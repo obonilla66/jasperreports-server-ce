@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -42,10 +42,13 @@ define(function (require) {
         dataSourceResourceTypes = require("dataSource/enum/dataSourceResourceTypes"),
         saveDialogViewFactory = require("dataSource/factory/saveDialogViewFactory"),
         dataSourceMainTemplate = require("text!dataSource/template/dataSourceMainTemplate.htm"),
+        dialogErrorMessageTemplate = require("text!common/templates/dialogErrorPopupTemplate.htm"),
 		jrsConfigs = require('jrs.configs'),
         CustomDataSourcesCollection = require("dataSource/collection/CustomDataSourceCollection"),
         awsSettings = require("settings!awsSettings"),
         settingsUtility = require("dataSource/util/settingsUtility");
+
+    var CreateDomainLink = _.template(jrsConfigs.contextPath + "/domaindesigner.html?dataSource={{-resourceUri}}");
 
     return Backbone.View.extend({
 
@@ -55,7 +58,7 @@ define(function (require) {
 
         events: {
             "change select[name='dataSourceType']" : "onDataSourceTypeChange",
-            "click #saveBtn" : "onSaveClick",
+            "click #saveBtn, #createDomainBtn" : "onSaveClick",
             "click #cancelBtn" : "onCancelClick"
         },
 
@@ -232,7 +235,7 @@ define(function (require) {
         },
 
 
-        _prepareSaveDialog: function() {
+        _prepareSaveDialog: function(createDomainMode) {
             this.saveDialog && this.saveDialog.remove();
 
             var SaveDialog = saveDialogViewFactory.getView(this.dataSourceType);
@@ -240,21 +243,22 @@ define(function (require) {
             this.saveDialog = new SaveDialog(_.extend({}, this.options, {
                 model: this.dataSourceView.model,
                 saveFn: this.options.saveFn,
-                success: _.bind(this._onSaveDone, this),
+                success: _.bind((createDomainMode? this._onSaveAndCreateDomainDone : this._onSaveDone), this),
                 error: _.bind(this._onSaveFail, this)
             }));
         },
 
-        onSaveClick: function() {
-
+        onSaveClick: function(e) {
             if (!this.dataSourceView.model.isValid(true)) {
                 return;
             }
 
-            var self = this, funcOnceValidationPassed = function() {
-                self._prepareSaveDialog();
-                self.saveDialog.startSaveDialog();
-            };
+            var self = this,
+                createDomainMode = e && e.currentTarget.id == "createDomainBtn",
+                funcOnceValidationPassed = function() {
+                    self._prepareSaveDialog(createDomainMode);
+                    self.saveDialog.startSaveDialog();
+                };
 
             // validationMethodOnSaveClick is moved to view in text-data-source branch,
             // but let's have them both (in model and in a view) here till merged
@@ -271,6 +275,10 @@ define(function (require) {
 		_onSaveDone: function() {
 			redirectToUrl(jrsConfigs.contextPath + "/flow.html?_flowId=repositoryConfirmFlow&resourceType=dataSource");
 		},
+
+        _onSaveAndCreateDomainDone: function(resourceModel) {
+            redirectToUrl(CreateDomainLink({resourceUri: resourceModel.get("uri")}));
+        },
 
 		_onSaveFail: function(model, xhr) {
 
@@ -325,15 +333,14 @@ define(function (require) {
 
 			if (handled === false) {
 				// otherwise, proceed with common error handling
+                var errTempl = _.template(dialogErrorMessageTemplate, {
+                    message: "Failed to save data source.",
+                    errorCode: errors[0] ? errors[0].errorCode : null,
+                    errorMsg: errors.message,
+                    respText: xhr.responseText
+                });
 
-				msg = "Failed to save data source.";
-
-				if (errors[0] && errors[0].errorCode) msg += "<br/>The reason is: " + errors[0].errorCode;
-				else if (errors.message) msg += "<br/>The reason is: " + errors.message;
-
-				msg += "<br/><br/>The full response from the server is: " + xhr.responseText;
-
-				dialogs.errorPopup.show(msg);
+				dialogs.errorPopup.show(errTempl);
 			}
 		},
 

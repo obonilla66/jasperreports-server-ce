@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.common.domain.impl;
 
@@ -31,6 +34,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import org.hibernate.Hibernate;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
  * @version $Id$
@@ -44,7 +49,8 @@ public class RepoLogEvent implements LogEvent {
 	private String messageCode;
 	private String resourceURI;
 	private String text;
-	private byte[] data;
+    // TODO: HibernateUpgrade 25.08.2016 - Possible data need to be refactored to type Blob
+    private byte[] data;
 	private byte state;
         private transient Blob dataBlob;
     private User user;
@@ -68,7 +74,11 @@ public class RepoLogEvent implements LogEvent {
                 if (data == null) {
                    this.dataBlob = null; 
                 } else {
-                    this.dataBlob = Hibernate.createBlob(data);
+                    try {
+                        this.dataBlob = new SerialBlob(data);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                 }
 	}
 

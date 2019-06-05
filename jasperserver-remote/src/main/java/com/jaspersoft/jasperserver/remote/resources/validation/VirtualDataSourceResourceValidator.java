@@ -1,24 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataSource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -27,15 +29,16 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.VirtualReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
+import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.addIllegalParameterValueError;
 import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.empty;
 
 /**
@@ -46,8 +49,8 @@ import static com.jaspersoft.jasperserver.remote.resources.validation.Validation
  */
 @Component
 public class VirtualDataSourceResourceValidator extends GenericResourceValidator<VirtualReportDataSource> {
-    private final Pattern specCharacters = Pattern.compile("[~!@#$%^&*()}{:\\[\\]?,.]+");
 
+    private final Pattern specCharacters = Pattern.compile("^\\d|[\\s\\*\\(\\)\\-\\+=:;\\.\\,\"\\\\/<>\\[\\]'!%]+");
     @javax.annotation.Resource(name = "concreteRepository")
     private RepositoryService service;
     @javax.annotation.Resource
@@ -56,38 +59,38 @@ public class VirtualDataSourceResourceValidator extends GenericResourceValidator
     ProfileAttributesResolver profileAttributesResolver;
 
     @Override
-    protected void internalValidate(VirtualReportDataSource resource, ValidationErrors errors) {
+    protected void internalValidate(VirtualReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (resource.getDataSourceUriMap() == null || resource.getDataSourceUriMap().isEmpty()) {
-            addIllegalParameterValueError(errors, "SubDataSources", "", "A virtual data source should aggregate at least 1 datasource");
+            errors.add(new IllegalParameterValueException("A virtual data source should aggregate at least 1 datasource", "SubDataSources", ""));
         } else {
             Set<String> uris = new HashSet<String>();
             String uri;
             for (String id : resource.getDataSourceUriMap().keySet()) {
                 if (empty(id)) {
-                    addIllegalParameterValueError(errors, "SubDataSource.id", "", "An id must be specified");
-                } else if (!profileAttributesResolver.containsAttribute(id) && specCharacters.matcher(id).matches()) {
-                    addIllegalParameterValueError(errors, "SubDataSource.id", id, "An id should not contain symbols ~.,!@#$%^&*():[]? and curly braces");
+                    errors.add(new IllegalParameterValueException("An id must be specified", "SubDataSource.id", ""));
+                } else if (!profileAttributesResolver.containsAttribute(id) && specCharacters.matcher(id).find()) {
+                    errors.add(new IllegalParameterValueException("An id should not contain symbols *()-+=:;.,\\\"\\\\/<>[]'! spaces and curly braces", "SubDataSource.id", id));
                 } else if (!uris.add((uri = resource.getDataSourceUriMap().get(id).getTargetURI()))) {
-                    addIllegalParameterValueError(errors, "SubDataSource.uri", id, "Duplicated URI: " + uri);
+                    errors.add(new IllegalParameterValueException("Duplicated URI: " + uri, "SubDataSource.uri", uri));
                 } else {
                     if (empty(uri)) {
-                        addIllegalParameterValueError(errors, "SubDataSource.uri", id, "Wrong URI: empty");
+                        errors.add(new IllegalParameterValueException("Wrong URI: empty", "SubDataSource.uri", ""));
                     } else {
                         if (!uri.startsWith(Folder.SEPARATOR)) {
-                            addIllegalParameterValueError(errors, "SubDataSource.uri", id, "Wrong URI: " + uri + ". Must be absolute and start from '/'");
-                        }
-
-                        Resource subDataSource = service.getResource(null, uri);
-                        if (subDataSource == null) {
-                            addIllegalParameterValueError(errors, "SubDataSource.uri", id, "Wrong URI: " + uri + ". Such resource does not exist.");
-                        } else if (!(subDataSource instanceof DataSource)) {
-                            addIllegalParameterValueError(errors, "SubDataSource.uri", id, "Wrong URI: " + uri + ". This is not a datasource.");
+                            errors.add(new IllegalParameterValueException("Wrong URI: " + uri + ". Must be absolute and start from '/'", "SubDataSource.uri", uri));
+                        } else {
+                            Resource subDataSource = service.getResource(null, uri);
+                            if (subDataSource == null) {
+                                errors.add(new IllegalParameterValueException("Wrong URI: " + uri + ". Such resource does not exist.", "SubDataSource.uri", uri));
+                            } else if (!(subDataSource instanceof DataSource)) {
+                                errors.add(new IllegalParameterValueException("Wrong URI: " + uri + ". This is not a datasource.", "SubDataSource.uri", uri));
+                            }
                         }
                     }
                 }
             }
 
-            if (!errors.isError() && !resource.isNew()) {
+            if (errors.isEmpty() && !resource.isNew()) {
                 validateUsage(resource);
             }
         }

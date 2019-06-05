@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <!--
@@ -30,17 +33,18 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
        xmlns:security="http://www.springframework.org/schema/security"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-       	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
-       	http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd
+       	http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
        
     <!-- ======================== FILTER CHAIN =======================  -->
 
     <bean id="authenticationAuthoirizationFilterChainProxy" class="org.springframework.security.web.FilterChainProxy">
-        <security:filter-chain-map path-type="ant">
-            <security:filter-chain pattern="/**" filters="authenticationProcessingFilter,JSAuthenticationSynchronizer"/>
-        </security:filter-chain-map>
+        <constructor-arg index="0">
+                <security:filter-chain pattern="/**" filters="authenticationProcessingFilter,JSAuthenticationSynchronizer"/>
+        </constructor-arg>
     </bean>
+
 
     <bean id="authenticationProcessingFilter"
           class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
@@ -50,6 +54,8 @@
         <property name="filterProcessesUrl" value="/j_spring_security_check"/>
         <property name="allowSessionCreation" value="true" />
         <property name="sessionAuthenticationStrategy" ref="sas"/>
+        <property name="usernameParameter" value="j_username"/>
+        <property name="passwordParameter" value="j_password"/>
     </bean>
 
     <bean id="successHandler" class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler" >
@@ -61,10 +67,10 @@
     <bean id="sas" class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy">
         <property name="migrateSessionAttributes" value="false" />
     </bean>
-    
+
     <!--TODO class=com.jaspersoft.jasperserver.api.security.externalAuth.BaseAuthenticationProcessingFilter-->
     <!--<bean id="authenticationProcessingFilter" class="org.springframework.security.ui.webapp.AuthenticationProcessingFilter">-->
-        <!--<property name="authenticationManager"><ref local="authenticationManager"/></property>-->
+        <!--<property name="authenticationManager"><ref bean="authenticationManager"/></property>-->
         <!--<property name="authenticationFailureUrl"><value>/login.html?error=1</value></property>-->
         <!--<property name="defaultTargetUrl"><value>/loginsuccess.html</value></property>-->
         <!--<property name="filterProcessesUrl"><value>/j_acegi_security_check</value></property>-->
@@ -72,14 +78,14 @@
 
     <!-- ======================== AUTHENTICATION ======================= -->
     <bean id="authenticationManager" class="org.springframework.security.authentication.ProviderManager">
-        <property name="providers">
+        <constructor-arg>
             <list>
-                <!-- not on by default <ref local="ldapAuthenticationProvider"/>  -->
-                <ref local="staticPrincipalAuthenticationProvider"/>
-                <ref local="jasperServerAuthenticationProvider"/>
-                <!--ref local="jaasAuthenticationProvider"/-->
+                <!-- not on by default <ref bean="ldapAuthenticationProvider"/>  -->
+                <ref bean="staticPrincipalAuthenticationProvider"/>
+                <ref bean="jasperServerAuthenticationProvider"/>
+                <!--ref bean="jaasAuthenticationProvider"/-->
             </list>
-        </property>
+        </constructor-arg>
     </bean>
 	
     <bean id="jasperServerAuthenticationProvider" class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
@@ -90,16 +96,16 @@
     <bean id="staticPrincipalAuthenticationProvider" class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
         <property name="userDetailsService"><ref bean="inMemoryDaoImpl"/></property>
     </bean>
-
-    <bean id="inMemoryDaoImpl" class="org.springframework.security.core.userdetails.memory.InMemoryDaoImpl">
-        <property name="userMap">
-            <!-- tomcat/tomcat -->
+    <bean id="inMemoryDaoImpl" class="org.springframework.security.provisioning.InMemoryUserDetailsManager">
+        <constructor-arg index="0">
             <value>
                 tomcat=tomcat,ROLE_TestExternalRole0
                 springlive=living,ROLE_TestExternalRole1
             </value>
-        </property>
+        </constructor-arg>
     </bean>
+
+
    
     <bean id="JSAuthenticationSynchronizer" class="com.jaspersoft.jasperserver.api.metadata.user.service.impl.MetadataAuthenticationProcessingFilter">
        <property name="externalUserService"><ref bean="userAuthorityService"/></property>
@@ -159,7 +165,7 @@
        <value>(uid={0})</value>
      </constructor-arg>
      <constructor-arg index="2">
-       <ref local="initialDirContextFactory" />
+       <ref bean="initialDirContextFactory" />
      </constructor-arg>            
      <property name="searchSubtree">
        <value>true</value>
@@ -174,13 +180,13 @@
    <bean id="ldapAuthenticationProvider" class="org.springframework.security.providers.ldap.LdapAuthenticationProvider">
      <constructor-arg>
        <bean class="org.springframework.security.providers.ldap.authenticator.BindAuthenticator">
-          <constructor-arg><ref local="initialDirContextFactory"/></constructor-arg>
+          <constructor-arg><ref bean="initialDirContextFactory"/></constructor-arg>
           <property name="userDnPatterns"><list><value>uid={0}</value></list></property>
        </bean>
      </constructor-arg>
      <constructor-arg>
        <bean class="org.springframework.security.providers.ldap.populator.DefaultLdapAuthoritiesPopulator">
-          <constructor-arg index="0"><ref local="initialDirContextFactory"/></constructor-arg>
+          <constructor-arg index="0"><ref bean="initialDirContextFactory"/></constructor-arg>
           <constructor-arg index="1"><value></value></constructor-arg>
           <property name="groupRoleAttribute"><value>cn</value></property>
           <property name="groupSearchFilter"><value>(&amp;(uniqueMember={0})(objectclass=groupofuniquenames))</value></property>

@@ -1,30 +1,37 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
+
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.groups.QueryExecutionValidationGroup;
+import com.jaspersoft.jasperserver.dto.resources.validation.ValidResourceReferences;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -37,6 +44,8 @@ public class ClientCustomDataSource extends ClientResource<ClientCustomDataSourc
     private String serviceClass;
     private String dataSourceName;
     private List<ClientProperty> properties;
+
+    @ValidResourceReferences(groups = QueryExecutionValidationGroup.class)
     private Map<String, ClientReferenceableFile> resources;
 
     public String getDataSourceName() {
@@ -50,28 +59,8 @@ public class ClientCustomDataSource extends ClientResource<ClientCustomDataSourc
         super(source);
         serviceClass = source.getServiceClass();
         dataSourceName = source.getDataSourceName();
-        final List<ClientProperty> sourceProperties = source.getProperties();
-        if(sourceProperties != null){
-            properties = new ArrayList<ClientProperty>();
-            for(ClientProperty property : sourceProperties){
-                properties.add(new ClientProperty(property));
-            }
-        }
-        final Map<String, ClientReferenceableFile> sourceResources = source.getResources();
-        if(sourceResources != null){
-            resources = new HashMap<String, ClientReferenceableFile>(sourceResources.size());
-            for(String key : sourceResources.keySet()){
-                final ClientReferenceableFile clientReferenceable = sourceResources.get(key);
-                ClientReferenceableFile clone;
-                if(clientReferenceable instanceof ClientReference){
-                    clone = new ClientReference((ClientReference) clientReferenceable);
-                } else {
-                    clone = new ClientFile((ClientFile) clientReferenceable);
-                }
-                resources.put(key, clone);
-            }
-        }
-
+        properties = copyOf(source.getProperties());
+        resources = copyOf(source.getResources());
     }
 
     @Override
@@ -84,7 +73,7 @@ public class ClientCustomDataSource extends ClientResource<ClientCustomDataSourc
 
         if (dataSourceName != null ? !dataSourceName.equals(that.dataSourceName) : that.dataSourceName != null)
             return false;
-        if (properties != null ? !new HashSet(properties).equals(new HashSet(that.properties)) : that.properties != null) return false;
+        if (properties != null ? (that.properties == null || !new HashSet(properties).equals(new HashSet(that.properties))) : that.properties != null) return false;
         if (resources != null ? !resources.equals(that.resources) : that.resources != null) return false;
         if (serviceClass != null ? !serviceClass.equals(that.serviceClass) : that.serviceClass != null) return false;
 
@@ -107,8 +96,9 @@ public class ClientCustomDataSource extends ClientResource<ClientCustomDataSourc
         return resources;
     }
 
-    public void setResources(Map<String, ClientReferenceableFile> resources) {
+    public ClientCustomDataSource setResources(Map<String, ClientReferenceableFile> resources) {
         this.resources = resources;
+        return this;
     }
 
     public ClientCustomDataSource setDataSourceName(String dataSourceName) {
@@ -160,5 +150,10 @@ public class ClientCustomDataSource extends ClientResource<ClientCustomDataSourc
                 ", properties=" + properties +
                 ", resources=" + resources +
                 '}';
+    }
+
+    @Override
+    public ClientCustomDataSource deepClone() {
+        return new ClientCustomDataSource(this);
     }
 }

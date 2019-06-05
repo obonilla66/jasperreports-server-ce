@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
@@ -28,6 +31,8 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * <p>AdhocDataView belongs to PRO codebase, but ClientAdhocDataView should be placed to CE because of usage in AbstractClientDataSourceHolder</p>
  *
@@ -39,9 +44,7 @@ public class ClientAdhocDataView extends AbstractClientDataSourceHolder<ClientAd
 
     private ClientQuery query;
     private ClientGenericComponent component;
-
     private ClientAdhocDataViewSchema schema;
-
     private List<ClientBundle> bundles;
 
     public ClientAdhocDataView() {
@@ -53,17 +56,12 @@ public class ClientAdhocDataView extends AbstractClientDataSourceHolder<ClientAd
         setUri(uri);
     }
 
-    @XmlElement(name = "schema")
-    public ClientAdhocDataViewSchema getSchema() {
-        return schema;
-    }
-
-    public void setSchema(ClientAdhocDataViewSchema schema) {
-        this.schema = schema;
-    }
-
     public ClientAdhocDataView(ClientAdhocDataView other) {
         super(other);
+        query = copyOf(other.getQuery());
+        component = copyOf(other.getComponent());
+        schema = copyOf(other.getSchema());
+        bundles = copyOf(other.getBundles());
     }
 
     public ClientAdhocDataView setQuery(ClientQuery clientQuery) {
@@ -73,7 +71,7 @@ public class ClientAdhocDataView extends AbstractClientDataSourceHolder<ClientAd
 
     @XmlElements({
             @XmlElement(name = "multiLevel", type = ClientMultiLevelQuery.class),
-            @XmlElement(name = "multiAxes", type = ClientMultiAxisQuery.class)
+            @XmlElement(name = "multiAxis", type = ClientMultiAxisQuery.class)
     })
     public ClientQuery getQuery() {
         return query;
@@ -100,6 +98,16 @@ public class ClientAdhocDataView extends AbstractClientDataSourceHolder<ClientAd
         return this;
     }
 
+    @XmlElement(name = "schema")
+    public ClientAdhocDataViewSchema getSchema() {
+        return schema;
+    }
+
+    public ClientAdhocDataView setSchema(ClientAdhocDataViewSchema schema) {
+        this.schema = schema;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -108,17 +116,17 @@ public class ClientAdhocDataView extends AbstractClientDataSourceHolder<ClientAd
 
         ClientAdhocDataView that = (ClientAdhocDataView) o;
 
-        if (bundles != null ? !bundles.equals(that.bundles) : that.bundles != null) return false;
         if (query != null ? !query.equals(that.query) : that.query != null) return false;
+        if (component != null ? !component.equals(that.component) : that.component != null) return false;
         if (schema != null ? !schema.equals(that.schema) : that.schema != null) return false;
-
-        return true;
+        return bundles != null ? bundles.equals(that.bundles) : that.bundles == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (query != null ? query.hashCode() : 0);
+        result = 31 * result + (component != null ? component.hashCode() : 0);
         result = 31 * result + (schema != null ? schema.hashCode() : 0);
         result = 31 * result + (bundles != null ? bundles.hashCode() : 0);
         return result;
@@ -128,8 +136,14 @@ public class ClientAdhocDataView extends AbstractClientDataSourceHolder<ClientAd
     public String toString() {
         return "ClientAdhocDataView{" +
                 "query=" + query +
+                ", component=" + component +
                 ", schema=" + schema +
                 ", bundles=" + bundles +
-                "} " + super.toString();
+                '}' + super.toString();
+    }
+
+    @Override
+    public ClientAdhocDataView deepClone() {
+        return new ClientAdhocDataView(this);
     }
 }

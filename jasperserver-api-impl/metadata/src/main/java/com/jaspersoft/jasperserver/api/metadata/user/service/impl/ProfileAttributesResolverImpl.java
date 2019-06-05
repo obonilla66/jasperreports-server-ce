@@ -1,36 +1,42 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.metadata.user.service.impl;
 
+import com.jaspersoft.jasperserver.api.JSConstraintViolationException;
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.JSProfileAttributeException;
+import com.jaspersoft.jasperserver.api.common.domain.AttributedObject;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceImpl;
-import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeCategory;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeEscapeStrategy;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
+import com.jaspersoft.jasperserver.dto.common.AttributeErrorCode;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -39,52 +45,60 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
+import javax.annotation.PostConstruct;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import javax.validation.groups.Default;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
-import static com.jaspersoft.jasperserver.api.JSProfileAttributeException.PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_BASE;
-import static com.jaspersoft.jasperserver.api.JSProfileAttributeException.PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_CATEGORY_INVALID;
-import static com.jaspersoft.jasperserver.api.JSProfileAttributeException.PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_NOT_FOUND;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
+import static com.jaspersoft.jasperserver.dto.common.AttributeErrorCode.Codes.PROFILE_ATTRIBUTE_SUBSTITUTION_CATEGORY_INVALID;
+import static com.jaspersoft.jasperserver.dto.common.AttributeErrorCode.Codes.PROFILE_ATTRIBUTE_SUBSTITUTION_NOT_FOUND;
 
 /**
  * The default {@link ProfileAttributesResolver} implementation.
  *
  * @author Volodya Sabadosh
  * @author Vlad Zavadskii
- * @version $Id$
- * @version $Id$
  */
 public class ProfileAttributesResolverImpl implements ProfileAttributesResolver {
     private static final Log log = LogFactory.getLog(ProfileAttributesResolverImpl.class);
 
+    // Names of the captured-groups for attribute placeholder patterns
+    public static final String attributeNameGroup = "name";
+    public static final String categoryGroup = "category";
+    // Named-capturing group expression template
+    public static final String groupExpression = "?<%1$s>";
+    public static final String PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_BASE =
+            "profile.attribute.exception.substitution.base";
+    public static final String IN_RESOURCE_SUFFIX =
+            ".in.resource";
+
+    @CheckAttributePatterns
+    private List<String> attributePlaceholderPatterns;
+    @CheckAttributePatterns
+    private List<String> parametrizedResourcePatterns;
+    @javax.annotation.Resource(name = "beanValidator")
+    private Validator validator;
+    private Pattern compiledAttributePlaceholderPattern;
+    private Pattern compiledParametrizedResourcePattern;
     private ProfileAttributeService profileAttributeService;
-    private Pattern attributePlaceholderPattern;
-
-    public Pattern getAttributeFunctionPattern() {
-        return attributeFunctionPattern;
-    }
-
-    public void setAttributeFunctionPattern(String attributeFunctionPattern) {
-        this.attributeFunctionPattern = Pattern.compile(attributeFunctionPattern, Pattern.MULTILINE);
-    }
-
-    private Pattern attributeFunctionPattern;
     private ObjectMapper objectMapper;
     private List<ProfileAttributeCategory> profileAttributeCategories;
     private MessageSource messageSource;
-    private RepositoryService repositoryService;
     private Set<String> excludedResourcesFromAttrResolving;
     private boolean enabledResolving = true;
 
@@ -100,32 +114,27 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
     }
 
-    public void setAttributePlaceholderPattern(String attributePlaceholderPattern) {
-        this.attributePlaceholderPattern = Pattern.compile(attributePlaceholderPattern, Pattern.MULTILINE);
+    @PostConstruct
+    public void init() {
+        validator.validate(this);
+
+        Set<ConstraintViolation<ProfileAttributesResolverImpl>> violations = validator.validate(this, Default.class);
+        if (!violations.isEmpty()) {
+            throw new JSConstraintViolationException("Failed to validate profileAttribute resolver.", violations);
+        }
+
+        compiledAttributePlaceholderPattern = compileAttributePattern(attributePlaceholderPatterns, "attributePlaceholderPatterns");
+        compiledParametrizedResourcePattern = compileAttributePattern(parametrizedResourcePatterns, "parametrizedResourcePatterns");
     }
 
-    public void setProfileAttributeService(ProfileAttributeService profileAttributeService) {
-        this.profileAttributeService = profileAttributeService;
-    }
-
-    public void setMessageSource(MessageSource messageSource) {
-        this.messageSource = messageSource;
-    }
-
-    public void setProfileAttributeCategories(List<ProfileAttributeCategory> profileAttributeCategories) {
-        this.profileAttributeCategories = profileAttributeCategories;
-    }
-
-    public void setExcludedResourcesFromAttrResolving(Set<String> excludedResourcesFromAttrResolving) {
-        this.excludedResourcesFromAttrResolving = excludedResourcesFromAttrResolving;
-    }
-
-    public void setRepositoryService(RepositoryService repositoryService) {
-        this.repositoryService = repositoryService;
-    }
-
-    public void setEnabledResolving(boolean enabledResolving) {
-        this.enabledResolving = enabledResolving;
+    /**
+     * Checks if this service should perform profile attribute resolving for the specified resource.
+     *
+     * @param resource a resource to check
+     * @return true if profile attribute resolving should be skipped. Otherwise returns false
+     */
+    public static boolean isSkipProfileAttributesResolving(AttributedObject resource) {
+        return resource.getAttributes() != null && resource.getAttributes().contains(SKIP_PROFILE_ATTRIBUTES_RESOLVING);
     }
 
     /**
@@ -133,7 +142,7 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
      */
     @Override
     public boolean containsAttribute(String str) {
-        return attributePlaceholderPattern.matcher(str).find();
+        return compiledAttributePlaceholderPattern.matcher(str).find();
     }
 
     /**
@@ -149,7 +158,7 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
             Scanner scanner = new Scanner(outputStreamStr);
             String foundAttribute;
             boolean hasAttributes = false;
-            while ((foundAttribute = scanner.findInLine(attributeFunctionPattern)) !=null || scanner.hasNextLine()) {
+            while ((foundAttribute = scanner.findInLine(compiledParametrizedResourcePattern)) != null || scanner.hasNextLine()) {
                 if (foundAttribute == null) {
                     scanner.nextLine();
                     continue;
@@ -192,7 +201,9 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Resource> T mergeResource(T resource) {
-        if (!enabledResolving || excludedResourcesFromAttrResolving.contains(resource.getClass().getCanonicalName())) {
+        boolean resolve = enabledResolving && !isSkipProfileAttributesResolving(resource);
+
+        if (!resolve || excludedResourcesFromAttrResolving.contains(resource.getClass().getCanonicalName())) {
             return resource;
         }
 
@@ -207,7 +218,7 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
         return resultResource;
     }
 
-    public <T> T mergeObject(T object, String identifier){
+    public <T> T mergeObject(T object, String identifier) {
         try {
             OutputStream outputStream = new ByteArrayOutputStream();
             objectMapper.writeValue(outputStream, object);
@@ -241,40 +252,26 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
      */
     public String merge(String templateString, String identifier, ProfileAttributeEscapeStrategy escapeStrategy) {
         Map<ProfileAttributeCategory, Map<String, ProfileAttribute>> profileAttributeCategoryMap =
-                new HashMap<ProfileAttributeCategory, Map<String, ProfileAttribute>>();
-        String replacementString = templateString;
-        Scanner scanner = new Scanner(templateString);
+                new HashMap<>();
+        StringBuffer replacementBuffer = new StringBuffer();
+        Matcher matcher = compiledAttributePlaceholderPattern.matcher(templateString);
 
-        String foundAttribute;
-        while ((foundAttribute = scanner.findInLine(attributePlaceholderPattern)) != null || scanner.hasNextLine()) {
-            if (foundAttribute == null) {
-                scanner.nextLine();
-                continue;
+        while (matcher.find()) {
+            MatcherDecorator matcherDecorator = new MatcherDecorator(matcher);
 
-            }
-            MatchResult matchResult = scanner.match();
-            String attrPlaceholder = matchResult.group(0);
-            String attrName = matchResult.group(1);
-            String foundCategory = matchResult.group(3);
+            String attrPlaceholder = matcherDecorator.getPlaceholder();
+            String attrName = matcherDecorator.getAttributeName();
+            String foundCategory = matcherDecorator.getCategory();
             ProfileAttributeCategory attrCategory = ProfileAttributeCategory.HIERARCHICAL;
 
             if (foundCategory != null) {
                 try {
                     attrCategory = ProfileAttributeCategory.valueOf(foundCategory.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    String[] baseErrorArgs = getBaseErrorArgs(templateString, identifier, attrPlaceholder);
-                    String[] args = new String[]{foundCategory, quote(attrName), profileAttributeCategories.toString()};
-                    String localizedMessage = getAttributeErrorMessage(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_CATEGORY_INVALID,
-                            baseErrorArgs, args, LocaleContextHolder.getLocale());
-                    String defaultMessage = getAttributeErrorMessage(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_CATEGORY_INVALID,
-                            baseErrorArgs, args, Locale.ENGLISH);
+                    String[] args = new String[]{foundCategory, attrName, profileAttributeCategories.toString()};
 
-                    log.error(localizedMessage);
-
-                    throw new JSProfileAttributeException(localizedMessage, new ErrorDescriptor()
-                            .setMessage(defaultMessage)
-                            .setErrorCode(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_CATEGORY_INVALID)
-                            .setParameters(args));
+                    throw generateProfileAttributeException(PROFILE_ATTRIBUTE_SUBSTITUTION_CATEGORY_INVALID,
+                            templateString, identifier, attrPlaceholder, args);
                 }
             }
 
@@ -291,52 +288,55 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
                 if (escapeStrategy != null) {
                     attrValue = escapeStrategy.escape(attrValue);
                 }
-                replacementString = replacementString.replace(attrPlaceholder, attrValue);
+                matcher.appendReplacement(replacementBuffer, quoteMatcherReplacement(attrValue));
 
                 if (log.isDebugEnabled()) {
                     log.debug(messageSource.getMessage("profile.attribute.debug.substitution.success",
-                            new Object[]{quote(attrName), identifier, getErrorFieldName(templateString, attrPlaceholder), attrValue},
+                            new Object[]{attrName, identifier, getErrorFieldName(templateString, attrPlaceholder), attrValue},
                             LocaleContextHolder.getLocale()));
                 }
             } else {
-                String[] baseErrorArgs = getBaseErrorArgs(templateString, identifier, attrPlaceholder);
-                String[] args = new String[]{quote(attrName), attrCategory.getLabel()};
-                String localizedMessage = getAttributeErrorMessage(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_NOT_FOUND,
-                        baseErrorArgs, args, LocaleContextHolder.getLocale());
-                String defaultMessage = getAttributeErrorMessage(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_NOT_FOUND,
-                        baseErrorArgs, args, Locale.ENGLISH);
+                String[] args = new String[]{attrName, attrCategory.getLabel()};
 
-                log.error(localizedMessage);
-
-                throw new JSProfileAttributeException(localizedMessage, new ErrorDescriptor()
-                        .setMessage(defaultMessage)
-                        .setErrorCode(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_NOT_FOUND)
-                        .setParameters(args));
+                throw generateProfileAttributeException(PROFILE_ATTRIBUTE_SUBSTITUTION_NOT_FOUND,
+                        templateString, identifier, attrPlaceholder, args);
             }
         }
+        matcher.appendTail(replacementBuffer);
 
-        return replacementString;
+        return replacementBuffer.toString();
     }
 
+    protected String quoteMatcherReplacement(String attrValue) {
+        return Matcher.quoteReplacement(attrValue);
+    }
 
-    protected String[] getBaseErrorArgs(String templateString, String identifier, String attrPlaceholder) {
+    JSProfileAttributeException generateProfileAttributeException(String baseErrorCode, String templateString,
+                                                                  String identifier, String attrPlaceholder, String[] baseArgs) {
+        String[] resourceSpecificErrorArgs = getResourceSpecificErrorArgs(templateString, identifier, attrPlaceholder);
+        String errorCode = baseErrorCode;
+
+        String[] messageBundleArgs = baseArgs;
+        if (resourceSpecificErrorArgs != null) {
+            errorCode = baseErrorCode.concat(IN_RESOURCE_SUFFIX);
+            messageBundleArgs = (String[])ArrayUtils.addAll(resourceSpecificErrorArgs, baseArgs);
+        }
+
+        String localizedMessage = messageSource.getMessage(errorCode, messageBundleArgs, LocaleContextHolder.getLocale());
+
+        log.error(localizedMessage);
+
+        return new JSProfileAttributeException(localizedMessage, AttributeErrorCode.
+                fromCode(errorCode).createDescriptor((Object[])messageBundleArgs));
+    }
+
+    String[] getResourceSpecificErrorArgs(String templateString, String identifier, String attrPlaceholder) {
         String[] baseErrorArgs = null;
         if (isNotEmpty(identifier) && !identifier.equals(Folder.SEPARATOR)) {
             baseErrorArgs = new String[]{identifier, getErrorFieldName(templateString, attrPlaceholder)};
         }
 
         return baseErrorArgs;
-    }
-
-    protected String getAttributeErrorMessage(String errorCode, String[] baseArgs, String args[], Locale locale) {
-        String errorMessageBase = "";
-
-        if (baseArgs != null) {
-            errorMessageBase = messageSource.getMessage(PROFILE_ATTRIBUTE_EXCEPTION_SUBSTITUTION_BASE, baseArgs,
-                    locale) + " ";
-        }
-
-        return errorMessageBase + messageSource.getMessage(errorCode, args, locale);
     }
 
     protected Map<String, ProfileAttribute> getProfileAttributeMap(ProfileAttributeCategory category) {
@@ -355,14 +355,24 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
 
     protected String getErrorFieldName(String templateString, String attrPlaceholder) {
         String attrLiteral = Pattern.quote(attrPlaceholder);
-        Pattern fieldNamePattern = Pattern.compile("\"([\\w$]+)\"\\s*:\\s*\"([^\"]|(\\\\\"))*" + attrLiteral,
-                Pattern.MULTILINE);
-        Matcher matcher = fieldNamePattern.matcher(templateString);
-        return matcher.find() ? quote(matcher.group(1)) : "";
-    }
 
-    private String quote(String messages) {
-        return "'" + messages + "'";
+        Supplier<Pattern> findJsonFieldNamePattern =
+                () -> Pattern.compile("(?m)\"(?<name>[\\w$]+)\"\\s*:\\s*\"([^\"]|(\\\\\"))*" + attrLiteral);
+        Supplier<Pattern> findXmlFieldNamePattern =
+                () -> Pattern.compile("(?s)<(?<name>[\\w.-]+)((?!<[\\w.-]+).)+" + attrLiteral);
+
+        return Stream.of(findJsonFieldNamePattern, findXmlFieldNamePattern)
+                .map(pattern -> {
+                    Matcher matcher = pattern.get().matcher(templateString);
+                    if (matcher.find()) {
+                        return matcher.group("name");
+                    } else {
+                        return "";
+                    }
+                })
+                .filter(name -> !name.isEmpty())
+                .findFirst()
+                .orElse("");
     }
 
     private Resource copyBaseResource(final Resource resource) {
@@ -372,28 +382,101 @@ public class ProfileAttributesResolverImpl implements ProfileAttributesResolver 
                 return resource.getClass();
             }
         };
-        baseResourceCopy.setName(resource.getName());
         baseResourceCopy.setDescription(resource.getDescription());
         baseResourceCopy.setLabel(resource.getLabel());
-        baseResourceCopy.setParentFolder(resource.getParentFolder());
-        baseResourceCopy.setURIString(resource.getURIString());
 
         return baseResourceCopy;
     }
 
     private void revertEscapedBaseResourceFields(Resource copyBaseResource, Resource originalResource) {
-        originalResource.setName(copyBaseResource.getName());
         originalResource.setDescription(copyBaseResource.getDescription());
         originalResource.setLabel(copyBaseResource.getLabel());
-        originalResource.setParentFolder(copyBaseResource.getParentFolder());
-        originalResource.setURIString(copyBaseResource.getURIString());
     }
 
     private void escapeBaseResourceFieldsFromResolving(Resource resource) {
-        resource.setName("");
         resource.setDescription("");
         resource.setLabel("");
-        resource.setParentFolder("");
-        resource.setURIString("");
     }
+
+    private Pattern compileAttributePattern(List<String> patterns, String propertyName) {
+        StringBuilder sb = new StringBuilder();
+        int uniqueId = 0;
+        List<String> allGroups = Arrays.asList(attributeNameGroup, categoryGroup);
+        for (String attributePattern : patterns) {
+            // Make captured-groups unique - each group will have its own unique name (e.g. name0, category0, name1 etc)
+            for (String group : allGroups) {
+                String oldGroup = String.format(groupExpression, group);
+                String newGroup = String.format(groupExpression, group + uniqueId);
+                attributePattern = attributePattern.replace(oldGroup, newGroup);
+            }
+
+            uniqueId++;
+            sb.append("(?:").append(attributePattern).append(")").append("|");
+        }
+
+        sb.deleteCharAt(sb.length() - 1);
+
+        return Pattern.compile(sb.toString());
+    }
+
+    public void setAttributePlaceholderPatterns(List<String> attributePlaceholderPatterns) {
+        this.attributePlaceholderPatterns = attributePlaceholderPatterns;
+    }
+
+    public void setProfileAttributeService(ProfileAttributeService profileAttributeService) {
+        this.profileAttributeService = profileAttributeService;
+    }
+
+    public void setMessageSource(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
+    public void setProfileAttributeCategories(List<ProfileAttributeCategory> profileAttributeCategories) {
+        this.profileAttributeCategories = profileAttributeCategories;
+    }
+
+    public void setExcludedResourcesFromAttrResolving(Set<String> excludedResourcesFromAttrResolving) {
+        this.excludedResourcesFromAttrResolving = excludedResourcesFromAttrResolving;
+    }
+
+    public void setEnabledResolving(boolean enabledResolving) {
+        this.enabledResolving = enabledResolving;
+    }
+
+    public void setParametrizedResourcePatterns(List<String> parametrizedResourcePatterns) {
+        this.parametrizedResourcePatterns = parametrizedResourcePatterns;
+    }
+
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
+
+    private class MatcherDecorator {
+        private Matcher matcher;
+        private int usedPattern;
+
+        public MatcherDecorator(Matcher matcher) {
+            this.matcher = matcher;
+
+            for (int i = 0; i < attributePlaceholderPatterns.size(); i++) {
+                if (matcher.group(attributeNameGroup + i) != null) {
+                    usedPattern = i;
+                    break;
+                }
+            }
+        }
+
+        public String getAttributeName() {
+            return matcher.group(attributeNameGroup + usedPattern);
+        }
+
+        public String getCategory() {
+            return matcher.group(categoryGroup + usedPattern);
+        }
+
+        public String getPlaceholder() {
+            return matcher.group(0);
+        }
+    }
+
 }

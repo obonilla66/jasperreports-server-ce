@@ -1,5 +1,7 @@
 <fieldset name="customFieldsContainer" class="group shortFields">
 
+    <js-templateNonce></js-templateNonce>
+
 	<legend class="offLeft"><span>{{- i18n['resource.dataSource.accessProp']}}</span></legend>
 
 	{{
@@ -7,7 +9,7 @@
 	var buildAttrs = function(attrs) {
 		return _.map(attrs, function(v, k){
 			v = v.toString().replace(/"/g, "\&quot\;");
-			return k + '="' + _.xssEscape(v) + '"';
+			return k + '="' + _.xssHardEscape(v) + '"';
 		}).join(" ");
 	};
 

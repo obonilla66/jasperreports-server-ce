@@ -7,7 +7,7 @@
   "removeCombined": false,
   "preserveLicenseComments": false,
   "paths": {
-    "common": "bower_components/js-sdk/src/common",
+    "common": "runtime_dependencies/js-sdk/src/common",
     "jquery": "empty:",
     "prototype": "empty:",
     "report.global": "empty:",

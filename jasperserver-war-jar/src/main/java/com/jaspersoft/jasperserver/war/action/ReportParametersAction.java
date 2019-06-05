@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
@@ -24,19 +27,19 @@ import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationErrorsImpl;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlsInformation;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.EhcacheEngineService;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.EngineServiceImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportLoadingService;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.util.InputControlLabelResolver;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.MessageSourceLoader;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.RepositoryContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.RepositoryUtil;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsContainer;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
@@ -45,12 +48,11 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
-import com.jaspersoft.jasperserver.war.cascade.CascadeResourceNotFoundException;
-import com.jaspersoft.jasperserver.war.cascade.InputControlValidationError;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsLogicService;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsValidationException;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationError;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
+import com.jaspersoft.jasperserver.inputcontrols.util.ReportParametersUtils;
 import com.jaspersoft.jasperserver.war.util.ServletContextWrapper;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
@@ -71,14 +73,7 @@ import javax.servlet.ServletRequest;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Ionut Nedelcu (ionutned@users.sourceforge.net)	
@@ -417,7 +412,7 @@ public abstract class ReportParametersAction extends FormAction implements Repor
      * @return
      */
     protected static ExecutionContext getExecutionContext(RequestContext reqContext) {
-        return getExecutionContext(JasperServerUtil.getExecutionContext(reqContext), reqContext);
+        return getExecutionContext(StaticExecutionContextProvider.getExecutionContext(), reqContext);
     }
 
     /**
@@ -620,12 +615,6 @@ public abstract class ReportParametersAction extends FormAction implements Repor
         }
 
         return info;
-    }
-
-    protected String resolveLabel(ExecutionContext exContext, String label, ResourceContainer reportUnit) {
-        final MessageSource reportMessageSource = MessageSourceLoader.loadMessageSource(exContext, reportUnit, repository);
-
-        return InputControlLabelResolver.resolve(label, reportMessageSource, messages);
     }
 
     protected void setupThreadRepositoryContext(ExecutionContext exContext) {

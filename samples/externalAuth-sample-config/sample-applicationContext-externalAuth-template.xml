@@ -1,24 +1,27 @@
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
 
     <!--
       - Sample configuration for users to implement in cases where there is no need for a login page. i.e. Windows active directory.
@@ -29,7 +32,7 @@
     <bean id="proxyAuthenticationProcessingFilter" class="com.jaspersoft.jasperserver.api.security.externalAuth.custom.CustomAuthenticationProcessingFilter"
           parent="authenticationProcessingFilter">
         <property name="authenticationManager">
-            <ref local="customAuthenticationManager"/>
+            <ref bean="customAuthenticationManager"/>
         </property>
         <property name="authenticationSuccessHandler" ref="externalAuthSuccessHandler" />
     </bean>
@@ -37,21 +40,21 @@
     <bean id="externalAuthSuccessHandler"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.JrsExternalAuthenticationSuccessHandler" parent="successHandler">
         <property name="externalDataSynchronizer">
-            <ref local="externalDataSynchronizer"/>
+            <ref bean="externalDataSynchronizer"/>
         </property>
     </bean>
 
     <bean id="proxyExceptionTranslationFilter" class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSExceptionTranslationFilter">
-        <property name="authenticationEntryPoint">
+        <constructor-arg index="0">
             <bean class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSLoginUrlAuthenticationEntryPoint">
-                <property name="loginFormUrl">
+                <constructor-arg index="0">
                     <value>/j_spring_security_check</value>
-                </property>
+                </constructor-arg>
                 <property name="forceHttps">
                     <value>false</value>
                 </property>
             </bean>
-        </property>
+        </constructor-arg>
         <property name="accessDeniedHandler">
             <bean class="com.jaspersoft.jasperserver.war.JRSAccessDeniedHandlerImpl">
                 <property name="errorPage" value="/WEB-INF/jsp/modules/system/AccessDeniedPage.jsp"/>
@@ -63,12 +66,12 @@
     </bean>
 
     <bean id="customAuthenticationManager" class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSProviderManager">
-        <property name="providers">
+        <constructor-arg index="0">
             <list>
                 <ref bean="customAuthenticationProvider"/>
                 <ref bean="${bean.daoAuthenticationProvider}"/>
             </list>
-        </property>
+        </constructor-arg>
     </bean>
 
     <bean id="customAuthenticationProvider" class="com.jaspersoft.jasperserver.api.security.externalAuth.custom.CustomAuthenticationProvider"/>
@@ -77,9 +80,9 @@
           class="com.jaspersoft.jasperserver.api.security.externalAuth.ExternalDataSynchronizerImpl">
         <property name="externalUserProcessors">
             <list>
-                <ref local="externalUserSetupProcessor"/>
+                <ref bean="externalUserSetupProcessor"/>
                 <!-- Example processor for creating user folder-->
-                <!--<ref local="externalUserFolderProcessor"/>-->
+                <!--<ref bean="externalUserFolderProcessor"/>-->
             </list>
         </property>
     </bean>

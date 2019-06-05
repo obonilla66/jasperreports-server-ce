@@ -1,29 +1,36 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.AwsReportDataSourceImpl;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientAwsDataSource;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import java.util.ArrayList;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertSame;
 
 /**
  * <p></p>
@@ -36,7 +43,7 @@ public class AwsDataSourceResourceConverterTest {
 
     @Test
     public void correctClientServerResourceType(){
-        assertEquals(converter.getClientResourceType(), ClientTypeHelper.extractClientType(ClientAwsDataSource.class));
+        assertEquals(converter.getClientResourceType(), ClientTypeUtility.extractClientType(ClientAwsDataSource.class));
         assertEquals(converter.getServerResourceType(), AwsReportDataSource.class.getName());
     }
 
@@ -61,7 +68,7 @@ public class AwsDataSourceResourceConverterTest {
         clientObject.setRoleArn(expectedRoleArn);
         clientObject.setSecretKey(expectedSecretKey);
         clientObject.setDriverClass(expectedDriverClass);
-        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.getAWSSecretKey(), expectedSecretKey);
         assertEquals(result.getAWSAccessKey(), expectedAccessKey);
@@ -125,7 +132,23 @@ public class AwsDataSourceResourceConverterTest {
 
         ClientAwsDataSource clientObject = new ClientAwsDataSource();
 
-        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNull(result.getAWSSecretKey());
     }
+
+    @Test
+    public void resourceSecureFieldsToClient_resultContainsSecretKey(){
+        final String expectedSecretKey = "testSecretKey";
+        final String expectedPassword = "testPassword";
+        AwsReportDataSource serverObject = new AwsReportDataSourceImpl();
+        serverObject.setAWSSecretKey(expectedSecretKey);
+        serverObject.setPassword(expectedPassword);
+        ClientAwsDataSource clientObject = new ClientAwsDataSource();
+
+        converter.resourceSecureFieldsToClient(clientObject, serverObject, null);
+
+        assertEquals(clientObject.getSecretKey(), expectedSecretKey);
+        assertEquals(clientObject.getPassword(), expectedPassword);
+    }
+
 }

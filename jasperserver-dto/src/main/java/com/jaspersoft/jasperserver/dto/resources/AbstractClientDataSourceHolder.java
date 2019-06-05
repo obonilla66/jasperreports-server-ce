@@ -1,24 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
+import com.jaspersoft.jasperserver.dto.resources.domain.ClientDomain;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -35,34 +42,7 @@ public abstract class AbstractClientDataSourceHolder<BuilderType extends Abstrac
 
     public AbstractClientDataSourceHolder(AbstractClientDataSourceHolder other) {
         super(other);
-        ClientReferenceableDataSource srcDataSource = other.getDataSource();
-        if (srcDataSource != null) {
-            if (srcDataSource instanceof ClientAdhocDataView){
-                dataSource = new ClientAdhocDataView((ClientAdhocDataView) srcDataSource);
-            } else if (srcDataSource instanceof ClientAwsDataSource){
-                dataSource = new ClientAwsDataSource((ClientAwsDataSource) srcDataSource);
-            } else if (srcDataSource instanceof ClientBeanDataSource){
-                dataSource = new ClientBeanDataSource((ClientBeanDataSource) srcDataSource);
-            } else if (srcDataSource instanceof ClientCustomDataSource){
-                dataSource = new ClientCustomDataSource((ClientCustomDataSource) srcDataSource);
-            } else if (srcDataSource instanceof ClientJdbcDataSource){
-                dataSource = new ClientJdbcDataSource((ClientJdbcDataSource) srcDataSource);
-            } else if (srcDataSource instanceof ClientJndiJdbcDataSource){
-                dataSource = new ClientJndiJdbcDataSource((ClientJndiJdbcDataSource) srcDataSource);
-            } else if (srcDataSource instanceof ClientMondrianConnection){
-                dataSource = new ClientMondrianConnection((ClientMondrianConnection) srcDataSource);
-            } else if (srcDataSource instanceof ClientMondrianXmlaDefinition){
-                dataSource = new ClientMondrianXmlaDefinition((ClientMondrianXmlaDefinition) srcDataSource);
-            } else if (srcDataSource instanceof ClientReference){
-                dataSource = new ClientReference((ClientReference) srcDataSource);
-            } else if (srcDataSource instanceof ClientSecureMondrianConnection){
-                dataSource = new ClientSecureMondrianConnection((ClientSecureMondrianConnection) srcDataSource);
-            } else if (srcDataSource instanceof ClientSemanticLayerDataSource){
-                dataSource = new ClientSemanticLayerDataSource((ClientSemanticLayerDataSource) srcDataSource);
-            } else if (srcDataSource instanceof ClientVirtualDataSource){
-                dataSource = new ClientVirtualDataSource((ClientVirtualDataSource) srcDataSource);
-            }
-        }
+        dataSource = copyOf(other.getDataSource());
     }
 
     @XmlElements({
@@ -75,7 +55,10 @@ public abstract class AbstractClientDataSourceHolder<BuilderType extends Abstrac
             @XmlElement(type = ClientJndiJdbcDataSource.class, name = "jndiJdbcDataSource"),
             @XmlElement(type = ClientVirtualDataSource.class, name = "virtualDataSource"),
             @XmlElement(type = ClientSemanticLayerDataSource.class, name = "semanticLayerDataSource"),
-            @XmlElement(type = ClientAdhocDataView.class, name = "advDataSource")
+            @XmlElement(type = ClientDomain.class, name = "domain"),
+            @XmlElement(type = ClientAdhocDataView.class, name = "advDataSource"),
+            @XmlElement(type = ClientAzureSqlDataSource.class, name = "azureSqlDataSource"),
+            @XmlElement(type = ClientSecureMondrianConnection.class, name = "secureMondrianConnection")
     })
     public ClientReferenceableDataSource getDataSource() {
         return dataSource;

@@ -1,34 +1,44 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.olap.domain.*;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.XMLAConnectionImpl;
+import com.jaspersoft.jasperserver.api.metadata.olap.service.OlapConnectionService;
+import com.jaspersoft.jasperserver.api.metadata.olap.service.XMLATestResult;
+import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
+import com.jaspersoft.jasperserver.api.metadata.xml.domain.impl.ResourceDescriptor;
 import com.jaspersoft.jasperserver.core.util.XMLUtil;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
+import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
+import com.jaspersoft.jasperserver.war.dto.*;
 import com.jaspersoft.jasperserver.war.model.impl.BaseTreeDataProvider;
 import com.jaspersoft.jasperserver.war.model.impl.TypedTreeDataProvider;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.olap4j.driver.xmla.XmlaOlap4jDriver;
 import org.olap4j.driver.xmla.cache.XmlaOlap4jCache;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -39,32 +49,8 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.execution.ScopeType;
 
-import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
-import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.olap.domain.JdbcOlapDataSource;
-import com.jaspersoft.jasperserver.api.metadata.olap.domain.JndiJdbcOlapDataSource;
-import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianConnection;
-import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianXMLADefinition;
-import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapClientConnection;
-import com.jaspersoft.jasperserver.api.metadata.olap.domain.XMLAConnection;
-import com.jaspersoft.jasperserver.api.metadata.olap.service.OlapConnectionService;
-import com.jaspersoft.jasperserver.api.metadata.olap.service.XMLATestResult;
-import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.api.metadata.xml.domain.impl.ResourceDescriptor;
-import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-import com.jaspersoft.jasperserver.war.dto.BaseDTO;
-import com.jaspersoft.jasperserver.war.dto.FileResourceWrapper;
-import com.jaspersoft.jasperserver.war.dto.OlapClientConnectionWrapper;
-import com.jaspersoft.jasperserver.war.dto.OlapUnitWrapper;
-import com.jaspersoft.jasperserver.war.dto.ReportDataSourceWrapper;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 
@@ -107,7 +93,7 @@ public class OlapClientConnectionAction extends FormAction {
 
     private BaseTreeDataProvider jrxmlTreeDataProvider;
 
-    protected ConfigurationBean configuration;
+    protected RepositoryConfiguration configuration;
 
 	/**
 	 * initialize OlapClientConnectionAction.class object
@@ -122,7 +108,7 @@ public class OlapClientConnectionAction extends FormAction {
         this.messages = messages;
     }
 
-    public void setConfiguration(ConfigurationBean configuration) {
+    public void setConfiguration(RepositoryConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -158,7 +144,7 @@ public class OlapClientConnectionAction extends FormAction {
 			resourcesInFolder.addFilterElement(FilterCriteria
 					.createParentFolderFilter(folderURI));
 			log("Searching for resources in the chosen folder:" + folderURI);
-			ResourceLookup[] existingResources = repository.findResource(JasperServerUtil.getExecutionContext(context),
+			ResourceLookup[] existingResources = repository.findResource(StaticExecutionContextProvider.getExecutionContext(),
 					resourcesInFolder);
 
 			if (existingResources != null && existingResources.length != 0) {
@@ -281,7 +267,7 @@ public class OlapClientConnectionAction extends FormAction {
 		filterCriteria.addFilterElement(FilterCriteria
 				.createPropertyEqualsFilter("fileType",
 						ResourceDescriptor.TYPE_MONDRIAN_SCHEMA));
-		ResourceLookup[] resourceLookup = repository.findResource(JasperServerUtil.getExecutionContext(context),
+		ResourceLookup[] resourceLookup = repository.findResource(StaticExecutionContextProvider.getExecutionContext(),
 				filterCriteria);
 		List allSources = null;
 		if (resourceLookup != null && resourceLookup.length != 0) {
@@ -317,7 +303,7 @@ public class OlapClientConnectionAction extends FormAction {
 		FilterCriteria filterCriteria = FilterCriteria
 				.createFilter(OlapClientConnection.class);
 		ResourceLookup[] resourceLookup = repository.findResource(
-				JasperServerUtil.getExecutionContext(context), filterCriteria);
+				StaticExecutionContextProvider.getExecutionContext(), filterCriteria);
 		List allMondrianConnections = null;
 		List allXmlaConnections = null;
 		if (resourceLookup != null && resourceLookup.length != 0) {
@@ -368,7 +354,7 @@ public class OlapClientConnectionAction extends FormAction {
 		FilterCriteria filterCriteria = FilterCriteria
 				.createFilter(MondrianXMLADefinition.class);
 		ResourceLookup[] resourceLookup = repository.findResource(
-				JasperServerUtil.getExecutionContext(context), filterCriteria);
+				StaticExecutionContextProvider.getExecutionContext(), filterCriteria);
 		List allXmlaDefinitions = null;
 		if (resourceLookup != null && resourceLookup.length != 0) {
 			log("Found xmla definition lookups size=" + resourceLookup.length);
@@ -603,7 +589,7 @@ public class OlapClientConnectionAction extends FormAction {
 			//if (wrapper.getOlapClientDatasource() == null) {
 			// new olap unit using existing datasource			
 			ReportDataSource datasource = (ReportDataSource) repository
-					.getResource(JasperServerUtil.getExecutionContext(context), resource.getSelectedUri());
+					.getResource(StaticExecutionContextProvider.getExecutionContext(), resource.getSelectedUri());
 			resource.setReportDataSource(datasource);
 			wrapper.setOlapClientDatasource(datasource);
 			//}

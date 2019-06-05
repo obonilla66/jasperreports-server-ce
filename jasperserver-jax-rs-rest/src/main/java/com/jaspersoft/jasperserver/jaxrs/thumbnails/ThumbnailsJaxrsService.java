@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.thumbnails;
@@ -25,7 +28,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.Re
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.dto.thumbnails.ResourceThumbnail;
 import com.jaspersoft.jasperserver.dto.thumbnails.ResourceThumbnailsListWrapper;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
 import com.jaspersoft.jasperserver.remote.services.SingleRepositoryService;
 import com.jaspersoft.jasperserver.war.httpheaders.JRSExpiresHeader;
@@ -213,14 +216,14 @@ public class ThumbnailsJaxrsService {
      * @param accept HeaderParam: "application/json" or "application/xml"
      * @param uris QueryParam: URIs to fetch thumbnails for
      * @return Response
-     * @throws RemoteException
+     * @throws ErrorDescriptorException
      */
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getThumbnails(
             @HeaderParam(HttpHeaders.ACCEPT) String accept,
             @QueryParam(ThumbnailsJaxrsService.PATH_PARAM_DEFAULT_ALLOWED) Boolean defaultAllowed,
-            @QueryParam(QUERY_PARAM_URI) List<String> uris) throws RemoteException
+            @QueryParam(QUERY_PARAM_URI) List<String> uris) throws ErrorDescriptorException
     {
 
         if (defaultAllowed == null)
@@ -268,7 +271,7 @@ public class ThumbnailsJaxrsService {
      * @param accept HeaderParam: "application/json" or "application/xml"
      * @param uris QueryParam: URIs to fetch thumbnails for
      * @return Response
-     * @throws RemoteException
+     * @throws ErrorDescriptorException
      */
     @POST
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
@@ -276,7 +279,7 @@ public class ThumbnailsJaxrsService {
     public Response getThumbnailsFormEncoded(
             @HeaderParam(HttpHeaders.ACCEPT) String accept,
             @QueryParam(ThumbnailsJaxrsService.PATH_PARAM_DEFAULT_ALLOWED) Boolean defaultAllowed,
-            @FormParam(QUERY_PARAM_URI) List<String> uris) throws RemoteException
+            @FormParam(QUERY_PARAM_URI) List<String> uris) throws ErrorDescriptorException
     {
         return getThumbnails(accept, defaultAllowed, uris);
     }

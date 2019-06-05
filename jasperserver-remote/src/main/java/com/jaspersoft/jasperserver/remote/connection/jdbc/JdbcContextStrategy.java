@@ -1,29 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection.jdbc;
 
+import com.jaspersoft.jasperserver.core.util.type.MultipleTypeProcessor;
 import com.jaspersoft.jasperserver.dto.resources.ClientJdbcDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientVirtualDataSource;
 import com.jaspersoft.jasperserver.remote.connection.ContextManagementStrategy;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.war.cascade.handlers.MultipleTypeProcessor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -57,7 +60,7 @@ public class JdbcContextStrategy<ConnectionDescriptionType extends ClientResourc
     }
 
     @Override
-    public ConnectionDescriptionType getContextForClient(ConnectionDescriptionType contextDescription, Map<String, Object> data) {
+    public ConnectionDescriptionType getContextForClient(ConnectionDescriptionType contextDescription, Map<String, Object> data, Map<String, String[]> additionalProperties) {
         ConnectionDescriptionType result = contextDescription;
         if(contextDescription instanceof ClientJdbcDataSource){
             result = (ConnectionDescriptionType) new ClientJdbcDataSource((ClientJdbcDataSource) contextDescription)

@@ -14,7 +14,7 @@ requirejs.config({
     },
     i18n: {
       paths: {
-        'js-sdk': 'bower_components/js-sdk'
+        'js-sdk': 'runtime_dependencies/js-sdk'
       }
     }
   },
@@ -22,57 +22,70 @@ requirejs.config({
     request: 'transport/request',
     requestSettings: 'config/requestSettings',
     backbone: 'config/Backbone',
-    'underscore.string': 'bower_components/underscore.string/lib/underscore.string',
-    'requirejs.plugin.css': 'bower_components/require-css/css',
-    'tv4.original': 'bower_components/tv4/tv4',
-    'backbone.validation.original': 'bower_components/backbone-validation/dist/backbone-validation-amd',
-    jquery: 'bower_components/jquery/dist/jquery',
-    'lodash.custom': 'bower_components/lodash.custom/dist/lodash.custom',
-    xregexp: 'bower_components/xregexp/xregexp-all',
-    momentTimezone: 'bower_components/moment-timezone/builds/moment-timezone-with-data',
-    moment: 'bower_components/moment/min/moment-with-locales',
-    domReady: 'bower_components/requirejs-domready/domReady',
-    xdm: 'bower_components/xdm/artifacts/v2.4.19/easyXDM.jasper',
-    base64: 'bower_components/js-base64/base64',
-    'backbone.epoxy.original': 'bower_components/backbone.epoxy/backbone.epoxy',
-    'backbone.marionette': 'bower_components/backbone.marionette/lib/core/backbone.marionette',
-    'backbone.wreqr': 'bower_components/backbone.wreqr/lib/backbone.wreqr',
-    'backbone.babysitter': 'bower_components/backbone.babysitter/lib/backbone.babysitter',
-    'jquery-ui': 'bower_components/jquery-ui/ui',
-    'perfect-scrollbar': 'bower_components/perfect-scrollbar/js/perfect-scrollbar.jquery',
-    'jquery.ui.mouse.touch': 'bower_components/jquery.ui.touch-punch/jquery.ui.touch-punch',
-    'jquery.selection': 'bower_components/jquery.selection/src/jquery.selection',
-    'jquery.urldecoder': 'bower_components/jquery.urldecoder/jquery.urldecoder',
-    'jquery.jcryption': 'bower_components/jCryption/jquery.jcryption',
-    underscore: 'bower_components/js-sdk/src/common/config/lodashTemplateSettings',
-    tv4: 'bower_components/js-sdk/src/common/config/tv4Settings',
-    'backbone.validation': 'bower_components/js-sdk/src/common/extension/backboneValidationExtension',
-    'backbone.epoxy': 'bower_components/js-sdk/src/common/extension/epoxyExtension',
+    'underscore.string': 'runtime_dependencies/underscore.string/dist/underscore.string',
+    'requirejs.plugin.css': 'runtime_dependencies/require-css/css',
+    'tv4.original': 'runtime_dependencies/tv4/tv4',
+    'backbone.validation.original': 'runtime_dependencies/backbone-validation/dist/backbone-validation-amd',
+    jquery: 'runtime_dependencies/jquery/dist/jquery',
+    underscore: 'runtime_dependencies/underscore/underscore',
+    xregexp: 'runtime_dependencies/xregexp/xregexp-all',
+    numeralPackage: 'runtime_dependencies/numeral',
+    numeral: 'runtime_dependencies/numeral/numeral',
+    localizedNumeral: 'runtime_dependencies/js-sdk/src/common/extension/numeralExtension',
+    moment: 'runtime_dependencies/moment/moment',
+    momentLocales: 'runtime_dependencies/moment/locale',
+    localizedMoment: 'runtime_dependencies/js-sdk/src/common/extension/momentExtension',
+    momentTimezone: 'runtime_dependencies/moment-timezone/builds/moment-timezone-with-data',
+    domReady: 'runtime_dependencies/requirejs-domready/domReady',
+    xdm: 'runtime_dependencies/easyXDM/artifacts/v2.4.20/easyXDM.jasper',
+    'backbone.epoxy.original': 'runtime_dependencies/backbone.epoxy/backbone.epoxy',
+    'backbone.marionette': 'runtime_dependencies/backbone.marionette/lib/core/backbone.marionette',
+    'backbone.wreqr': 'runtime_dependencies/backbone.wreqr/lib/backbone.wreqr',
+    'backbone.babysitter': 'runtime_dependencies/backbone.babysitter/lib/backbone.babysitter',
+    'jquery-ui': 'runtime_dependencies/jquery-ui/ui',
+    jQueryDatepickerExtension: 'runtime_dependencies/js-sdk/src/common/extension/jQueryDatepickerExtension',
+    jQueryTimepickerExtension: 'runtime_dependencies/js-sdk/src/common/extension/jQueryTimepickerExtension',
+    jQueryUiSliderAccessExtension: 'runtime_dependencies/js-sdk/src/common/extension/jQueryUiSliderAccessExtension',
+    'jquery-ui/widgets/timepicker': 'runtime_dependencies/jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon',
+    'jquery-ui-sliderAccess': 'runtime_dependencies/jqueryui-timepicker-addon/dist/jquery-ui-sliderAccess',
+    'perfect-scrollbar': 'runtime_dependencies/perfect-scrollbar/dist/js/perfect-scrollbar.jquery',
+    'jquery.ui.mouse.touch': 'runtime_dependencies/jquery-ui-touch-punch/jquery.ui.touch-punch',
+    'jquery.selection': 'runtime_dependencies/jquery.selection/src/jquery.selection',
+    'jquery.urldecoder': 'runtime_dependencies/jquery.urldecoder/jquery.urldecoder',
+    'jquery.jcryption': 'runtime_dependencies/jCryption/jquery.jcryption',
+    underscoreExtension: 'runtime_dependencies/js-sdk/src/common/extension/underscoreExtension',
+    tv4: 'runtime_dependencies/js-sdk/src/common/config/tv4Settings',
+    'backbone.validation': 'runtime_dependencies/js-sdk/src/common/extension/backboneValidationExtension',
+    'backbone.epoxy': 'runtime_dependencies/js-sdk/src/common/extension/epoxyExtension',
     bundle: 'plugin/bundle',
     text: 'plugin/text',
-    css: 'bower_components/js-sdk/src/common/plugin/css',
-    csslink: 'bower_components/js-sdk/src/common/plugin/csslink',
-    vizShim: 'bower_components/js-sdk/src/common/plugin/vizShim',
-    logger: 'bower_components/js-sdk/src/common/logging/logger',
-    stdnav: 'bower_components/js-sdk/src/common/stdnav/stdnav',
-    stdnavPluginAnchor: 'bower_components/js-sdk/src/common/stdnav/plugins/stdnavPluginAnchor',
-    stdnavPluginButton: 'bower_components/js-sdk/src/common/stdnav/plugins/stdnavPluginButton',
-    stdnavPluginForms: 'bower_components/js-sdk/src/common/stdnav/plugins/stdnavPluginForms',
-    stdnavPluginGrid: 'bower_components/js-sdk/src/common/stdnav/plugins/stdnavPluginGrid',
-    stdnavPluginList: 'bower_components/js-sdk/src/common/stdnav/plugins/stdnavPluginList',
-    stdnavPluginTable: 'bower_components/js-sdk/src/common/stdnav/plugins/stdnavPluginTable',
-    common: 'bower_components/js-sdk/src/common',
+    css: 'runtime_dependencies/js-sdk/src/common/plugin/css',
+    csslink: 'runtime_dependencies/js-sdk/src/common/plugin/csslink',
+    vizShim: 'runtime_dependencies/js-sdk/src/common/plugin/vizShim',
+    momentLocale: 'runtime_dependencies/js-sdk/src/common/plugin/momentLocale',
+    logger: 'runtime_dependencies/js-sdk/src/common/logging/logger',
+    stdnav: 'runtime_dependencies/js-sdk/src/common/stdnav/stdnav',
+    stdnavDebugger: 'runtime_dependencies/js-sdk/src/common/stdnav/stdnavDebugger',
+    stdnavFocusing: 'runtime_dependencies/js-sdk/src/common/stdnav/stdnavFocusing',
+    stdnavModalFocusing: 'runtime_dependencies/js-sdk/src/common/stdnav/stdnavModalFocusing',
+    stdnavEventHandlers: 'runtime_dependencies/js-sdk/src/common/stdnav/stdnavEventHandlers',
+    stdnavPluginAnchor: 'runtime_dependencies/js-sdk/src/common/stdnav/plugins/stdnavPluginAnchor',
+    stdnavPluginButton: 'runtime_dependencies/js-sdk/src/common/stdnav/plugins/stdnavPluginButton',
+    stdnavPluginForms: 'runtime_dependencies/js-sdk/src/common/stdnav/plugins/stdnavPluginForms',
+    stdnavPluginGrid: 'runtime_dependencies/js-sdk/src/common/stdnav/plugins/stdnavPluginGrid',
+    stdnavPluginList: 'runtime_dependencies/js-sdk/src/common/stdnav/plugins/stdnavPluginList',
+    stdnavPluginTable: 'runtime_dependencies/js-sdk/src/common/stdnav/plugins/stdnavPluginTable',
+    common: 'runtime_dependencies/js-sdk/src/common',
+    'jquery-ui-locales': 'runtime_dependencies/js-sdk/src/settings/jquery-ui/i18n',
     fakeXhrFactory: 'transport/fakeXhrFactory',
-    'backbone.original': 'bower_components/backbone/backbone',
-    'requirejs.plugin.text': 'bower_components/requirejs-text/text',
-    mustache: 'bower_components/mustache/mustache',
-    prototype: 'bower_components/prototype/dist/prototype',
-    builder: 'bower_components/scriptaculous/src/builder',
-    effects: 'bower_components/scriptaculous/src/effects',
-    dragdrop: 'bower_components/scriptaculous/src/dragdrop',
-    iscroll: 'bower_components/iscroll/src/iscroll',
-    'dragdrop.extra': 'bower_components/dragdropextra/dragdropextra',
-    encoding: 'bower_components/encoding/encoding',
+    'backbone.original': 'runtime_dependencies/backbone/backbone',
+    'requirejs.plugin.text': 'runtime_dependencies/requirejs-text/text',
+    prototype: 'runtime_dependencies/prototype/dist/prototype',
+    builder: 'runtime_dependencies/scriptaculous/src/builder',
+    effects: 'runtime_dependencies/scriptaculous/src/effects',
+    dragdrop: 'runtime_dependencies/scriptaculous/src/dragdrop',
+    iscroll: 'runtime_dependencies/iscroll/src/iscroll',
+    'dragdrop.extra': 'runtime_dependencies/dragdropextra/dragdropextra',
     touchcontroller: 'touch.controller',
     'components.toolbar': 'components.toolbarButtons.events',
     'components.list': 'list.base',
@@ -81,19 +94,22 @@ requirejs.config({
     'report.view': 'report.view.runtime',
     stdnavPluginActionMenu: 'stdnav/plugins/stdnavPluginActionMenu',
     stdnavPluginDynamicList: 'stdnav/plugins/stdnavPluginDynamicList',
+    stdnavPluginToolbar: 'stdnav/plugins/stdnavPluginToolbar',
     'wcf.scroll': '../wcf/scroller',
     'report.global': '../reportresource?resource=net/sf/jasperreports/web/servlets/resources/jasperreports-global.js',
     ReportRequireJsConfig: '../getRequirejsConfig.html?noext',
-    async: 'bower_components/requirejs-plugins/src/async',
+    async: 'runtime_dependencies/requirejs-plugins/src/async',
     settings: 'plugin/settings',
     restResource: 'plugin/restResource',
-    components: 'bower_components/js-sdk/src/components',
-    'bi/report': 'bower_components/bi-report/src/bi/report',
-    'bi/repository': 'bower_components/bi-repository/src/bi/repository',
+    json: 'plugin/json',
+    components: 'runtime_dependencies/js-sdk/src/components',
+    'bi/report': 'runtime_dependencies/bi-report/src/bi/report',
+    'bi/repository': 'runtime_dependencies/bi-repository/src/bi/repository',
     'jasperreports-loader': 'reportViewer/jasperreports-loader'
   },
   shim: {
     jquery: {
+      deps: ['xssUtil'],
       init: function() {
                 return this.jQuery.noConflict();
             }
@@ -101,18 +117,12 @@ requirejs.config({
     momentTimezone: {
       deps: ['moment']
     },
-    base64: {
-      exports: 'Base64',
-      init: function () {
-                return this.Base64.noConflict();
-            }
-    },
     'jquery.selection': {
       deps: ['jquery'],
       exports: 'jQuery'
     },
-    'jquery.doubletap': {
-      deps: ['jquery'],
+    'jquery-ui-sliderAccess': {
+      deps: ['jquery','jquery-ui/widgets/slider'],
       exports: 'jQuery'
     },
     'jquery.urldecoder': {
@@ -129,19 +139,16 @@ requirejs.config({
     jasper: {
       exports: 'jasper'
     },
-    prototype: {
-      exports: '__dollar_sign__'
-    },
     builder: {
       deps: ['prototype'],
       exports: 'Builder'
     },
-    mustache: {
-      exports: 'Mustache'
-    },
     effects: {
       deps: ['prototype'],
       exports: 'Effect'
+    },
+    prototype: {
+      exports: '__dollar_sign__'
     },
     dragdrop: {
       deps: ['prototype','effects'],
@@ -202,10 +209,6 @@ requirejs.config({
       deps: ['jquery','prototype','utils.common','dragdrop.extra','tools.truncator','iscroll','components.webHelp'],
       exports: 'layoutModule'
     },
-    'home.simple': {
-      deps: ['prototype','components.webHelp'],
-      exports: 'home'
-    },
     'ajax.mock': {
       deps: ['jquery'],
       exports: 'fakeResponce'
@@ -227,7 +230,7 @@ requirejs.config({
       exports: 'keyManager'
     },
     'components.templateengine': {
-      deps: ['namespace','jquery','underscore','mustache'],
+      deps: ['namespace','jquery','underscore'],
       exports: 'jaspersoft.components.templateEngine'
     },
     'components.dialogs': {
@@ -271,7 +274,7 @@ requirejs.config({
       exports: 'dynamicTree'
     },
     'components.utils': {
-      deps: ['jquery','underscore','mustache','components.dialogs','core.ajax'],
+      deps: ['jquery','underscore','components.dialogs','core.ajax'],
       exports: 'jaspersoft.components.utils'
     },
     heartbeat: {
@@ -291,7 +294,7 @@ requirejs.config({
       exports: 'picker'
     },
     'controls.core': {
-      deps: ['jquery','underscore','mustache','components.dialogs','namespace','controls.logging'],
+      deps: ['jquery','underscore','components.dialogs','namespace','controls.logging'],
       exports: 'JRS.Controls'
     },
     localContext: {
@@ -322,11 +325,11 @@ requirejs.config({
       exports: 'Report'
     },
     'controls.components': {
-      deps: ['jquery','underscore','controls.basecontrol','components/singleSelect/view/SingleSelect','components/multiSelect/view/MultiSelect','components/singleSelect/dataprovider/CacheableDataProvider','common/util/parse/date'],
+      deps: ['jquery','underscore','controls.basecontrol','components/singleSelect/view/SingleSelect','components/multiSelect/view/MultiSelect','components/singleSelect/dataprovider/CacheableDataProvider','common/util/parse/date','components/multiSelect/dataprovider/selectedItemsDataProviderSorterFactory'],
       exports: 'JRS.Controls'
     },
     'controls.viewmodel': {
-      deps: ['jquery','underscore','controls.core','controls.basecontrol','jquery-ui/jquery.ui.sortable'],
+      deps: ['jquery','underscore','controls.core','controls.basecontrol','jquery-ui/widgets/sortable'],
       exports: 'JRS.Controls'
     },
     'controls.logging': {
@@ -364,10 +367,6 @@ requirejs.config({
     'components.loginBox': {
       deps: ['prototype','components.webHelp','components.dialogs','components.utils','core.layout'],
       exports: 'loginBox'
-    },
-    'components.tabs': {
-      deps: ['prototype'],
-      exports: 'tabModule'
     },
     'login.form': {
       deps: ['jquery','components.loginBox','jrs.configs','common/util/encrypter'],
@@ -465,15 +464,15 @@ requirejs.config({
       exports: 'window.ResourceDataSource'
     },
     'resource.dataSource.jdbc': {
-      deps: ['resource.dataSource','mustache','components.dialog','core.events.bis','xregexp'],
+      deps: ['resource.dataSource','components.dialog','core.events.bis','xregexp'],
       exports: 'window.JdbcDataSourceEditor'
     },
     'resource.dataSource.jndi': {
-      deps: ['resource.dataSource','mustache','components.dialog','core.events.bis','xregexp'],
+      deps: ['resource.dataSource','components.dialog','core.events.bis','xregexp'],
       exports: 'window.JndiResourceDataSource'
     },
     'resource.dataSource.bean': {
-      deps: ['resource.dataSource','mustache','components.dialog','core.events.bis','xregexp'],
+      deps: ['resource.dataSource','components.dialog','core.events.bis','xregexp'],
       exports: 'window.BeanResourceDataSource'
     },
     'resource.dataSource.aws': {
@@ -481,7 +480,7 @@ requirejs.config({
       exports: 'window.AwsResourceDataSource'
     },
     'resource.dataSource.virtual': {
-      deps: ['resource.dataSource','mustache','components.dialog','core.events.bis','xregexp','components.dependent.dialog'],
+      deps: ['resource.dataSource','components.dialog','core.events.bis','xregexp','components.dependent.dialog'],
       exports: 'window.VirtualResourceDataSource'
     },
     'resource.dataType': {
@@ -581,20 +580,33 @@ requirejs.config({
       exports: 'ScheduleParams'
     }
   },
-  waitSeconds: 60,
   map: {
     '*': {
+      underscore: 'underscoreExtension',
+      'jquery-ui/widgets/datepicker': 'jQueryDatepickerExtension',
+      'jquery-ui/widgets/timepicker': 'jQueryTimepickerExtension',
+      xssUtil: 'common/util/xssUtil',
       'settings/localeSettings': 'jrs.configs',
       'settings/dateTimeSettings': 'settings!dateTimeSettings',
       'settings/decimalFormatSymbols': 'settings!decimalFormatSymbols',
-      'settings/generalSettings': 'jrs.configs',
-      'jquery.ui': 'reportViewer/jquery.ui.custom',
-      'jquery.timepicker': 'config/dateAndTimeSettings',
-      'jquery.timepicker.addon': 'config/dateAndTimeSettings'
+      'settings/generalSettings': 'jrs.configs'
+    },
+    underscoreExtension: {
+      underscore: 'underscore'
+    },
+    jQueryDatepickerExtension: {
+      'jquery-ui/widgets/datepicker': 'jquery-ui/widgets/datepicker'
+    },
+    jQueryTimepickerExtension: {
+      'jquery-ui/widgets/timepicker': 'jquery-ui/widgets/timepicker'
+    },
+    'jquery-ui/widgets/timepicker': {
+      jquery: 'jQueryUiSliderAccessExtension',
+      'jquery-ui': 'jquery-ui/widgets/datepicker'
     },
     'scheduler/view/editor/parametersTabView': {
       'controls.options': 'controls.base'
     }
   },
-  baseUrl: ''
+  waitSeconds: 60
 });

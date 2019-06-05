@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el.operator;
 
@@ -27,19 +30,12 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.Client
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLess;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLessOrEqual;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientNotEqual;
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionOperandsSize;
 
-import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation.EQUALS;
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation.GREATER;
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation.GREATER_OR_EQUAL;
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation.LESS;
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation.LESS_OR_EQUAL;
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation.NOT_EQUAL;
 import static java.util.Arrays.asList;
 
 /**
@@ -47,95 +43,95 @@ import static java.util.Arrays.asList;
  * @author Grant Bacon <gbacon@tibco.com>
  * @version $Id $
  */
-@XmlRootElement(name = "comparison")
 public abstract class ClientComparison<F extends ClientComparison<F>> extends ClientOperator<F> {
 
-    private ClientOperation type;
-
-    protected ClientComparison() {
-        super();
-        this.type = ClientOperation.UNDEFINED;
+    public ClientComparison() {
+        super(ClientOperation.UNDEFINED);
     }
 
     protected ClientComparison(ClientOperation operation) {
-        super(operation.getName());
-        this.type = operation;
+        super(operation);
     }
 
     protected ClientComparison(ClientOperation operation, List<? extends ClientExpression> operands) {
-        super(operation.getName());
-
-        this.type = operation;
-        setOperands(new ArrayList<ClientExpression>(operands));
+        super(operation, operands);
     }
 
+    protected ClientComparison(ClientOperation operation, List<? extends ClientExpression> operands, Boolean paren) {
+        super(operation, operands, paren);
+        setParen(paren);
+    }
+
+    protected ClientComparison(ClientComparison source) {
+        super(source);
+    }
 
     public static ClientComparison eq(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientEquals(asList(lhs, rhs));
+        return new ClientEquals().setOperands(asList(lhs, rhs));
     }
 
     public static ClientGreaterOrEqual gtOrEq(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientGreaterOrEqual(asList(lhs, rhs));
+        return new ClientGreaterOrEqual().setOperands(asList(lhs, rhs));
     }
 
     public static ClientLessOrEqual ltOrEq(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientLessOrEqual(asList(lhs, rhs));
+        return new ClientLessOrEqual().setOperands(asList(lhs, rhs));
     }
 
     public static ClientGreater gt(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientGreater(asList(lhs, rhs));
+        return new ClientGreater().setOperands(asList(lhs, rhs));
     }
 
     public static ClientComparison lt(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientLess(asList(lhs, rhs));
+        return new ClientLess().setOperands(asList(lhs, rhs));
     }
 
     public static ClientComparison notEq(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientNotEqual(asList(lhs, rhs));
+        return new ClientNotEqual().setOperands(asList(lhs, rhs));
     }
 
     public static ClientComparison createComparison(String name, List<ClientExpression> operands) {
+
         ClientOperation operation = ClientOperation.fromString(name);
-        if (operation != null && ClientOperation.isSupported(operation.getName())) {
-            if (operation.equals(ClientOperation.GREATER)) {
-                return new ClientGreater(operands);
-            } else if (operation.equals(ClientOperation.GREATER_OR_EQUAL)) {
-                return new ClientGreaterOrEqual(operands);
-            } else if (operation.equals(ClientOperation.LESS)) {
-                return new ClientLess(operands);
-            } else if (operation.equals(ClientOperation.LESS_OR_EQUAL)) {
-                return new ClientLessOrEqual(operands);
-            } else if (operation.equals(ClientOperation.EQUALS)) {
-                return new ClientEquals(operands);
-            } else if (operation.equals(ClientOperation.NOT_EQUAL)) {
-                return new ClientNotEqual(operands);
+        if (operation != null) {
+            ClientComparison comparison = null;
+
+            switch (operation) {
+                case GREATER:
+                    comparison = new ClientGreater(operands);
+                    break;
+                case GREATER_OR_EQUAL:
+                    comparison = new ClientGreaterOrEqual(operands);
+                    break;
+                case LESS:
+                    comparison = new ClientLess(operands);
+                    break;
+                case LESS_OR_EQUAL:
+                    comparison = new ClientLessOrEqual(operands);
+                    break;
+                case EQUALS:
+                    comparison = new ClientEquals(operands);
+                    break;
+                case NOT_EQUAL:
+                    comparison = new ClientNotEqual(operands);
+                    break;
             }
 
-            return null;
-        } else {
-            return null;
+            return comparison;
         }
+        return null;
     }
 
-    @Size(min = 2, max = 2, message = "query.expression.is.not.valid")
+    @CheckExpressionOperandsSize(min = 2, max = 2)
     @Override
     public List<ClientExpression> getOperands() {
         return super.getOperands();
     }
 
     @Override
-    protected ClientOperator setOperands(List<ClientExpression> operands) {
-        if (operands != null) {
-            this.operands = new ArrayList<ClientExpression>(operands);
-        } else {
-            this.operands = null;
-        }
-        return this;
-    }
-
-    @XmlTransient
-    public ClientOperation getType() {
-        return type;
+    public F setOperands(List<ClientExpression> operands) {
+        super.setOperands(operands);
+        return (F) this;
     }
 
     /*
@@ -151,24 +147,14 @@ public abstract class ClientComparison<F extends ClientComparison<F>> extends Cl
         return operands.size() > 1 ? operands.get(1) : null;
     }
 
-    public static boolean isSupported(String text) {
-        return ClientOperation.isSupported(text) && (
-                EQUALS.getName().equals(text) ||
-                NOT_EQUAL.getName().equals(text) ||
-                GREATER.getName().equals(text) ||
-                GREATER_OR_EQUAL.getName().equals(text) ||
-                LESS.getName().equals(text) ||
-                LESS_OR_EQUAL.getName().equals(text)
-        );
-    }
-
     @Override
     public void accept(ClientELVisitor visitor) {
-        if (this.getLhs() != null) {
-            this.getLhs().accept(visitor);
+        final List<ClientExpression> operands = getOperands();
+        if (operands != null && !operands.isEmpty()) {
+            operands.get(0).accept(visitor);
         }
-        if (this.getRhs() != null) {
-            this.getRhs().accept(visitor);
+        if (operands != null && operands.size() > 1) {
+            operands.get(1).accept(visitor);
         }
 
     }
@@ -176,9 +162,9 @@ public abstract class ClientComparison<F extends ClientComparison<F>> extends Cl
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-
-        String lhsString = (getLhs() != null) ? getLhs().toString() : ClientExpressions.MISSING_REPRESENTATION;
-        String rhsString = (getRhs() != null) ? getRhs().toString() : ClientExpressions.MISSING_REPRESENTATION;
+        final List<ClientExpression> operands = getOperands();
+        String lhsString = operands != null && !operands.isEmpty() ? operands.get(0).toString() : ClientExpressions.MISSING_REPRESENTATION;
+        String rhsString = operands != null && operands.size() > 1 ? operands.get(1).toString() : ClientExpressions.MISSING_REPRESENTATION;
 
         if (hasParen()) {
             sb.append("(");
@@ -187,7 +173,7 @@ public abstract class ClientComparison<F extends ClientComparison<F>> extends Cl
         sb
                 .append(lhsString)
                 .append(" ")
-                .append(getType().getDomelOperator())
+                .append(getOperator().getDomelOperator())
                 .append(" ")
                 .append(rhsString);
 
@@ -197,22 +183,9 @@ public abstract class ClientComparison<F extends ClientComparison<F>> extends Cl
         return sb.toString();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ClientComparison)) return false;
-        if (!super.equals(o)) return false;
 
-        ClientComparison<?> that = (ClientComparison<?>) o;
-
-        return type == that.type;
-
+    public int getPrecedence() {
+        return 3;
     }
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        return result;
-    }
 }

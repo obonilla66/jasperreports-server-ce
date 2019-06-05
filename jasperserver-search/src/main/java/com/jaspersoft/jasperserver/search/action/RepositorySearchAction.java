@@ -1,27 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.search.action;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
 import com.jaspersoft.jasperserver.api.engine.common.service.impl.NavigationActionModelSupport;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
@@ -29,12 +34,7 @@ import com.jaspersoft.jasperserver.api.search.QueryModificationEvaluator;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
 import com.jaspersoft.jasperserver.api.search.SearchFilter;
 import com.jaspersoft.jasperserver.api.search.SearchSorter;
-import com.jaspersoft.jasperserver.search.common.CustomFilter;
-import com.jaspersoft.jasperserver.search.common.CustomSorter;
-import com.jaspersoft.jasperserver.search.common.Option;
-import com.jaspersoft.jasperserver.search.common.RepositorySearchConfiguration;
-import com.jaspersoft.jasperserver.search.common.ResourceDetails;
-import com.jaspersoft.jasperserver.search.common.SearchAttributes;
+import com.jaspersoft.jasperserver.search.common.*;
 import com.jaspersoft.jasperserver.search.filter.TextFilter;
 import com.jaspersoft.jasperserver.search.mode.SearchMode;
 import com.jaspersoft.jasperserver.search.model.permission.Permission;
@@ -43,8 +43,6 @@ import com.jaspersoft.jasperserver.search.service.ResourceService;
 import com.jaspersoft.jasperserver.search.state.State;
 import com.jaspersoft.jasperserver.search.strategy.ResourceLoadStrategy;
 import com.jaspersoft.jasperserver.search.util.JSONConverter;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -108,7 +106,7 @@ public class RepositorySearchAction extends BaseSearchAction {
     private static final String PARAMETER_IS_FOLDER = "isFolder";
 
     protected SecurityContextProvider securityContextProvider;
-    protected ConfigurationBean configuration;
+    protected RepositoryConfiguration configuration;
     protected RepositorySearchService repositorySearchService;
     protected SearchCriteriaFactory searchCriteriaFactory;
     protected ResourceLoadStrategy resourceLoadStrategy;
@@ -128,7 +126,7 @@ public class RepositorySearchAction extends BaseSearchAction {
         this.securityContextProvider = securityContextProvider;
     }
 
-    public void setConfiguration(ConfigurationBean configuration) {
+    public void setConfiguration(RepositoryConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -430,7 +428,7 @@ public class RepositorySearchAction extends BaseSearchAction {
     @SuppressWarnings({"unchecked"})
     private ExecutionContext exContext(RequestContext context) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ExecutionContext exContext = JasperServerUtil.getExecutionContext(context);
+        ExecutionContext exContext = StaticExecutionContextProvider.getExecutionContext();
 
         if (exContext.getAttributes() == null) {
             exContext.setAttributes(new ArrayList());

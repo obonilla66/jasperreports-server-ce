@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.reports.ReportParameter;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -26,14 +30,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author vsabadosh
  * @version $Id: ClientReportOptions.java 32880 2013-08-09 07:09:12Z inesterenko $
  */
 @XmlRootElement(name = ResourceMediaType.REPORT_OPTIONS_CLIENT_TYPE)
-public class ClientReportOptions extends ClientResource<ClientReportOptions> {
+public class ClientReportOptions extends ClientResource<ClientReportOptions> implements DeepCloneable<ClientReportOptions> {
     private String reportUri;
     private List<ReportParameter> reportParameters;
+
+    public ClientReportOptions() {
+    }
+
+    public ClientReportOptions(ClientReportOptions other) {
+        super(other);
+        reportUri = other.reportUri;
+        reportParameters = copyOf(other.getReportParameters());
+    }
 
     public String getReportUri() {
         return reportUri;
@@ -66,7 +81,7 @@ public class ClientReportOptions extends ClientResource<ClientReportOptions> {
         if ((reportParameters != null && that.reportParameters == null)
                 || (reportParameters == null && that.reportParameters != null)) return false;
         if (reportParameters != null && that.reportParameters != null) {
-            Set<ReportParameter> set1 = new  HashSet<ReportParameter>();
+            Set<ReportParameter> set1 = new HashSet<ReportParameter>();
             set1.addAll(reportParameters);
             Set<ReportParameter> set2 = new HashSet<ReportParameter>();
             set2.addAll(that.reportParameters);
@@ -95,5 +110,10 @@ public class ClientReportOptions extends ClientResource<ClientReportOptions> {
                 ", uri='" + getUri() + '\'' +
                 ", label='" + getLabel() + '\'' +
                 '}';
+    }
+
+    @Override
+    public ClientReportOptions deepClone() {
+        return new ClientReportOptions(this);
     }
 }

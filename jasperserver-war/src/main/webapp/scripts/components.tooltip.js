@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -117,7 +117,7 @@ JSTooltip.addVar("TEXT_PATTERN", ".message:not(.label)");
 
 JSTooltip.addMethod("_toAttribute", function(attrName, value) {
     if(this.srcElement) {
-        value = xssUtil.escape(value);
+        value = xssUtil.hardEscape(value);
         this.srcElement.writeAttribute(attrName, isArray(value) ? value.join(this.SEPARATOR) : value);
     }
 });
@@ -134,7 +134,7 @@ JSTooltip.addMethod("_fromAttribute", function(attrName) {
 JSTooltip.addMethod("_setValues", function(elements, values) {
     elements.each(function (element, index) {
         if (values[index]) {
-            element.update(xssUtil.escape(values[index]));
+            element.update(xssUtil.hardEscape(values[index]));
         }
     });
 });
@@ -168,8 +168,8 @@ JSTooltip.addMethod("_calculateZIndex", function(element) {
 
 JSTooltip.addMethod("_escapeText", function(text) {
     return _.isArray(text)
-                ? _.map(text, function (txt) { return xssUtil.escape(txt)})
-                : xssUtil.escape(text);
+                ? _.map(text, function (txt) { return xssUtil.hardEscape(txt)})
+                : xssUtil.hardEscape(text);
 });
 
 JSTooltip.addMethod("show", function(offsets) {

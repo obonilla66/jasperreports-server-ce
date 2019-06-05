@@ -1,22 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-(function($) {
+(function() {
     "use strict";
+	var isDomLoaded = false;
+
+	function setIsDomLoadedVariable() {
+		isDomLoaded = true;
+	}
+
+	document.addEventListener("DOMContentLoaded", setIsDomLoadedVariable);
 
     var DELAY_AJAX_TILL_CSRF_TOKEN_LOADS_MILLIS = 1000;
     var MAX_NUMBER_OF_TRIES = 5;
@@ -137,6 +147,17 @@
 		window.XMLHttpRequest = init_XMLHttpRequest;
 	}
 
+    function csrfTokenRetrieveFailed() {
+        var event = new CustomEvent('systemDialogWarn', {
+            detail: {
+                message: 'Connection error! Try reloading!',
+                duration: 60000
+            }
+        });
+        document.dispatchEvent(event);
+        console.error('Failed to retrieve CSRF token');
+    }
+
     function ajaxWaitForCsrfTokenToLoad(xhr, data) {
         if (xhr.ajaxTryCntr < MAX_NUMBER_OF_TRIES) {
             window.setTimeout(function () {
@@ -145,8 +166,7 @@
             }, DELAY_AJAX_TILL_CSRF_TOKEN_LOADS_MILLIS);
         }
         else {
-            $(document).trigger('systemDialogWarn', ['Connection error! Try reloading!', 60000]);
-            console.error('Failed to retrieve CSRF token');
+            csrfTokenRetrieveFailed();
         }
     }
 
@@ -389,70 +409,82 @@
 		return pageTokens;
 	}
 	
+	function ajax(done, fail) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "%SERVLET_PATH%", true);
+        xhr.setRequestHeader("FETCH-CSRF-TOKEN", "1");
+        xhr.onreadystatechange = function() {
+            if(this.readyState === XMLHttpRequest.DONE) {
+            	if (this.status === 200) {
+                    done(xhr.responseText);
+				} else {
+                    fail();
+				}
+            }
+        };
+        xhr.send();
+    }
 	/**
-	 * Only inject the tokens if the JavaScript was referenced from HTML that
-	 * was served by us. Otherwise, the code was referenced from malicious HTML
-	 * which may be trying to steal tokens using JavaScript hijacking techniques.
+	 * Inject the tokens.
 	 * The token is now removed and fetched using another POST request to solve,
 	 * the token hijacking problem.
 	 */
-	if(isValidDomain(document.domain, "%DOMAIN_ORIGIN%")) {
-		/** optionally include Ajax CSRF support **/
-        if(%INJECT_XHR% == true) {
-            if (navigator.appName == "Microsoft Internet Explorer") {
-                hijackExplorer();
-            } else {
-                hijackStandard();
-            }
-        }
 
-        $.ajax({
-            method: "POST",
-            url: "%SERVLET_PATH%",
-            headers: {"FETCH-CSRF-TOKEN": "1"}
-        })
-        .done(function(tokenResp) {
-                var token_pair = tokenResp.split(":");
-                var token_name = token_pair[0];
-                var token_value = token_pair[1];
-
-                if(%INJECT_XHR% == true) {
-                    XMLHttpRequest.prototype.onsend = function (data) {
-                        if (isValidUrl(this.url)) {
-                            this.setRequestHeader("X-Requested-With", "%X_REQUESTED_WITH%");
-                            this.setRequestHeader(token_name, token_value);
-                        }
-                    };
-                }
-
-                if ( %INJECT_FORMS% == true) {
-                    //inject CSRF token into dynamically created post forms
-                    HTMLFormElement.prototype._submit = HTMLFormElement.prototype.submit;
-                    HTMLFormElement.prototype.submit = function (data) {
-                        // The forms are submitted synchronously; not likely to be submitted during page load.
-                        var pageTokens = {};
-                        if (%TOKENS_PER_PAGE%) {        // %...% params coming from jrs.csrfguard.properties
-                            pageTokens = requestPageTokens();
-                        }
-                        injectTokenForm(this, token_name, token_value, pageTokens, %INJECT_GET_FORMS%);
-
-                        this._submit.apply(this, arguments);
-                    };
-                }
-
-                $( document ).ready(function() {
-                    /** update nodes (with csrf token) in DOM after load **/
-                    injectTokens(token_name, token_value);
-                });
-
-                isCSRFTokenLoaded = true;
-        })
-        .fail(function(error) {
-            $(document).trigger('systemDialogWarn', ['Connection error! Try reloading!', 60000]);
-            console.error('Failed to retrieve CSRF token');
-        });
-	} else {
-		console.error("OWASP CSRFGuard JavaScript was included from within an unauthorized domain!");
+	/** optionally include Ajax CSRF support **/
+	if(%INJECT_XHR% == true) {
+		if (navigator.appName == "Microsoft Internet Explorer") {
+			hijackExplorer();
+		} else {
+			hijackStandard();
+		}
 	}
 
-})(jQuery);
+	ajax(function(tokenResp) {
+		var token_pair = tokenResp.split(":");
+		var token_name = token_pair[0];
+		var token_value = token_pair[1];
+
+		if(%INJECT_XHR% == true) {
+			XMLHttpRequest.prototype.onsend = function (data) {
+				if (isValidUrl(this.url)) {
+					this.setRequestHeader("X-Requested-With", "%X_REQUESTED_WITH%");
+					this.setRequestHeader(token_name, token_value);
+				}
+			};
+		}
+
+		if ( %INJECT_FORMS% == true) {
+			//inject CSRF token into dynamically created post forms
+			HTMLFormElement.prototype._submit = HTMLFormElement.prototype.submit;
+			HTMLFormElement.prototype.submit = function (data) {
+				// The forms are submitted synchronously; not likely to be submitted during page load.
+				var pageTokens = {};
+				if (%TOKENS_PER_PAGE%) {        // %...% params coming from jrs.csrfguard.properties
+					pageTokens = requestPageTokens();
+				}
+				injectTokenForm(this, token_name, token_value, pageTokens, %INJECT_GET_FORMS%);
+
+				this._submit.apply(this, arguments);
+			};
+		}
+
+		if (isDomLoaded) {
+			injectTokens(token_name, token_value);
+		} else {
+			document.removeEventListener("DOMContentLoaded", setIsDomLoadedVariable);
+
+			document.addEventListener("DOMContentLoaded", function (event) {
+				/** update nodes (with csrf token) in DOM after load **/
+				injectTokens(token_name, token_value);
+
+				isDomLoaded = true;
+			});
+		}
+
+		isCSRFTokenLoaded = true;
+	}, function(error) {
+		csrfTokenRetrieveFailed();
+	});
+
+
+})();

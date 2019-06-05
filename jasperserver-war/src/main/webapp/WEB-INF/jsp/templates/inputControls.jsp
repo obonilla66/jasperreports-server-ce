@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%--
@@ -28,15 +32,16 @@ Usage:
 
 --%>
 
-<%@ taglib prefix="spring" uri="/spring"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
+<%@ taglib prefix="tx" uri="http://tiles.apache.org/tags-tiles-extras"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
 
 
 
-<t:useAttribute name="containerClass" id="containerClass" classname="java.lang.String" ignore="true"/>
-<t:useAttribute name="bodyContent" id="bodyContent" classname="java.lang.String" ignore="false"/>
-<t:useAttribute name="hasReportOptions" id="hasReportOptions" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute name="containerClass" id="containerClass" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute name="bodyContent" id="bodyContent" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute name="hasReportOptions" id="hasReportOptions" classname="java.lang.String" ignore="true"/>
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
     <t:putAttribute name="containerClass">panel dialog overlay inputControls centered_horz centered_vert moveable sizeable <c:if test="${not empty requestScope.reportOptionsList}">showingSubHeader</c:if> ${containerClass}</t:putAttribute>

@@ -1,28 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
-import org.junit.Before;
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertNotSame;
 
 
 /**
@@ -30,44 +35,48 @@ import static org.junit.Assert.*;
  * <p/>
  *
  * @author tetiana.iefimenko
+ * @author Andriy Tivodar <ativodar@tibco>
  * @version $Id$
  * @see
  */
-public class ResourceSingleElementTest {
+public class ResourceSingleElementTest extends BaseDTOTest<ResourceSingleElement> {
 
-    public static final String SOURCE_NAME = "SourceName";
-    public static final String ELEMENT_NAME = "name";
-    public static final String TYPE = "Type";
-    public static final ClientExpressionContainer EXPRESSION = new ClientExpressionContainer().setString("Expression");
-    ResourceSingleElement sourceElement;
-    ResourceSingleElement clonedElement;
-
-    @Before
-    public void setUp() {
-
-        sourceElement = new ResourceSingleElement()
-                .setType(TYPE)
-                .setExpression(EXPRESSION)
-                .setSourceName(SOURCE_NAME)
-                .setName(ELEMENT_NAME);
+    @Override
+    protected List<ResourceSingleElement> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setName("name2"),
+                createFullyConfiguredInstance().setSourceName("sourceName2"),
+                createFullyConfiguredInstance().setType("type2"),
+                createFullyConfiguredInstance().setExpression(new ClientExpressionContainer().setString("string2")),
+                // with null values
+                createFullyConfiguredInstance().setName(null),
+                createFullyConfiguredInstance().setSourceName(null),
+                createFullyConfiguredInstance().setType(null),
+                createFullyConfiguredInstance().setExpression(null)
+        );
     }
 
-    @Test
-    public void testCloningConstructor() {
-
-        clonedElement = new ResourceSingleElement(sourceElement);
-
-        assertTrue(clonedElement.equals(sourceElement));
-        assertFalse(sourceElement == clonedElement);
-        assertNotNull(clonedElement.getName());
-        assertEquals(ELEMENT_NAME, clonedElement.getName());
-        assertNotNull(clonedElement.getSourceName());
-        assertEquals(SOURCE_NAME, clonedElement.getSourceName());
-        assertNotNull(clonedElement.getExpression());
-        assertEquals(EXPRESSION, clonedElement.getExpression());
-        assertNotNull(clonedElement.getType());
-        assertEquals(TYPE, clonedElement.getType());
-
+    @Override
+    protected ResourceSingleElement createFullyConfiguredInstance() {
+        return new ResourceSingleElement()
+                .setName("name")
+                .setSourceName("sourceName")
+                .setType("type")
+                .setExpression(new ClientExpressionContainer().setString("Expression"));
     }
 
+    @Override
+    protected ResourceSingleElement createInstanceWithDefaultParameters() {
+        return new ResourceSingleElement();
+    }
+
+    @Override
+    protected ResourceSingleElement createInstanceFromOther(ResourceSingleElement other) {
+        return new ResourceSingleElement(other);
+    }
+
+    @Override
+    protected void assertFieldsHaveUniqueReferences(ResourceSingleElement expected, ResourceSingleElement actual) {
+        assertNotSame(expected.getExpression(), actual.getExpression());
+    }
 }

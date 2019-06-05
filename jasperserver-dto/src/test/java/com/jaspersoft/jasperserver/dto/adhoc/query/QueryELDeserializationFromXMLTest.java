@@ -1,31 +1,39 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
 import com.jaspersoft.jasperserver.dto.adhoc.query.group.ClientQueryGroupBy;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
@@ -196,9 +204,9 @@ public class QueryELDeserializationFromXMLTest extends QueryTest {
                 "            <equals>\n" +
                 "                <operands>\n" +
                 "                    <variable name=\"sales\"/>\n" +
-                "                    <integer>\n" +
+                "                    <number>\n" +
                 "                        <value>1</value>\n" +
-                "                    </integer>\n" +
+                "                    </number>\n" +
                 "                </operands>\n" +
                 "            </equals>\n" +
                 "        </filterExpression>\n" +
@@ -213,9 +221,14 @@ public class QueryELDeserializationFromXMLTest extends QueryTest {
         assertThat(cq.getWhere().getFilterExpression().getObject(), is(instanceOf(ClientEquals.class)));
 
         final ClientEquals filterExpressionObject = (ClientEquals) cq.getWhere().getFilterExpression().getObject();
-        assertThat(filterExpressionObject.getLhs(), is(instanceOf(ClientVariable.class)));
-        assertThat(filterExpressionObject.getLhs().toString(), is("sales"));
-        assertThat(filterExpressionObject.getRhs().toString(), is("1"));
+        final List<ClientExpression> operands = filterExpressionObject.getOperands();
+        assertThat(operands, notNullValue());
+        assertThat(operands, hasSize(2));
+        final ClientExpression lhs = operands.get(0);
+        assertThat(lhs, is(instanceOf(ClientVariable.class)));
+        assertThat(lhs.toString(), is("sales"));
+        final ClientExpression rhs = operands.get(1);
+        assertThat(rhs.toString(), is("1"));
     }
 
     @Test

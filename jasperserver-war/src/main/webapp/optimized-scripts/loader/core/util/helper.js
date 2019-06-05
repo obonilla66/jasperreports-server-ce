@@ -1,1 +1,1 @@
-define([],function(){"use strict";return{serverSettings:function(n){var r=n.match(/<script[^>]*>([^<]*)<\/script>/)[1],t=new Function(r+"return __jrsConfigs__;");return t()},loaderConfig:function(n){return new Function("requirejs","return "+n)({config:function(n){return n}})}}});
+define([],function(){"use strict";return{serverSettings:function(n){var r=n.match(/<script[^>]*>([^<]*)<\/script>/)[1];return new Function(r+"return __jrsConfigs__;")()},loaderConfig:function(n){return new Function("requirejs","return "+n)({config:function(n){return n}})}}});

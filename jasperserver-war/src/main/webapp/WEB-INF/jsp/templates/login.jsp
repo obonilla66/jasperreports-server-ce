@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%--
@@ -37,17 +41,18 @@ Usage:
 --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
-<%@ taglib uri="/spring" prefix="spring"%>
+<%@ taglib prefix="tx" uri="http://tiles.apache.org/tags-tiles-extras"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 
-<t:useAttribute name="jsEdition" id="jsEdition" classname="java.lang.String" ignore="false"/>
-<t:useAttribute name="allowUserPasswordChange" id="allowUserPasswordChange" classname="java.lang.String" ignore="false"/>
-<t:useAttribute name="showPasswordChange" id="showPasswordChange" classname="java.lang.String" ignore="true"/>
-<t:useAttribute name="warningMessages" id="warningMessages" classname="java.lang.String" ignore="true"/>
-<t:useAttribute name="errorMessages" id="errorMessages" classname="java.lang.String" ignore="true"/>
-<t:useAttribute name="localeOptions" id="localeOptions" classname="java.lang.String" ignore="false"/>
-<t:useAttribute name="timezoneOptions" id="timezoneOptions" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute name="jsEdition" id="jsEdition" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute name="allowUserPasswordChange" id="allowUserPasswordChange" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute name="showPasswordChange" id="showPasswordChange" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute name="warningMessages" id="warningMessages" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute name="errorMessages" id="errorMessages" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute name="localeOptions" id="localeOptions" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute name="timezoneOptions" id="timezoneOptions" classname="java.lang.String" ignore="false"/>
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
     <t:putAttribute name="containerClass">panel dialog inlay login ${containerClass}</t:putAttribute>

@@ -1,28 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.PostgreSQLDialect;
-
-import com.jaspersoft.hibernate.ByteWrappingBlobType;
+import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.type.descriptor.sql.BinaryTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * This dialect maps blobs to binary streams for PostgreSQL.
@@ -42,14 +45,31 @@ import com.jaspersoft.hibernate.ByteWrappingBlobType;
  *   Oracle has a brain-dead binary type (LONG RAW) that we should stay away from, and if we've already
  *   tested with blobs on other databases, then just let it be.
  */
-public class PostgresqlNoBlobDialect extends PostgreSQLDialect {
+public class PostgresqlNoBlobDialect extends PostgreSQL82Dialect {
 
     public PostgresqlNoBlobDialect() {
         super();
         // use "bytea" to map blob types
         registerColumnType( Types.BLOB, "bytea" );
-        // turn on blob mapping
-        getDefaultProperties().setProperty(ByteWrappingBlobType.MAP_BLOBS_TO_BINARY_TYPE, String.valueOf(true));
+
+    }
+
+
+    @Override
+    public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+        SqlTypeDescriptor descriptor;
+        switch ( sqlCode ) {
+            case Types.BLOB: {
+                // Force BLOB binding to byte[].
+                descriptor = BinaryTypeDescriptor.INSTANCE;
+                break;
+            }
+            default: {
+                descriptor = super.getSqlTypeDescriptorOverride( sqlCode );
+                break;
+            }
+        }
+        return descriptor;
     }
 
 }

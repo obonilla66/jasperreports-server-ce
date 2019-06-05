@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -29,14 +29,22 @@
  */
 
 var Controls = (function (jQuery, _, Controls, Report) {
-
+    var ConfirmationDialog;
+    var Overlay;
     //workaround to get AMD module in non-AMD styled module.
     var inputControlsSettings = null;
-    require(["settings!inputControls"], function(inputControls) {
+    require([
+        "settings!inputControls",
+        "common/component/dialog/ConfirmationDialog",
+        "components/overlay/Overlay"],
+        function(inputControls, Dialog, OverlayComponent) {
+
         inputControlsSettings = inputControls;
+        ConfirmationDialog = Dialog;
+        Overlay = OverlayComponent;
     });
 
-    return _.extend(Controls,{
+    return _.extend(Controls, {
 
         _messages:{},
 
@@ -180,8 +188,6 @@ var Controls = (function (jQuery, _, Controls, Report) {
 
             if ((isProVersion())) {
 
-
-
                 var optionsContainerSelector;
 
                 if (this.layouts.LAYOUT_POPUP_SCREEN == Report.reportControlsLayout) {
@@ -232,6 +238,7 @@ var Controls = (function (jQuery, _, Controls, Report) {
                         reportOptions.add(Report.reportUnitURI, optionName, selectedData, overwrite)
                             .done(function () {
                                 Controls.reportOptionsDialog.hideWarning();
+
                                 dialogs.systemConfirm.show(ControlsBase.getMessage("report.options.option.saved"));
                                 showSubHeader();
                                 var container = reportOptions.getElem().parent();
@@ -250,7 +257,7 @@ var Controls = (function (jQuery, _, Controls, Report) {
                             .fail(function(err){
                                 if (err) {
                                     try {
-                                        var errorResponse = jQuery.parseJSON(err.responseText);
+                                        var errorResponse = JSON.parse(err.responseText);
                                         //check on error  for overwrite
                                         if (errorResponse.errorCode === "report.options.dialog.confirm.message"){
                                             !overwrite && (Controls.reportOptionsDialog.optionNameToOverwrite = optionName);
@@ -277,7 +284,12 @@ var Controls = (function (jQuery, _, Controls, Report) {
 
                 this.remove = function () {
                     var optionName = reportOptions.get('selection').label;
-                    if (confirm(ControlsBase.getMessage("report.options.option.confirm.remove", {option: optionName}))) {
+
+                    var dialog = new ConfirmationDialog({
+                        text: ControlsBase.getMessage("report.options.option.confirm.remove", {option: optionName})
+                    });
+
+                    dialog.on("button:yes", function() {
                         reportOptions.removeOption(Report.reportUnitURI, reportOptions.get('selection').id)
                             .done(function () {
                                 if (!reportOptions.get('values')) {
@@ -287,7 +299,7 @@ var Controls = (function (jQuery, _, Controls, Report) {
                                         container.addClass("hidden");
                                     } else {
                                         jQuery(optionsContainerSelector).addClass("hidden");
-                                        jQuery(optionsContainerSelector).innerHTML = "";
+                                        jQuery(optionsContainerSelector).html("");
                                     }
                                     if (Controls.layouts.LAYOUT_TOP_OF_PAGE == Report.reportControlsLayout) {
                                         jQuery("#" + ControlsBase.INPUT_CONTROLS_FORM + " .header").addClass("hidden");
@@ -296,8 +308,14 @@ var Controls = (function (jQuery, _, Controls, Report) {
                                 reportOptions.enableRemoveButton(false); // change the Remove button to Save
                                 dialogs.systemConfirm.show(ControlsBase.getMessage("report.options.option.removed"));
                             });
-                    }
-                }
+                        dialog.remove();
+                    });
+
+                    dialog.on("button:no", function(){
+                        dialog.remove();
+                    });
+                    dialog.open();
+                };
 
                 Controls.reportOptions = reportOptions;
             }
@@ -389,12 +407,33 @@ var Controls = (function (jQuery, _, Controls, Report) {
                                 Controls.selectionChanged = false;
                             },
                             function() {
+                                // using overlay here solely for this error dialog,
+                                // because components.dialogs share state, closing built-in pageDimmer
+                                // when the option is set to make it visible
+                                var overlay = new Overlay({
+                                    zIndex: dialogs.errorPopup.getZIndex() - 1
+                                });
+
+                                jQuery("body").append(overlay.$el);
+                                overlay.show();
                                 //application of input controls was failed probably because of
                                 //report cancellation
                                 //in this case if hideControls is true we have to set values to
                                 //latest successfull value
                                 Controls.lastSelection = lastSuccessfulSelection;
                                 Controls.lastReportOptionsSelection = lastSuccessfulReportOption;
+
+                                // refresh report with IC after an error, on error dialog close
+                                dialogs.errorPopup.onClose = function() {
+                                    if (Controls.lastSelection && !_.isEmpty(Controls.lastSelection)) {
+                                        Report.refreshReport(null, null,
+                                            ControlsBase.buildSelectedDataUri(Controls.lastSelection));
+                                    } else {
+                                        Report.refreshReport();
+                                    }
+
+                                    overlay.remove();
+                                };
 
                                 if (hideControls) {
                                     Controls.cancel();

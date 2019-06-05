@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.logging.access.service.impl;
 
@@ -21,8 +24,8 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateBef
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
 import com.jaspersoft.jasperserver.api.logging.access.domain.hibernate.RepoAccessEvent;
-import org.hibernate.event.DeleteEvent;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.DeleteEvent;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -49,6 +52,14 @@ public class HibernateAccessEventDeleteListener implements HibernateBeforeDelete
         if (accessEvents != null && !accessEvents.isEmpty()) {
             for (Iterator it = accessEvents.iterator(); it.hasNext();) {
                 RepoAccessEvent accessEvent = (RepoAccessEvent) it.next();
+                RepoResource resource = accessEvent.getResource();
+                // Detach event from resource because event could be re-saved by cascade
+                if (resource!=null && resource.getAccessEvents()!=null) {
+                    if (resource.getAccessEvents().contains(accessEvent)) {
+                        resource.getAccessEvents().remove(accessEvent);
+                    }
+                }
+                //Delete Access event
                 session.delete(accessEvent);
             }
         }

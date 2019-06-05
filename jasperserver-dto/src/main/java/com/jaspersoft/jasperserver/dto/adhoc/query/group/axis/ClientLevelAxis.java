@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.group.axis;
 
@@ -27,9 +30,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
@@ -44,22 +48,8 @@ public class ClientLevelAxis extends ClientBaseAxis<ClientQueryLevel> {
     }
 
     public ClientLevelAxis(ClientLevelAxis axis) {
-        this();
-        if (axis != null) {
-            if (axis.getItems() != null) {
-                for (ClientQueryLevel level : axis.getItems()) {
-                    this.getItems().add(level.deepClone());
-                }
-            }
-            if (axis.getExpansions() != null) {
-                this.expansions = new ArrayList<ClientExpandable>();
-
-                for (ClientExpandable expandable : axis.getExpansions()) {
-                    this.expansions.add(expandable.deepClone());
-                }
-            }
-        }
-
+        super(axis);
+        expansions = copyOf(axis.getExpansions());
     }
 
     public ClientLevelAxis(Collection<? extends ClientQueryLevel> c) {
@@ -98,8 +88,8 @@ public class ClientLevelAxis extends ClientBaseAxis<ClientQueryLevel> {
     }
 
     @Override
-    public ClientBaseAxis setItems(List<ClientQueryLevel> items) {
-        return super.setItems(items);
+    public ClientLevelAxis setItems(List<ClientQueryLevel> items) {
+        return (ClientLevelAxis) super.setItems(items);
     }
 
     @Override
@@ -127,5 +117,10 @@ public class ClientLevelAxis extends ClientBaseAxis<ClientQueryLevel> {
         int result = super.hashCode();
         result = 31 * result + (expansions != null ? expansions.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public ClientLevelAxis deepClone() {
+        return new ClientLevelAxis(this);
     }
 }

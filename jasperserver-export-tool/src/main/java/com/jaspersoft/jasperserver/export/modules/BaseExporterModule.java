@@ -1,23 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.export.modules;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -124,19 +128,20 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	
 	protected final void serialize(Object object, String parentPath, String fileName, ObjectSerializer serializer) {
 		OutputStream out = getFileOutput(parentPath, fileName);
+		BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(out,16384);
 		boolean closeOut = true;
 		try {
-			serializer.write(object, out, exportContext);
+			serializer.write(object, bufferedOutputStream, exportContext);
 			
 			closeOut = false;
-			out.close();
+			bufferedOutputStream.close();
 		} catch (IOException e) {
 			log.error(e);
 			throw new JSExceptionWrapper(e);
 		} finally {
 			if (closeOut) {
 				try {
-					out.close();
+					bufferedOutputStream.close();
 				} catch (IOException e) {
 					log.error(e);
 				}

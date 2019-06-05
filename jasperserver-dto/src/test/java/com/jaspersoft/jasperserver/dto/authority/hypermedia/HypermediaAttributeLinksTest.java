@@ -1,121 +1,68 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.authority.hypermedia;
 
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOPresentableTest;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 /**
- * @author askorodumov
+ * @author Alexei Skorodumov <askorodumov@tibco.com>
  * @version $Id$
  */
-public class HypermediaAttributeLinksTest {
+public class HypermediaAttributeLinksTest extends BaseDTOPresentableTest<HypermediaAttributeLinks> {
 
-    @Test
-    public void equals_emptyIdentical_success() {
-        HypermediaAttributeLinks attributeLinks1 = new HypermediaAttributeLinks();
-        HypermediaAttributeLinks attributeLinks2 = new HypermediaAttributeLinks();
-
-        assertTrue(attributeLinks1.equals(attributeLinks2));
-        assertTrue(attributeLinks2.equals(attributeLinks1));
+    @Override
+    protected List<HypermediaAttributeLinks> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setPermission(new Link().setHref("href2")),
+                // with null values
+                createFullyConfiguredInstance().setPermission(null)
+        );
     }
 
-    @Test
-    public void hashCode_emptyIdentical_success() {
-        HypermediaAttributeLinks attributeLinks1 = new HypermediaAttributeLinks();
-        HypermediaAttributeLinks attributeLinks2 = new HypermediaAttributeLinks();
+    @Override
+    protected HypermediaAttributeLinks createFullyConfiguredInstance() {
+        HypermediaAttributeLinks attribute = new HypermediaAttributeLinks();
+        attribute.setPermission(new Link().setHref("href"));
 
-        assertEquals(attributeLinks1.hashCode(), attributeLinks2.hashCode());
+        return attribute;
     }
 
-    @Test
-    public void toString_emptyIdentical_success() {
-        HypermediaAttributeLinks attributeLinks1 = new HypermediaAttributeLinks();
-        HypermediaAttributeLinks attributeLinks2 = new HypermediaAttributeLinks();
-
-        assertEquals(attributeLinks1.toString(), attributeLinks2.toString());
+    @Override
+    protected HypermediaAttributeLinks createInstanceWithDefaultParameters() {
+        return new HypermediaAttributeLinks();
     }
 
-    @Test
-    public void equals_identical_success() {
-        HypermediaAttributeLinks attributeLinks1 = createAttributeLinks("href1");
-        HypermediaAttributeLinks attributeLinks2 = new HypermediaAttributeLinks(attributeLinks1);
-
-        assertTrue(attributeLinks1.equals(attributeLinks2));
-        assertTrue(attributeLinks2.equals(attributeLinks1));
+    @Override
+    protected HypermediaAttributeLinks createInstanceFromOther(HypermediaAttributeLinks other) {
+        return new HypermediaAttributeLinks(other);
     }
 
-    @Test
-    public void hashCode_identical_success() {
-        HypermediaAttributeLinks attributeLinks1 = createAttributeLinks("href1");
-        HypermediaAttributeLinks attributeLinks2 = new HypermediaAttributeLinks(attributeLinks1);
-
-        assertEquals(attributeLinks1.hashCode(), attributeLinks2.hashCode());
-    }
-
-    @Test
-    public void toString_identical_success() {
-        HypermediaAttributeLinks attributeLinks1 = createAttributeLinks("href1");
-        HypermediaAttributeLinks attributeLinks2 = new HypermediaAttributeLinks(attributeLinks1);
-
-        assertEquals(attributeLinks1.toString(), attributeLinks2.toString());
-    }
-
-    @Test
-    public void equals_notIdentical_success() {
-        HypermediaAttributeLinks attributeLinks1 = createAttributeLinks("href1");
-        HypermediaAttributeLinks attributeLinks2 = createAttributeLinks("href2");
-        HypermediaAttributeLinks attributeLinks3 = createAttributeLinks(null);
-
-        assertFalse(attributeLinks1.equals(attributeLinks2));
-        assertFalse(attributeLinks2.equals(attributeLinks1));
-
-        assertFalse(attributeLinks1.equals(attributeLinks3));
-        assertFalse(attributeLinks3.equals(attributeLinks1));
-    }
-
-    @Test
-    public void hashCode_notIdentical_success() {
-        HypermediaAttributeLinks attributeLinks1 = createAttributeLinks("href1");
-        HypermediaAttributeLinks attributeLinks2 = createAttributeLinks("href2");
-        HypermediaAttributeLinks attributeLinks3 = createAttributeLinks(null);
-
-        assertNotEquals(attributeLinks1.hashCode(), attributeLinks2.hashCode());
-        assertNotEquals(attributeLinks1.hashCode(), attributeLinks3.hashCode());
-    }
-
-    @Test
-    public void toString_notIdentical_success() {
-        HypermediaAttributeLinks attributeLinks1 = createAttributeLinks("href1");
-        HypermediaAttributeLinks attributeLinks2 = createAttributeLinks("href2");
-        HypermediaAttributeLinks attributeLinks3 = createAttributeLinks(null);
-
-        assertNotEquals(attributeLinks1.toString(), attributeLinks2.toString());
-        assertNotEquals(attributeLinks1.toString(), attributeLinks3.toString());
-    }
-
-    private HypermediaAttributeLinks createAttributeLinks(String href) {
-        HypermediaAttributeLinks links = new HypermediaAttributeLinks();
-        Link link = new Link();
-        link.setHref(href);
-        links.setPermission(link);
-        return links;
+    @Override
+    protected void assertFieldsHaveUniqueReferences(HypermediaAttributeLinks expected, HypermediaAttributeLinks actual) {
+        assertNotSame(expected.getPermission(), actual.getPermission());
     }
 }

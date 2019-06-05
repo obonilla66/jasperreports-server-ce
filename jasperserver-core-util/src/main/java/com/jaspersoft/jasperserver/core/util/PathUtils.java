@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.core.util;
@@ -133,40 +136,6 @@ public class PathUtils {
 			result = concatPaths(result, p);
 		}
 		return result;
-	}
-
-	/**
-	 * Helper method for building paths from the array of path segments.
-	 * Prepends path with {@link #FILE_SEPARATOR}
-	 *
-	 * Skip all empty paths
-	 *
-	 * @param pathSegments Path segments
-	 * @return String representing path
-     */
-	public static String buildPath(String ... pathSegments) {
-		return buildPath(Arrays.asList(pathSegments));
-	}
-
-	/**
-	 * Helper method for building paths from the array of path segments.
-	 * Prepends path with {@link #FILE_SEPARATOR}
-	 *
-	 * Skip all empty paths
-	 *
-	 * @param pathSegments Path segments
-	 * @return String representing path
-     */
-	public static String buildPath(List<String> pathSegments) {
-		if (pathSegments == null || pathSegments.size() == 0) {
-			return null;
-		}
-		StringBuilder pathBuilder = new StringBuilder();
-		for (String pathSeg : pathSegments) {
-			pathBuilder.append(FILE_SEPARATOR).append(pathSeg);
-		}
-
-		return pathBuilder.toString();
 	}
 
 	public static String normalizePath(String path) {

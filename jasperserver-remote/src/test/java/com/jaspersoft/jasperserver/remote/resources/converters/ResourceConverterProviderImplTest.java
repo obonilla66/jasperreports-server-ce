@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -22,12 +25,12 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceLookupImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResourceLookup;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -41,7 +44,10 @@ import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertTrue;
 
 /**
  * <p></p>
@@ -59,7 +65,7 @@ public class ResourceConverterProviderImplTest {
     private LookupResourceConverter lookupResourceConverter;
     private TestFolderConverter testFolderConverter;
 
-    private final String type = ClientTypeHelper.extractClientType(ClientFile.class);
+    private final String type = ClientTypeUtility.extractClientType(ClientFile.class);
 
     @BeforeMethod
     public void init(){
@@ -99,6 +105,15 @@ public class ResourceConverterProviderImplTest {
             assertTrue(false);
         }
     }
+    
+    @Test
+    public void getCombinedConverterKey(){
+        assertEquals(provider.getCombinedConverterKey("serverType", "clientType"), "serverType<=>clienttype");
+        assertEquals(provider.getCombinedConverterKey(null, "clientType"), "null<=>clienttype");
+        assertEquals(provider.getCombinedConverterKey("serverType", null), "serverType<=>null");
+        assertEquals(provider.getCombinedConverterKey(null, null), "null<=>null");
+
+    }
 
     @Test
     public void prepareConverters_getToClientConverter_string() throws Exception {
@@ -121,8 +136,8 @@ public class ResourceConverterProviderImplTest {
 
     @Test
     public void prepareConverters_getToServerConverter_string() throws Exception {
-        assertSame(provider.getToServerConverter(ClientTypeHelper.extractClientType(ClientResourceLookup.class)), lookupResourceConverter);
-        assertSame(provider.getToServerConverter(ClientTypeHelper.extractClientType(TestClientFolder.class)), testFolderConverter);
+        assertSame(provider.getToServerConverter(ClientTypeUtility.extractClientType(ClientResourceLookup.class)), lookupResourceConverter);
+        assertSame(provider.getToServerConverter(ClientTypeUtility.extractClientType(TestClientFolder.class)), testFolderConverter);
         IllegalParameterValueException exception = null;
         try{
             provider.getToServerConverter("unknownType");
@@ -145,7 +160,7 @@ public class ResourceConverterProviderImplTest {
     private class TestClientFolder extends ClientResource<TestClientFolder> {}
     private class TestFolderConverter extends ResourceConverterImpl<Folder, TestClientFolder> {
         @Override
-        protected Folder resourceSpecificFieldsToServer(TestClientFolder clientObject, Folder resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        protected Folder resourceSpecificFieldsToServer(TestClientFolder clientObject, Folder resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
             return resultToUpdate;
         }
 

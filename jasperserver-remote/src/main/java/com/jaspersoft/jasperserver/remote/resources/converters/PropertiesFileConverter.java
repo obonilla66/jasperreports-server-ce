@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -24,7 +27,6 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConve
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.dto.resources.ClientPropertiesFile;
 import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
-import com.jaspersoft.jasperserver.dto.resources.ResourceMediaType;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 
 import static com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceBase.TYPE_RESOURCE_BUNDLE;
@@ -53,7 +56,7 @@ public class PropertiesFileConverter extends ResourceConverterImpl<FileResource,
     private SingleRepositoryService singleRepositoryService;
 
     @Override
-    protected FileResource resourceSpecificFieldsToServer(ClientPropertiesFile clientObject, FileResource resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected FileResource resourceSpecificFieldsToServer(ClientPropertiesFile clientObject, FileResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         throw new UnsupportedOperationException();
     }
 
@@ -69,8 +72,7 @@ public class PropertiesFileConverter extends ResourceConverterImpl<FileResource,
         String type = resource.getFileType();
 
         if (!TYPE_RESOURCE_BUNDLE.equals(type)) {
-            throw new NotAcceptableException(
-                    ResourceMediaType.RESOURCE_MEDIA_TYPE_PREFIX + ResourceMediaType.PROPERTIES_FILE_CLIENT_TYPE);
+            throw new NotAcceptableException();
         }
 
         FileResourceData data = singleRepositoryService.getFileResourceData(resource);

@@ -1,33 +1,41 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.common.service.impl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Set;
 
+import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.orm.hibernate3.HibernateAccessor;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.hibernate.Session;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.LockMode;
+import org.springframework.dao.DataAccessException;
+import org.springframework.orm.hibernate5.support.HibernateDaoSupport;
+import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 
@@ -56,6 +64,7 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
 		Object execute();
 	}
 
+	@Transactional(propagation = Propagation.REQUIRED)
 	protected final Object executeCallback(final DaoCallback callback) {
 		try {
 			getHibernateTemplate();
@@ -69,6 +78,7 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
 		}
 	}
 
+	@Transactional(propagation = Propagation.REQUIRED)
 	protected final Object executeWriteCallback(final DaoCallback callback) {
 		return executeWriteCallback(callback, true);
 	}
@@ -79,7 +89,7 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
 		HibernateTemplate hibernateTemplate = getHibernateTemplate();
 		HibernateDaoFlushModeHandle flushModeHandle = createFlushModeHandle(hibernateTemplate);
 		try {
-			flushModeHandle.setFlushMode(HibernateAccessor.FLUSH_COMMIT);
+			flushModeHandle.setFlushMode(FlushMode.COMMIT);
 			Object ret = callback.execute();
 			if (flush) {
 				boolean doMerge = (ret!=null && ContentResource.class.isAssignableFrom(ret.getClass()));
@@ -122,7 +132,12 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
         if (isMillsSecondUnsupportedInSchema == null) {
             try {
                 // removing "jdbc:" from url
-                String url = getHibernateTemplate().getSessionFactory().getCurrentSession().connection().getMetaData().getURL().substring(5).toLowerCase();
+				String url = getHibernateTemplate().getSessionFactory().getCurrentSession().doReturningWork(new ReturningWork<String>() {
+					@Override
+					public String execute(Connection connection) throws SQLException {
+						return connection.getMetaData().getURL();
+					}
+				});
                 if (millisSecondUnsupportedSchemaSet != null) {
                     for (String dbName : millisSecondUnsupportedSchemaSet) {
                         if (url.startsWith(dbName)) {
@@ -184,11 +199,17 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
     public void setMillisSecondUnsupportedSchemaSet(Set<String> millisSecondUnsupportedSchemaSet) {
         this.millisSecondUnsupportedSchemaSet = millisSecondUnsupportedSchemaSet;
     }
+    protected Session getSession() {
+    	return getSessionFactory().getCurrentSession();
+	}
+	public ActiveMQBlobMessage test() {
+	    return new ActiveMQBlobMessage();
+    }
 }
 
 interface HibernateDaoFlushModeHandle {
 	
-	void setFlushMode(int flushMode);
+	void setFlushMode(FlushMode flushMode);
 	
 	void revert();
 }
@@ -196,21 +217,21 @@ interface HibernateDaoFlushModeHandle {
 class HibernateDaoTemplateFlushModeHandle implements HibernateDaoFlushModeHandle {
 	
 	private final HibernateDaoTemplate template;
-	private final Integer origFlushMode;
+	private final FlushMode origFlushMode;
 	
 	public HibernateDaoTemplateFlushModeHandle(HibernateDaoTemplate template) {
 		this.template = template;
-		this.origFlushMode = template.getLocalFlushMode();
+		this.origFlushMode = template.getSessionFactory().getCurrentSession().getHibernateFlushMode();
 	}
 
 	@Override
-	public void setFlushMode(int flushMode) {
-		template.setLocalFlushMode(flushMode);
+	public void setFlushMode(FlushMode flushMode) {
+		template.getSessionFactory().getCurrentSession().setHibernateFlushMode(flushMode);
 	}
 
 	@Override
 	public void revert() {
-		template.setLocalFlushMode(origFlushMode);
+		template.getSessionFactory().getCurrentSession().setHibernateFlushMode(origFlushMode);
 	}
 	
 }
@@ -218,21 +239,21 @@ class HibernateDaoTemplateFlushModeHandle implements HibernateDaoFlushModeHandle
 class HibernateTemplateFlushModeHandle implements HibernateDaoFlushModeHandle {
 	
 	private final HibernateTemplate template;
-	private final int origFlushMode;
+	private final FlushMode origFlushMode;
 	
 	public HibernateTemplateFlushModeHandle(HibernateTemplate template) {
 		this.template = template;
-		this.origFlushMode = template.getFlushMode();
+		this.origFlushMode = template.getSessionFactory().getCurrentSession().getHibernateFlushMode();
 	}
 
 	@Override
-	public void setFlushMode(int flushMode) {
-		template.setFlushMode(flushMode);
+	public void setFlushMode(FlushMode flushMode) {
+		template.getSessionFactory().getCurrentSession().setHibernateFlushMode(flushMode);
 	}
 
 	@Override
 	public void revert() {
-		template.setFlushMode(origFlushMode);
+		template.getSessionFactory().getCurrentSession().setHibernateFlushMode(origFlushMode);
 	}
 
 }

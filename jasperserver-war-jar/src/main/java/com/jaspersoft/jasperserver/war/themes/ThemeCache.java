@@ -1,34 +1,38 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.themes;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.TenantQualified;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.UserAndRoleConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.support.AbstractMessageSource;
@@ -57,7 +61,8 @@ public class ThemeCache {
     private Map<String, String> uid2name;
     private Map<String, HierarchicalTheme> themeMap;
     private Map<String, ThemeResource> resourceMap;
-    private ConfigurationBean configurationBean;
+    private UserAndRoleConfiguration userAndRoleConfiguration;
+    private RepositoryConfiguration repositoryConfiguration;
     private RepositoryService repositoryService;
     private TenantService tenantService;
     private ThemeUtils themeUtils;
@@ -119,7 +124,7 @@ public class ThemeCache {
     }
 
     protected String getTenantQualifiedThemeName(String themeName) {
-        if (themeName.contains(configurationBean.getUserNameSeparator())) {
+        if (themeName.contains(userAndRoleConfiguration.getUserNameSeparator())) {
             // already qualified
             return themeName;
         }
@@ -131,7 +136,7 @@ public class ThemeCache {
             if (auth.getPrincipal() instanceof TenantQualified) {
                 String tenantId = ((TenantQualified) auth.getPrincipal()).getTenantId();
                 if (tenantId != null && tenantId.length() > 0 && !tenantId.equals(TenantService.ORGANIZATIONS)) { //checking that it is not root. since in external authentication we can pass organizations as root
-                    tenantQualifiedThemeName += configurationBean.getUserNameSeparator() + tenantId;
+                    tenantQualifiedThemeName += userAndRoleConfiguration.getUserNameSeparator() + tenantId;
                 }
             }
         }
@@ -155,7 +160,7 @@ public class ThemeCache {
                 if (themePreLoadListener != null) {
                     themePreLoadListener.onThemeLoad(tenantQualifiedThemeName);
                 }
-                String tenantQualifiedDefault = getTenantQualifiedThemeName(configurationBean.getThemeDefaultName());
+                String tenantQualifiedDefault = getTenantQualifiedThemeName(repositoryConfiguration.getThemeDefaultName());
                 theme = createTheme(tenantQualifiedThemeName);
                 if (!tenantQualifiedDefault.equals(tenantQualifiedThemeName)) {
                     theme.setParentTheme(new HierarchicalThemeProxy(tenantQualifiedDefault, this));
@@ -167,10 +172,10 @@ public class ThemeCache {
     }
 
     private HierarchicalTheme createTheme(String tenantQualifiedThemeName) {
-        String sep = configurationBean.getUserNameSeparator();
+        String sep = userAndRoleConfiguration.getUserNameSeparator();
         int sepPos = tenantQualifiedThemeName.indexOf(sep);
         String themeName = (sepPos > 0) ? tenantQualifiedThemeName.substring(0, sepPos) : tenantQualifiedThemeName;
-        String themeFolder = configurationBean.getThemeFolderName() + "/" + themeName;
+        String themeFolder = repositoryConfiguration.getThemeFolderName() + "/" + themeName;
 
         if (sepPos > 0) { // tenant theme
             String tenantId = tenantQualifiedThemeName.substring(sepPos + 1);
@@ -183,7 +188,7 @@ public class ThemeCache {
         filterCriteria.addFilterElement(
                 FilterCriteria.createAncestorFolderFilter(themeFolder)
         );
-        ExecutionContext executionContext = JasperServerUtil.getExecutionContext();
+        ExecutionContext executionContext = StaticExecutionContextProvider.getExecutionContext();
         ResourceLookup[] lookups = repositoryService.findResource(executionContext, filterCriteria);
 
         final String uid = getNewUID();
@@ -199,7 +204,7 @@ public class ThemeCache {
                 byte[] data = frd.getData();
                 ThemeResource themeResource = new ThemeResource(lastModified, data);
 
-                String webLink = configurationBean.getThemeServletPrefix() + "/" + uid + "/" + relPath;
+                String webLink = repositoryConfiguration.getThemeServletPrefix() + "/" + uid + "/" + relPath;
                 resourceMap.put(webLink, themeResource);
 
                 themeMessageSource.addMessage(relPath, webLink);
@@ -210,7 +215,7 @@ public class ThemeCache {
             new AbstractMessageSource() {
                 @Override
                 protected MessageFormat resolveCode(String code, Locale locale) {
-                    return new MessageFormat(configurationBean.getThemeServletPrefix() + "/" + uid + "/" + code);
+                    return new MessageFormat(repositoryConfiguration.getThemeServletPrefix() + "/" + uid + "/" + code);
                 }
             }
         );
@@ -254,7 +259,7 @@ public class ThemeCache {
             String resTenant = info.getTenantId();
             String tenantQualifiedTheme = resTheme;
             if (resTenant != null) {
-                tenantQualifiedTheme += configurationBean.getUserNameSeparator() + resTenant;
+                tenantQualifiedTheme += userAndRoleConfiguration.getUserNameSeparator() + resTenant;
             }
 
             themesToUpdate.add(tenantQualifiedTheme);
@@ -281,7 +286,7 @@ public class ThemeCache {
         if (uid != null) {
             uid2name.remove(uid);
             // clean up the resource map
-            String webLinkPrefix = configurationBean.getThemeServletPrefix() + "/" + uid;
+            String webLinkPrefix = repositoryConfiguration.getThemeServletPrefix() + "/" + uid;
             for (Iterator<String> iter = resourceMap.keySet().iterator(); iter.hasNext(); ) {
                 String webLink = iter.next();
                 if (webLink.startsWith(webLinkPrefix)) {
@@ -338,12 +343,20 @@ public class ThemeCache {
         }
     }
 
-    public ConfigurationBean getConfigurationBean() {
-        return configurationBean;
+    public void setUserAndRoleConfiguration(UserAndRoleConfiguration userAndRoleConfiguration) {
+        this.userAndRoleConfiguration = userAndRoleConfiguration;
     }
 
-    public void setConfigurationBean(ConfigurationBean configurationBean) {
-        this.configurationBean = configurationBean;
+    public UserAndRoleConfiguration getUserAndRoleConfiguration() {
+        return userAndRoleConfiguration;
+    }
+
+    public void setRepositoryConfiguration(RepositoryConfiguration repositoryConfiguration) {
+        this.repositoryConfiguration = repositoryConfiguration;
+    }
+
+    public RepositoryConfiguration getRepositoryConfiguration() {
+        return repositoryConfiguration;
     }
 
     public RepositoryService getRepositoryService() {

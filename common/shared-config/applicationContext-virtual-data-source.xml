@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 
     <bean id="virtualDataSourceHandler" class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.VirtualDataSourceHandler">
         <property name="repositoryService">
@@ -38,7 +41,7 @@
         <property name="teiidCacheFactory" ref="teiidCacheFactory"/>
         <property name="transactionManagerConfiguration"><ref bean="transactionManagerConfiguration"/></property>
         <property name="serverConfig"><ref bean="serverConfig"/></property>
-        <property name="engineService"><ref local="engineService"/></property>
+        <property name="engineService"><ref bean="engineService"/></property>
         <property name="repositoryService"><ref bean="${bean.repositoryService}"/></property>
         <property name="poolTimeoutInMinute" value="20"/>
         <property name="useSubDSTableList" value="true"/>
@@ -278,11 +281,11 @@
         <!--
          Journal fragment file 1
          -->
-        <property name="logPart1Filename" value="transactionBtm1.log"/>
+        <property name="logPart1Filename" value="transactionBtm1.tlog"/>
         <!--
         Journal fragment file 2
         -->
-        <property name="logPart2Filename" value="transactionBtm2.log"/>
+        <property name="logPart2Filename" value="transactionBtm2.tlog"/>
         <!--
         whether saving journal fragment files to log directory
         -->
@@ -290,12 +293,13 @@
         <!--
         Set the journal to be used to record transaction logs. This can be any of disk, null or a class name.
         The disk journal is a classic implementation using two fixed-size files and disk forces, the null journal just allows one to disable logging.
+        Do not use the null journal on production as without transaction logs, atomicity cannot be guaranteed.
         -->
-        <property name="journal" value="null"/>
+        <property name="journal" value="disk"/>
         <!--
         set logs forced to disk
         -->
-        <property name="forcedWriteEnabled" value="false"/>
+        <property name="forcedWriteEnabled" value="true"/>
         <!--
         Are disk forces batched? Disabling batching can seriously lower the transaction manager's throughput.
         -->
@@ -304,6 +308,11 @@
         Should corrupted transactions log entries be skipped? Use only at last resort when all you have to recover is a pair of corrupted files.
         -->
         <property name="skipCorruptedLogs" value="true"/>
+        <!--
+        Set the Maximum size in megabytes of the journal fragments.
+        Larger logs allow transactions to stay longer in-doubt but the TM pauses longer when a fragment is full.
+        -->
+        <property name="maxLogSizeInMb" value="2"/>
     </bean>
 
     <bean id="fileTranslator" class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig">

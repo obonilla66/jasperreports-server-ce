@@ -1,24 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.authority;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * <p></p>
@@ -29,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Deprecated
 @XmlRootElement(name = "attribute")
-public class ClientUserAttribute {
+public class ClientUserAttribute implements DeepCloneable<ClientUserAttribute> {
     private String name;
     private String value;
     private Boolean secure = null;
@@ -39,6 +46,8 @@ public class ClientUserAttribute {
     private String holder;
 
     public ClientUserAttribute(ClientUserAttribute other) {
+        checkNotNull(other);
+
         this.name = other.getName();
         this.value = other.getValue();
         this.secure = other.isSecure();
@@ -49,6 +58,11 @@ public class ClientUserAttribute {
     }
 
     public ClientUserAttribute() {
+    }
+
+    @Override
+    public ClientUserAttribute deepClone() {
+        return new ClientUserAttribute(this);
     }
 
     public String getName() {
@@ -78,7 +92,7 @@ public class ClientUserAttribute {
         return this;
     }
 
-    public ClientUserAttribute setSecure(boolean secure) {
+    public ClientUserAttribute setSecure(Boolean secure) {
         this.secure = secure;
         return this;
     }
@@ -102,8 +116,9 @@ public class ClientUserAttribute {
         return description;
     }
 
-    public void setDescription(String description) {
+    public ClientUserAttribute setDescription(String description) {
         this.description = description;
+        return this;
     }
 
     public Integer getPermissionMask() {
@@ -124,15 +139,22 @@ public class ClientUserAttribute {
 
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (value != null ? !value.equals(that.value) : that.value != null) return false;
-        if (holder != null ? !holder.equals(that.holder) : that.holder != null) return false;
-
-        return true;
+        if (secure != null ? !secure.equals(that.secure) : that.secure != null) return false;
+        if (inherited != null ? !inherited.equals(that.inherited) : that.inherited != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null) return false;
+        if (permissionMask != null ? !permissionMask.equals(that.permissionMask) : that.permissionMask != null)
+            return false;
+        return holder != null ? holder.equals(that.holder) : that.holder == null;
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (secure != null ? secure.hashCode() : 0);
+        result = 31 * result + (inherited != null ? inherited.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (permissionMask != null ? permissionMask.hashCode() : 0);
         result = 31 * result + (holder != null ? holder.hashCode() : 0);
         return result;
     }
@@ -142,10 +164,10 @@ public class ClientUserAttribute {
         return "ClientUserAttribute{" +
                 "name='" + name + '\'' +
                 ", value='" + value + '\'' +
-                ", secure='" + secure + '\'' +
-                ", inherited='" + inherited + '\'' +
+                ", secure=" + secure +
+                ", inherited=" + inherited +
                 ", description='" + description + '\'' +
-                ", permissionMask='" + permissionMask + '\'' +
+                ", permissionMask=" + permissionMask +
                 ", holder='" + holder + '\'' +
                 '}';
     }

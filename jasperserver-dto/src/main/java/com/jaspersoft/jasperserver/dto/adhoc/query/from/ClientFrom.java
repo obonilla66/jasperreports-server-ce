@@ -1,39 +1,45 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.from;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Andriy Godovanets
  * @version $Id: ClientFrom.java 54107 2015-09-28 22:16:32Z schubar $
  */
-public class ClientFrom {
+public class ClientFrom implements DeepCloneable<ClientFrom> {
     private String dataSource;
     private String olapCube;
 
     public ClientFrom() {
     }
 
-    public ClientFrom(ClientFrom from) {
-        if (from != null) {
-            this
-                    .setDataSource(from.getDataSource())
-                    .setOlapCube(from.getOlapCube());
-        }
+    public ClientFrom(ClientFrom source) {
+        checkNotNull(source);
+
+        dataSource = source.getDataSource();
+        olapCube = source.getOlapCube();
     }
 
     public ClientFrom(String dataSource) {
@@ -43,6 +49,11 @@ public class ClientFrom {
     public ClientFrom(String dataSource, String olapCube) {
         this.dataSource = dataSource;
         this.olapCube = olapCube;
+    }
+
+    @Override
+    public ClientFrom deepClone() {
+        return new ClientFrom(this);
     }
 
     public String getDataSource() {

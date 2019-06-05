@@ -1,25 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.job;
 
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.common.util.rd.DateRangeFactory;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.FTPInfo;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobAlert;
@@ -71,9 +75,10 @@ import com.jaspersoft.jasperserver.dto.job.model.ClientJobSourceModel;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConverter;
-import com.jaspersoft.jasperserver.war.cascade.CascadeResourceNotFoundException;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsLogicService;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsValidationException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,8 +94,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TimeZone;
 import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.types.date.RelativeTimestampRange;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -484,9 +491,17 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
         if ((clientObject.getId() != null)) {
             resultToUpdate.setId(clientObject.getId());
         }
+
         if ((clientObject.getVersion() != null)) {
             resultToUpdate.setVersion(clientObject.getVersion());
         }
+
+        if (clientObject.getOutputLocale() == null){
+            resultToUpdate.setOutputLocale(LocaleContextHolder.getLocale().toString());
+        } else {
+            resultToUpdate.setOutputLocale(clientObject.getOutputLocale());
+        }
+
         resultToUpdate.setUsername(clientObject.getUsername());
         resultToUpdate.setLabel(clientObject.getLabel());
         resultToUpdate.setDescription(clientObject.getDescription());
@@ -494,7 +509,6 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
         Timestamp creationDate = clientObject.getCreationDate();
         resultToUpdate.setCreationDate((creationDate != null) ? new Timestamp(creationDate.getTime()) : null);
         resultToUpdate.setBaseOutputFilename(clientObject.getBaseOutputFilename());
-        resultToUpdate.setOutputLocale(clientObject.getOutputLocale());
 
         resultToUpdate.setOutputTimeZone(clientObject.getOutputTimeZone());
 
@@ -769,6 +783,11 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
                     try {
                         Map<String, Object> typedParameters = inputControlsLogicService.getTypedParameters(clientJobSource.getReportUnitURI(), clientParameters);
                         serverJobSource.setParameters(typedParameters);
+
+                        // RelativeTimestampRang have to be converted to server representation with report output timezone
+                        // because the value of the RelativeTimestampRang depends in what timezone report will run
+                        TimeZone tz = (timeZone != null) ? TimeZone.getTimeZone(timeZone) : null;
+                        fixTimeZoneForRelativeTimestampRangeParams(typedParameters, tz);
                     } catch (ClassCastException e) {
                         log.error(e);
                         throw new IllegalParameterValueException("job.source.parameters", "Map with content of wrong type");
@@ -798,6 +817,19 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
             serverJobSource.getParameters().put(JRParameter.REPORT_TIME_ZONE, TimeZone.getTimeZone(timeZone));
         }
         return serverJobSource;
+    }
+
+    private void fixTimeZoneForRelativeTimestampRangeParams(Map<String, Object> typedParameters, TimeZone timeZone) {
+        if (typedParameters == null) return;
+
+        for (Map.Entry<String, Object> entry : typedParameters.entrySet()) {
+            if (entry.getValue() instanceof RelativeTimestampRange) {
+                RelativeTimestampRange range = (RelativeTimestampRange) entry.getValue();
+
+                range = (RelativeTimestampRange) DateRangeFactory.getInstance(range.getExpression(), timeZone, Timestamp.class);
+                entry.setValue(range);
+            }
+        }
     }
 
     protected ReportJobTrigger toServerJobTrigger(ClientJobTrigger clientJobTrigger) {

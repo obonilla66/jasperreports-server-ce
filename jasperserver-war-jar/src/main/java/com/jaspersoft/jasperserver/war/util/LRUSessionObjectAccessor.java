@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.util;
@@ -36,6 +39,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.util.WebUtils;
 
+import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
+import com.jaspersoft.jasperserver.war.action.WebflowReportContext;
+
+import net.sf.jasperreports.engine.JRPrintPage;
+import net.sf.jasperreports.engine.JRVirtualizer;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.ReportContext;
+
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
  * @version $Id$
@@ -50,6 +61,7 @@ public class LRUSessionObjectAccessor implements SessionObjectSerieAccessor {
 	
 	private AtomicInteger idCounter = new AtomicInteger();
 
+	@SuppressWarnings("rawtypes")
 	protected static class ObjectSerie extends LinkedHashMap implements SessionObjectSeries, 
 			HttpSessionBindingListener, HttpSessionActivationListener {
 		
@@ -67,10 +79,20 @@ public class LRUSessionObjectAccessor implements SessionObjectSerieAccessor {
 		protected boolean removeEldestEntry(Entry entry) {
 			boolean remove = size() > maxSize;
 			
-			if (remove && log.isDebugEnabled()) {
-				log.debug("Automatically removing object with name " + entry.getKey());
+			if(remove){
+				if(log.isDebugEnabled()){
+					log.debug("Automatically removing object with name " + entry.getKey());
+				}
+				Object o = entry.getValue();
+				if(o instanceof ReportUnitResult){
+					cleanupRUR((ReportUnitResult)o);
+				} else if (o instanceof WebflowReportContext){
+					cleanupWRC((WebflowReportContext)o);
+				}
+				
+				// This seems to be helping but not really a must-have
+				// System.runFinalization();
 			}
-			
 			return remove;
 		}
 
@@ -98,12 +120,56 @@ public class LRUSessionObjectAccessor implements SessionObjectSerieAccessor {
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		public List getValues() {
 			Collection values = values();
 			return new ArrayList(values);
 		}
 	}
 	
+	/**
+	 * Prevent memory leaks by removing possible circular references between the objects
+	 * @param rur
+	 */
+	static private void cleanupRUR(ReportUnitResult rur){
+		// clear context
+		ReportContext ctx = rur.getReportContext();
+		if(ctx!=null){
+			ctx.clearParameterValues();
+		}
+		rur.setReportContext(null);
+		// go through pages and clear circular references too
+		JasperPrint jp = rur.getJasperPrint();
+		if(jp!=null){
+			if(jp.getPages()!=null){
+				for(JRPrintPage page: jp.getPages()){
+					if(page.getElements()!=null){
+						page.getElements().clear();
+					}
+				}
+				jp.getPages().clear();
+			}
+		}
+		// cleanup printer
+		rur.setJasperPrintAccessor(null);
+		// and virtualizer
+		JRVirtualizer v =  rur.getVirtualizer();
+		if(v!=null){
+			v.cleanup();
+		}
+	}
+
+	/**
+	 * Prevent memory leaks by removing possible circular references between the objects
+	 * @param wrc
+	 */
+	static private void cleanupWRC(WebflowReportContext wrc){
+		wrc.clearParameterValues();
+		wrc.setFlowValues(null);
+	}
+	
+	
+	@SuppressWarnings("unchecked")
 	public String putObject(HttpServletRequest request, Object object) {
 		ObjectSerie objectSerie = getObjectSerie(request);
 		String name = createName(object);

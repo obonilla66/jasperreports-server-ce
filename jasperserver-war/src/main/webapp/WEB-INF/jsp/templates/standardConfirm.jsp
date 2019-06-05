@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%--
@@ -32,17 +36,19 @@ Usage:
 --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
+<%@ taglib prefix="tx" uri="http://tiles.apache.org/tags-tiles-extras"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
 
-<t:useAttribute name="okLabel" id="okLabel" ignore="true" classname="java.lang.String"/>
-<t:useAttribute name="cancelLabel" id="cancelLabel" ignore="true" classname="java.lang.String"/>
-<t:useAttribute id="containerClass" name="containerClass" classname="java.lang.String" ignore="true"/>
-<t:useAttribute id="leftButtonId" name="leftButtonId" classname="java.lang.String" ignore="true"/>
-<t:useAttribute id="rightButtonId" name="rightButtonId" classname="java.lang.String" ignore="true"/>
-<t:useAttribute id="bodyContent" name="bodyContent" classname="java.lang.String" ignore="true"/>
-<t:useAttribute id="containerTitle" name="containerTitle" classname="java.lang.String" ignore="true"/>
-<t:useAttribute id="containerElements" name="containerElements" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute name="okLabel" id="okLabel" ignore="true" classname="java.lang.String"/>
+<tx:useAttribute name="cancelLabel" id="cancelLabel" ignore="true" classname="java.lang.String"/>
+<tx:useAttribute id="containerClass" name="containerClass" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="leftButtonId" name="leftButtonId" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="rightButtonId" name="rightButtonId" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="bodyContent" name="bodyContent" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="containerTitle" name="containerTitle" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="containerElements" name="containerElements" classname="java.lang.String" ignore="true"/>
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
     <t:putAttribute name="containerClass">panel dialog overlay standardConfirm moveable centered_horz centered_vert ${containerClass}</t:putAttribute>
@@ -76,6 +82,7 @@ Usage:
         <t:putAttribute name="headerClass" value="mover"/>
         <p class="message"></p>
         <t:putAttribute name="footerContent">
+            <js:xssNonce/>
             <button class="button action primary up ok">
                 <span class="wrap"><spring:message code="DIALOG_CONFIRM_BUTTON_LABEL_OK"/></span>
                 <span class="icon"></span>

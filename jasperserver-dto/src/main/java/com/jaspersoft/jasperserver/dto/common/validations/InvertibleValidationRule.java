@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.common.validations;
 
@@ -27,7 +30,8 @@ public abstract class InvertibleValidationRule<BuilderType extends InvertibleVal
         extends ValidationRule<BuilderType> {
     private Boolean inverted = false;
 
-    public InvertibleValidationRule(){}
+    public InvertibleValidationRule() {
+    }
 
     public InvertibleValidationRule(InvertibleValidationRule other) {
         super(other);
@@ -51,11 +55,9 @@ public abstract class InvertibleValidationRule<BuilderType extends InvertibleVal
         if (!(o instanceof InvertibleValidationRule)) return false;
         if (!super.equals(o)) return false;
 
-        InvertibleValidationRule that = (InvertibleValidationRule) o;
+        InvertibleValidationRule<?> that = (InvertibleValidationRule<?>) o;
 
-        if (inverted != null ? !inverted.equals(that.inverted) : that.inverted != null) return false;
-
-        return true;
+        return inverted != null ? inverted.equals(that.inverted) : that.inverted == null;
     }
 
     @Override

@@ -1,22 +1,25 @@
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
-<%@ page contentType="text/html" %>
+<%@ page contentType="text/html; charset=utf-8" %>
 
 <%
     response.setHeader("P3P","CP='IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT'");
@@ -24,7 +27,7 @@
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
-<%@ taglib uri="/spring" prefix="spring"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib uri="/WEB-INF/jasperserver.tld" prefix="js" %>
 <%@ taglib prefix="tiles" uri="http://tiles.apache.org/tags-tiles" %>
 
@@ -67,8 +70,8 @@
             <c:if test="${pageProperties['meta.noMenu']==null}">
                <div id="mainNavigation" tabindex="2" class="menuRoot menu horizontal primaryNav" js-navtype="actionmenu" role="menubar" aria-label="Main Menu"><!--FIXME ARIA i18n -->
                    <ul id="navigationOptions" js-navtype="actionmenu" data-component-type="navigation">
-                       <li id="main_home" js-navtype="actionmenu" role="menuitem" class="leaf hidden" aria-label="<spring:message code="menu.home"/>" data-title="true">
-                           <p class="wrap button"><span class="icon"></span><spring:message code="menu.home"/></p>
+                       <li id="main_home" js-navtype="actionmenu" role="menuitem" class="leaf hidden" data-title="true" aria-label="<spring:message code="menu.home"/>">
+                           <p class="wrap button"><span class="icon"></span></p>
                        </li>
                        <c:if test='<%= !((NavigationActionModelSupport)application.getAttribute("concreteNavigationActionModelSupport")).banUserRole() %>'>
                            <li id="main_library" js-navtype="actionmenu" role="menuitem" class="leaf hidden">
@@ -82,7 +85,7 @@
         <div class="sectionRight">
             <div style="float:left;">
                 <ul id="metaLinks" class="horizontal" role="menubar" tabindex="3" aria-label="User Menu"><!-- FIXME i18n -->
-                    <authz:authorize ifNotGranted="ROLE_ANONYMOUS">
+                    <authz:authorize access="!hasRole('ROLE_ANONYMOUS')">
                        <li id="userID" role="menuitem">
                                 <span id="casted">
                                     <c:if test="<%= com.jaspersoft.jasperserver.api.metadata.user.service.impl.UserAuthorityServiceImpl.isUserSwitched() %>">
@@ -104,7 +107,7 @@
                             </a>
                         </li>
                     </c:if>
-                    <authz:authorize ifNotGranted="ROLE_ANONYMOUS">
+                    <authz:authorize access="!hasRole('ROLE_ANONYMOUS')">
                         <li id="main_logOut" class="last" role="menuitem">
                             <a id="main_logOut_link" tabindex="-1">
                                 <spring:message code="menu.logout"/>
@@ -177,8 +180,8 @@
                     <c:if test="${pageProperties['meta.noMenu']==null}">
                         <div id="mainNavigation" tabindex="2" class="menuRoot menu horizontal primaryNav" js-navtype="actionmenu" role="menubar" aria-label="Main Menu"><!--FIXME ARIA i18n -->
                             <ul id="navigationOptions" js-navtype="actionmenu" data-component-type="navigation">
-                                <li id="main_home" js-navtype="actionmenu" role="menuitem" class="leaf">
-                                    <p class="wrap button"><span class="icon"></span><spring:message code="menu.home"/></p>
+                                <li id="main_home" js-navtype="actionmenu" role="menuitem" class="leaf" data-title="true" aria-label="<spring:message code="menu.home"/>">
+                                    <p class="wrap button"><span class="icon"></span></p>
                                 </li>
                                 <c:if test='<%= !((NavigationActionModelSupport)application.getAttribute("concreteNavigationActionModelSupport")).banUserRole() %>'>
                                     <li id="main_library" js-navtype="actionmenu" role="menuitem" class="leaf">

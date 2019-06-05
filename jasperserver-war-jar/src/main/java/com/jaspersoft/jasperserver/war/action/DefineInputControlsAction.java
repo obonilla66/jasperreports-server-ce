@@ -1,59 +1,46 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
 import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
 import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
 import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-import com.jaspersoft.jasperserver.war.dto.BaseDTO;
-import com.jaspersoft.jasperserver.war.dto.DataTypeWrapper;
-import com.jaspersoft.jasperserver.war.dto.InputControlWrapper;
-import com.jaspersoft.jasperserver.war.dto.ListOfValuesDTO;
-import com.jaspersoft.jasperserver.war.dto.QueryWrapper;
-import com.jaspersoft.jasperserver.war.dto.ResourceReferenceDTO;
+import com.jaspersoft.jasperserver.war.dto.*;
 import com.jaspersoft.jasperserver.war.model.impl.TypedTreeDataProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.MessageSource;
 import org.springframework.webflow.action.FormAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.execution.ScopeType;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DefineInputControlsAction extends FormAction {
 	private final Log log = LogFactory.getLog(this.getClass());
@@ -79,9 +66,9 @@ public class DefineInputControlsAction extends FormAction {
     private TypedTreeDataProvider listOfValuesTreeDataProvider;
     private TypedTreeDataProvider queryTreeDataProvider;
     private TypedTreeDataProvider oLAPTreeDataProvider;
-	private MessageSource messageSource;
-    private ConfigurationBean configuration;
+    private RepositoryConfiguration configuration;
     private Map<String, Map<String, Object>> inputControlTypeConfiguration;
+    private CalendarFormatProvider formatProvider;
 
     /*
       * method to get the reposervice object
@@ -123,7 +110,7 @@ public class DefineInputControlsAction extends FormAction {
 			InputControl ic=formObject.getInputControl();
 			FilterCriteria criteria = FilterCriteria.createFilter();
 			criteria.addFilterElement(FilterCriteria.createParentFolderFilter(ic.getParentFolder()));
-			ResourceLookup[] resources = repository.findResource(JasperServerUtil.getExecutionContext(context), criteria);
+			ResourceLookup[] resources = repository.findResource(StaticExecutionContextProvider.getExecutionContext(), criteria);
 			List allResources=Arrays.asList(resources);
 			formObject.setAllResources(allResources);
 		}
@@ -209,7 +196,7 @@ public class DefineInputControlsAction extends FormAction {
 			}
 		log("control type="+selectedType);
 		List existingPathsList=new ArrayList();
-		ResourceLookup[] lookups=repository.findResource(JasperServerUtil.getExecutionContext(context), criteria);
+		ResourceLookup[] lookups=repository.findResource(StaticExecutionContextProvider.getExecutionContext(), criteria);
 		if(lookups!=null){
 			log("Found lookups size="+lookups.length);
 			for(int i=0;i<lookups.length;i++){
@@ -512,28 +499,14 @@ public class DefineInputControlsAction extends FormAction {
 	private DateFormat getFormat(byte type) {
         switch (type) {
             case DataType.TYPE_DATE:
-                return JasperServerUtil.createCalendarDateFormat(messageSource);
+                return getFormatProvider().getDateFormat();
             case DataType.TYPE_DATE_TIME:
-                return JasperServerUtil.createCalendarDateTimeFormat(messageSource);
+                return getFormatProvider().getDatetimeFormat();
             case DataType.TYPE_TIME:
-                return JasperServerUtil.createCalendarTimeFormat(messageSource);
+                return getFormatProvider().getTimeFormat();
             default:
-                return JasperServerUtil.createCalendarDateFormat(messageSource);
+                return getFormatProvider().getDateFormat();
         }
-	}
-
-	/**
-	 * @return Returns the messageSource.
-	 */
-	public MessageSource getMessageSource() {
-		return messageSource;
-	}
-
-	/**
-	 * @param messageSource The messageSource to set.
-	 */
-	public void setMessageSource(MessageSource messageSource) {
-		this.messageSource = messageSource;
 	}
 
     public TypedTreeDataProvider getDataTypeTreeDataProvider() {
@@ -575,4 +548,12 @@ public class DefineInputControlsAction extends FormAction {
     public void setInputControlTypeConfiguration(Map<String, Map<String, Object>> inputControlTypeConfiguration) {
         this.inputControlTypeConfiguration = inputControlTypeConfiguration;
     }
+
+	public CalendarFormatProvider getFormatProvider() {
+		return formatProvider;
+	}
+
+	public void setFormatProvider(CalendarFormatProvider formatProvider) {
+		this.formatProvider = formatProvider;
+	}
 }

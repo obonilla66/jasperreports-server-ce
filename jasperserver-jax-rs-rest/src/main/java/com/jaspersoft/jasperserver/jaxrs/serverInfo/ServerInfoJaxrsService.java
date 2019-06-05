@@ -1,25 +1,28 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.serverInfo;
 
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceWrapper;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.services.ServerInfoService;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -51,7 +54,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getServerInfo() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo()).build();
             }
         });
@@ -62,7 +65,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getServerVersion() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getVersion()).build();
             }
         });
@@ -73,7 +76,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getServerEdition() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getEdition().toString()).build();
             }
         });
@@ -84,7 +87,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getServerEditionName() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getEditionName()).build();
             }
         });
@@ -95,7 +98,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getServerLicenseType() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getLicenseType()).build();
             }
         });
@@ -106,7 +109,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getServerBuild() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getBuild()).build();
             }
         });
@@ -117,7 +120,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getServerExpiration() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getExpiration()).build();
             }
         });
@@ -128,7 +131,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response getFeatures() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getFeatures()).build();
             }
         });
@@ -139,7 +142,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response dateFormatPattern() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getDateFormatPattern()).build();
             }
         });
@@ -150,7 +153,7 @@ public class ServerInfoJaxrsService extends RemoteServiceWrapper<ServerInfoServi
     @Produces(MediaType.TEXT_PLAIN)
     public Response datetimeFormatPattern() {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(ServerInfoService service) throws RemoteException {
+            public Response call(ServerInfoService service) throws ErrorDescriptorException {
                 return Response.ok(service.getServerInfo().getDatetimeFormatPattern()).build();
             }
         });

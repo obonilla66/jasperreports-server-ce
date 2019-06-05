@@ -1,28 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-
+import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
+import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
+import com.jaspersoft.jasperserver.war.tags.PaginatorTag;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.MessageSource;
@@ -30,15 +35,7 @@ import org.springframework.webflow.action.FormAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
-import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
-import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-import com.jaspersoft.jasperserver.war.tags.PaginatorTag;
+import java.util.*;
 
 public class RepoAdminAction extends FormAction {
 
@@ -49,7 +46,6 @@ public class RepoAdminAction extends FormAction {
 	private RepositoryService repository;
 	private String flowAttributeFolder;
 	private MessageSource messages;//FIXME not used
-	private ConfigurationBean configuration;
 	private RepositorySecurityChecker repositoryServiceSecurityChecker;
 
 	/*
@@ -92,16 +88,6 @@ public class RepoAdminAction extends FormAction {
 		this.messages = messages;
 	}
 
-	public ConfigurationBean getConfiguration()
-	{
-		return configuration;
-	}
-
-	public void setConfiguration(ConfigurationBean configuration)
-	{
-		this.configuration = configuration;
-	}
-
 	public RepoAdminAction()
 	{
 //		setFormObjectClass(CreateReportWizardDTO.class);
@@ -134,13 +120,13 @@ public class RepoAdminAction extends FormAction {
 		FilterCriteria criteria = FilterCriteria.createFilter();
 		criteria.addFilterElement(FilterCriteria.createParentFolderFilter(folderURI));
 
-		List folders = repository.getSubFolders(JasperServerUtil.getExecutionContext(context), folderURI);
+		List folders = repository.getSubFolders(StaticExecutionContextProvider.getExecutionContext(), folderURI);
 
 /*
 		ResourceLookup[] resources = repository.findResource(null, criteria);
 		context.getRequestScope().put("resources", Arrays.asList(resources));
 */
-		List resources = repository.loadResourcesList(JasperServerUtil.getExecutionContext(context), criteria);
+		List resources = repository.loadResourcesList(StaticExecutionContextProvider.getExecutionContext(), criteria);
 
 		List allResources = new ArrayList();
 		allResources.addAll(folders);

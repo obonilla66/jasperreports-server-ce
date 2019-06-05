@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -81,7 +81,7 @@ jQuery.extend(Report, {
 
 
             // observe page navigation buttons
-            $(this.PAGINATION_CONTAINER).observe('click', function(e) {
+            jQuery('.toolsRight')[0].observe('click', function(e) {
                 var elem = e.element();
                 e.stop();
 
@@ -115,7 +115,7 @@ jQuery.extend(Report, {
         if(typeof JRS !== 'undefined' && JRS.fid){
             fr = jQuery('#'+JRS.fid, window.parent.document);
             r = fr.contents().find('#reportContainer');
-            fr.removeClass('hidden').show();
+            fr.removeClass(layoutModule.HIDDEN_CLASS).show();
 
             if(!isIPad()) fr.parent().parent().css('background-image','none');
             var h = r.height();
@@ -129,8 +129,8 @@ jQuery.extend(Report, {
 
                 r.children('div').bind({
                     'touchstart':function(){
-                        fr.parent().parent().siblings().removeClass('over');
-                        fr.parent().parent().addClass('over');
+                        fr.parent().parent().siblings().removeClass(layoutModule.HOVERED_CLASS);
+                        fr.parent().parent().addClass(layoutModule.HOVERED_CLASS);
                     }
                 })
             }
@@ -176,19 +176,19 @@ jQuery.extend(Report, {
 
         if (paginationState.length > 0) {
             var lastPageIndex = paginationState.attr("data-lastPageIndex");
-            jQuery("#emptyReportID").addClass('hidden');
+            jQuery("#emptyReportID").addClass(layoutModule.HIDDEN_CLASS);
 
             if (lastPageIndex === "0") {
-                jQuery("#pagination").addClass('hidden');
+                jQuery(".control.paging").addClass(layoutModule.HIDDEN_CLASS).prev(".divider").addClass(layoutModule.HIDDEN_CLASS);
             } else {
-                jQuery("#pagination").removeClass('hidden');
+                jQuery(".control.paging").removeClass(layoutModule.HIDDEN_CLASS).prev(".divider").removeClass(layoutModule.HIDDEN_CLASS);
             }
         }
         if (emptyReportState && emptyReportState.length > 0) {
             var emptyReportMessage = emptyReportState.html();
-            jQuery("#pagination").addClass('hidden');
+            jQuery(".control.paging").addClass(layoutModule.HIDDEN_CLASS).prev(".divider").addClass(layoutModule.HIDDEN_CLASS);
             jQuery(jQuery("#emptyReportID p.message")[1]).html(emptyReportMessage);
-            jQuery("#emptyReportID").removeClass('hidden');
+            jQuery("#emptyReportID").removeClass(layoutModule.HIDDEN_CLASS);
             centerElement(jQuery("#emptyReportID"), {horz: true, vert: true});
         }
 
@@ -246,6 +246,7 @@ jQuery.extend(Report, {
                 buttonManager.disable($(Report.PAGINATION_PAGE_NEXT));
             }
             buttonManager.disable($(Report.PAGINATION_PAGE_LAST));
+
         } else if ((currentPageIndex+1) < lastPage) {
             buttonManager.enable($(Report.PAGINATION_PAGE_NEXT));
             buttonManager.enable($(Report.PAGINATION_PAGE_LAST));
@@ -276,7 +277,28 @@ jQuery.extend(Report, {
         if (viewer.reportInstance.status.totalPages != null) {
             this.pageActions['button#page_last'] = lastPage - 1;
         }
+
+        require(['stdnav', 'jquery'], function(stdnav, jQuery) {
+            var $elem = jQuery(".toolsRight .paging.subfocus").find("button");
+            if ($elem.length && $elem.is(":disabled")) {
+                if ($elem.is("#" + Report.PAGINATION_PAGE_LAST)) {
+                    stdnav.forceFocus(".toolsRight li.page_first");
+                } else if ($elem.is("#" + Report.PAGINATION_PAGE_FIRST)) {
+                    stdnav.forceFocus(".toolsRight li.page_last");
+                } else if ($elem.is("#" + Report.PAGINATION_PAGE_NEXT)) {
+                    stdnav.forceFocus(".toolsRight li.page_prev");
+                } else if ($elem.is("#" + Report.PAGINATION_PAGE_PREV)) {
+                    stdnav.forceFocus(".toolsRight li.page_next");
+                } else {
+                    $elem.closest("ul").focus();
+                }
+            } else {
+                $elem.addClass(layoutModule.HOVERED_CLASS);
+            }
+        });
+
     },
+
     refreshAsyncCancel: function(canceled) {
         var meta = viewer.reportInstance.status;
 
@@ -346,11 +368,19 @@ jQuery.extend(Report, {
         if (!Report.confirmExit()) {
             return;
         }
+        var params = Report.getAllRequestParameters();
 
         // disable back button after first click
         buttonManager.disable($('back'));
 
-        window.history.back();
+        if (params["_ddHyperlink"]) {
+            window.history.back();
+        } else {
+            // exportForm is used here to leave the page
+            Report.exportForm._eventId.value = "close";
+            Report.exportForm._flowExecutionKey.value = Report.reportExecutionKey();
+            Report.exportForm.submit();
+        }
     },
     open: function() {
         alert("Not implemented yet: open report")

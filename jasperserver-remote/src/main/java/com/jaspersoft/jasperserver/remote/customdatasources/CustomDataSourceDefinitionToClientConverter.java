@@ -1,30 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.customdatasources;
 
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.CustomReportDataSourceService;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.customdatasources.ClientCustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.dto.customdatasources.CustomDataSourcePropertyDefinition;
 import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -81,6 +84,6 @@ public class CustomDataSourceDefinitionToClientConverter implements ToClientConv
 
     @Override
     public String getClientResourceType() {
-        return ClientTypeHelper.extractClientType(ClientCustomDataSourceDefinition.class);
+        return ClientTypeUtility.extractClientType(ClientCustomDataSourceDefinition.class);
     }
 }

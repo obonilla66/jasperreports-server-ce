@@ -1,73 +1,80 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
-import org.junit.Before;
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOPresentableTest;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
 
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p/>
  * <p/>
  *
  * @author tetiana.iefimenko
+ * @author Andriy Tivodar <ativodar@tibco>
  * @version $Id$
  * @see
  */
-public class ResourceGroupElementTest {
+public class ResourceGroupElementTest extends BaseDTOPresentableTest<ResourceGroupElement> {
 
-    public static final String ELEMENT_NAME = "name";
-    public static final ClientExpressionContainer FILTER_EXPRESSION = new ClientExpressionContainer().setString("FilterExpression");
-    public static final String SOURCE_NAME = "SourceName";
-    ResourceGroupElement sourceElement;
-    ResourceGroupElement clonedElement;
-
-    @Before
-    public void setUp() {
-        sourceElement = new ResourceGroupElement()
-                .setName(ELEMENT_NAME)
-                .setElements(new ArrayList<SchemaElement>())
-                .setFilterExpression(FILTER_EXPRESSION)
-                .setSourceName(SOURCE_NAME);
+    @Override
+    protected List<ResourceGroupElement> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setName("name2"),
+                createFullyConfiguredInstance().setKind("kind2"),
+                createFullyConfiguredInstance().setSourceName("sourcingName2"),
+                createFullyConfiguredInstance().setElements(Arrays.<SchemaElement>asList(new QueryResourceGroupElement(), new QueryResourceGroupElement().setName("name2"))),
+                createFullyConfiguredInstance().setFilterExpression(new ClientExpressionContainer().setObject(new ClientString("filterExpression2"))),
+                // with null values
+                createFullyConfiguredInstance().setName(null),
+                createFullyConfiguredInstance().setKind(null),
+                createFullyConfiguredInstance().setSourceName(null),
+                createFullyConfiguredInstance().setElements(null),
+                createFullyConfiguredInstance().setFilterExpression(null)
+        );
     }
 
-    @Test
-    public void testCloningConstructor() {
+    @Override
+    protected ResourceGroupElement createFullyConfiguredInstance() {
+        return new ResourceGroupElement()
+                .setName("name")
+                .setKind("kind")
+                .setSourceName("sourcingName")
+                .setElements(Arrays.<SchemaElement>asList(new QueryResourceGroupElement(), new QueryResourceGroupElement().setName("name")))
+                .setFilterExpression(new ClientExpressionContainer().setObject(new ClientString("filterExpression")));
+    }
 
-        clonedElement = new ResourceGroupElement(sourceElement);
+    @Override
+    protected ResourceGroupElement createInstanceWithDefaultParameters() {
+        return new ResourceGroupElement();
+    }
 
-        assertTrue(clonedElement.equals(sourceElement));
-        assertFalse(sourceElement == clonedElement);
-        assertFalse(sourceElement.getElements() == clonedElement.getElements());
-        assertNotNull(clonedElement.getName());
-        assertEquals(ELEMENT_NAME, clonedElement.getName());
-        assertNotNull(clonedElement.getFilterExpression());
-        assertEquals(FILTER_EXPRESSION, clonedElement.getFilterExpression());
-        assertNotNull(clonedElement.getSourceName());
-        assertEquals(SOURCE_NAME, clonedElement.getSourceName());
+    @Override
+    protected ResourceGroupElement createInstanceFromOther(ResourceGroupElement other) {
+        return new ResourceGroupElement(other);
     }
 
 }

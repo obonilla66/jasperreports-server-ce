@@ -1,21 +1,21 @@
-/**
- * Copyright (C) 2005 - 2015 Jaspersoft Corporation. All rights reserved.
+/*
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -85,7 +85,11 @@ define(function(require) {
             },
 
             initialize: function() {
-                _.bindAll(this);
+                _.bindAll(this, "render", "doExport", "handleExportPhase", "filterAuthoritiesBySubOrgs",
+                    "bindWithRoles", "bindWithUsers", "changeEnabledState", "includeRolesByUsers", "includeUsersWithRoles",
+                    "includeSelectedRolesUsersOnly", "sendParameters", "onRolesToUsersChange", "onUsersToRolesChange",
+                    "_isServerLevel", "_includeUsersOrRoles", "_showNotification", "_getBrokenDependencies",
+                    "_clickOnCheckbox", "_onModelChange", "_resetModel");
 
                 this.model || (this.model = new ExportModel());
                 this.stateModel = new ExportStateModel();
@@ -374,7 +378,7 @@ define(function(require) {
 
     function initializeAuthorityPickers(options){
         this.rolesList = new AuthorityPickerView({
-            model: AuthorityModel.instance("rest_v2/{{#tenantId}}organizations/{{{tenantId}}}/{{/tenantId}}roles?q={{{searchString}}}{{#excludeSubOrgs}}&includeSubOrgs=false{{/excludeSubOrgs}}", {tenantId: options.tenantId}),
+            model: AuthorityModel.instance("rest_v2/{{if (tenantId) { }}organizations/{{-tenantId}}/{{ } }}roles?q={{-searchString}}{{ if (excludeSubOrgs) { }}&includeSubOrgs=false{{ } }}", {tenantId: options.tenantId}),
             customClass: "selectedRoles",
             title: i18n["export.dialog.roles.users.roles.label"],
             selectLabel: i18n["export.dialog.roles.users.select.all.roles.label"]
@@ -384,7 +388,7 @@ define(function(require) {
         this.rolesList.render();
 
         this.usersList = new AuthorityPickerView({
-            model: AuthorityModel.instance("rest_v2/{{#tenantId}}organizations/{{{tenantId}}}/{{/tenantId}}users?q={{{searchString}}}{{#excludeSubOrgs}}&includeSubOrgs=false{{/excludeSubOrgs}}", {tenantId: options.tenantId}),
+            model: AuthorityModel.instance("rest_v2/{{if (tenantId) { }}organizations/{{-tenantId}}/{{ } }}users?q={{-searchString}}{{ if (excludeSubOrgs) { }}&includeSubOrgs=false{{ } }}", {tenantId: options.tenantId}),
             customClass: "select selectedUsers",
             title: i18n["export.dialog.roles.users.users.label"],
             selectLabel: i18n["export.dialog.roles.users.select.all.users.label"]
@@ -393,10 +397,10 @@ define(function(require) {
         this.usersList.on("change:selection", this.bindWithUsers);
         this.usersList.render();
 
-        this.rolesToUsers = AuthorityModel.instance("rest_v2/users?hasAllRequiredRoles=false{{#roles}}&requiredRole={{{.}}}{{/roles}}");
+        this.rolesToUsers = AuthorityModel.instance("rest_v2/users?hasAllRequiredRoles=false{{ if (roles) for (var i = 0; i < roles.length; i++) { }}&requiredRole={{-roles[i]}}{{ } }}");
         this.rolesToUsers.on("change", this.onRolesToUsersChange);
 
-        this.usersToRoles = AuthorityModel.instance("rest_v2/roles?hasAllUsers=false{{#users}}&user={{{.}}}{{/users}}");
+        this.usersToRoles = AuthorityModel.instance("rest_v2/roles?hasAllUsers=false{{ if (users) for (var i = 0; i < users.length; i++) { }}&user={{-users[i]}}{{ } }}");
         this.usersToRoles.on("change", this.onUsersToRolesChange);
 
         this.changeEnabledState();

@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -48,7 +48,7 @@ var resourceReport = {
 
 
     SAVE_BUTTON_ID: "done",
-    
+
     JRXML_FILE_PATH_COOKIE: 'jrxmlFilePath',
 
     _canGenerateId: true,
@@ -72,7 +72,7 @@ var resourceReport = {
 
             this._isEditMode = options ? options.isEditMode : false;
             this._initialSource =
-                    this._fileSystemSource.checked ? this._fileSystemSource : this._contentRepositorySource;
+                this._fileSystemSource.checked ? this._fileSystemSource : this._contentRepositorySource;
             this._jrxmlFileResourceAlreadyUploaded = options.jrxmlFileResourceAlreadyUploaded;
             this._label.validator = resource.labelValidator.bind(this);
             this._resourceId.validator = resource.resourceIdValidator.bind(this);
@@ -81,7 +81,7 @@ var resourceReport = {
             this._resourceUri.validator = this._resourceUriValidator.bind(this);
 
             this._initEvents();
-			this._adjustFileSelectorPosition();
+            this._adjustFileSelectorPosition();
 
             this._fileName.value =  this._jrxmlFileResourceAlreadyUploaded;
         }
@@ -117,12 +117,12 @@ var resourceReport = {
 
     _initEvents: function() {
 
-		var self = this;
+        var self = this;
 
         //opens file upload selection dialog, when user clicks on ordinary button
         jQuery("#" + this.FILE_UPLOAD_BUTTON_ID).click(function(e) {
             e.preventDefault();
-			jQuery("#" + self.FILE_PATH_ID).trigger('click');
+            jQuery("#" + self.FILE_PATH_ID).trigger('click');
         });
 
         this._saveButton.observe('click', function(e){
@@ -139,7 +139,7 @@ var resourceReport = {
                 ValidationModule.validate(resource.getValidationEntries([element]));
 
                 if (element == self._resourceId
-                        && self._resourceId.getValue() != resource.generateResourceId(self._label.getValue())) {
+                    && self._resourceId.getValue() != resource.generateResourceId(self._label.getValue())) {
                     self._canGenerateId = false;
                 }
 
@@ -152,34 +152,34 @@ var resourceReport = {
         });
 
         this._filePath.observe('change', function() {
-        	if (isIE()){
+            if (isIE()){
                 //IE can for security reasons change real patch to file on 'c:\fakepath\'
                 //is should not be shown to user, in this case show only filename
-        		if (this.value.toLowerCase().indexOf('c:\\fakepath\\') != -1) {
-        			self._fileName.value = this.value.substring('c:\\fakepath\\'.length,this.value.length);
-        		}
-        		else{
-        			self._fileName.value = this.value;
-        		}
-        	}
-        	else{
-        		self._fileName.value = this.files[0].name;
+                if (this.value.toLowerCase().indexOf('c:\\fakepath\\') != -1) {
+                    self._fileName.value = this.value.substring('c:\\fakepath\\'.length,this.value.length);
+                }
+                else{
+                    self._fileName.value = this.value;
+                }
+            }
+            else{
+                self._fileName.value = this.files[0].name;
             }
             $('fileUpload').removeClassName('error');
-			self._adjustFileSelectorPosition();
+            self._adjustFileSelectorPosition();
         });
     },
 
     _isDataValid: function() {
         var elementsToValidate = [this._label, this._resourceId, this._description, this._filePath, this._resourceUri];
         if (isIE()){
-        	this.file = this._filePath.value;
+            this.file = this._filePath.value;
         }
         else{
-        	this.file = this._filePath.files[0];
-        }      
-        this.html = this._filePath.innerHTML;
-        
+            this.file = this._filePath.files[0];
+        }
+        this.html = jQuery(this._filePath).html();
+
         return ValidationModule.validate(resource.getValidationEntries(elementsToValidate));
     },
 
@@ -188,8 +188,8 @@ var resourceReport = {
         var errorMessage = "";
 
         if (this._fileSystemSource.checked && value.blank()
-                && (!this._isEditMode || this._initialSource != this._fileSystemSource)
-                && !this._jrxmlFileResourceAlreadyUploaded) {
+            && (!this._isEditMode || this._initialSource != this._fileSystemSource)
+            && !this._jrxmlFileResourceAlreadyUploaded) {
             errorMessage = resource.messages['filePathIsEmpty'];
             isValid = false;
         }
@@ -218,34 +218,34 @@ var resourceReport = {
         };
     },
 
-	_adjustFileSelectorPosition: function() {
-		var fp = jQuery("#filePath");
+    _adjustFileSelectorPosition: function() {
+        var fp = jQuery("#filePath");
 
-		if (isIE7() || isIE8() || isIE9() || isIE10()) {
-			var top = 20, right = 0, width = 95, height = 30,
-				hasError = fp.parents("label").hasClass("error");
+        if (isIE7() || isIE8() || isIE9() || isIE10()) {
+            var top = 20, right = 0, width = 95, height = 30,
+                hasError = fp.parents("label").hasClass("error");
 
-			if (hasError) {
-				// adjust the position because of the error message
-				top += 13;
-			}
+            if (hasError) {
+                // adjust the position because of the error message
+                top += 13;
+            }
 
-			fp.css({
-				opacity: "0",
-				position: "absolute",
-				right: right,
-				top: top,
-				width: width,
-				height: height
-			});
-		} else {
-			fp.css({
-				position: "fixed",
-				right: "-1000px",
-				top: "-1000px"
-			});
-		}
-	},
+            fp.css({
+                opacity: "0",
+                position: "absolute",
+                right: right,
+                top: top,
+                width: width,
+                height: height
+            });
+        } else {
+            fp.css({
+                position: "fixed",
+                right: "-1000px",
+                top: "-1000px"
+            });
+        }
+    },
 
     editResource: function(resourceName) {
         $(this.RESOURCE_NAME_ID).setValue(resourceName);
@@ -281,4 +281,3 @@ if (typeof require === "undefined") {
         resourceReport.initialize(localContext.initOptions);
     });
 }
-

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
@@ -97,16 +100,6 @@ public enum ClientAggregates {
 
     public static ClientQueryAggregatedField aggregate(String id, ClientQueryField field, String name, String arg) {
         return aggregate(id, field, name, null, arg);
-    }
-
-    private static String buildExpression(String field, String functionName, String arg) {
-        String expr;
-        if (arg == null || arg.isEmpty()) {
-            expr = String.format("%s(%s)", functionName, field);
-        } else {
-            expr = String.format("%s(%s, %s)", functionName, field, arg);
-        }
-        return expr;
     }
 
     public static ClientQueryAggregatedField aggregate(String id, ClientQueryField field, String funcName, String expr, String args) {

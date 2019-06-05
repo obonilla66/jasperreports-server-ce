@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
@@ -21,23 +24,18 @@ import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationError;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder;
 import com.jaspersoft.jasperserver.api.common.util.TimeZonesList;
 import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobAlert;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobCalendarTrigger;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobMailNotification;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobRepositoryDestination;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSimpleTrigger;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSource;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobTrigger;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
+import com.jaspersoft.jasperserver.api.engine.scheduling.domain.*;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobNotFoundException;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportSchedulingService;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.war.common.LocalesList;
 import com.jaspersoft.jasperserver.war.common.UserLocale;
 import com.jaspersoft.jasperserver.war.dto.ByteEnum;
@@ -57,18 +55,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 import java.beans.PropertyEditorSupport;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TimeZone;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -124,9 +111,12 @@ public class ReportJobEditAction extends FormAction {
 	private TimeZonesList timeZonesList;
 	private String timeZonesAttrName;
 	
-	private ConfigurationBean configuration;
+	private RepositoryConfiguration configuration;
 
     private AuditContext auditContext;
+
+	private CalendarFormatProvider formatProvider;
+
 
 	private ValidationErrorsUtils validationUtils = ValidationErrorsUtils.instance();
 
@@ -308,7 +298,15 @@ public class ReportJobEditAction extends FormAction {
         this.auditContext = auditContext;
     }
 
-    protected void initBinder(RequestContext context, DataBinder binder) {
+	public CalendarFormatProvider getFormatProvider() {
+		return formatProvider;
+	}
+
+	public void setFormatProvider(CalendarFormatProvider formatProvider) {
+		this.formatProvider = formatProvider;
+	}
+
+	protected void initBinder(RequestContext context, DataBinder binder) {
 		super.initBinder(context, binder);
 		
 		binder.registerCustomEditor(List.class, "mailNotification.toAddresses", mailAddressesEditor);
@@ -316,8 +314,7 @@ public class ReportJobEditAction extends FormAction {
 		binder.registerCustomEditor(List.class, "mailNotification.bccAddresses", mailAddressesEditor);
 		
 		// create a fresh date editor so that is uses the current locale
-		CustomDateEditor customDateEditor = new CustomDateEditor(
-				JasperServerUtil.createCalendarDateTimeFormat(getMessageSource()), true);
+		CustomDateEditor customDateEditor = new CustomDateEditor(formatProvider.getDatetimeFormat(), true);
 		binder.registerCustomEditor(Date.class, customDateEditor);
 		
 		binder.registerCustomEditor(Integer.class, customNumberEditor);
@@ -359,7 +356,7 @@ public class ReportJobEditAction extends FormAction {
 		} else {
 			Long jobIdParam = context.getRequestParameters().getRequiredLong(getEditJobIdParamName());
 			long jobId = jobIdParam.longValue();
-			job = schedulingService.getScheduledJob(JasperServerUtil.getExecutionContext(context), jobId);
+			job = schedulingService.getScheduledJob(StaticExecutionContextProvider.getExecutionContext(), jobId);
 			if (job == null) {
 				throw new ReportJobNotFoundException(jobId);
 			}
@@ -478,7 +475,7 @@ public class ReportJobEditAction extends FormAction {
             List timeZones = getTimeZonesList().getTimeZones(getUserLocale());
             context.getRequestScope().put(getTimeZonesAttrName(), timeZones);
 
-            TimeZone userTz = JasperServerUtil.getTimezone(context);
+            TimeZone userTz = TimeZoneContextHolder.getTimeZone();
             context.getRequestScope().put("preferredTimezone", userTz.getID());
         }
     }
@@ -578,12 +575,12 @@ public class ReportJobEditAction extends FormAction {
                 // by default, send alert to owner and admin if job fails
                 job.setAlert(new ReportJobAlert());
                 createAuditReportSchedulingEvent("scheduleReport");
-				schedulingService.scheduleJob(JasperServerUtil.getExecutionContext(context), job);
+				schedulingService.scheduleJob(StaticExecutionContextProvider.getExecutionContext(), job);
                 closeReportSchedulingAuditEvent("scheduleReport");
 			} else {
 				try {
                     createAuditReportSchedulingEvent("updateReportScheduling");
-					schedulingService.updateScheduledJob(JasperServerUtil.getExecutionContext(context), job);
+					schedulingService.updateScheduledJob(StaticExecutionContextProvider.getExecutionContext(), job);
                     closeReportSchedulingAuditEvent("updateReportScheduling");
 				} catch (ReportJobNotFoundException e) {
 					context.getFlowScope().put("errorMessage", "report.job.save.not.found");
@@ -719,11 +716,11 @@ public class ReportJobEditAction extends FormAction {
 		this.recurrenceIntervalUnits = recurrenceIntervalUnits;
 	}
 	
-	public ConfigurationBean getConfiguration() {
+	public RepositoryConfiguration getConfiguration() {
 		return configuration;
 	}
 
-	public void setConfiguration(ConfigurationBean configuration) {
+	public void setConfiguration(RepositoryConfiguration configuration) {
 		this.configuration = configuration;
 	}
 

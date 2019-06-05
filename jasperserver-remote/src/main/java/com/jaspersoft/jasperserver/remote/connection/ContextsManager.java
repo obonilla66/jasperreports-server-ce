@@ -1,35 +1,45 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.ExceptionListWrapper;
+import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
+import com.jaspersoft.jasperserver.core.util.type.GenericParametersHelper;
+import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
+import com.jaspersoft.jasperserver.dto.common.validations.SupportsValidation;
 import com.jaspersoft.jasperserver.remote.common.JrsBeanValidator;
-import com.jaspersoft.jasperserver.remote.connection.storage.ConnectionDataPair;
-import com.jaspersoft.jasperserver.remote.connection.storage.ConnectionDataStorage;
+import com.jaspersoft.jasperserver.remote.connection.storage.ContextDataStorage;
+import com.jaspersoft.jasperserver.remote.connection.storage.ContextDataPair;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.OperationCancelledException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
-import com.jaspersoft.jasperserver.remote.exception.UnsupportedOperationRemoteException;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
+import com.jaspersoft.jasperserver.remote.exception.UnsupportedOperationErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConverter;
-import com.jaspersoft.jasperserver.war.cascade.handlers.GenericTypeProcessorRegistry;
-import com.jaspersoft.jasperserver.war.helper.GenericParametersHelper;
 import org.springframework.stereotype.Service;
+import com.jaspersoft.jasperserver.remote.validation.ClientValidator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -40,6 +50,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * <p></p>
@@ -49,6 +63,7 @@ import java.util.UUID;
  */
 @Service
 public class ContextsManager {
+    private final static Log log = LogFactory.getLog(ContextsManager.class);
     @Resource
     private List<ContextQueryExecutor> queryExecutors;
     private Map<String, Class<?>> queryTypeToClassMapping;
@@ -62,12 +77,14 @@ public class ContextsManager {
     @Resource
     private ProfileAttributesResolver profileAttributesResolver;
     @Resource
-    private ConnectionDataStorage connectionDataStorage;
+    private ContextDataStorage contextDataStorage;
     @Resource
     private JrsBeanValidator jrsBeanValidator;
+    @Resource
+    private ContextExecutorService contextExecutorService;
 
-    public Class<?> getConnectionDescriptionClass(String connectionType) {
-        return typeToClassMapping.get(connectionType != null ? connectionType.toLowerCase() : null);
+    public Class<?> getContextDescriptionClass(String contextType) {
+        return typeToClassMapping.get(contextType != null ? contextType.toLowerCase() : null);
     }
 
     public Class<?> getQueryClass(String queryType) {
@@ -78,54 +95,59 @@ public class ContextsManager {
         return metadataParamsTypeToClassMapping.get(paramsType != null ? paramsType.toLowerCase() : null);
     }
 
-    public UUID createConnection(Object connectionDescription) throws IllegalParameterValueException {
-        if (connectionDescription == null) {
+    public UUID createContext(Object contextDescription) throws IllegalParameterValueException {
+        if (contextDescription == null) {
             throw new MandatoryParameterNotFoundException("body");
         }
-        jrsBeanValidator.validate(connectionDescription);
-        final Map<String, Object> data = new HashMap<String, Object>();
-        // generic type processor registry assures safety of unchecked assignment
-        @SuppressWarnings("unchecked")
-        final ContextValidator<Object> validator = genericTypeProcessorRegistry.getTypeProcessor(connectionDescription.getClass(), ContextValidator.class, false);
-        if (validator != null) {
-            validator.validate(connectionDescription);
+        final ContextManagementStrategy<Object, Object> strategy = (ContextManagementStrategy<Object, Object>) getStrategy(contextDescription.getClass());
+        if (strategy.getClass().getAnnotation(SupportsValidation.class) == null) {
+            jrsBeanValidator.validate(contextDescription);
+            // generic type processor registry assures safety of unchecked assignment
+            ClientValidator clientValidator = genericTypeProcessorRegistry.getTypeProcessor(contextDescription.getClass(), ClientValidator.class, false);
+            if (clientValidator != null) {
+                final List<Exception> exceptions = clientValidator.validate(contextDescription);
+                if (!exceptions.isEmpty()) {
+                    throw new ExceptionListWrapper(exceptions);
+                }
+            }
         }
-        final ContextManagementStrategy<Object, Object> strategy = getStrategy(connectionDescription);
-        final Object context = strategy.createContext(connectionDescription, data);
-        return connectionDataStorage.save(new ConnectionDataPair(context, data));
+        final Map<String, Object> data = new HashMap<String, Object>();
+        final Object context = strategy.createContext(contextDescription, data);
+        ContextDataPair item = new ContextDataPair(context, data).setExternalContextClass(contextDescription.getClass());
+        return contextDataStorage.save(item);
     }
 
-    public boolean isMetadataSupported(Object connectionDescription, String metadataClientType) {
-        final ContextMetadataBuilder<?> metadataBuilder = getMetadataBuilder(connectionDescription);
+    public boolean isMetadataSupported(Object contextDescription, String metadataClientType) {
+        final ContextMetadataBuilder<?> metadataBuilder = getMetadataBuilder(contextDescription);
         boolean result = false;
         if (metadataBuilder instanceof GenericTypeMetadataBuilder) {
-            // some connection strategies serves data sources of multiple types, described by generic model.
+            // some context strategies serves data sources of multiple types, described by generic model.
             final GenericTypeMetadataBuilder genericTypeMetadataBuilder = (GenericTypeMetadataBuilder) metadataBuilder;
             try {
-                result = genericTypeMetadataBuilder.isMetadataSupported(connectionDescription, metadataClientType);
+                result = genericTypeMetadataBuilder.isMetadataSupported(contextDescription, metadataClientType);
             } catch (ClassCastException e) {
                 final ToServerConverter typeProcessor = genericTypeProcessorRegistry
-                        .getTypeProcessor(connectionDescription.getClass(), ToServerConverter.class, false);
+                        .getTypeProcessor(contextDescription.getClass(), ToServerConverter.class, false);
                 if (typeProcessor != null) {
                     // it's a case with internal representation of resource. Let's try to convert it and check
                     // if metadata is supported
                     try {
                         result = genericTypeMetadataBuilder.isMetadataSupported(
-                                typeProcessor.toServer(connectionDescription, null), metadataClientType);
+                                typeProcessor.toServer(contextDescription, null), metadataClientType);
                     } catch (Exception ex) {
                         // do nothing. Don't support this case
                     }
                 }
             }
         } else if(metadataBuilder != null) {
-            result = extractMetadataClientResourceType(metadataBuilder, connectionDescription)
+            result = extractMetadataClientResourceType(metadataBuilder, contextDescription)
                     .equalsIgnoreCase(metadataClientType);
         }
         return result;
     }
 
-    protected ContextMetadataBuilder<?> getMetadataBuilder(Object connectionDescription) {
-        final Class<?> contextDescriptionClass = connectionDescription.getClass();
+    protected ContextMetadataBuilder<?> getMetadataBuilder(Object contextDescription) {
+        final Class<?> contextDescriptionClass = contextDescription.getClass();
         final ContextManagementStrategy contextManagementStrategy = genericTypeProcessorRegistry.getTypeProcessor(contextDescriptionClass, ContextManagementStrategy.class);
         final Class<?> internalContextType = GenericParametersHelper
                 .getGenericTypeArgument(contextManagementStrategy.getClass(), ContextManagementStrategy.class, 1);
@@ -140,7 +162,7 @@ public class ContextsManager {
             } else if (contextManagementStrategy instanceof GenericTypeContextStrategy) {
                 // context strategy converts external type to internal. Let's ask it for concrete internal type
                 final Class concreteInternalType = ((GenericTypeContextStrategy) contextManagementStrategy)
-                        .getConcreteInternalType(connectionDescription);
+                        .getConcreteInternalType(contextDescription);
                 metadataBuilder = genericTypeProcessorRegistry.getTypeProcessor(concreteInternalType,
                         ContextMetadataBuilder.class, false);
             }
@@ -148,33 +170,33 @@ public class ContextsManager {
         return metadataBuilder;
     }
 
-    public String getMetadataClientResourceType(Object connectionDescription) {
-        final ContextMetadataBuilder<?> metadataBuilder = getMetadataBuilder(connectionDescription);
+    public String getMetadataClientResourceType(Object contextDescription) {
+        final ContextMetadataBuilder<?> metadataBuilder = getMetadataBuilder(contextDescription);
         String result = null;
         if (metadataBuilder instanceof GenericTypeMetadataBuilder) {
-            // some connection strategies serves data sources of multiple types, described by generic model.
+            // some context strategies serves data sources of multiple types, described by generic model.
             final GenericTypeMetadataBuilder genericTypeMetadataBuilder = (GenericTypeMetadataBuilder) metadataBuilder;
             try {
-                result = genericTypeMetadataBuilder.getMetadataClientResourceType(connectionDescription);
+                result = genericTypeMetadataBuilder.getMetadataClientResourceType(contextDescription);
             } catch (ClassCastException e) {
                 final ToServerConverter typeProcessor = genericTypeProcessorRegistry
-                        .getTypeProcessor(connectionDescription.getClass(), ToServerConverter.class, false);
+                        .getTypeProcessor(contextDescription.getClass(), ToServerConverter.class, false);
                 if (typeProcessor != null) {
                     // it's a case with internal representation of resource. Let's try to convert it
                     // and get metadata client type
                     try {
-                        result = genericTypeMetadataBuilder.getMetadataClientResourceType(typeProcessor.toServer(connectionDescription, null));
+                        result = genericTypeMetadataBuilder.getMetadataClientResourceType(typeProcessor.toServer(contextDescription, null));
                     } catch (Exception ex) {
                         // do nothing. Don't support this case
                     }
                 }
             }
         }
-        return result != null ? result : extractMetadataClientResourceType(metadataBuilder, connectionDescription);
+        return result != null ? result : extractMetadataClientResourceType(metadataBuilder, contextDescription);
     }
 
     protected String extractMetadataClientResourceType(ContextMetadataBuilder<?> metadataBuilder,
-            Object connectionDescription) {
+            Object contextDescription) {
         String result = null;
         final ClientResourceType clientResourceTypeAnnotation;
         try {
@@ -189,57 +211,96 @@ public class ContextsManager {
             result = clientResourceTypeAnnotation.value();
         }
         return result != null ? result :
-                "repository." + ClientTypeHelper.extractClientType(connectionDescription.getClass()) + ".metadata";
+                "repository." + ClientTypeUtility.extractClientType(contextDescription.getClass()) + ".metadata";
     }
 
-    public Object getConnection(UUID uuid) throws ResourceNotFoundException {
-        final ConnectionDataPair pair = connectionDataStorage.get(uuid);
-        return pair != null ? getStrategy(pair.getConnection())
-                .getContextForClient(pair.getConnection(), pair.getData()) : null;
+    public Object getContext(UUID uuid, Map<String, String[]> additionalProperties) throws ResourceNotFoundException {
+        final ContextDataPair pair = contextDataStorage.get(uuid);
+        return pair != null ? getStrategy(pair)
+                .getContextForClient(pair.getContext(), pair.getData(), additionalProperties) : null;
     }
 
-    public void removeConnection(UUID uuid) throws ResourceNotFoundException {
-        final ConnectionDataPair pair = connectionDataStorage.get(uuid);
+
+    public void removeContext(UUID uuid) throws ResourceNotFoundException {
+        final ContextDataPair pair = contextDataStorage.get(uuid, false);
         if (pair != null) {
-            getStrategy(pair.getConnection()).deleteContext(pair.getConnection(), pair.getData());
-            connectionDataStorage.delete(uuid);
+            getStrategy(pair).deleteContext(pair.getContext(), pair.getData());
         }
+        contextDataStorage.delete(uuid);
+        contextExecutorService.cancelContext(uuid);
     }
 
     // generic processor registry assures safety of call
     @SuppressWarnings("unchecked")
-    public Object getConnectionMetadata(UUID uuid, Map<String, String[]> options) throws ResourceNotFoundException, UnsupportedOperationRemoteException {
-        final ConnectionDataPair pair = connectionDataStorage.get(uuid);
-        final Object connection = pair.getConnection();
-        ContextMetadataBuilder typeProcessor = genericTypeProcessorRegistry.getTypeProcessor(connection.getClass(), ContextMetadataBuilder.class, false);
-        if (typeProcessor == null && connection instanceof com.jaspersoft.jasperserver.api.metadata.common.domain.Resource) {
+    public Object getContextMetadata(UUID uuid, final Map<String, String[]> options) throws ResourceNotFoundException, UnsupportedOperationErrorDescriptorException {
+        final ContextDataPair pair = contextDataStorage.get(uuid);
+        final Object context = pair.getContext();
+        ContextMetadataBuilder typeProcessor = genericTypeProcessorRegistry.getTypeProcessor(context.getClass(), ContextMetadataBuilder.class, false);
+        if (typeProcessor == null && context instanceof com.jaspersoft.jasperserver.api.metadata.common.domain.Resource) {
             typeProcessor = genericTypeProcessorRegistry
                     .getTypeProcessor(
-                            ((com.jaspersoft.jasperserver.api.metadata.common.domain.Resource) connection)
+                            ((com.jaspersoft.jasperserver.api.metadata.common.domain.Resource) context)
                                     .getResourceType(),
                             ContextMetadataBuilder.class, false);
         }
         if (typeProcessor == null) {
-            throw new UnsupportedOperationRemoteException(ClientTypeHelper.extractClientType(connection.getClass()) + "/metadata");
+            throw new UnsupportedOperationErrorDescriptorException(ClientTypeUtility.extractClientType(context.getClass()) + "/metadata");
         }
         resolveAttributes(options);
-        return typeProcessor.build(profileAttributesResolver.mergeObject(connection, uuid.toString()),
-                options, pair.getData());
+        final Object mergedContext = profileAttributesResolver.mergeObject(context, uuid.toString());
+        final ContextMetadataBuilder typeProcessorClosure = typeProcessor;
+        final Map<String, Object> data = pair.getData();
+        return callAndGet(uuid, new Callable<Object>() {
+            public Object call() throws Exception {
+                if(log.isDebugEnabled())log.debug("Starting building of metadata for context " + context.toString());
+                final Object result = typeProcessorClosure.build(mergedContext, options, data);
+                if(log.isDebugEnabled())log.debug("Building of metadata completed. Context " + context.toString());
+                return result;
+            }
+        });
     }
 
-    public Object getConnectionMetadata(UUID uuid, Object metadataParams) {
-        final ConnectionDataPair pair = connectionDataStorage.get(uuid);
-        final Object connection = pair.getConnection();
-        final ContextParametrizedMetadataBuilder typeProcessor = genericTypeProcessorRegistry
-                .getTypeProcessor(connection.getClass(), ContextParametrizedMetadataBuilder.class, false);
-        if (typeProcessor == null) {
-            throw new UnsupportedOperationRemoteException(ClientTypeHelper.extractClientType(connection.getClass()) + "/metadata");
+    protected <T> T callAndGet(UUID contextUuid, Callable<T> callable){
+        final Future<T> future = contextExecutorService.runWithContext(contextUuid, callable);
+        try {
+            return future.get();
+        } catch (CancellationException e){
+            throw new OperationCancelledException(e);
+        } catch (ExecutionException e){
+            final Throwable cause = e.getCause();
+            if(cause instanceof RuntimeException){
+                throw (RuntimeException)cause;
+            } else {
+                throw new JSExceptionWrapper((Exception) cause);
+            }
+        } catch (Exception e) {
+            throw new JSExceptionWrapper(e);
         }
-        return typeProcessor.build(profileAttributesResolver.mergeObject(connection, uuid.toString()),
-                profileAttributesResolver.mergeObject(metadataParams, uuid.toString()), pair.getData());
     }
 
-    private void resolveAttributes(Map<String, String[]> options) {
+    public Object getContextMetadata(UUID uuid, Object metadataParams) {
+        final ContextDataPair pair = contextDataStorage.get(uuid);
+        final Object context = pair.getContext();
+        final ContextParametrizedMetadataBuilder typeProcessor = genericTypeProcessorRegistry
+                .getTypeProcessor(context.getClass(), ContextParametrizedMetadataBuilder.class, false);
+        if (typeProcessor == null) {
+            throw new UnsupportedOperationErrorDescriptorException(ClientTypeUtility.extractClientType(context.getClass()) + "/metadata");
+        }
+        final Object mergedContext = profileAttributesResolver.mergeObject(context, uuid.toString());
+        final Object mergedMetadataParams = profileAttributesResolver.mergeObject(metadataParams, uuid.toString());
+        final Map<String, Object> data = pair.getData();
+        return callAndGet(uuid, new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                if(log.isDebugEnabled())log.debug("Starting building of metadata for context " + context.toString());
+                final Object result = typeProcessor.build(mergedContext, mergedMetadataParams, data);
+                if(log.isDebugEnabled())log.debug("Building of metadata completed. Context " + context.toString());
+                return result;
+            }
+        });
+    }
+
+    protected void resolveAttributes(Map<String, String[]> options) {
         if (options != null && options.size() > 0) {
             for (String[] option : options.values()) {
                 if (option != null && option.length > 0) {
@@ -254,34 +315,50 @@ public class ContextsManager {
         }
     }
 
-    public Object executeQuery(UUID uuid, Object query, Map<String, String[]> queryParameters) {
+    public Object executeQuery(UUID uuid, final Object query, final Map<String, String[]> queryParameters) {
         jrsBeanValidator.validate(query);
-        final ConnectionDataPair connectionDataPair = connectionDataStorage.get(uuid);
-        final Object connection = connectionDataPair.getConnection();
-        ContextQueryExecutor<Object, Object> queryExecutor = getQueryExecutor(query, connection);
-        return queryExecutor.executeQuery(query, connection, queryParameters, connectionDataPair.getData());
+        final ContextDataPair contextDataPair = contextDataStorage.get(uuid);
+        final Object context = contextDataPair.getContext();
+        final ContextQueryExecutor<Object, Object> queryExecutor = getQueryExecutor(query, context);
+        return callAndGet(uuid, new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                if(log.isDebugEnabled())log.debug("Starting of query execution for context " + context.toString());
+                final Object result = queryExecutor.executeQuery(query, context, queryParameters, contextDataPair.getData());
+                if(log.isDebugEnabled())log.debug("Query execution is completed. Context " + context.toString());
+                return result;
+            }
+        });
     }
 
-    public Object executeQueryForMetadata(UUID uuid, Object query) {
+    public Object executeQueryForMetadata(UUID uuid, final Object query) {
         jrsBeanValidator.validate(query);
-        final ConnectionDataPair connectionDataPair = connectionDataStorage.get(uuid);
-        final Object connection = connectionDataPair.getConnection();
-        ContextQueryExecutor<Object, Object> queryExecutor = getQueryExecutor(query, connection);
-        return queryExecutor.executeQueryForMetadata(query, connection, connectionDataPair.getData());
+        final ContextDataPair contextDataPair = contextDataStorage.get(uuid);
+        final Object context = contextDataPair.getContext();
+        final ContextQueryExecutor<Object, Object> queryExecutor = getQueryExecutor(query, context);
+        return callAndGet(uuid, new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                if(log.isDebugEnabled())log.debug("Starting of query execution for metadata. Context " + context.toString());
+                final Object result = queryExecutor.executeQueryForMetadata(query, context, contextDataPair.getData());
+                if(log.isDebugEnabled())log.debug("Query execution for metadata is completed. Context " + context.toString());
+                return result;
+            }
+        });
     }
 
-    protected ContextQueryExecutor<Object, Object> getQueryExecutor(Object query, Object connection) {
+    protected ContextQueryExecutor<Object, Object> getQueryExecutor(Object query, Object context) {
         ContextQueryExecutor<Object, Object> queryExecutor = null;
-        final ContextManagementStrategy<Object, Object> strategy = getStrategy(connection);
+        final ContextManagementStrategy<Object, Object> strategy = (ContextManagementStrategy<Object, Object>) getStrategy(context.getClass());
         if (strategy instanceof ContextQueryExecutor) {
             queryExecutor = (ContextQueryExecutor<Object, Object>) strategy;
         } else {
             final List<ContextQueryExecutor> queryExecutorList = queryClassToQueryExecutorsMapping.get(query.getClass());
             if (queryExecutorList != null) {
                 for (ContextQueryExecutor currentQueryExecutor : queryExecutorList) {
-                    final Class<?> connectionClass = GenericParametersHelper
+                    final Class<?> contextClass = GenericParametersHelper
                             .getGenericTypeArgument(currentQueryExecutor.getClass(), ContextQueryExecutor.class, 1);
-                    if (connectionClass.isAssignableFrom(connection.getClass())) {
+                    if (contextClass.isAssignableFrom(context.getClass())) {
                         queryExecutor = currentQueryExecutor;
                         break;
                     }
@@ -289,25 +366,34 @@ public class ContextsManager {
             }
         }
         if (queryExecutor == null) {
-            throw new UnsupportedOperationRemoteException(ClientTypeHelper.extractClientType(connection.getClass()));
+            throw new UnsupportedOperationErrorDescriptorException(ClientTypeUtility.extractClientType(context.getClass()));
         }
         return queryExecutor;
     }
 
     // initialization code in afterPropertiesSet() ensures cast safety in this case.
     @SuppressWarnings("unchecked")
-    protected <T> ContextManagementStrategy<T, Object> getStrategy(T object) {
-        return (ContextManagementStrategy<T, Object>) genericTypeProcessorRegistry.getTypeProcessor(object.getClass(),
+    protected <T> ContextManagementStrategy<T, Object> getStrategy(Class<T> objectClass) {
+        return (ContextManagementStrategy<T, Object>) genericTypeProcessorRegistry.getTypeProcessor(objectClass,
+                ContextManagementStrategy.class, false);
+    }
+
+    // initialization code in afterPropertiesSet() ensures cast safety in this case.
+    @SuppressWarnings("unchecked")
+    protected <T> ContextManagementStrategy<T, Object> getStrategy(ContextDataPair contextDataPair) {
+        Class internalContextClass = contextDataPair.getContext().getClass();
+        Class externalContextClass = contextDataPair.getExternalContextClass();
+        return (ContextManagementStrategy<T, Object>) genericTypeProcessorRegistry.getTypeProcessor((externalContextClass != null) ? externalContextClass : internalContextClass,
                 ContextManagementStrategy.class, false);
     }
 
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
         Map<String, Class<?>> typeToClassMap = new HashMap<String, Class<?>>();
-        final Set<Class<?>> connectionDescriptionClasses = genericTypeProcessorRegistry
+        final Set<Class<?>> contextDescriptionClasses = genericTypeProcessorRegistry
                 .getProcessorMapping(ContextManagementStrategy.class).keySet();
-        for (Class<?> connectionDescriptionClass : connectionDescriptionClasses) {
-            typeToClassMap.put(ClientTypeHelper.extractClientType(connectionDescriptionClass).toLowerCase(), connectionDescriptionClass);
+        for (Class<?> contextDescriptionClass : contextDescriptionClasses) {
+            typeToClassMap.put(ClientTypeUtility.extractClientType(contextDescriptionClass).toLowerCase(), contextDescriptionClass);
         }
         typeToClassMapping = Collections.unmodifiableMap(typeToClassMap);
         if (queryExecutors != null) {
@@ -316,7 +402,7 @@ public class ContextsManager {
             for (ContextQueryExecutor queryExecutor : queryExecutors) {
                 final Class<?> queryClass = GenericParametersHelper.getGenericTypeArgument(queryExecutor.getClass(),
                         ContextQueryExecutor.class, 0);
-                final String queryType = ClientTypeHelper.extractClientType(queryClass).toLowerCase();
+                final String queryType = ClientTypeUtility.extractClientType(queryClass).toLowerCase();
                 queryTypeToClassMap.put(queryType, queryClass);
                 List<ContextQueryExecutor> executorsForClass = queryClassToQueryExecutorMap.get(queryClass);
                 if (executorsForClass == null) {
@@ -342,7 +428,7 @@ public class ContextsManager {
                         .getGenericTypeArgument(parametrizedMetadataBuilder.getClass(),
                                 ContextParametrizedMetadataBuilder.class, 1);
                 metadataParamsMapping
-                        .put(ClientTypeHelper.extractClientType(metadataOptionsClass).toLowerCase(), metadataOptionsClass);
+                        .put(ClientTypeUtility.extractClientType(metadataOptionsClass).toLowerCase(), metadataOptionsClass);
             }
         }
         metadataParamsTypeToClassMapping = Collections.unmodifiableMap(metadataParamsMapping);

@@ -1,46 +1,41 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ast.ClientELVisitor;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeTimestampRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeDateRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBoolean;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientFloat;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDouble;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLong;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientShort;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientByte;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigDecimal;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeDateRange;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeTimestampRange;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTimestamp;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientPercentRatio;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientFunction;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientAdd;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientSubtract;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientDivide;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientMultiply;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientPercentRatio;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientSubtract;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreater;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreaterOrEqual;
@@ -51,6 +46,7 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientAnd
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientNot;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientOr;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -61,17 +57,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author Stas Chubar <schubar@tibco.com>
  * @author Grant Bacon <gbacon@tibco.com>
- * @version $Id $
+ * @version $Id$
  */
-@XmlRootElement(name = "list")
+@XmlRootElement(name = ClientList.EXPRESSION_ID)
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class ClientList implements ClientExpression<ClientList> {
-
+    public static final String EXPRESSION_ID = "list";
     public List<ClientExpression> items;
-    protected Boolean paren = null;
 
     public ClientList() {
         this.items = new ArrayList<ClientExpression>();
@@ -79,11 +77,14 @@ public class ClientList implements ClientExpression<ClientList> {
 
     public ClientList(List<ClientExpression> expressions) {
         this();
-        this.items = CopyFactory.copy(expressions);
+        if (expressions != null) {
+            this.items = copyOf(expressions);
+        }
     }
 
-    public ClientList (ClientList source){
-        this(source.getItems());
+    public ClientList (ClientList source) {
+        checkNotNull(source);
+        this.items = copyOf(source.getItems());
     }
 
     public ClientList addItem(ClientExpression expr) {
@@ -108,75 +109,61 @@ public class ClientList implements ClientExpression<ClientList> {
 
     @XmlElementWrapper(name = "items")
     @XmlElements(value = {
-            @XmlElement(name = "NULL",
+            @XmlElement(name = ClientNull.EXPRESSION_ID,
                     type = ClientNull.class),
-            @XmlElement(name = "boolean",
+            @XmlElement(name = ClientBoolean.EXPRESSION_ID,
                     type = ClientBoolean.class),
-            @XmlElement(name = "byte",
-                    type = ClientByte.class),
-            @XmlElement(name = "short",
-                    type = ClientShort.class),
-            @XmlElement(name = "integer",
-                    type = ClientInteger.class),
-            @XmlElement(name = "bigInteger",
-                    type = ClientBigInteger.class),
-            @XmlElement(name = "long",
-                    type = ClientLong.class),
-            @XmlElement(name = "relativeDateRange",
+            @XmlElement(name = ClientNumber.EXPRESSION_ID,
+                    type = ClientNumber.class),
+            @XmlElement(name = ClientRelativeDateRange.EXPRESSION_ID,
                     type = ClientRelativeDateRange.class),
-            @XmlElement(name = "relativeTimestampRange",
+            @XmlElement(name = ClientRelativeTimestampRange.EXPRESSION_ID,
                     type = ClientRelativeTimestampRange.class),
-            @XmlElement(name = "string",
+            @XmlElement(name = ClientString.EXPRESSION_ID,
                     type = ClientString.class),
-            @XmlElement(name = "date",
+            @XmlElement(name = ClientDate.EXPRESSION_ID,
                     type = ClientDate.class),
-            @XmlElement(name = "time",
+            @XmlElement(name = ClientTime.EXPRESSION_ID,
                     type = ClientTime.class),
-            @XmlElement(name = "timestamp",
+            @XmlElement(name = ClientTimestamp.EXPRESSION_ID,
                     type = ClientTimestamp.class),
-            @XmlElement(name = "float",
-                    type = ClientFloat.class),
-            @XmlElement(name = "double",
-                    type = ClientDouble.class),
-            @XmlElement(name = "bigDecimal",
-                    type = ClientBigDecimal.class),
-            @XmlElement(name = "variable",
+            @XmlElement(name = ClientVariable.EXPRESSION_ID,
                     type = ClientVariable.class),
-            @XmlElement(name = "not",
+            @XmlElement(name = ClientNot.EXPRESSION_ID,
                     type = ClientNot.class),
-            @XmlElement(name = "and",
+            @XmlElement(name = ClientAnd.EXPRESSION_ID,
                     type = ClientAnd.class),
-            @XmlElement(name = "or",
+            @XmlElement(name = ClientOr.EXPRESSION_ID,
                     type = ClientOr.class),
-            @XmlElement(name = "greater",
+            @XmlElement(name = ClientGreater.EXPRESSION_ID,
                     type = ClientGreater.class),
-            @XmlElement(name = "greaterOrEqual",
+            @XmlElement(name = ClientGreaterOrEqual.EXPRESSION_ID,
                     type = ClientGreaterOrEqual.class),
-            @XmlElement(name = "less",
+            @XmlElement(name = ClientLess.EXPRESSION_ID,
                     type = ClientLess.class),
-            @XmlElement(name = "lessOrEqual",
+            @XmlElement(name = ClientLessOrEqual.EXPRESSION_ID,
                     type = ClientLessOrEqual.class),
-            @XmlElement(name = "notEqual",
+            @XmlElement(name = ClientNotEqual.EXPRESSION_ID,
                     type = ClientNotEqual.class),
-            @XmlElement(name = "equals",
+            @XmlElement(name = ClientEquals.EXPRESSION_ID,
                     type = ClientEquals.class),
-            @XmlElement(name = "function",
+            @XmlElement(name = ClientFunction.EXPRESSION_ID,
                     type = ClientFunction.class),
-            @XmlElement(name = "in",
+            @XmlElement(name = ClientIn.EXPRESSION_ID,
                     type = ClientIn.class),
-            @XmlElement(name = "range",
+            @XmlElement(name = ClientRange.EXPRESSION_ID,
                     type = ClientRange.class),
-            @XmlElement(name = "add",
+            @XmlElement(name = ClientAdd.EXPRESSION_ID,
                     type = ClientAdd.class),
-            @XmlElement(name = "subtract",
+            @XmlElement(name = ClientSubtract.EXPRESSION_ID,
                     type = ClientSubtract.class),
-            @XmlElement(name = "multiply",
+            @XmlElement(name = ClientMultiply.EXPRESSION_ID,
                     type = ClientMultiply.class),
-            @XmlElement(name = "divide",
+            @XmlElement(name = ClientDivide.EXPRESSION_ID,
                     type = ClientDivide.class),
-            @XmlElement(name = "percentRatio",
+            @XmlElement(name = ClientPercentRatio.EXPRESSION_ID,
                     type = ClientPercentRatio.class),
-            @XmlElement(name = "list",
+            @XmlElement(name = ClientList.EXPRESSION_ID,
                     type = ClientList.class)
     })
     public List<ClientExpression> getItems() {
@@ -191,20 +178,16 @@ public class ClientList implements ClientExpression<ClientList> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ClientList)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         ClientList that = (ClientList) o;
 
-        if (items != null ? !items.equals(that.items) : that.items != null) return false;
-        return paren != null ? paren.equals(that.paren) : that.paren == null;
-
+        return items != null ? items.equals(that.items) : that.items == null;
     }
 
     @Override
     public int hashCode() {
-        int result = items != null ? items.hashCode() : 0;
-        result = 31 * result + (paren != null ? paren.hashCode() : 0);
-        return result;
+        return items != null ? items.hashCode() : 0;
     }
 
     @Override
@@ -215,23 +198,17 @@ public class ClientList implements ClientExpression<ClientList> {
         }
 
         StringBuilder sb = new StringBuilder("(");
+        boolean isFirst = true;
         for (ClientExpression expression : this.items) {
-            sb.append(expression.toString());
-            if (this.items.indexOf(expression) != this.items.size() - 1) {
+            if(isFirst){
+                isFirst = false;
+            } else {
                 sb.append(", ");
             }
+            sb.append(expression.toString());
         }
         sb.append(")");
         return sb.toString();
-    }
-
-    @Override
-    public Boolean hasParen() {
-        return isParen() != null && paren;
-    }
-
-    public Boolean isParen() {
-        return (paren != null) ? paren : null;
     }
 
     @Override

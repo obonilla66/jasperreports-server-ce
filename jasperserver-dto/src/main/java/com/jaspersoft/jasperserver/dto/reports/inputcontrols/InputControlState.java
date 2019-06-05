@@ -1,28 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.reports.inputcontrols;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * InputControlState
@@ -32,7 +39,7 @@ import java.util.List;
  */
 
 @XmlRootElement
-public class InputControlState implements Serializable {
+public class InputControlState implements Serializable, DeepCloneable<InputControlState> {
 
     private final static long serialVersionUID = 1l;
 
@@ -46,18 +53,13 @@ public class InputControlState implements Serializable {
     }
 
     public InputControlState(InputControlState other) {
+        checkNotNull(other);
+
         this.uri = other.getUri();
         this.id = other.getId();
         this.value = other.getValue();
         this.error = other.getError();
-
-        final List<InputControlOption> clientAttributes = other.getOptions();
-        if(clientAttributes != null){
-            options = new ArrayList<InputControlOption>(other.getOptions().size());
-            for(InputControlOption attribute : clientAttributes){
-                options.add(new InputControlOption(attribute));
-            }
-        }
+        this.options = copyOf(other.getOptions());
     }
 
     public String getId() {
@@ -114,23 +116,41 @@ public class InputControlState implements Serializable {
 
         InputControlState that = (InputControlState) o;
 
-        if (error != null ? !error.equals(that.error) : that.error != null) return false;
-        if (!id.equals(that.id)) return false;
-        if (options != null ? !options.equals(that.options) : that.options != null) return false;
-        if (!uri.equals(that.uri)) return false;
+        if (uri != null ? !uri.equals(that.uri) : that.uri != null) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (value != null ? !value.equals(that.value) : that.value != null) return false;
-
-        return true;
+        if (error != null ? !error.equals(that.error) : that.error != null) return false;
+        return options != null ? options.equals(that.options) : that.options == null;
     }
 
     @Override
     public int hashCode() {
-        int result = uri.hashCode();
-        result = 31 * result + id.hashCode();
+        int result = uri != null ? uri.hashCode() : 0;
+        result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         result = 31 * result + (error != null ? error.hashCode() : 0);
         result = 31 * result + (options != null ? options.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "InputControlState{" +
+                "uri='" + uri + '\'' +
+                ", id='" + id + '\'' +
+                ", value='" + value + '\'' +
+                ", error='" + error + '\'' +
+                ", options=" + options +
+                '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public InputControlState deepClone() {
+        return new InputControlState(this);
     }
 }
 

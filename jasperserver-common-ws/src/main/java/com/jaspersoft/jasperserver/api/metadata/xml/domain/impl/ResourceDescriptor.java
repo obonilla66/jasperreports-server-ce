@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.xml.domain.impl;
 
@@ -24,15 +27,9 @@ package com.jaspersoft.jasperserver.api.metadata.xml.domain.impl;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
-import org.w3c.dom.Document;
+import com.jaspersoft.jasperserver.war.common.JasperServerConst;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import com.jaspersoft.jasperserver.core.util.XMLUtil;
+import java.util.*;
 
 public class ResourceDescriptor {
 
@@ -41,8 +38,6 @@ public class ResourceDescriptor {
     public static final String TYPE_OLAPUNIT = "olapUnit";
 
     /* PRO OBJECTS */
-    public static final String TYPE_DASHBOARD_STATE = "dashboardState";
-    public static final String TYPE_DASHBOARD = "dashboard";
     public static final String TYPE_REPORT_OPTIONS = "reportOptions";
     public static final String TYPE_DATASOURCE_DOMAIN = "domain";
     public static final String TYPE_DOMAIN_TOPICS = "domainTopic";
@@ -66,9 +61,9 @@ public class ResourceDescriptor {
     public static final String TYPE_REFERENCE = "reference";
     public static final String TYPE_INPUT_CONTROL = "inputControl";
     public static final String TYPE_DATA_TYPE = "dataType";
-    public static final String TYPE_OLAP_MONDRIAN_CONNECTION = "olapMondrianCon";
-    public static final String TYPE_OLAP_XMLA_CONNECTION = "olapXmlaCon";
-    public static final String TYPE_MONDRIAN_SCHEMA = "olapMondrianSchema";
+    public static final String TYPE_OLAP_MONDRIAN_CONNECTION = JasperServerConst.TYPE_OLAP_MONDRIAN_CONNECTION;
+    public static final String TYPE_OLAP_XMLA_CONNECTION = JasperServerConst.TYPE_OLAP_XMLA_CONNECTION;
+    public static final String TYPE_MONDRIAN_SCHEMA = FileResource.TYPE_MONDRIAN_SCHEMA;
     public static final String TYPE_MONGODB_JDBC_CONFIG = FileResource.TYPE_MONGODB_JDBC_CONFIG;
   	public static final String TYPE_AZURE_CERTIFICATE = FileResource.TYPE_AZURE_CERTIFICATE;
 	public static final String TYPE_ACCESS_GRANT_SCHEMA = FileResource.TYPE_ACCESS_GRANT_SCHEMA; // Pro-only

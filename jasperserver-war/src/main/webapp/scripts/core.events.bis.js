@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -155,29 +155,34 @@ document.observe('contextmenu', function(event) {
 });
 
 document.observe('dom:loaded', function(event) {
+    var isGlobalEventsAllowed = function(el) {
+        var $el = jQuery(el);
+        return typeof $el.data("globalEvents") === 'undefined';
+    };
+
     isIE() && document.body.setAttribute('oncontextmenu', 'return false');
 
     jQuery('body').on('mouseover',layoutModule.BUTTON_PATTERN,function(evt){
-        if(!hasDisabledAttributeSet(this)) buttonManager.over(this);
+        if(!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this)) buttonManager.over(this);
     });
 
     jQuery('body').on('mouseout',layoutModule.BUTTON_PATTERN,function(evt){
-        buttonManager.out(this);
+        if (isGlobalEventsAllowed(this)) buttonManager.out(this);
     });
 
     jQuery('body').on('focus',layoutModule.BUTTON_PATTERN,function(evt){
-        if(!hasDisabledAttributeSet(this)) buttonManager.over(this);
+        if(!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this)) buttonManager.over(this);
     });
 
     jQuery('body').on('blur',layoutModule.BUTTON_PATTERN+'.'+layoutModule.HOVERED_CLASS,function(evt){
-        if(!hasDisabledAttributeSet(this)) buttonManager.out(this);
+        if(!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this)) buttonManager.out(this);
     });
 
     jQuery('body').on('mousedown mouseup touchstart touchend',[layoutModule.BUTTON_PATTERN, layoutModule.MENU_LIST_PATTERN, layoutModule.DISCLOSURE_BUTTON_PATTERN, layoutModule.META_LINKS_PATTERN].join(','),function(evt){
         if (evt.type == 'mousedown' || evt.type == 'touchstart') {
-            !hasDisabledAttributeSet(this) && buttonManager.down(this);
+            !hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this) && buttonManager.down(this);
         } else {
-            !hasDisabledAttributeSet(this) && buttonManager.up(this);
+            !hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this) && buttonManager.up(this);
         }
         if((evt.type == 'mouseup' || evt.type == 'touchend')) {
             if(this.parentNode.id == layoutModule.MAIN_NAVIGATION_HOME_ITEM_ID) primaryNavModule.navigationOption("home");
@@ -195,7 +200,7 @@ document.observe('dom:loaded', function(event) {
     });
 
     jQuery('#frame').on('touchend mouseup',layoutModule.TABSET_TAB_PATTERN,function(evt){
-        if(!hasDisabledAttributeSet(this) && jQuery(this.parentNode).attr("disableCoreEvents") !== "true") {
+        if(!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this) && jQuery(this.parentNode).attr("disableCoreEvents") !== "true") {
             jQuery(this).siblings().removeClass(layoutModule.SELECTED_CLASS).each(function(index,element){
                 jQuery(jQuery(this).attr("tabId")).addClass("hidden");
             });

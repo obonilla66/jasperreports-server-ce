@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 
@@ -26,72 +29,67 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.ast.ClientQueryExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ast.ClientQueryVisitor;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBoolean;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientFloat;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDouble;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLong;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientShort;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientByte;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigDecimal;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTimestamp;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientFunction;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientAdd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientDivide;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientMultiply;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientSubtract;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.*;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreater;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreaterOrEqual;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLess;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLessOrEqual;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientNotEqual;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientAnd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientNot;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientOr;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionContainer;
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckAggregateDefinition;
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionType;
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.NotEmpty;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
-import javax.validation.constraints.AssertTrue;
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import static com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionContainerValidator.AGGREGATION_EXPRESSION_NOT_VALID;
+import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorCode.Codes.QUERY_AGGREGATION_EXPRESSION_NOT_VALID;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 
 /**
  * @author Andriy Godovanets
  */
 @XmlRootElement
-public class ClientQueryAggregatedField implements ClientField, ClientAggregate, ClientFieldReference, ClientIdentifiable<String>, ClientQueryExpression {
+@CheckAggregateDefinition
+public class ClientQueryAggregatedField implements ClientField, ClientAggregate, ClientFieldReference, ClientIdentifiable<String>, ClientQueryExpression, DeepCloneable<ClientQueryAggregatedField> {
     private String id;
     private String aggregateFunction;
     private String aggregateFirstLevelFunction;
 
-    @CheckExpressionContainer(message = AGGREGATION_EXPRESSION_NOT_VALID,
+
+    @CheckExpressionType(message = QUERY_AGGREGATION_EXPRESSION_NOT_VALID,
             value = {
                     ClientAdd.class,
                     ClientAnd.class,
                     ClientBoolean.class,
                     ClientDate.class,
-                    ClientByte.class,
-                    ClientShort.class,
-                    ClientInteger.class,
-                    ClientLong.class,
-                    ClientBigInteger.class,
-                    ClientFloat.class,
-                    ClientDouble.class,
-                    ClientBigDecimal.class,
+                    ClientNumber.class,
                     ClientDivide.class,
                     ClientEquals.class,
                     ClientFunction.class,
                     ClientGreater.class,
                     ClientGreaterOrEqual.class,
                     ClientIn.class,
-                    ClientInteger.class,
                     ClientLess.class,
                     ClientLessOrEqual.class,
                     ClientMultiply.class,
@@ -106,7 +104,6 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
                     ClientTimestamp.class,
                     ClientVariable.class
             })
-
     private ClientExpressionContainer expressionContainer;
 
     private String aggregateType;
@@ -114,23 +111,22 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
     //TODO-Andriy Remove
     private String aggregateArg;
 
-    @NotNull
+    @NotEmpty
     private String fieldRef;
 
     public ClientQueryAggregatedField() {
     }
 
     public ClientQueryAggregatedField(ClientQueryAggregatedField field) {
-        if (field != null) {
-            this
-                    .setId(field.getId())
-                    .setFieldReference(field.getFieldReference())
-                    .setAggregateFunction(field.getAggregateFunction())
-                    .setAggregateFirstLevelFunction(field.getAggregateFirstLevelFunction())
-                    .setAggregateType(field.getAggregateType())
-                    .setExpressionContainer(field.getExpressionContainer())
-                    .setAggregateArg(field.getAggregateArg());
-        }
+        checkNotNull(field);
+
+        id = field.getId();
+        aggregateFunction = field.getAggregateFunction();
+        aggregateFirstLevelFunction = field.getAggregateFirstLevelFunction();
+        expressionContainer = copyOf(field.getExpressionContainer());
+        aggregateType = field.getAggregateType();
+        aggregateArg = field.getAggregateArg();
+        fieldRef = field.getFieldReference();
     }
 
     @Override
@@ -261,18 +257,6 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
         return getAggregateArg();
     }
 
-    @XmlTransient
-    @AssertTrue(message = "query.aggregate.definition.error")
-    public boolean isValidAggregate() {
-        boolean isDefault = (getAggregateFunction() == null && getAggregateExpression() == null);
-        boolean isBuiltin = (getAggregateFunction() != null && !getAggregateFunction().isEmpty());
-        boolean isCustom = (getAggregateExpression() != null && !getAggregateExpression().isEmpty())
-                || (getExpressionContainer() != null);
-
-
-        return isDefault || (isBuiltin && !isCustom) || (isCustom && !isBuiltin);
-    }
-
     @Override
     public void accept(ClientQueryVisitor visitor) {
         if (this.expressionContainer != null) {
@@ -291,10 +275,13 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (aggregateFunction != null ? !aggregateFunction.equals(that.aggregateFunction) : that.aggregateFunction != null)
             return false;
-        if (expressionContainer != null ? !expressionContainer.equals(that.expressionContainer) : that.expressionContainer != null)
+        if (aggregateFirstLevelFunction != null ? !aggregateFirstLevelFunction.equals(that.aggregateFirstLevelFunction) : that.aggregateFirstLevelFunction != null) return false;
+        if (expressionContainer != null ? !expressionContainer.equals(that.expressionContainer) : that.expressionContainer != null) {
             return false;
-        if (aggregateType != null ? !aggregateType.equals(that.aggregateType) : that.aggregateType != null)
+        }
+        if (aggregateType != null ? !aggregateType.equals(that.aggregateType) : that.aggregateType != null) {
             return false;
+        }
         if (aggregateArg != null ? !aggregateArg.equals(that.aggregateArg) : that.aggregateArg != null) return false;
         return !(fieldRef != null ? !fieldRef.equals(that.fieldRef) : that.fieldRef != null);
 
@@ -304,6 +291,7 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (aggregateFunction != null ? aggregateFunction.hashCode() : 0);
+        result = 31 * result + (aggregateFirstLevelFunction != null ? aggregateFirstLevelFunction.hashCode() : 0);
         result = 31 * result + (expressionContainer != null ? expressionContainer.hashCode() : 0);
         result = 31 * result + (aggregateType != null ? aggregateType.hashCode() : 0);
         result = 31 * result + (aggregateArg != null ? aggregateArg.hashCode() : 0);
@@ -316,10 +304,16 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
         return "ClientQueryAggregatedField{" +
                 "id='" + id + '\'' +
                 ", aggregateFunction='" + aggregateFunction + '\'' +
+                ", aggregateFirstLevelFunction='" + aggregateFirstLevelFunction + '\'' +
                 ", expression=" + expressionContainer +
                 ", aggregateType='" + aggregateType + '\'' +
                 ", aggregateArg='" + aggregateArg + '\'' +
                 ", name='" + getName() + '\'' +
                 '}';
+    }
+
+    @Override
+    public ClientQueryAggregatedField deepClone() {
+        return new ClientQueryAggregatedField(this);
     }
 }

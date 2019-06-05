@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -504,7 +504,7 @@ orgModule.entityList = {
         var entityList = this;
         item.processTemplate = function(element) {
             var id = element.select(entityList.ID_PATTERN)[0];
-            id.update(xssUtil.escape(this.getValue().getDisplayName()));
+            id.update(xssUtil.hardEscape(this.getValue().getDisplayName()));
             return element;
         };
 
@@ -1208,7 +1208,7 @@ orgModule.properties = {
                 item.processTemplate = function(element) {
                     if (tooltipText.length > 0) {
                         new JSTooltip(element, {
-                            text: xssUtil.escape(tooltipText),
+                            text: xssUtil.hardEscape(tooltipText),
                             templateId: template
                         });
                     }
@@ -1219,12 +1219,12 @@ orgModule.properties = {
                 item.processTemplate = function(element) {
                     var nameAnchor = element.select("a")[0];
 
-                    nameAnchor.insert(xssUtil.escape(this.getLabel()));
+                    nameAnchor.insert(xssUtil.hardEscape(this.getLabel()));
                     nameAnchor.writeAttribute('href', this.getValue().getManagerURL());
 
                     if (tooltipText.length > 0) {
                         new JSTooltip(element, {
-                            text: xssUtil.escape(tooltipText),
+                            text: xssUtil.hardEscape(tooltipText),
                             templateId: template
                         });
                     }
@@ -1560,13 +1560,6 @@ orgModule.createSameValidator = function(element, asElement, messageKey) {
  * @param messageKey {String}
  */
 orgModule.createRegExpValidator = function(element, messageKey, regExp) {
-    if (typeof regExp === "string") {
-        if (window.XRegExp) {
-            regExp = XRegExp(regExp);
-        } else {
-            regExp = new RegExp(regExp);
-        }
-    }
     return {
         validator: function(value) {
             var matches = regExp.exec(value);

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic;
 
@@ -23,53 +26,57 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientOperator;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ast.ClientELVisitor;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation;
 
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
  * @author Grant Bacon <gbacon@tibco.com>
  * @author Stas Chubar <schubar@tibco.com>
- * @version $Id $
+ * @version $Id$
  */
-@XmlRootElement(name = ClientMultiply.OPERATOR_ID)
+@XmlRootElement(name = ClientMultiply.EXPRESSION_ID)
 public class ClientMultiply extends ClientOperator<ClientMultiply> {
 
-    public static final String OPERATOR_ID = "multiply";
-    public static final String DOMEL_OPERATOR = "*";
+    public static final String EXPRESSION_ID = "multiply";
 
     public ClientMultiply() {
-        super(ClientOperation.MULTIPLY.getName());
+        super(ClientOperation.MULTIPLY);
+    }
+
+    public ClientMultiply(List<? extends ClientExpression> operands, Boolean paren) {
+        super(ClientOperation.MULTIPLY, operands, paren);
     }
 
     public ClientMultiply(List<? extends ClientExpression> operands) {
-        super(ClientOperation.MULTIPLY.getName(), operands);
+        super(ClientOperation.MULTIPLY, operands);
     }
 
-    public ClientMultiply(ClientMultiply multiplication) {
-        super(multiplication.getOperator(), multiplication.getOperands(), multiplication.paren);
+    public ClientMultiply(ClientMultiply source) {
+        super(source);
     }
 
     @Override
-    public String getOperator() {
-        return operator;
+    @Size(min = 2, max = 2, message = DOMEL_INCORRECT_OPERANDS_COUNT)
+    public List<ClientExpression> getOperands() {
+        return operands;
     }
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        if (getOperands() != null && !getOperands().isEmpty()) {
-            result.append(addStringOperand(getOperands().get(0)));
+        String separator = " " + getOperator().getDomelOperator() + " ";
+        String operandsAsString;
+        if (getOperands().size() < 2) {
+            if (getOperands().isEmpty()) {
+                operandsAsString = ClientExpressions.MISSING_REPRESENTATION + separator + ClientExpressions.MISSING_REPRESENTATION;
+            } else {
+                operandsAsString = getOperands().get(0) + separator + ClientExpressions.MISSING_REPRESENTATION;
+            }
         } else {
-            result.append(ClientExpressions.MISSING_REPRESENTATION);
-        }
-        result.append(" " + DOMEL_OPERATOR + " ");
-        if (getOperands() != null && getOperands().size() > 0) {
-            result.append(addStringOperand(getOperands().get(1)));
-        } else {
-            result.append(ClientExpressions.MISSING_REPRESENTATION);
+            operandsAsString = operandsToString(getOperands(), separator);
         }
 
-        return hasParen() ? "(" + result.toString() + ")" : result.toString();
+        return hasParen() ? "(" + operandsAsString + ")" : operandsAsString;
     }
 
     @Override
@@ -79,13 +86,12 @@ public class ClientMultiply extends ClientOperator<ClientMultiply> {
     }
 
     @Override
-    public ClientMultiply setParen() {
-        super.setParen();
-        return this;
+    public ClientMultiply deepClone() {
+        return new ClientMultiply(this);
     }
 
     @Override
-    public ClientMultiply deepClone() {
-        return new ClientMultiply(this);
+    public int getPrecedence() {
+        return 5;
     }
 }

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
@@ -21,6 +24,7 @@ package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 import com.jaspersoft.jasperserver.api.JSAwsDataSourceRecoveryException;
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsDataSourceRecovery;
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSDataSourceConnectionFailedException;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -29,11 +33,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import javax.sql.DataSource;
+import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.TimeZone;
-import java.net.ConnectException;
 
 /**
  * @author vsabadosh
@@ -60,7 +64,7 @@ public class AwsDataSourceService extends JdbcDataSourceService {
         try {
             return getDataSource().getConnection();
         } catch (SQLException e) {
-            throw new JSException(getErrorMessage("jsexception.error.creating.connection"), e);
+            throw new JSDataSourceConnectionFailedException(getErrorMessage("jsexception.error.creating.connection"), e);
         }
     }
 
@@ -114,12 +118,12 @@ public class AwsDataSourceService extends JdbcDataSourceService {
                                     getErrorMessage("aws.exception.datasource.recovery.timeout"));
                         } else {
                             log.error("Error creating connection.", e);
-                            throw new JSException(getErrorMessage("jsexception.error.creating.connection"), e);
+                            throw new JSDataSourceConnectionFailedException(getErrorMessage("jsexception.error.creating.connection"), e);
                         }
                     }
                 } else {
                     log.error("Error creating connection.", e);
-                    throw new JSException(getErrorMessage("jsexception.error.creating.connection"), e);
+                    throw new JSDataSourceConnectionFailedException(getErrorMessage("jsexception.error.creating.connection"), e);
                 }
             }
         }

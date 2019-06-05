@@ -1,8 +1,10 @@
 {{
-	var moment = require("moment");
+	var moment = require("localizedMoment");
 }}
 
 <div class="wrap draggable">
+
+    <js-templateNonce></js-templateNonce>
     <div class="column one">
         <p class="jobResource" title="{{- model.reportLabel }}">{{- model.reportLabel }} </p>
         <p class="jobResourcePath" title="{{- model.reportUnitURI }}">{{- model.reportUnitURI }}</p>

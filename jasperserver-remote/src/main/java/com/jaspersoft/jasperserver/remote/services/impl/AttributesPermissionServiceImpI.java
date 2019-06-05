@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
@@ -32,7 +35,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeSer
 import com.jaspersoft.jasperserver.api.metadata.user.service.impl.InternalURIDefinition;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.stereotype.Component;
@@ -70,7 +73,7 @@ public class AttributesPermissionServiceImpI extends PermissionsServiceImpl {
     @Resource
     protected ProfileAttributeService profileAttributeService;
 
-    public List<ObjectPermission> putPermissions(InternalURI internalURI, List<ObjectPermission> objectPermissions) throws RemoteException {
+    public List<ObjectPermission> putPermissions(InternalURI internalURI, List<ObjectPermission> objectPermissions) throws ErrorDescriptorException {
         ProfileAttribute profileAttribute;
         if (!(internalURI instanceof ProfileAttribute)) {
             return super.putPermissions(internalURI, objectPermissions);
@@ -130,7 +133,7 @@ public class AttributesPermissionServiceImpI extends PermissionsServiceImpl {
         return result;
     }
 
-    protected void changePermissionConsistencyCheck(ObjectPermission objectPermission) throws RemoteException {
+    protected void changePermissionConsistencyCheck(ObjectPermission objectPermission) throws ErrorDescriptorException {
         if (StringUtils.isBlank(objectPermission.getURI())) {
             throw new IllegalParameterValueException("URI is blank", "uri", objectPermission.getURI());
         }

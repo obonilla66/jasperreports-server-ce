@@ -1,24 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.common.service.JdbcDriverService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.AwsReportDataSourceImpl;
@@ -30,9 +32,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * <p></p>
@@ -75,32 +81,44 @@ public class JdbcDataSourceResourceValidatorTest {
         validator.validate(dataSource);
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_no_driverClass() throws Exception {
         dataSource.setDriverClass(null);
 
-        validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(dataSource);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_unknownDriver() throws Exception {
         reset(jdbcDriverService);
 
-        validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(dataSource);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_noConnection() throws Exception {
         dataSource.setConnectionUrl(null);
 
-        validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(dataSource);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_invalidTimezione() throws Exception {
         dataSource.setTimezone("#$%^&*(OL)");
 
-        validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(dataSource);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
     @Test

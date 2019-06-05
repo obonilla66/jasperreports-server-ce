@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.importexport;
 
@@ -21,7 +24,7 @@ import com.jaspersoft.jasperserver.dto.importexport.ImportTask;
 import com.jaspersoft.jasperserver.dto.importexport.State;
 import com.jaspersoft.jasperserver.export.service.ImportExportService;
 import com.jaspersoft.jasperserver.export.service.impl.ImportExportServiceImpl;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.services.async.ImportExportTask;
 import com.jaspersoft.jasperserver.remote.services.async.ImportRunnable;
 import com.jaspersoft.jasperserver.remote.services.async.Task;
@@ -156,7 +159,7 @@ public class ImportJaxrsService {
     @GET
     @Path("/{id}/state")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getStateOfTheTask(@PathParam("id") final String taskId) throws RemoteException {
+    public Response getStateOfTheTask(@PathParam("id") final String taskId) throws ErrorDescriptorException {
         State taskState = basicTaskManager.getTaskState(taskId);
         if (!taskState.getPhase().equals(Task.INPROGRESS) && !taskState.getPhase().equals(Task.PENDING)){
             basicTaskManager.finishTask(taskId);
@@ -166,14 +169,14 @@ public class ImportJaxrsService {
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getTasksIds() throws RemoteException {
+    public Response getTasksIds() throws ErrorDescriptorException {
         return Response.ok(basicTaskManager.getTaskIds()).build();
     }
 
     @GET
     @Path("/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getParamsOfTheTask(@PathParam("id") final String taskId) throws RemoteException {
+    public Response getParamsOfTheTask(@PathParam("id") final String taskId) throws ErrorDescriptorException {
         Task task = basicTaskManager.getTask(taskId);
 
         ImportTask taskDto = new ImportTask();
@@ -209,7 +212,7 @@ public class ImportJaxrsService {
     @Path("/{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putTask(ImportTask taskDto, @PathParam("id") String taskId)  throws RemoteException {
+    public Response putTask(ImportTask taskDto, @PathParam("id") String taskId)  throws ErrorDescriptorException {
         Task task = basicTaskManager.getTask(taskId);
         task.updateTask(taskDto.getParameters(), taskDto.getOrganization(), taskDto.getBrokenDependencies());
         basicTaskManager.restartTask(task);

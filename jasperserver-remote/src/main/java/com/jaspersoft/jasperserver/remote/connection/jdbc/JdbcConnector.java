@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection.jdbc;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.BaseJdbcDataSource;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.DataSourceServiceDefinition;
@@ -26,8 +30,10 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.remote.connection.ContextCreationFailedException;
+import com.jaspersoft.jasperserver.remote.connection.UnsupportedDataSourceException;
 import com.jaspersoft.jasperserver.remote.connection.datadiscovery.Connector;
 import net.sf.jasperreports.engine.JRParameter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,14 +116,20 @@ public class JdbcConnector<ConnectionDescriptionType extends Resource> implement
         }
         final ReportDataSourceServiceFactory reportDataSourceServiceFactory = applicationContext
                 .getBean(dataSourceServiceDefinition.getServiceBeanName(), ReportDataSourceServiceFactory.class);
-        return (BaseJdbcDataSource) reportDataSourceServiceFactory.createService((ReportDataSource) connectionDescription);
+        final ReportDataSourceService service = reportDataSourceServiceFactory.createService((ReportDataSource) connectionDescription);
+        if(!(service instanceof BaseJdbcDataSource)){
+            throw new UnsupportedDataSourceException("Impossible to obtain JDBC connection from " +
+                    connectionDescription.getResourceType());
+        }
+        return (BaseJdbcDataSource) service;
     }
 
     protected void ensureJdbcDataSourcePassword(JdbcReportDataSource jdbcDataSource) {
         final String password = jdbcDataSource.getPassword();
         final String passwordSubstitution = messageSource.getMessage("input.password.substitution", null, LocaleContextHolder.getLocale());
         if ((password == null || password.equals(passwordSubstitution)) && jdbcDataSource.getURIString() != null) {
-            JdbcReportDataSource existingDs = (JdbcReportDataSource) repository.getResource(null, jdbcDataSource.getURIString());
+            JdbcReportDataSource existingDs = (JdbcReportDataSource) repository
+                    .getResource(ExecutionContextImpl.getRuntimeExecutionContext(), jdbcDataSource.getURIString());
             if (existingDs != null) {
                 jdbcDataSource.setPassword(existingDs.getPassword());
             }

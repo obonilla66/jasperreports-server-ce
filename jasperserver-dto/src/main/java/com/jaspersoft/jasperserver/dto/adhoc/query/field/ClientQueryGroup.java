@@ -1,30 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 
 import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientIdentifiable;
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.NotEmpty;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Andriy Godovanets
@@ -42,16 +47,14 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
         // no op
     }
 
-    public ClientQueryGroup(ClientQueryGroup group) {
-        if (group != null) {
-            this
-                    .setId(group.getId())
-                    .setFieldName(group.getFieldName())
-                    .setCategorizer(group.getCategorizer());
+    public ClientQueryGroup(ClientQueryGroup source) {
+        checkNotNull(source);
 
-            this.type = group.type;
-            this.setIncludeAll(group.getIncludeAll());
-        }
+        id = source.getId();
+        type = source.getType();
+        categorizer = source.getCategorizer();
+        fieldName = source.getFieldName();
+        includeAll = source.getIncludeAll();
     }
 
     @Override
@@ -87,7 +90,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
     /**
      * @return Name of the field to group by
      */
-    @NotNull
+    @NotEmpty
     @XmlElement(name = "field")
     public String getFieldName() {
         return fieldName;
@@ -129,7 +132,10 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
     }
 
     public ClientQueryGroup setDataSourceField(ClientDataSourceField field) {
-        if (field != null) {
+        if (field == null) {
+            fieldName = null;
+            type = null;
+        } else {
             fieldName = field.getName();
             type = field.getType();
         }
@@ -143,6 +149,10 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
         public ClientAllGroup() {
             setId(ALL_GROUP_ID);
             setFieldName(ALL_GROUP_ID);
+        }
+
+        public ClientAllGroup(ClientAllGroup other) {
+            super(other);
         }
 
         @XmlTransient
@@ -159,7 +169,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
 
         @Override
         public ClientAllGroup deepClone() {
-            return new ClientAllGroup();
+            return new ClientAllGroup(this);
         }
 
         @Override
@@ -167,6 +177,18 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
             if (this == o) return true;
             if (!(o instanceof ClientAllGroup)) return false;
             return super.equals(o);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("ClientAllGroup{");
+            sb.append("categorizer='").append(getCategorizer()).append('\'');
+            sb.append(", id='").append(getId()).append('\'');
+            sb.append(", type='").append(getType()).append('\'');
+            sb.append(", fieldName='").append(getFieldName()).append('\'');
+            sb.append(", includeAll=").append(getIncludeAll());
+            sb.append('}');
+            return sb.toString();
         }
     }
 
@@ -183,7 +205,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
             return false;
         if (getFieldName() != null ? !getFieldName().equals(that.getFieldName()) : that.getFieldName() != null)
             return false;
-        return includeAll != null ? includeAll.equals(that.includeAll) : that.includeAll == null;
+        return getIncludeAll() != null ? getIncludeAll().equals(that.getIncludeAll()) : that.getIncludeAll() == null;
 
     }
 
@@ -193,7 +215,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
         result = 31 * result + (getType() != null ? getType().hashCode() : 0);
         result = 31 * result + (getCategorizer() != null ? getCategorizer().hashCode() : 0);
         result = 31 * result + (getFieldName() != null ? getFieldName().hashCode() : 0);
-        result = 31 * result + (includeAll != null ? includeAll.hashCode() : 0);
+        result = 31 * result + (getIncludeAll() != null ? getIncludeAll().hashCode() : 0);
         return result;
     }
 

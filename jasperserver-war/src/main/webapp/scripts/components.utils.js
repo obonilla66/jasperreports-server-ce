@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -27,7 +27,7 @@
 
 /* global jaspersoft, console, _, Mustache, dialogs, ajax */
 
-jaspersoft.components.utils = (function(jQuery, _, Mustache, dialogs, ajax){
+jaspersoft.components.utils = (function(jQuery, _, dialogs, ajax){
     var isIE = navigator.userAgent.toLowerCase().indexOf("msie") > -1;
 
     return {
@@ -57,7 +57,7 @@ jaspersoft.components.utils = (function(jQuery, _, Mustache, dialogs, ajax){
                     parent.removeChild(el);
                 }
 
-                el.innerHTML = "";
+                jQuery(el).html("");
 
                 if (isIE && (el.tagName == "SELECT")) {
                     //workaround for bug in IE, select element and innerHTML functionality
@@ -67,7 +67,7 @@ jaspersoft.components.utils = (function(jQuery, _, Mustache, dialogs, ajax){
                         var option = document.createElement('OPTION');
                         //hardcoded workaround for report options
                         option.value = !_.isUndefined(data.value) ? data.value : data.id;
-                        option.innerHTML = data.label;
+                        jQuery(option).html(data.label);
                         if (data.selected) {
                             option.setAttribute('selected', 'selected');
                         }
@@ -75,7 +75,7 @@ jaspersoft.components.utils = (function(jQuery, _, Mustache, dialogs, ajax){
                     });
                     el.appendChild(fragment);
                 } else {
-                    el.innerHTML = template(data);
+                    jQuery(el).html(template(data));
                 }
 
                 if (nextSibling) {
@@ -139,7 +139,6 @@ jaspersoft.components.utils = (function(jQuery, _, Mustache, dialogs, ajax){
 })(
     jQuery,
     _,
-    Mustache,
     dialogs,
     ajax
 );

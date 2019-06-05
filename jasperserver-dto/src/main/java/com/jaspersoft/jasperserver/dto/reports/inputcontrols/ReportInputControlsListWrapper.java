@@ -1,33 +1,40 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.reports.inputcontrols;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
 @XmlRootElement(name = "inputControls")
-public class ReportInputControlsListWrapper {
+public class ReportInputControlsListWrapper implements DeepCloneable<ReportInputControlsListWrapper> {
 
     private List<ReportInputControl> inputParameters;
 
@@ -37,13 +44,9 @@ public class ReportInputControlsListWrapper {
     }
 
     public ReportInputControlsListWrapper(ReportInputControlsListWrapper other) {
-        final List<ReportInputControl> reportInputControls = other.getInputParameters();
-        if(reportInputControls != null){
-            inputParameters = new ArrayList<ReportInputControl>(other.getInputParameters().size());
-            for(ReportInputControl inputControl : reportInputControls){
-                inputParameters.add(new ReportInputControl(inputControl));
-            }
-        }
+        checkNotNull(other);
+
+        this.inputParameters = copyOf(other.getInputParameters());
     }
 
     @XmlElement(name = "inputControl")
@@ -72,5 +75,21 @@ public class ReportInputControlsListWrapper {
     @Override
     public int hashCode() {
         return inputParameters != null ? inputParameters.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "ReportInputControlsListWrapper{" +
+                "inputParameters=" + inputParameters +
+                '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public ReportInputControlsListWrapper deepClone() {
+        return new ReportInputControlsListWrapper(this);
     }
 }

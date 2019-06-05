@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
@@ -121,15 +124,13 @@ public class ClientAwsDataSource extends AbstractClientJdbcDataSource<ClientAwsD
         ClientAwsDataSource that = (ClientAwsDataSource) o;
 
         if (accessKey != null ? !accessKey.equals(that.accessKey) : that.accessKey != null) return false;
+        if (secretKey != null ? !secretKey.equals(that.secretKey) : that.secretKey != null) return false;
+        if (roleArn != null ? !roleArn.equals(that.roleArn) : that.roleArn != null) return false;
+        if (region != null ? !region.equals(that.region) : that.region != null) return false;
+        if (dbName != null ? !dbName.equals(that.dbName) : that.dbName != null) return false;
         if (dbInstanceIdentifier != null ? !dbInstanceIdentifier.equals(that.dbInstanceIdentifier) : that.dbInstanceIdentifier != null)
             return false;
-        if (dbName != null ? !dbName.equals(that.dbName) : that.dbName != null) return false;
-        if (dbService != null ? !dbService.equals(that.dbService) : that.dbService != null) return false;
-        if (region != null ? !region.equals(that.region) : that.region != null) return false;
-        if (roleArn != null ? !roleArn.equals(that.roleArn) : that.roleArn != null) return false;
-        if (secretKey != null ? !secretKey.equals(that.secretKey) : that.secretKey != null) return false;
-
-        return true;
+        return dbService != null ? dbService.equals(that.dbService) : that.dbService == null;
     }
 
     @Override
@@ -156,5 +157,10 @@ public class ClientAwsDataSource extends AbstractClientJdbcDataSource<ClientAwsD
                 ", dbInstanceIdentifier='" + dbInstanceIdentifier + '\'' +
                 ", dbService='" + dbService + '\'' +
                 "} " + super.toString();
+    }
+
+    @Override
+    public ClientAwsDataSource deepClone() {
+        return new ClientAwsDataSource(this);
     }
 }

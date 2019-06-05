@@ -1,19 +1,22 @@
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 
@@ -24,11 +27,11 @@
 
     <!-- properties to specify current upgrade source and target version values -->
     <!-- these are used to help specify the sql update script to be executed    -->
-    <property name="defaultUpgradeFromVersion" value="6.4" />
-    <property name="defaultUpgradeToVersion" value="7.1" />
+    <property name="defaultUpgradeFromVersion" value="7.1" />
+    <property name="defaultUpgradeToVersion" value="7.2" />
 
     <!-- failonerror="false"  -->
-    <target name="drop-js-db" 
+    <target name="drop-js-db"
             description="drop jasperserver repository db">
         <echo message="Dropping database. js.dbName = ${js.dbName}"/>
         <runSQL jdbcUrl="${admin.jdbcUrl}" print="true" onerror="continue">
@@ -123,7 +126,7 @@
     </target>
 
 
-    <!-- bug 28757: SQL Server upgrade needs fix to exactly match correct 4.7.0 --> 
+    <!-- bug 28757: SQL Server upgrade needs fix to exactly match correct 4.7.0 -->
     <!-- todo: should be able to remove this now                                -->
     <target name="upgrade-fix-sqlserver"
             description="run script for 4.7.1 sqlserver fix">
@@ -162,7 +165,7 @@
                 <echo> Error: Check release notes for availability on your database type    </echo>
                 <echo>======================================================================</echo>
                 <echo> </echo>
-                <fail>Error: The upgrade script: upgrade-${dbType}-5.2.0-5.5.0-pro.sql 
+                <fail>Error: The upgrade script: upgrade-${dbType}-5.2.0-5.5.0-pro.sql
                       or upgrade-${dbType}-5.2.0-5.5.0-pro.plsql was not found</fail>
             </then>
         </if>
@@ -516,6 +519,87 @@
         </if>
    </target>
 
+   <property name="7.1-standard-upgrade-message" value="${line.separator}WARNING: legacy dashboards (prior to release 7.1) are no longer supported and will be skipped during the import operation.${line.separator}${line.separator}"/>
+   <target name="upgrade-7.1-7.2-pro"
+            description="upgrade from 7.1 to 7.2">
+
+        <echo> </echo>
+        <echo> currentSqlDir = ${currentSqlDir} </echo>
+        <echo> dbType = ${dbType} </echo>
+        <echo> </echo>
+
+        <if>
+            <not>
+                <or>
+                    <available file="${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-pro.sql"/>
+                    <available file="${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-pro.plsql"/>
+                </or>
+            </not>
+            <then>
+                <echo> </echo>
+                <echo>======================================================================</echo>
+                <echo> Error: The upgrade script: upgrade-${dbType}-7.1.0-7.2.0-pro.sql     </echo>
+                <echo> Error: or the script upgrade-${dbType}-7.1.0-7.2.0-pro.plsql         </echo>
+                <echo> Error: are not currently available.                                  </echo>
+                <echo> Error: Check release notes for availability on your database type    </echo>
+                <echo>======================================================================</echo>
+                <echo> </echo>
+                <fail>Error: The upgrade script: upgrade-${dbType}-7.1.0-7.2.0-pro.sql
+                    or upgrade-${dbType}-7.1.0-7.2.0-pro.plsql was not found</fail>
+            </then>
+        </if>
+
+        <local name="upgradeWarningMessage"/>
+        <local name="upgradeCanceledMessage"/>
+        <property name="upgradeWarningMessage" value="Legacy dashboards prior to release 7.1 are no longer supported and will be removed during the upgrade operation. Do you want to continue upgrade? WARNING: All existing Legacy Dashboards will be lost! This operation may not be rolled back. Enter 'y' to continue or 'n' to cancel the upgrade operation. Default is 'n'"/>
+        <property name="upgradeCanceledMessage" value="Upgrade procedure was canceled"/>
+        <if>
+            <available file="${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-pro.plsql"/>
+            <then>
+                <sequential>
+                    <echo>run script: ${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-pro.plsql </echo>
+                    <input message="${upgradeWarningMessage}"  validargs="y,n" defaultvalue="n" addproperty="continue" />
+                    <if>
+                        <equals arg1="${continue}" arg2="y" />
+                        <then>
+                            <runPLSQL jdbcUrl="${js.jdbcUrl}" print="true">
+                                <fileset dir="${currentSqlDir}">
+                                    <include name="upgrade-${dbType}-7.1.0-7.2.0-pro.plsql"/>
+                                </fileset>
+                            </runPLSQL>
+                        </then>
+                        <else>
+                            <fail message="${upgradeCanceledMessage}"/>
+                        </else>
+                    </if>
+                </sequential>
+            </then>
+        </if>
+
+        <if>
+            <available file="${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-pro.sql"/>
+            <then>
+                <sequential>
+                    <echo>run script: ${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-pro.sql </echo>
+                    <input message="${upgradeWarningMessage}" validargs="y,n" defaultvalue="n" addproperty="continue" />
+                    <if>
+                        <equals arg1="${continue}" arg2="y" />
+                        <then>
+                            <runSQL jdbcUrl="${js.jdbcUrl}" print="true">
+                                <fileset dir="${currentSqlDir}">
+                                    <include name="upgrade-${dbType}-7.1.0-7.2.0-pro.sql"/>
+                                </fileset>
+                            </runSQL>
+                        </then>
+                        <else>
+                            <fail message="${upgradeCanceledMessage}"/>
+                        </else>
+                    </if>
+                </sequential>
+            </then>
+        </if>
+   </target>
+
    <target name="upgrade-6.3-6.4-pro"
             description="upgrade from 6.3 to 6.4">
 
@@ -826,6 +910,38 @@
         </runSQL>
     </target>
 
+    <target name="upgrade-7.1-7.2-ce"
+            description="upgrade from 7.1 to 7.2">
+
+        <echo> </echo>
+        <echo> currentSqlDir = ${currentSqlDir} </echo>
+        <echo> dbType = ${dbType} </echo>
+        <echo> </echo>
+
+        <if>
+            <not>
+                <available file="${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-ce.sql"/>
+            </not>
+            <then>
+                <echo> </echo>
+                <echo>======================================================================</echo>
+                <echo> Error: The upgrade script: upgrade-${dbType}-7.1.0-7.2.0-ce.sql      </echo>
+                <echo> Error: is not currently available.                                   </echo>
+                <echo> Error: Check release notes for availability on your database type    </echo>
+                <echo>======================================================================</echo>
+                <echo> </echo>
+                <fail>Error: The upgrade script: upgrade-${dbType}-7.1.0-7.2.0-ce.sql was not found</fail>
+            </then>
+        </if>
+
+        <echo>run script: ${currentSqlDir}/upgrade-${dbType}-7.1.0-7.2.0-ce.sql </echo>
+        <runSQL jdbcUrl="${js.jdbcUrl}" print="true">
+            <fileset dir="${currentSqlDir}">
+                <include name="upgrade-${dbType}-7.1.0-7.2.0-ce.sql"/>
+            </fileset>
+        </runSQL>
+    </target>
+
     <target name="upgrade-for-overlay-pro"
             description="internal upgrade task used by overlay install">
 
@@ -1043,6 +1159,14 @@
             <if>
                 <equals arg1="@{strategy}" arg2="standard" />
                 <then>
+                    <if>
+                        <isset property="${defaultUpgradeToVersion}-standard-upgrade-message"/>
+                        <then>
+                            <propertycopy name="standard-upgrade-message" from="${defaultUpgradeToVersion}-standard-upgrade-message"/>
+                            <echo message="${standard-upgrade-message}"/>
+                        </then>
+                    </if>
+
                     <recreateDB systemName="js" prompt="false" />
                     <antcall target="init-js-db-@{edition}">
                         <param name="stopIfError" value="true" />

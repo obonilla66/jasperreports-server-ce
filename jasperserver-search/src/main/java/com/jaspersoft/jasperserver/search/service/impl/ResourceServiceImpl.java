@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.search.service.impl;
@@ -25,6 +28,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
+import com.jaspersoft.jasperserver.api.metadata.common.util.DatabaseCharactersEscapeResolver;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterElementDisjunction;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
@@ -52,8 +56,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.LikeEscapeAwareExpression.ESCAPE_CHAR;
-import static com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.LikeEscapeAwareExpression.escape;
 import static com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria.createPropertyEqualsFilter;
 import static com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria.createPropertyLikeFilter;
 import static org.hibernate.criterion.MatchMode.START;
@@ -79,6 +81,7 @@ public class ResourceServiceImpl extends BaseService implements ResourceService 
     private RepositorySecurityChecker securityChecker;
     private SchedulingChecker schedulingChecker;
     private ResourceTypeResolver typeResolver;
+    private DatabaseCharactersEscapeResolver databaseCharactersEscapeResolver;
     private Map<String, ChildrenLoaderService> childrenLoaders;
     private List<String> deleteOrder;
     private List<String> checkDependentResourcesFor;
@@ -211,11 +214,12 @@ public class ResourceServiceImpl extends BaseService implements ResourceService 
             for (Resource resource : copiedResources) {
                 String pattern;
                 disjunction.addFilterElement(createPropertyEqualsFilter("name", resource.getName()));
-                pattern = escape(resource.getName() + NAME_DELIMITER, ESCAPE_CHAR);
-                disjunction.addFilterElement(createPropertyLikeFilter("name", pattern, START, ESCAPE_CHAR));
+                pattern = escape(resource.getName() + NAME_DELIMITER);
+                char escapeChar = databaseCharactersEscapeResolver.getEscapeChar();
+                disjunction.addFilterElement(createPropertyLikeFilter("name", pattern, START, escapeChar));
                 disjunction.addFilterElement(createPropertyEqualsFilter("label", resource.getLabel()));
-                pattern = escape(resource.getLabel() + LABEL_DELIMITER, ESCAPE_CHAR);
-                disjunction.addFilterElement(createPropertyLikeFilter("label", pattern, START, ESCAPE_CHAR));
+                pattern = escape(resource.getLabel() + LABEL_DELIMITER);
+                disjunction.addFilterElement(createPropertyLikeFilter("label", pattern, START, escapeChar));
             }
 
             List<Resource> resources = repositoryService.loadResourcesList(null, criteria);
@@ -404,6 +408,14 @@ public class ResourceServiceImpl extends BaseService implements ResourceService 
 
     public void setResourceTypeResolver(ResourceTypeResolver typeResolver) {
         this.typeResolver = typeResolver;
+    }
+
+    public void setDatabaseCharactersEscapeResolver(DatabaseCharactersEscapeResolver databaseCharactersEscapeResolver) {
+        this.databaseCharactersEscapeResolver = databaseCharactersEscapeResolver;
+    }
+
+    private String escape(String text) {
+        return databaseCharactersEscapeResolver.getEscapedText(text);
     }
 
     class DeleteOrderComparator implements Comparator<Resource> {

@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.resources;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
@@ -26,21 +30,22 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ContentReso
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.DataTypeImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
-import com.jaspersoft.jasperserver.dto.common.PatchDescriptor;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.ReportUnitImpl;
 import com.jaspersoft.jasperserver.dto.resources.ClientDataType;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
+import com.jaspersoft.jasperserver.dto.resources.ClientFolder;
 import com.jaspersoft.jasperserver.dto.resources.ClientInputControl;
+import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ResourceMediaType;
 import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
-import com.jaspersoft.jasperserver.remote.exception.PatchException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConversionOptions;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConverter;
 import com.jaspersoft.jasperserver.remote.services.SingleRepositoryService;
@@ -61,12 +66,26 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertTrue;
 
 /**
  * <p></p>
@@ -139,7 +158,7 @@ public class ResourceDetailsJaxrsServiceTest {
                 return clientResourceType;
             }
         });
-        final Response response = service.getResourceDetails(uri, MediaType.APPLICATION_XML, null, null);
+        final Response response = service.getResourceDetails(uri, MediaType.APPLICATION_XML, null, null, null, null);
         assertNotNull(response);
         assertSame(response.getEntity(), clientDataType);
         final List<Object> contentTypeHeaders = response.getMetadata().get(HttpHeaders.CONTENT_TYPE);
@@ -167,7 +186,7 @@ public class ResourceDetailsJaxrsServiceTest {
                 return clientResourceType;
             }
         });
-        final Response response = service.getResourceDetails(uri, MediaType.APPLICATION_JSON, null, null);
+        final Response response = service.getResourceDetails(uri, MediaType.APPLICATION_JSON, null, null, null, null);
         assertNotNull(response);
         assertSame(response.getEntity(), clientDataType);
         final List<Object> contentTypeHeaders = response.getMetadata().get(HttpHeaders.CONTENT_TYPE);
@@ -181,7 +200,38 @@ public class ResourceDetailsJaxrsServiceTest {
     public void getResourceDetails_null() throws Exception {
         final String uri = "test/resource/uri";
         when(repositoryService.getResource(Folder.SEPARATOR + uri)).thenThrow(ResourceNotFoundException.class);
-        final Response response = service.getResourceDetails(uri, MediaType.APPLICATION_JSON, null, null);
+        service.getResourceDetails(uri, MediaType.APPLICATION_JSON, null, null, null, null);
+    }
+
+    @Test
+    public void getResourceDetails_notAcceptable(){
+        final String uri = "/test/resource/uri";
+        final ReportUnitImpl reportUnit = new ReportUnitImpl();
+        when(repositoryService.getResource(uri)).thenReturn(reportUnit);
+        final ToClientConverter toClientConverterMock = mock(ToClientConverter.class);
+        when(toClientConverterMock.toClient(any(Resource.class), any(ToClientConversionOptions.class)))
+                .thenThrow(new NotAcceptableException());
+        when(resourceConverterProvider.getToClientConverter(reportUnit.getResourceType(),
+                ResourceMediaType.REPORT_UNIT_CLIENT_TYPE)).thenReturn(toClientConverterMock);
+        final ToClientConverter defaultToClientConverterMock = mock(ToClientConverter.class);
+        when(resourceConverterProvider.getToClientConverter(reportUnit)).thenReturn(defaultToClientConverterMock);
+        when(defaultToClientConverterMock.getClientResourceType()).thenReturn("expectedType");
+        NotAcceptableException resultException = null;
+        try {
+            service.getResourceDetails(uri, ResourceMediaType.REPORT_UNIT_JSON, null, null, null, null);
+        } catch (NotAcceptableException e) {
+            resultException = e;
+        }
+        assertNotNull(resultException);
+        assertEquals(resultException.getErrorDescriptor(), new NotAcceptableException().getErrorDescriptor()
+                .addProperties(
+                        new ClientProperty("acceptableType", MediaType.APPLICATION_XML),
+                        new ClientProperty("acceptableType", MediaType.APPLICATION_JSON),
+                        new ClientProperty("acceptableType", ResourceMediaType.RESOURCE_MEDIA_TYPE_PREFIX +
+                                "expectedType" + ResourceMediaType.RESOURCE_XML_TYPE),
+                        new ClientProperty("acceptableType", ResourceMediaType.RESOURCE_MEDIA_TYPE_PREFIX +
+                                "expectedType" + ResourceMediaType.RESOURCE_JSON_TYPE)
+                ));
     }
 
     @Test(groups = "GET")
@@ -202,7 +252,7 @@ public class ResourceDetailsJaxrsServiceTest {
                 return clientResourceType;
             }
         });
-        final Response response = service.getResourceDetails(uri, ResourceMediaType.FILE_JSON, null, null);
+        final Response response = service.getResourceDetails(uri, ResourceMediaType.FILE_JSON, null, null, null, null);
         assertNotNull(response);
         assertSame(response.getEntity(), clientFile);
         final List<Object> contentTypeHeaders = response.getMetadata().get(HttpHeaders.CONTENT_TYPE);
@@ -234,7 +284,7 @@ public class ResourceDetailsJaxrsServiceTest {
         });
         when(repositoryService.getFileResourceData(serverObject)).thenReturn(new FileResourceData(new byte[10]));
 
-        final Response response = service.getResourceDetails(uri, null, null, null);
+        final Response response = service.getResourceDetails(uri, null, null, null, null, null);
 
         assertNotNull(response);
         final List<Object> contentTypeHeaders = response.getMetadata().get(HttpHeaders.CONTENT_TYPE);
@@ -266,10 +316,18 @@ public class ResourceDetailsJaxrsServiceTest {
         Mockito.when(repositoryService.createResource(any(Resource.class), anyString(), anyBoolean(), eq(false))).thenReturn(created);
         Mockito.when(repositoryService.getUniqueName(anyString(), anyString())).thenReturn(name);
 
-        service.createResource(clientRes, uri, true, false, null);
+        final HashMap<String, String[]> additionalProperties = new HashMap<String, String[]>();
+        final ArgumentCaptor<ToClientConversionOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ToClientConversionOptions.class);
+        final ClientFolder expectedResult = new ClientFolder();
+        doReturn(expectedResult).when(clientConverter).toClient(same(created), optionsArgumentCaptor.capture());
 
+        final ClientResource result = service.createResource(clientRes, uri, true, false, null, additionalProperties);
+
+        assertSame(result, expectedResult);
         Mockito.verify(serverConverter).toServer(clientRes, ToServerConversionOptions.getDefault().setOwnersUri(uri + Folder.SEPARATOR + name).setResetVersion(true));
-        Mockito.verify(clientConverter).toClient(created, null);
+        final ToClientConversionOptions options = optionsArgumentCaptor.getValue();
+        assertNotNull(options);
+        assertSame(options.getAdditionalProperties(), additionalProperties);
     }
 
     @Test(groups = "POST")
@@ -278,14 +336,14 @@ public class ResourceDetailsJaxrsServiceTest {
         Mockito.when(repositoryService.getResource(anyString())).thenReturn(res);
         Mockito.when(repositoryService.getUniqueName(anyString(), anyString())).thenReturn(name);
 
-        service.createResource(clientRes, uri, true, true, null);
+        service.createResource(clientRes, uri, true, true, null, null);
         Mockito.verify(repositoryService).createResource(any(Resource.class), anyString(), anyBoolean(), eq(true));
     }
 
     @Test(groups = "COPY")
     public void testCopyResource_copy() throws Exception {
         Mockito.when(repositoryService.getResource(anyString())).thenReturn(res);
-        Response response = service.defaultPostHandler(null,uri + uri, uri,"", "", "", null, true, true, null, false);
+        Response response = service.defaultPostHandler(null,uri + uri, uri,"", "", "", null, true, true, null, false, null);
 
         verify(repositoryService).copyResource(uri, uri + uri, true, true, null);
     }
@@ -293,7 +351,7 @@ public class ResourceDetailsJaxrsServiceTest {
     @Test(groups = "COPY")
     public void testCopyResource_status() throws Exception {
         Mockito.when(repositoryService.getResource(anyString())).thenReturn(res);
-        Response response = service.defaultPostHandler(null, uri, uri + uri, "", "", "", null, true, true, null, false);
+        Response response = service.defaultPostHandler(null, uri, uri + uri, "", "", "", null, true, true, null, false, null);
 
         assertEquals(response.getStatus(), HttpServletResponse.SC_OK);
     }
@@ -303,7 +361,7 @@ public class ResourceDetailsJaxrsServiceTest {
         doThrow(ResourceNotFoundException.class).when(repositoryService).copyResource(anyString(), anyString(),
                 anyBoolean(), anyBoolean(), isNull(String.class));
 
-        Response response = service.defaultPostHandler(null, uri, uri + uri, "", "", "", "",true, true, null, false);
+        Response response = service.defaultPostHandler(null, uri, uri + uri, "", "", "", "",true, true, null, false, null);
     }
 
     @Test(groups = "COPY", expectedExceptions = {AccessDeniedException.class}, dependsOnMethods = {"testCopyResource_copy"})
@@ -311,14 +369,14 @@ public class ResourceDetailsJaxrsServiceTest {
         doThrow(AccessDeniedException.class).when(repositoryService).copyResource(anyString(), anyString(), anyBoolean(),
                 anyBoolean(), isNull(String.class));
 
-        Response response = service.defaultPostHandler(null, uri, uri + uri, "", "", "","", true, true, null, false);
+        Response response = service.defaultPostHandler(null, uri, uri + uri, "", "", "","", true, true, null, false, null);
     }
 
     @Test(groups = "MOVE")
     public void testMoveResource_move() throws Exception {
         Mockito.when(repositoryService.getResource(anyString())).thenReturn(res);
         Response response = service.defaultPutHandler(null,Folder.SEPARATOR +  uri + uri, uri, "", null ,"", null, true,
-                true, null, false);
+                true, null, false, null);
 
         verify(repositoryService).moveResource(uri, Folder.SEPARATOR + uri + uri, true, true, null);
     }
@@ -327,7 +385,7 @@ public class ResourceDetailsJaxrsServiceTest {
     public void testMoveResource_status() throws Exception {
         Mockito.when(repositoryService.getResource(anyString())).thenReturn(res);
         Response response = service.defaultPutHandler(null, Folder.SEPARATOR + uri, uri + uri, "", null ,"",null, true,
-                true, null, false);
+                true, null, false, null);
 
         assertEquals(response.getStatus(), HttpServletResponse.SC_OK);
     }
@@ -337,7 +395,7 @@ public class ResourceDetailsJaxrsServiceTest {
         doThrow(ResourceNotFoundException.class).when(repositoryService).moveResource(anyString(), anyString(),
                 anyBoolean(), anyBoolean(), isNull(String.class));
 
-        Response response = service.defaultPutHandler(null, uri, uri + uri, "", null, "",null, true, true, null, false);
+        Response response = service.defaultPutHandler(null, uri, uri + uri, "", null, "",null, true, true, null, false, null);
     }
 
     @Test(groups = "MOVE", expectedExceptions = {AccessDeniedException.class}, dependsOnMethods = {"testCopyResource_copy"})
@@ -345,11 +403,11 @@ public class ResourceDetailsJaxrsServiceTest {
         doThrow(AccessDeniedException.class).when(repositoryService).moveResource(anyString(), anyString(), anyBoolean(),
                 anyBoolean(), isNull(String.class));
 
-        Response response = service.defaultPutHandler(null, uri, uri + uri, "", null, "", null,true, true, null, false);
+        Response response = service.defaultPutHandler(null, uri, uri + uri, "", null, "", null,true, true, null, false, null);
     }
 
     @Test(groups = "CREATE_RESOURCE_MULTIPART")
-    public void createResourceViaForm_fileCreation() throws RemoteException {
+    public void createResourceViaForm_fileCreation() throws ErrorDescriptorException {
         ResourceDetailsJaxrsService serviceMock = mock(ResourceDetailsJaxrsService.class);
         final FormDataMultiPart multiPart = new FormDataMultiPart();
         final String expectedLabel = "testLabel";
@@ -364,14 +422,15 @@ public class ResourceDetailsJaxrsServiceTest {
         multiPart.field("description", expectedDescription);
         multiPart.field("type", expectedType);
         final String expectedMimeType = "someMimeType";
-        when(serviceMock.createResourceViaForm(multiPart, uri, Boolean.FALSE, expectedMimeType, false)).thenCallRealMethod();
+        final HashMap<String, String[]> additionalProperties = new HashMap<String, String[]>();
+        when(serviceMock.createResourceViaForm(multiPart, uri, Boolean.FALSE, expectedMimeType, false, additionalProperties)).thenCallRealMethod();
         when(serviceMock.createFileViaForm(eq(expectedData), eq(uri), eq(expectedLabel), eq(expectedDescription), eq(expectedType), eq(Boolean.FALSE), eq(false))).thenReturn(clientRes);
-        final ClientResource resource = serviceMock.createResourceViaForm(multiPart, uri, Boolean.FALSE, expectedMimeType, false);
+        final ClientResource resource = serviceMock.createResourceViaForm(multiPart, uri, Boolean.FALSE, expectedMimeType, false, additionalProperties);
         assertSame(resource, clientRes);
     }
 
     @Test(groups = "CREATE_RESOURCE_MULTIPART")
-    public void createResourceViaForm_resourceCreation() throws RemoteException {
+    public void createResourceViaForm_resourceCreation() throws ErrorDescriptorException {
         final FormDataMultiPart multiPart = new FormDataMultiPart();
         FormDataBodyPart bodyPartMock = mock(FormDataBodyPart.class);
         when(bodyPartMock.getEntityAs(ClientInputControl.class)).thenReturn(clientRes);
@@ -390,7 +449,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(toServerConverter.toServer(eq(clientRes), toServerConversionOptionsArgumentCaptor.capture())).thenReturn(res);
         when(resourceConverterProvider.getToServerConverter(clientRes)).thenReturn((ToServerConverter) toServerConverter);
         when(repositoryService.createResource(res, uri, Boolean.FALSE, false)).thenReturn(res);
-        final ClientResource resource = service.createResourceViaForm(multiPart, uri, Boolean.FALSE, null, false);
+        final ClientResource resource = service.createResourceViaForm(multiPart, uri, Boolean.FALSE, null, false, null);
         assertSame(resource, clientRes);
         assertNotNull(toServerConversionOptionsArgumentCaptor.getValue());
         Map<String, InputStream> parts = toServerConversionOptionsArgumentCaptor.getValue().getAttachments();
@@ -402,14 +461,14 @@ public class ResourceDetailsJaxrsServiceTest {
     }
 
     @Test(groups = "CREATE_RESOURCE_MULTIPART", expectedExceptions = IllegalParameterValueException.class)
-    public void createResourceViaForm_invalidResourceMediaType() throws RemoteException {
+    public void createResourceViaForm_invalidResourceMediaType() throws ErrorDescriptorException {
         final FormDataMultiPart multiPart = new FormDataMultiPart();
         final FormDataBodyPart bodyPartMock = mock(FormDataBodyPart.class);
         when(bodyPartMock.getEntityAs(ClientResource.class)).thenReturn(clientRes);
         when(bodyPartMock.getName()).thenReturn("resource");
         when(bodyPartMock.getMediaType()).thenReturn(MediaType.WILDCARD_TYPE);
         multiPart.bodyPart(bodyPartMock);
-        service.createResourceViaForm(multiPart, uri, Boolean.FALSE, null, false);
+        service.createResourceViaForm(multiPart, uri, Boolean.FALSE, null, false, null);
     }
 
     @Test(groups = "CREATE_FILE")
@@ -429,7 +488,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.createFileResource(stream, Folder.SEPARATOR + uri, name, name, description, ContentResource.TYPE_PDF,  true, false)).thenReturn(res);
 
         Response response = service.defaultPostHandler(stream, Folder.SEPARATOR + uri, null, "attachment; filename="+name,
-                description, type, "",true, true, null, false);
+                description, type, "",true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
@@ -443,7 +502,8 @@ public class ResourceDetailsJaxrsServiceTest {
 
         when(repositoryService.createFileResource(stream,uri ,name,name,description,type,true, false)).thenReturn(res);
 
-        Response response = service.defaultPostHandler(stream, uri, null, null, type, description,"", true, true, null, false);
+        Response response = service.defaultPostHandler(stream, uri, null, null, type, description,"", true, true, null,
+                false, null);
     }
 
     @Test(groups = "CREATE_FILE", expectedExceptions = {IllegalParameterValueException.class})
@@ -453,7 +513,8 @@ public class ResourceDetailsJaxrsServiceTest {
 
         when(repositoryService.createFileResource(stream,uri,name,name,description,type,true, false)).thenReturn(res);
 
-        Response response = service.defaultPostHandler(stream, uri, null, type, type, description,"", true, true, null, false);
+        Response response = service.defaultPostHandler(stream, uri, null, type, type, description,"", true, true, null,
+                false, null);
     }
 
     @Test(groups = "CREATE_FILE", expectedExceptions = {IllegalParameterValueException.class})
@@ -464,7 +525,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.createFileResource(stream,uri,name,name,description,type,true, false)).thenReturn(res);
 
         Response response = service.defaultPostHandler(stream, uri, null, "attachment; filename="+name, type,"",
-                description, true, true, null, false);
+                description, true, true, null, false, null);
     }
 
     @Test(groups = "CREATE_FILE", expectedExceptions = {IllegalParameterValueException.class})
@@ -475,7 +536,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.createFileResource(stream,uri,name,name,description,type,true, false)).thenReturn(res);
 
         Response response = service.defaultPostHandler(stream, uri, null, "attachment; filename="+name, type,"",
-                description, true, true, null, false);
+                description, true, true, null, false, null);
     }
 
     @Test(groups = "CREATE_FILE")
@@ -486,7 +547,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.createFileResource(stream, Folder.SEPARATOR + uri, name, name, description, ContentResource.TYPE_PDF,  true, false)).thenReturn(res);
 
         Response response = service.defaultPostHandler(stream, Folder.SEPARATOR + uri, null, "attachment; filename="+name,
-                description, type, null, true, true, null, false);
+                description, type, null, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
@@ -498,14 +559,16 @@ public class ResourceDetailsJaxrsServiceTest {
         String name = "test.pdf", description = "test", type = "application/pdf; charset=UTF-8";
         InputStream stream = new ByteArrayInputStream(new byte[5]);
 
-        when(repositoryService.createFileResource(stream, Folder.SEPARATOR + uri, name,  name,description, ContentResource.TYPE_PDF,  true, false)).thenReturn(res);
+        when(repositoryService.createFileResource(stream, Folder.SEPARATOR + uri, name,  name,description,
+                ContentResource.TYPE_PDF,  true, false)).thenReturn(res);
 
         Response response = service.defaultPostHandler(stream, Folder.SEPARATOR + uri, null, "attachment; filename="+name,
-                description, type, null, true, true, null, false);
+                description, type, null, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
-        verify(repositoryService).createFileResource(stream, Folder.SEPARATOR + uri, name, name, description, ContentResource.TYPE_PDF,  true, false);
+        verify(repositoryService).createFileResource(stream, Folder.SEPARATOR + uri, name, name, description,
+                ContentResource.TYPE_PDF,  true, false);
     }
 
     @Test(groups = "CREATE_FILE")
@@ -517,11 +580,12 @@ public class ResourceDetailsJaxrsServiceTest {
         when(contentTypeMapping.containsKey("pdf")).thenReturn(true);
 
         Response response = service.defaultPostHandler(stream, Folder.SEPARATOR + uri, null, "attachment; filename="+name,
-                description, "",type, true, true, null, false);
+                description, "",type, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
-        verify(repositoryService).createFileResource(stream, Folder.SEPARATOR + uri, name,  name, description, ContentResource.TYPE_PDF,  true, false);
+        verify(repositoryService).createFileResource(stream, Folder.SEPARATOR + uri, name,  name, description,
+                ContentResource.TYPE_PDF,  true, false);
     }
 
     @Test(groups = "CREATE_FILE")
@@ -589,7 +653,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.getResource(Folder.SEPARATOR + uri + Folder.SEPARATOR + name)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream, Folder.SEPARATOR + uri + Folder.SEPARATOR + name, null,
-                null, description, type,null, true, true, null, false);
+                null, description, type,null, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -604,7 +668,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.createFileResource(stream, Folder.SEPARATOR + uri, name,  name, description, ContentResource.TYPE_PDF,  true, false)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream, Folder.SEPARATOR + uri + Folder.SEPARATOR + name, null,
-                null, description, type,null, true, true, null, false);
+                null, description, type,null, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
@@ -620,7 +684,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.getResource(Folder.SEPARATOR + uri + Folder.SEPARATOR + name)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream, uri + Folder.SEPARATOR + name, null,  null, description,
-                type,null,true, true, null, false);
+                type,null,true, true, null, false, null);
     }
 
     @Test(groups = "UPDATE_FILE")
@@ -632,7 +696,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.getResource(Folder.SEPARATOR + uri + Folder.SEPARATOR + name)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream,Folder.SEPARATOR +  uri + Folder.SEPARATOR + name, null,
-                null, description, type, null,true, true, null, false);
+                null, description, type, null,true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -648,7 +712,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.getResource(Folder.SEPARATOR + uri + Folder.SEPARATOR + name)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream, Folder.SEPARATOR + uri + Folder.SEPARATOR + name, null,
-                null, description, type,null, true, true, null, false);
+                null, description, type,null, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -665,7 +729,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.getResource(Folder.SEPARATOR + uri + Folder.SEPARATOR + name)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream, Folder.SEPARATOR + uri + Folder.SEPARATOR + name, null,
-                null, description, type,null, true, true, null, false);
+                null, description, type,null, true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -682,7 +746,7 @@ public class ResourceDetailsJaxrsServiceTest {
         when(repositoryService.getResource(Folder.SEPARATOR + name)).thenReturn(res);
 
         Response response = service.defaultPutHandler(stream, Folder.SEPARATOR + name, null, null, description, type,
-                null,true, true, null, false);
+                null,true, true, null, false, null);
 
         assertNotNull(response);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());

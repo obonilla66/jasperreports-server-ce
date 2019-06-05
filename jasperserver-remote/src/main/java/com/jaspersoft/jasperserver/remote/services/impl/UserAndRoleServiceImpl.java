@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
@@ -24,6 +27,7 @@ import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.UserAndRoleConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.client.RoleImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
@@ -32,11 +36,10 @@ import com.jaspersoft.jasperserver.remote.common.RoleSearchCriteria;
 import com.jaspersoft.jasperserver.remote.common.UserSearchCriteria;
 import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.exception.WeakPasswordException;
 import com.jaspersoft.jasperserver.remote.services.UserAndRoleService;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,7 +73,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
     private AuditContext auditContext;
 
     @javax.annotation.Resource(name = "configurationBean")
-    private ConfigurationBean conf;
+    private UserAndRoleConfiguration conf;
 
     @javax.annotation.Resource
     private List<Role> defaultRoles;
@@ -95,7 +98,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
     }
 
 
-    public List<User> findUsers(UserSearchCriteria criteria) throws RemoteException {
+    public List<User> findUsers(UserSearchCriteria criteria) throws ErrorDescriptorException {
         User user;
         if (criteria == null || criteria.getTenantId()==null && criteria.getName()==null){
             throw new IllegalStateException("findUser: malformed search criteria");
@@ -121,13 +124,13 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
         return result;
     }
 
-    public User putUser(User user) throws RemoteException {
+    public User putUser(User user) throws ErrorDescriptorException {
         String auditEventType = "createUser";
 
         try {
             if(user == null) {
                 createAuditEvent(auditEventType);
-                throw new RemoteException("User is null.");
+                throw new ErrorDescriptorException("User is null.");
             }
 
             if (user.getUsername() == null){
@@ -182,19 +185,19 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
 
             return user;
         }
-        catch (RemoteException remoteException) {
-            addExceptionToAuditEvent(auditEventType, remoteException);
-            throw remoteException;
+        catch (ErrorDescriptorException errorDescriptorException) {
+            addExceptionToAuditEvent(auditEventType, errorDescriptorException);
+            throw errorDescriptorException;
         }
     }
 
-    public void deleteUser(User user) throws RemoteException {
+    public void deleteUser(User user) throws ErrorDescriptorException {
 
         createAuditEvent("deleteUser");
 
         try {
             if(user == null) {
-                throw new RemoteException("User is null.");
+                throw new ErrorDescriptorException("User is null.");
             }
 
             if (!doesContextUserHasAccessToTenant(user.getTenantId())) {
@@ -202,15 +205,15 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
             }
 
             deleteUser(user.getUsername(), user.getTenantId());
-        } catch (RemoteException remoteException) {
-            addExceptionToAuditEvent("deleteUser", remoteException);
-            throw remoteException;
+        } catch (ErrorDescriptorException errorDescriptorException) {
+            addExceptionToAuditEvent("deleteUser", errorDescriptorException);
+            throw errorDescriptorException;
         }
     }
 
-    public List<Role> findRoles(RoleSearchCriteria criteria) throws RemoteException {
+    public List<Role> findRoles(RoleSearchCriteria criteria) throws ErrorDescriptorException {
         if(criteria == null) {
-            throw new RemoteException("Role search criteria is null.");
+            throw new ErrorDescriptorException("Role search criteria is null.");
         }
 
         if (!doesContextUserHasAccessToTenant(criteria.getTenantId()) && !isRootTenant(criteria.getTenantId())) {
@@ -235,14 +238,14 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
         return result;
     }
 
-    public Role putRole(Role role) throws RemoteException {
+    public Role putRole(Role role) throws ErrorDescriptorException {
         if (isValidRole(role)) {
             String auditEventType = "createRole";
 
             try {
                 if(role == null) {
                     createAuditEvent(auditEventType);
-                    throw new RemoteException("Role is null.");
+                    throw new ErrorDescriptorException("Role is null.");
                 }
 
                 String nameWithoutNotSupportedSymbols =
@@ -250,7 +253,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
 
                 if (nameWithoutNotSupportedSymbols.length() != role.getRoleName().length()) {
                     createAuditEvent(auditEventType);
-                    throw new RemoteException("Role name contains not supported symbols");
+                    throw new ErrorDescriptorException("Role name contains not supported symbols");
                 }
 
                 Role existedRole = getRole(role);
@@ -271,28 +274,28 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
                 if (r != null) {
                     return r;
                 } else {
-                    throw new RemoteException("Error while putting role : " + role.getRoleName());
+                    throw new ErrorDescriptorException("Error while putting role : " + role.getRoleName());
                 }
-            } catch (RemoteException remoteException) {
-                addExceptionToAuditEvent(auditEventType, remoteException);
-                throw remoteException;
+            } catch (ErrorDescriptorException errorDescriptorException) {
+                addExceptionToAuditEvent(auditEventType, errorDescriptorException);
+                throw errorDescriptorException;
             }
         }
         else
             throw new IllegalParameterValueException("name", role.getRoleName());
     }
 
-    public Role updateRoleName(Role oldRole, String newName) throws RemoteException {
+    public Role updateRoleName(Role oldRole, String newName) throws ErrorDescriptorException {
 
         createAuditEvent("updateRole");
 
         try {
             if(oldRole == null) {
-                throw new RemoteException("Role is null.");
+                throw new ErrorDescriptorException("Role is null.");
             }
 
             if(newName == null) {
-                throw new RemoteException("New name is null.");
+                throw new ErrorDescriptorException("New name is null.");
             }
 
             Role aRole = oldRole;
@@ -300,7 +303,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
             String nameWithoutNotSupportedSymbols = newName.replaceAll(conf.getRoleNameNotSupportedSymbols(), "");
 
             if (nameWithoutNotSupportedSymbols.length() != newName.length()) {
-                throw new RemoteException("Role name contains not supported symbols");
+                throw new ErrorDescriptorException("Role name contains not supported symbols");
             }
 
             if (!doesContextUserHasAccessToTenant(aRole.getTenantId())) {
@@ -325,21 +328,21 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
             if (r != null) {
                 return r;
             } else {
-                throw new RemoteException("Error while putting role : " + aRole.getRoleName());
+                throw new ErrorDescriptorException("Error while putting role : " + aRole.getRoleName());
             }
-        } catch (RemoteException remoteException) {
-            addExceptionToAuditEvent("updateRole", remoteException);
-            throw remoteException;
+        } catch (ErrorDescriptorException errorDescriptorException) {
+            addExceptionToAuditEvent("updateRole", errorDescriptorException);
+            throw errorDescriptorException;
         }
     }
 
-    public void deleteRole(Role role) throws RemoteException {
+    public void deleteRole(Role role) throws ErrorDescriptorException {
 
         createAuditEvent("deleteRole");
 
         try {
             if(role == null) {
-                throw new RemoteException("Role is null.");
+                throw new ErrorDescriptorException("Role is null.");
             }
 
             if (!doesContextUserHasAccessToTenant(role.getTenantId())) {
@@ -347,9 +350,9 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
             }
 
             deleteRole(role.getRoleName(), role.getTenantId());
-        } catch (RemoteException remoteException) {
-            addExceptionToAuditEvent("deleteRole", remoteException);
-            throw remoteException;
+        } catch (ErrorDescriptorException errorDescriptorException) {
+            addExceptionToAuditEvent("deleteRole", errorDescriptorException);
+            throw errorDescriptorException;
         }
     }
 
@@ -358,11 +361,11 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
                 role.getRoleName().replaceAll(conf.getRoleNameNotSupportedSymbols(), "").equals(role.getRoleName());
     }
 
-    private boolean isRootTenant(String tenantId) throws RemoteException {
+    private boolean isRootTenant(String tenantId) throws ErrorDescriptorException {
         return tenantId == null || TenantService.ORGANIZATIONS.equals(tenantId);
     }
 
-    private boolean isEmailValid(User user) throws RemoteException {
+    private boolean isEmailValid(User user) throws ErrorDescriptorException {
         String email = user.getEmailAddress();
         if(email == null) {
             return true;
@@ -468,7 +471,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
         }
     }
 
-    protected Set getTenantsCriteriaSet(String tenantId, boolean includeSubOrgs) throws RemoteException {
+    protected Set getTenantsCriteriaSet(String tenantId, boolean includeSubOrgs) throws ErrorDescriptorException {
         Set tenantIdSet = new HashSet();
         tenantIdSet.add(tenantId);
 
@@ -478,7 +481,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
             try {
                 allTenants = tenantService.getAllSubTenantList(null, id);
             } catch (Exception e) {
-                throw new RemoteException("Organization '" + tenantId + "' not found.");
+                throw new ErrorDescriptorException("Organization '" + tenantId + "' not found.");
             }
 
             if (allTenants != null) {
@@ -539,11 +542,11 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
         return userAuthorityService.getUser(null, user.getUsername());
     }
 
-    protected void handleUnexpectedException(Exception unexpectedException, String username) throws RemoteException {
-        throw new RemoteException("An unexpected exception has occurred while putting user:" + username, unexpectedException);
+    protected void handleUnexpectedException(Exception unexpectedException, String username) throws ErrorDescriptorException {
+        throw new ErrorDescriptorException("An unexpected exception has occurred while putting user:" + username, unexpectedException);
     }
 
-    private boolean doesContextUserHasAccessToTenant(String tenantId) throws RemoteException {
+    private boolean doesContextUserHasAccessToTenant(String tenantId) throws ErrorDescriptorException {
         String currentTenantId = securityContextProvider.getContextUser().getTenantId();
         currentTenantId = (currentTenantId == null) ? TenantService.ORGANIZATIONS : currentTenantId;
         tenantId = (tenantId == null) ? TenantService.ORGANIZATIONS : tenantId;
@@ -610,7 +613,7 @@ public class UserAndRoleServiceImpl implements UserAndRoleService {
         this.auditContext = auditContext;
     }
 
-    public void setConf(ConfigurationBean conf) {
+    public void setConf(UserAndRoleConfiguration conf) {
         this.conf = conf;
     }
 

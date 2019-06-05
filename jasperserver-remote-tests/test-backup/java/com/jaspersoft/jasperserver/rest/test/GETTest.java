@@ -236,19 +236,14 @@ public class GETTest extends RESTTest
 		sendAndAssert_PRO(httpReqPro, RESOURCE+"/Domains/Simple_Domain");
 	}
 	
-	@Test  
+	@Test
 	public void Resource_Query_GET_200() throws Exception{
 		sendAndAssert_PRO(httpReqPro, RESOURCE+"/supermart/Common/CustomerCityQuery");
 	}
-	
-	@Test  
+
+	@Test
 	public void Resource_DomainTopic_GET_200() throws Exception{
 		sendAndAssert_PRO(httpReqPro, RESOURCE+"/adhoc/topics/Simple_Domain_Topic");
-	}
-	
-	@Test
-	public void Resource_Dashboard_GET_200() throws Exception{
-		sendAndAssert_PRO(httpReqPro, RESOURCE+"/supermart/SupermartDashboard30");
 	}
 
     @Test

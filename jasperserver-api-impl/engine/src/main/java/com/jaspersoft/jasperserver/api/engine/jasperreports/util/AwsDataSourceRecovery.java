@@ -1,32 +1,34 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.engine.jasperreports.util;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest;
-import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
-import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
-import com.amazonaws.services.ec2.model.IpPermission;
-import com.amazonaws.services.ec2.model.RevokeSecurityGroupIngressRequest;
-import com.amazonaws.services.ec2.model.SecurityGroup;
-import com.amazonaws.services.rds.AmazonRDSClient;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
+import com.amazonaws.services.ec2.model.*;
+import com.amazonaws.services.rds.AmazonRDS;
+import com.amazonaws.services.rds.AmazonRDSClientBuilder;
 import com.amazonaws.services.rds.model.AuthorizeDBSecurityGroupIngressRequest;
 import com.amazonaws.services.rds.model.CreateDBSecurityGroupRequest;
 import com.amazonaws.services.rds.model.DBInstance;
@@ -42,7 +44,8 @@ import com.amazonaws.services.rds.model.IPRange;
 import com.amazonaws.services.rds.model.ModifyDBInstanceRequest;
 import com.amazonaws.services.rds.model.RevokeDBSecurityGroupIngressRequest;
 import com.amazonaws.services.rds.model.VpcSecurityGroupMembership;
-import com.amazonaws.services.redshift.AmazonRedshiftClient;
+import com.amazonaws.services.redshift.AmazonRedshift;
+import com.amazonaws.services.redshift.AmazonRedshiftClientBuilder;
 import com.amazonaws.services.redshift.model.AuthorizeClusterSecurityGroupIngressRequest;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.ClusterSecurityGroup;
@@ -79,11 +82,10 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
  */
 public class AwsDataSourceRecovery {
 
-    public static final String RDS = "rds";
-    public static final String EC2 = "ec2";
-    public static final String Redshift = "redshift";
+    public static final String RDS = AmazonRDS.ENDPOINT_PREFIX;
+    public static final String EC2 = AmazonEC2.ENDPOINT_PREFIX;
+    public static final String Redshift = AmazonRedshift.ENDPOINT_PREFIX;
 
-    private List<String> awsRegions;
     private String awsDataSourceActiveStatus;
     private AwsProperties awsProperties;
 
@@ -132,13 +134,19 @@ public class AwsDataSourceRecovery {
         AWSCredentials awsCredentials = awsCredentialUtil.getAWSCredentials(awsReportDataSource.getAWSAccessKey(),
                 awsReportDataSource.getAWSSecretKey(), awsReportDataSource.getRoleARN());
 
-        AmazonRDSClient rdsClient = new AmazonRDSClient(awsCredentials);
         DescribeDBInstancesRequest describeDBInstancesRequest = new DescribeDBInstancesRequest().
                 withDBInstanceIdentifier(awsReportDataSource.getDbInstanceIdentifier());
-        String endpoint = awsReportDataSource.getAWSRegion();
-        if (endpoint != null) {
-            rdsClient.setEndpoint(RDS + "." + endpoint);
+        String region = awsReportDataSource.getAWSRegion();
+//            if region is presended as endpoint - strip domain name
+        if (region!=null && region.contains(".")) {
+            region=region.split("\\.")[0];
         }
+
+        AmazonRDS rdsClient = AmazonRDSClientBuilder.standard().
+                withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).
+                withRegion(region).
+                build();
+
         DBInstance dbInstance;
         DescribeDBInstancesResult describeInstancesResult = rdsClient.describeDBInstances(describeDBInstancesRequest);
         if (describeInstancesResult != null && describeInstancesResult.getDBInstances() != null &&
@@ -256,13 +264,20 @@ public class AwsDataSourceRecovery {
         AWSCredentials awsCredentials = awsCredentialUtil.getAWSCredentials(awsReportDataSource.getAWSAccessKey(),
                 awsReportDataSource.getAWSSecretKey(), awsReportDataSource.getRoleARN());
 
-        AmazonRedshiftClient redshiftClient = new AmazonRedshiftClient(awsCredentials);
+
         DescribeClustersRequest describeClustersRequest = new DescribeClustersRequest().
                 withClusterIdentifier(awsReportDataSource.getDbInstanceIdentifier());
-        String endpoint = awsReportDataSource.getAWSRegion();
-        if (endpoint != null) {
-            redshiftClient.setEndpoint(Redshift + "." + endpoint);
+        String region = awsReportDataSource.getAWSRegion();
+        //            if region is presended as endpoint - strip domain name
+        if (region!=null && region.contains(".")) {
+            region=region.split("\\.")[0];
         }
+
+        AmazonRedshift redshiftClient = AmazonRedshiftClientBuilder.
+                standard().
+                withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).
+                withRegion(region).
+                build();
         Cluster cluster;
         DescribeClustersResult describeClustersResult = redshiftClient.describeClusters(describeClustersRequest);
         if (describeClustersResult != null && describeClustersResult.getClusters() != null &&
@@ -418,11 +433,14 @@ public class AwsDataSourceRecovery {
         AWSCredentials awsCredentials = awsCredentialUtil.getAWSCredentials(awsReportDataSource.getAWSAccessKey(),
                 awsReportDataSource.getAWSSecretKey(), awsReportDataSource.getRoleARN());
         //Security
-        AmazonEC2Client amazonEc2Client = new AmazonEC2Client(awsCredentials);
-        String endpoint = awsReportDataSource.getAWSRegion();
-        if (endpoint != null) {
-            amazonEc2Client.setEndpoint(EC2 + "." + endpoint);
+        String region = awsReportDataSource.getAWSRegion();
+        if (region!=null && region.contains(".")) {
+            region=region.split("\\.")[0];
         }
+        AmazonEC2 amazonEc2Client = AmazonEC2ClientBuilder.
+                standard().
+                withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).
+                build();
 
         SecurityGroup vpcSecurityGroup = null;
         try {
@@ -450,8 +468,8 @@ public class AwsDataSourceRecovery {
             List<IpPermission> ipPermissions = vpcSecurityGroup.getIpPermissions();
             if (ipPermissions != null && ipPermissions.size() > 0) {
                 for (IpPermission ipPermission : ipPermissions) {
-                    if (ipPermission.getIpRanges() != null && ipPermission.getIpRanges().size() > 0 &&
-                            ipPermission.getIpRanges().contains(ingressPublicIp)) {
+                    if (ipPermission.getIpv4Ranges() != null && ipPermission.getIpv4Ranges().size() > 0 &&
+                            ipPermission.getIpv4Ranges().contains(ingressPublicIp)) {
                         ingressIpMaskExist = true;
                     }
                 }
@@ -468,8 +486,10 @@ public class AwsDataSourceRecovery {
         }
 
         if (!ingressIpMaskExist) {
+            IpRange ingressPublicIpRange = new IpRange();
+            ingressPublicIpRange.setCidrIp(ingressPublicIp);
             IpPermission ipPermission = new IpPermission().withIpProtocol("tcp").
-                    withIpRanges(ingressPublicIp).withFromPort(0).withToPort(65535);
+                    withIpv4Ranges(ingressPublicIpRange).withFromPort(0).withToPort(65535);
             List<IpPermission> ipPermissions = new ArrayList<IpPermission>();
             ipPermissions.add(ipPermission);
             AuthorizeSecurityGroupIngressRequest authorizeRequest = new AuthorizeSecurityGroupIngressRequest().
@@ -484,22 +504,17 @@ public class AwsDataSourceRecovery {
         return messageSource.getMessage(errorCode, null, LocaleContextHolder.getLocale());
     }
 
-    private String parseRegionFromSubRegion(String region) {
-        String regionPrefix = ".amazonaws.com";
-        if (region != null) {
-            for (String awsRegion : awsRegions) {
-                String[] parse = awsRegion.split(regionPrefix);
-                if (region.contains(parse[0])) {
-                    return awsRegion;
+    private String parseRegionFromSubRegion(String subRegion) {
+        if (subRegion != null) {
+            for (Region awsRegion : AwsRegionsAutoDetection.regionList) {
+                if (subRegion.contains(awsRegion.getName())) {
+                    return AwsRegionsAutoDetection.getRegionEndpointFromRegion(awsRegion);
                 }
             }
         }
         return null;
     }
 
-    public void setAwsRegions(List<String> awsRegions) {
-        this.awsRegions = awsRegions;
-    }
 
     public void setAwsDataSourceActiveStatus(String awsDataSourceActiveStatus) {
         this.awsDataSourceActiveStatus = awsDataSourceActiveStatus;

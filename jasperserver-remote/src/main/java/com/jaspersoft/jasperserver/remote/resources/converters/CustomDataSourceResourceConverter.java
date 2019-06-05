@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -51,7 +54,7 @@ public class CustomDataSourceResourceConverter extends ResourceConverterImpl<Cus
     protected ResourceReferenceConverterProvider resourceReferenceConverterProvider;
 
     @Override
-    protected CustomReportDataSource resourceSpecificFieldsToServer(ClientCustomDataSource clientObject, CustomReportDataSource resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected CustomReportDataSource resourceSpecificFieldsToServer(ClientCustomDataSource clientObject, CustomReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setDataSourceName(clientObject.getDataSourceName());
         final CustomDataSourceDefinition definition = customDataSourceFactory.getDefinitionByName(clientObject.getDataSourceName());
         // let's fill service class by dataSourceName. If dataSourceName is incorrect and no such definition,
@@ -132,5 +135,23 @@ public class CustomDataSourceResourceConverter extends ResourceConverterImpl<Cus
         client.setProperties(properties == null || properties.isEmpty() ? null : properties);
         client.setResources(convertResourcesToClient(serverObject.getResources(), options));
         return client;
+    }
+
+    @Override
+    protected void resourceSecureFieldsToClient(ClientCustomDataSource client, CustomReportDataSource serverObject, ToClientConversionOptions options) {
+        final Map propertyMap = serverObject.getPropertyMap();
+        if (propertyMap != null && !propertyMap.isEmpty()) {
+            final Set<String> set = propertyMap.keySet();
+            for (String key : set) {
+                if (propertiesToIgnore.contains(key)) {
+                    if (client.getProperties() == null) {
+                        client.setProperties(new ArrayList<ClientProperty>());
+                    } else {
+                        client.setProperties(new ArrayList<ClientProperty>(client.getProperties()));
+                    }
+                    client.getProperties().add(new ClientProperty(key, (String)propertyMap.get(key)));
+                }
+            }
+        }
     }
 }

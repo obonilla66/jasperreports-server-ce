@@ -1,40 +1,39 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.AbstractErrors;
-import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
 
 import javax.annotation.Resource;
-
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.*;
+import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.empty;
 
 /**
  * <p></p>
@@ -48,19 +47,20 @@ public class CustomDataSourceResourceValidator extends GenericResourceValidator<
     private CustomReportDataSourceServiceFactory customDataSourceFactory;
 
     @Override
-    protected void internalValidate(CustomReportDataSource resource, ValidationErrors errors) {
+    protected void internalValidate(CustomReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getServiceClass()) && empty(resource.getDataSourceName())){
-            addMandatoryParameterNotFoundError(errors, "ServiceClass or DataSourceName");
+            errors.add(new MandatoryParameterNotFoundException("ServiceClass or DataSourceName"));
         } else {
             CustomDataSourceDefinition definition = customDataSourceFactory.getDefinition(resource);
             if (definition == null){
-                addError(errors, IllegalParameterValueException.ERROR_CODE, "ServiceClass or DataSourceName", "No custom data source definition found");
+                errors.add(new IllegalParameterValueException(
+                        "ServiceClass or DataSourceName", resource.getDataSourceName(), null));
             } else {
                 if (empty(resource.getServiceClass())){
                     resource.setServiceClass(definition.getServiceClassName());
                 }
                 if (empty(resource.getServiceClass())){
-                    addMandatoryParameterNotFoundError(errors, "ServiceClass");
+                    errors.add(new MandatoryParameterNotFoundException("ServiceClass"));
                 }
 
                 if (definition.getValidator() != null) {

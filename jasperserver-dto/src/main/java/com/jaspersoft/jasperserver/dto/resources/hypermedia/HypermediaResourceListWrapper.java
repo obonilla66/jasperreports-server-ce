@@ -1,27 +1,34 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.hypermedia;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -30,24 +37,27 @@ import java.util.List;
  * @version $Id$
  */
 @XmlRootElement(name = "resources")
-public class HypermediaResourceListWrapper {
+public class HypermediaResourceListWrapper implements DeepCloneable<HypermediaResourceListWrapper> {
     private List<HypermediaResourceLookup> resourceLookups;
     private HypermediaResourceLookupLinks links;
 
-    public HypermediaResourceListWrapper(){}
+    public HypermediaResourceListWrapper() {
+    }
 
-    public HypermediaResourceListWrapper(List<HypermediaResourceLookup> resourceLookups){
+    public HypermediaResourceListWrapper(List<HypermediaResourceLookup> resourceLookups) {
         this.resourceLookups = resourceLookups;
     }
 
     public HypermediaResourceListWrapper(HypermediaResourceListWrapper other) {
-        final List<HypermediaResourceLookup> srcResourceLookups = other.getResourceLookups();
-        if(srcResourceLookups != null){
-            resourceLookups = new ArrayList<HypermediaResourceLookup>(other.getResourceLookups().size());
-            for(HypermediaResourceLookup lookup : srcResourceLookups){
-                resourceLookups.add(new HypermediaResourceLookup(lookup));
-            }
-        }
+        checkNotNull(other);
+
+        this.resourceLookups = copyOf(other.getResourceLookups());
+        this.links = copyOf(other.getLinks());
+    }
+
+    @Override
+    public HypermediaResourceListWrapper deepClone() {
+        return new HypermediaResourceListWrapper(this);
     }
 
     @XmlElement(name = "resourceLookup")
@@ -65,8 +75,9 @@ public class HypermediaResourceListWrapper {
         return links;
     }
 
-    public void setLinks(HypermediaResourceLookupLinks links) {
+    public HypermediaResourceListWrapper setLinks(HypermediaResourceLookupLinks links) {
         this.links = links;
+        return this;
     }
 
     @Override
@@ -78,13 +89,14 @@ public class HypermediaResourceListWrapper {
 
         if (resourceLookups != null ? !resourceLookups.equals(that.resourceLookups) : that.resourceLookups != null)
             return false;
-
-        return true;
+        return links != null ? links.equals(that.links) : that.links == null;
     }
 
     @Override
     public int hashCode() {
-        return resourceLookups != null ? resourceLookups.hashCode() : 0;
+        int result = resourceLookups != null ? resourceLookups.hashCode() : 0;
+        result = 31 * result + (links != null ? links.hashCode() : 0);
+        return result;
     }
 
     @Override

@@ -1,30 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.security;
 
-import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.JSSecurityException;
 import com.jaspersoft.jasperserver.api.security.validators.Validator;
 import com.jaspersoft.jasperserver.api.security.validators.ValidatorRule;
 import com.jaspersoft.jasperserver.api.security.validators.ValidatorRuleImpl;
 import com.jaspersoft.jasperserver.core.util.StringUtil;
 import mondrian.tui.MockHttpServletRequest;
+import org.junit.Before;
 import org.junit.Test;
 import org.owasp.esapi.errors.ValidationException;
 import org.unitils.UnitilsJUnit4;
@@ -32,12 +35,19 @@ import org.unitils.mock.Mock;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.jaspersoft.jasperserver.api.security.SecurityConfiguration.isInputValidationOn;
 import static com.jaspersoft.jasperserver.api.security.SecurityConfiguration.isSQLValidationOn;
+import static com.jaspersoft.jasperserver.api.security.validators.Validator.SEMICOLON_SUBSTITUTION_VALUE;
 import static com.jaspersoft.jasperserver.api.security.validators.Validator.getDefaultEncoding;
 import static com.jaspersoft.jasperserver.api.security.validators.Validator.getDefaultEncodingErrorMessage;
 import static com.jaspersoft.jasperserver.api.security.validators.Validator.isParamValueValid;
@@ -45,6 +55,10 @@ import static com.jaspersoft.jasperserver.api.security.validators.Validator.vali
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.matches;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for Validation
@@ -55,29 +69,84 @@ import static org.junit.Assert.assertTrue;
  */
 public class ValidatorTest extends UnitilsJUnit4 {
 
+    private static final String CHECK_QUERY_REGEX =
+            "(?s)^SELECT \\* FROM \\(.*" + SEMICOLON_SUBSTITUTION_VALUE + ".*\\) SUBQUERY8173082FDC24 WHERE 1=0$";
+
+    private Connection connection = mock(Connection.class);
+    private Statement statement = mock(Statement.class);
+
+    @Before
+    public void setUp() throws Exception {
+        when(connection.prepareStatement(anyString())).thenReturn(mock(PreparedStatement.class));
+
+        when(connection.createStatement()).thenReturn(statement);
+    }
+
     @Test
     public void testSQLValidationIsEnabled() {
         assertTrue("SQL Validation is disabled. This is too dangerous to ship as a default!", isSQLValidationOn());
     }
 
     @Test
+    public void validateSql_sqlIsNull_valid() {
+        assertTrue(validateSQL(null, connection));
+    }
+
+    @Test
+    public void validateSql_sqlIsEmpty_valid() {
+        assertTrue(validateSQL("", connection));
+    }
+
+    @Test
+    public void validateSql_sqlIsWhitespaces_valid() {
+        assertTrue(validateSQL(" \t ", connection));
+    }
+
+    @Test
     public void validateSQLTest1() {
-        validateSQL("  SeLeCt * from blah where a = 'ololo';");
+        validateSQL("  SeLeCt * from blah where a = 'ololo';", connection);
     }
 
     @Test
     public void validateSQLTest2() {
-        validateSQL("  SeLeCt * from blah where a = 'ololo';;;;;   ");
+        validateSQL("  SeLeCt * from blah where a = 'ololo';;;;;   ", connection);
     }
 
     @Test(expected = JSSecurityException.class)
-    public void validateSQLTest3() {
-        validateSQL("  SeLeCt * from blah where a = 'ololo';create table test (col blob);");
+    public void validateSQLTest3() throws Exception {
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(matches(CHECK_QUERY_REGEX))).thenReturn(preparedStatement);
+        when(preparedStatement.getMetaData()).thenThrow(new SQLException("Error"));
+
+        validateSQL("  SeLeCt * from blah where a = 'ololo';create table test (col blob);", connection);
     }
 
     @Test(expected = JSSecurityException.class)
-    public void validateSQLTest4() {
-        validateSQL("  SeLeCt * from blah where a = 'ololo';create table test (col blob)");
+    public void validateSQLTest4() throws Exception {
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(matches(CHECK_QUERY_REGEX))).thenReturn(preparedStatement);
+        when(preparedStatement.getMetaData()).thenThrow(new SQLException("Error"));
+
+        validateSQL("  SeLeCt * from blah where a = 'ololo';create table test (col blob)", connection);
+    }
+    @Test(expected = JSSecurityException.class)
+    public void validateSQLTest5() {
+        validateSQL("  select '<script><img name=alert(1) onerror=eval(name) src=1/></script>' from account ", connection);
+    }
+
+    @Test(expected = JSSecurityException.class)
+    public void validateSQLTest6() {
+        validateSQL("  select '<img name=alert(1) onerror=eval(name) src=1/></script>' from account ", connection);
+    }
+
+    @Test(expected = JSSecurityException.class)
+    public void validateSQLTest7() {
+        validateSQL("  select '< script      ><img name=alert(1) onerror=eval(name) src=1/></script>' from account ", connection);
+    }
+
+    @Test(expected = JSSecurityException.class)
+    public void validateSQLTest8() {
+        validateSQL("  select '<img name=alert(1) onerror=eval(name) src=1/></SCRIPT>' from account ", connection);
     }
 
     @Test
@@ -426,4 +495,41 @@ public class ValidatorTest extends UnitilsJUnit4 {
         Validator.validateRequestParams(request);
     }
 
+    @Test(expected = JSSecurityException.class)
+    public void validateSQL_semicolonSeparatedStatements_metadataReturnsNull_exception() throws Exception {
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(matches(CHECK_QUERY_REGEX))).thenReturn(preparedStatement);
+        when(preparedStatement.getMetaData()).thenReturn(null);
+        when(statement.execute(matches(CHECK_QUERY_REGEX))).thenThrow(new SQLException());
+
+        validateSQL("SELECT CITY FROM STORE; DROP TABLE STORE", connection);
+    }
+
+    @Test
+    public void validateSQL_semicolonInData_valid() throws Exception {
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(matches(CHECK_QUERY_REGEX))).thenReturn(preparedStatement);
+        when(preparedStatement.getMetaData()).thenReturn(mock(ResultSetMetaData.class));
+
+        validateSQL("SELECT CITY FROM STORE WHERE TEXT = ';'", connection);
+    }
+
+    @Test(expected = JSSecurityException.class)
+    public void validateSQL_notAllowedQuery_exception() {
+        validateSQL("DROP TABLE STORE", connection);
+    }
+
+    @Test(expected = JSSecurityException.class)
+    public void validateSQL_semicolonSeparatedStatements_metadataThrowsSQLFeatureNotSupportedException_exception() throws Exception {
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement(matches(CHECK_QUERY_REGEX))).thenReturn(preparedStatement);
+        when(preparedStatement.getMetaData()).thenThrow(new SQLFeatureNotSupportedException("error"));
+
+        validateSQL("SELECT CITY FROM STORE; DROP TABLE STORE", connection);
+    }
+
+    @Test(expected = JSSecurityException.class)
+    public void validateSQL_notAllowedQueryWithSemicolon_exception() {
+        validateSQL("DROP TABLE ';STORE'", connection);
+    }
 }

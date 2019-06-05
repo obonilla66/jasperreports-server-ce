@@ -1,31 +1,30 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid;
 
-import bitronix.tm.Configuration;
-import bitronix.tm.TransactionManagerServices;
 import com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.teiid.MemoryConfig;
 import com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.teiid.ServerConfig;
 import com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.teiid.TransactionManagerConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.service.BufferService;
@@ -35,11 +34,8 @@ import org.teiid.runtime.EmbeddedServer;
 
 import javax.naming.InitialContext;
 import javax.resource.spi.XATerminator;
-import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
-import java.io.File;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import bitronix.tm.BitronixTransactionManager;
@@ -109,69 +105,11 @@ public class TeiidEmbeddedServer extends EmbeddedServer {
 		start(config);
 	}
 
-    private javax.transaction.TransactionManager createTransactionManager(TransactionManagerConfiguration userConfig) throws Exception {
+    private javax.transaction.TransactionManager createTransactionManager(TransactionManagerConfiguration userConfig) {
         if (userConfig != null) {
-            Configuration tmConfig = TransactionManagerServices.getConfiguration();
-            if (userConfig.getServerId() != null) tmConfig.setServerId(userConfig.getServerId());
-
-
-            if (userConfig.getLogPart1Filename () != null) tmConfig.setLogPart1Filename(userConfig.getLogPart1Filename());
-            if (userConfig.getLogPart2Filename () != null) tmConfig.setLogPart2Filename(userConfig.getLogPart2Filename());
-
-            if (userConfig.isSaveLogFilesToLogDirectory()) {
-                tmConfig.setLogPart1Filename(getTransactionLogFileName(true, tmConfig.getLogPart1Filename()));
-                tmConfig.setLogPart2Filename(getTransactionLogFileName(true, tmConfig.getLogPart2Filename()));
-                log.debug("Transaction Manager Log Part 1 - " + tmConfig.getLogPart1Filename());
-                log.debug("Transaction Manager Log Part 2 - " + tmConfig.getLogPart2Filename());
-            }
-            tmConfig.setForcedWriteEnabled(userConfig.isForcedWriteEnabled());
-            tmConfig.setForceBatchingEnabled(userConfig.isForceBatchingEnabled());
-            tmConfig.setMaxLogSizeInMb(userConfig.getMaxLogSizeInMb());
-            tmConfig.setFilterLogStatus(userConfig.isFilterLogStatus());
-            tmConfig.setSkipCorruptedLogs(userConfig.isSkipCorruptedLogs());
-            tmConfig.setAsynchronous2Pc(userConfig.isAsynchronous2Pc());
-            tmConfig.setWarnAboutZeroResourceTransaction(userConfig.isWarnAboutZeroResourceTransaction());
-            tmConfig.setDebugZeroResourceTransaction(userConfig.isDebugZeroResourceTransaction());
-            tmConfig.setDefaultTransactionTimeout(userConfig.getDefaultTransactionTimeout());
-            tmConfig.setGracefulShutdownInterval(userConfig.getGracefulShutdownInterval());
-            tmConfig.setBackgroundRecoveryIntervalSeconds(userConfig.getBackgroundRecoveryIntervalSeconds());
-            tmConfig.setDisableJmx(userConfig.isDisableJmx());
-            if (userConfig.getJndiUserTransactionName() != null)
-                tmConfig.setJndiUserTransactionName(userConfig.getJndiUserTransactionName());
-            if (userConfig.getJndiTransactionSynchronizationRegistryName() != null)
-                tmConfig.setJndiTransactionSynchronizationRegistryName(userConfig.getJndiTransactionSynchronizationRegistryName());
-            if (userConfig.getJournal() != null) tmConfig.setJournal(userConfig.getJournal());
-            if (userConfig.getExceptionAnalyzer() != null) tmConfig.setExceptionAnalyzer(userConfig.getExceptionAnalyzer());
-            tmConfig.setCurrentNodeOnlyRecovery(userConfig.isCurrentNodeOnlyRecovery());
-            tmConfig.setAllowMultipleLrc(userConfig.isAllowMultipleLrc());
-            if (userConfig.getResourceConfigurationFilename() != null) tmConfig.setResourceConfigurationFilename(userConfig.getResourceConfigurationFilename());
+            userConfig.setUpConfig();
         }
        return new BitronixTransactionManager();
-    }
-
-
-    private String getTransactionLogFileName(boolean isSaveToLogDirectory, String logFileName) {
-        File logDirectory = null;
-        if (isSaveToLogDirectory) logDirectory = getLogDirectory();
-        if (logDirectory != null) {
-            File logFile = new File(logDirectory, logFileName);
-            return logFile.getPath();
-        }
-        return logFileName;
-    }
-
-    private File getLogDirectory() {
-        try {
-            Logger logger = Logger.getRootLogger();
-            Enumeration e = logger.getAllAppenders();
-            while(e.hasMoreElements()){
-                Object elt= e.nextElement();
-                if (elt instanceof FileAppender) return new File(((FileAppender)elt).getFile()).getParentFile();
-            }
-        } catch (Exception ex) {
-            log.debug("Fail to detect log directory!");
-        }
-        return null;
     }
 
 

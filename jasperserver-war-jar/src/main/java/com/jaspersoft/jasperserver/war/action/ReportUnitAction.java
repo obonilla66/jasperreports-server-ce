@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
@@ -22,6 +25,7 @@ import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.JSNotImplementedException;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationResult;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
@@ -32,13 +36,12 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputContro
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.helper.DataSourceJsonHelper;
 import com.jaspersoft.jasperserver.api.metadata.olap.util.OlapReportCheckUtil;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 import com.jaspersoft.jasperserver.war.common.JasperServerConst;
 import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import com.jaspersoft.jasperserver.war.dto.*;
 import com.jaspersoft.jasperserver.war.model.impl.BaseTreeDataProvider;
 import com.jaspersoft.jasperserver.war.model.impl.TypedTreeDataProvider;
@@ -119,7 +122,7 @@ public class ReportUnitAction extends FormAction {
 
 	private EngineService engine;
 
-	private ConfigurationBean configuration;
+	private RepositoryConfiguration configuration;
 
 	private JasperServerConstImpl constants = new JasperServerConstImpl();
 	
@@ -199,7 +202,7 @@ public class ReportUnitAction extends FormAction {
 	public Event initAction(RequestContext context) throws Exception {
 		ReportUnitWrapper wrapper = getFormReportUnitWrapper(context);
 
-        wrapper.setAnyJrxmlAvailable(jrxmlRepository.isAnyJrxmlExists(context));
+        wrapper.setAnyJrxmlAvailable(jrxmlRepository.isAnyJrxmlExists());
 		/* In new Mode get a list of all resources already present in the chosen
 		 * folder, to validate report name's uniqueness */
 		if (wrapper.isNewMode()) {
@@ -215,7 +218,7 @@ public class ReportUnitAction extends FormAction {
 //			resourcesInFolder.addFilterElement(FilterCriteria
 //					.createParentFolderFilter(folderURI));
 //			log("Searching for resources in the chosen folder:"+folderURI);
-//			ResourceLookup[] existingResources = repository.findResource(JasperServerUtil.getExecutionContext(context),
+//			ResourceLookup[] existingResources = repository.findResource(StaticExecutionContextProvider.getExecutionContext(),
 //					resourcesInFolder);
 //
 //			if (existingResources != null && existingResources.length != 0) {
@@ -554,7 +557,7 @@ public class ReportUnitAction extends FormAction {
 	{
 		List existingPathsList=new ArrayList();
 		FilterCriteria criteria = FilterCriteria.createFilter(InputControl.class);
-		ResourceLookup[] lookups = repository.findResource(JasperServerUtil.getExecutionContext(context), criteria);
+		ResourceLookup[] lookups = repository.findResource(StaticExecutionContextProvider.getExecutionContext(), criteria);
 		if(lookups!=null){
 			for(int i=0;i<lookups.length;i++){
 				existingPathsList.add(lookups[i].getURIString());
@@ -1066,12 +1069,12 @@ public class ReportUnitAction extends FormAction {
 		this.engine = engine;
 	}
 
-	public ConfigurationBean getConfiguration()
+	public RepositoryConfiguration getConfiguration()
 	{
 		return configuration;
 	}
 
-	public void setConfiguration(ConfigurationBean configuration)
+	public void setConfiguration(RepositoryConfiguration configuration)
 	{
 		this.configuration = configuration;
 	}
@@ -1137,7 +1140,7 @@ public class ReportUnitAction extends FormAction {
 
 	protected void setJRXMLQueryLanguage(RequestContext context, boolean changed) {
 		ResourceReference mainReport = getFormReportUnitWrapper(context).getReportUnit().getMainReport();
-		String queryLanguage = engine.getQueryLanguage(JasperServerUtil.getExecutionContext(context), mainReport);
+		String queryLanguage = engine.getQueryLanguage(StaticExecutionContextProvider.getExecutionContext(), mainReport);
 		context.getFlowScope().put(getReportQueryLanguageFlowAttribute(), queryLanguage);
 		
 		if (changed && queryLanguage != null) {
@@ -1156,12 +1159,12 @@ public class ReportUnitAction extends FormAction {
 			} else {
 				String uri = dsRef.getReferenceURI();
 				if (uri != null) {
-					ds = (ReportDataSource) repository.getResource(JasperServerUtil.getExecutionContext(context), uri);
+					ds = (ReportDataSource) repository.getResource(StaticExecutionContextProvider.getExecutionContext(), uri);
 				}
 			}
 			
 			if (ds != null) {
-				Set dataSourceTypes = engine.getDataSourceTypes(JasperServerUtil.getExecutionContext(context), queryLanguage);
+				Set dataSourceTypes = engine.getDataSourceTypes(StaticExecutionContextProvider.getExecutionContext(), queryLanguage);
 				if (!checkDataSourceType(ds, dataSourceTypes)) {
 					if (log.isDebugEnabled()) {
 						log.debug("Data source of report unit " + reportUnit.getURIString() + " does not support " + queryLanguage + " queries, removing");

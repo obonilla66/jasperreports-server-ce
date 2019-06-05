@@ -1,37 +1,38 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.resources;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
-import com.jaspersoft.jasperserver.dto.common.PatchDescriptor;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResourceListWrapper;
 import com.jaspersoft.jasperserver.dto.resources.ClientResourceLookup;
 import com.jaspersoft.jasperserver.dto.resources.ResourceMediaType;
-import com.jaspersoft.jasperserver.jaxrs.common.PATCH;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
-import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
 import com.jaspersoft.jasperserver.remote.services.BatchRepositoryService;
 import com.jaspersoft.jasperserver.remote.services.SingleRepositoryService;
@@ -43,19 +44,10 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -66,6 +58,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <p></p>
@@ -109,12 +103,14 @@ public class RepositoryJaxrsService {
             @QueryParam("forceTotalCount") @DefaultValue("false") Boolean forceTotalCount,
             @QueryParam(RestConstants.QUERY_PARAM_SORT_BY) String sortBy,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED) Boolean expanded,
+            @QueryParam(RestConstants.QUERY_PARAM_EXPAND_TYPE) Set<String> expandTypes,
             @QueryParam("forceFullPage") @DefaultValue("false") Boolean forceFullPage,
-            @HeaderParam(HttpHeaders.ACCEPT)String accept) throws RemoteException, IOException {
+            @HeaderParam(HttpHeaders.ACCEPT)String accept,
+            @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
 
         Response res;
         if (ResourceMediaType.FOLDER_JSON.equals(accept) || ResourceMediaType.FOLDER_XML.equals(accept)) {
-            res = getResourceDetails("", accept, expanded, null);
+            res = getResourceDetails("", accept, expanded, expandTypes, null, httpServletRequest);
         } else {
             AccessType accessType =  AccessType.ALL;
             if (accessTypeString != null && !"".equals(accessTypeString)){
@@ -172,8 +168,7 @@ public class RepositoryJaxrsService {
     }
 
     @DELETE
-    @Transactional(rollbackFor = Exception.class)
-    public Response deleteResources(@QueryParam("resourceUri") List<String> uris) throws RemoteException {
+    public Response deleteResources(@QueryParam("resourceUri") List<String> uris) throws ErrorDescriptorException {
         if (uris == null || uris.isEmpty()) {
             //no URI is specified as a parameter. It means delete request on root resource.
             // Call single delete logic. And let it forbid such a request.
@@ -188,20 +183,21 @@ public class RepositoryJaxrsService {
     public Response getResourceDetails(@PathParam(ResourceDetailsJaxrsService.PATH_PARAM_URI)String uri, 
             @HeaderParam(HttpHeaders.ACCEPT)String accept,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED) Boolean expanded,
-            @QueryParam(RestConstants.QUERY_PARAM_INCLUDE) List<String> includes) throws RemoteException {
-       return resourceDetailsJaxrsService.getResourceDetails(Folder.SEPARATOR + uri.replaceAll("/$", ""), accept, expanded, includes);
+            @QueryParam(RestConstants.QUERY_PARAM_EXPAND_TYPE) Set<String> expandTypes,
+            @QueryParam(RestConstants.QUERY_PARAM_INCLUDE) List<String> includes,
+            @Context final HttpServletRequest request) throws ErrorDescriptorException {
+       return resourceDetailsJaxrsService.getResourceDetails(Folder.SEPARATOR + uri.replaceAll("/$", ""), accept,
+               expanded, expandTypes, includes, request.getParameterMap());
     }
 
     @DELETE
     @Path("/{uri: .+}")
-    @Transactional(rollbackFor = Exception.class)
-    public Response deleteResource(@PathParam(ResourceDetailsJaxrsService.PATH_PARAM_URI) String uri) throws RemoteException {
+    public Response deleteResource(@PathParam(ResourceDetailsJaxrsService.PATH_PARAM_URI) String uri) throws ErrorDescriptorException {
         return resourceDetailsJaxrsService.deleteResource(Folder.SEPARATOR + uri.replaceAll("/$", ""));
     }
 
     @POST
     @Path("/{uri: .+}")
-    @Transactional(rollbackFor = Exception.class)
     public Response defaultPostHandler(
             @PathParam(ResourceDetailsJaxrsService.PATH_PARAM_URI) String _uri,
             @HeaderParam(HttpHeaders.CONTENT_LOCATION) String sourceUri,
@@ -210,17 +206,20 @@ public class RepositoryJaxrsService {
             @HeaderParam(HttpHeaders.CONTENT_TYPE)MediaType mediaType,
             @HeaderParam(HttpHeaders.ACCEPT)String accept,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED)@DefaultValue("false")Boolean expanded,
+            @QueryParam(RestConstants.QUERY_PARAM_EXPAND_TYPE) Set<String> expandTypes,
             @QueryParam(RestConstants.QUERY_PARAM_CREATE_FOLDERS)@DefaultValue("true")Boolean createFolders,
             @QueryParam(RestConstants.QUERY_PARAM_DRY_RUN)@DefaultValue("false")Boolean dryRun,
             @QueryParam("overwrite")@DefaultValue("false")Boolean overwrite,
-            @QueryParam("renameTo") String renameTo) throws RemoteException, IOException {
+            @QueryParam("renameTo") String renameTo,
+            @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
         Response response = null;
         String uri = Folder.SEPARATOR + _uri.replaceAll("/$", "");
+        final Map<String, String[]> parameterMap = httpServletRequest.getParameterMap();
         if(mediaType != null && MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE)){
             final ClientResource result = resourceDetailsJaxrsService.createResourceViaForm(
                     request.readEntity(FormDataMultiPart.class),
                     uri,
-                    createFolders, accept, dryRun);
+                    createFolders, accept, dryRun, parameterMap);
             response =  Response.status(Response.Status.CREATED).entity(result).build();
         } else {
             InputStream stream = request.readEntity(InputStream.class);
@@ -231,14 +230,16 @@ public class RepositoryJaxrsService {
                 // wrong media type for resource creation request, let's try default post handler
                 response = resourceDetailsJaxrsService.defaultPostHandler(stream, uri, sourceUri,
                         disposition, description, mediaType != null ? mediaType.toString() : null, accept, createFolders,
-                        overwrite, renameTo, dryRun);
+                        overwrite, renameTo, dryRun, parameterMap);
             }
             if (response == null) {
                 final ClientResource createdResource = resourceDetailsJaxrsService
-                        .createResource(resourceLookup, uri, createFolders, dryRun, accept);
+                        .createResource(resourceLookup, uri, createFolders, dryRun, accept, parameterMap);
 
                 if (expanded != null && expanded) {
-                    response = Response.fromResponse(resourceDetailsJaxrsService.getResourceDetails(createdResource.getUri(), accept, true, null))
+                    response = Response.fromResponse(resourceDetailsJaxrsService
+                            .getResourceDetails(createdResource.getUri(), accept, true, expandTypes,  null,
+                                    parameterMap))
                             .status(Response.Status.CREATED).build();
                 } else {
                     response = Response.status(Response.Status.CREATED).entity(createdResource).build();
@@ -249,7 +250,6 @@ public class RepositoryJaxrsService {
     }
 
     @POST
-    @Transactional(rollbackFor = Exception.class)
     public Response defaultPostHandlerForRoot(
             @HeaderParam(HttpHeaders.CONTENT_LOCATION) String sourceUri,
             @HeaderParam("Content-Disposition")String disposition,
@@ -257,12 +257,14 @@ public class RepositoryJaxrsService {
             @HeaderParam(HttpHeaders.CONTENT_TYPE)MediaType rawMimeType,
             @HeaderParam(HttpHeaders.ACCEPT)String accept,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED)@DefaultValue("false")Boolean expanded,
+            @QueryParam(RestConstants.QUERY_PARAM_EXPAND_TYPE) Set<String> expandTypes,
             @QueryParam(RestConstants.QUERY_PARAM_CREATE_FOLDERS)@DefaultValue("true")Boolean createFolders,
             @QueryParam(RestConstants.QUERY_PARAM_DRY_RUN)@DefaultValue("false")Boolean dryRun,
             @QueryParam("overwrite")@DefaultValue("false")Boolean overwrite,
-            @QueryParam("renameTo") String renameTo) throws RemoteException, IOException{
-        return defaultPostHandler("", sourceUri,disposition, description, rawMimeType, accept, expanded,
-                createFolders, dryRun, overwrite, renameTo);
+            @QueryParam("renameTo") String renameTo,
+            @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException{
+        return defaultPostHandler("", sourceUri,disposition, description, rawMimeType, accept, expanded, expandTypes,
+                createFolders, dryRun, overwrite, renameTo, httpServletRequest);
     }
 
     /**
@@ -296,7 +298,6 @@ public class RepositoryJaxrsService {
     }
 
     @PUT
-    @Transactional(rollbackFor = Exception.class)
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response defaultPutHandlerForRoot(
             @HeaderParam(HttpHeaders.CONTENT_LOCATION) String sourceUri,
@@ -305,16 +306,17 @@ public class RepositoryJaxrsService {
             @HeaderParam(HttpHeaders.CONTENT_TYPE)MediaType mediaType,
             @HeaderParam(HttpHeaders.ACCEPT)String accept,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED)@DefaultValue("false")Boolean expanded,
+            @QueryParam(RestConstants.QUERY_PARAM_EXPAND_TYPE) Set<String> expandTypes,
             @QueryParam(RestConstants.QUERY_PARAM_CREATE_FOLDERS)@DefaultValue("true")Boolean createFolders,
             @QueryParam(RestConstants.QUERY_PARAM_DRY_RUN)@DefaultValue("false")Boolean dryRun,
             @QueryParam("overwrite")@DefaultValue("false")Boolean overwrite,
-            @QueryParam("renameTo") String renameTo) throws RemoteException, IOException {
-        return defaultPutHandler("", sourceUri, disposition, description, mediaType, accept, expanded,
-                createFolders, dryRun, overwrite, renameTo);
+            @QueryParam("renameTo") String renameTo,
+            @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
+        return defaultPutHandler("", sourceUri, disposition, description, mediaType, accept, expanded, expandTypes,
+                createFolders, dryRun, overwrite, renameTo, httpServletRequest);
     }
 
     @PUT
-    @Transactional(rollbackFor = Exception.class)
     @Path("/{uri: .+}")
     public Response defaultPutHandler(
             @PathParam(ResourceDetailsJaxrsService.PATH_PARAM_URI) String _uri,
@@ -324,16 +326,19 @@ public class RepositoryJaxrsService {
             @HeaderParam(HttpHeaders.CONTENT_TYPE)MediaType mediaType,
             @HeaderParam(HttpHeaders.ACCEPT)String accept,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED)@DefaultValue("false")Boolean expanded,
+            @QueryParam(RestConstants.QUERY_PARAM_EXPAND_TYPE) Set<String> expandTypes,
             @QueryParam(RestConstants.QUERY_PARAM_CREATE_FOLDERS)@DefaultValue("true")Boolean createFolders,
             @QueryParam(RestConstants.QUERY_PARAM_DRY_RUN)@DefaultValue("false")Boolean dryRun,
             @QueryParam("overwrite")@DefaultValue("false")Boolean overwrite,
-            @QueryParam("renameTo") String renameTo) throws RemoteException, IOException {
+            @QueryParam("renameTo") String renameTo,
+            @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
         String uri = Folder.SEPARATOR + _uri.replaceAll("/$", "");
         ClientResource resourceLookup = null;
         Response response = null;
+        final Map<String, String[]> parameterMap = httpServletRequest.getParameterMap();
         if(mediaType != null && MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE)){
             response = resourceDetailsJaxrsService.updateResourceViaForm(request.readEntity(FormDataMultiPart.class),
-                    uri, createFolders, accept, dryRun);
+                    uri, createFolders, accept, dryRun, parameterMap);
         } else {
             InputStream stream = request.readEntity(InputStream.class);
             try {
@@ -343,21 +348,15 @@ public class RepositoryJaxrsService {
                 // wrong media type for resource creation request, let's try default put handler
                 response = resourceDetailsJaxrsService.defaultPutHandler(stream, uri, sourceUri,
                         disposition, description, mediaType != null ? mediaType.toString() : null, accept, createFolders,
-                        overwrite, renameTo, dryRun);
+                        overwrite, renameTo, dryRun, parameterMap);
             }
             if (response == null) {
                 if (resourceLookup == null) {
                     throw new MandatoryParameterNotFoundException("resource body");
                 }
                 resourceLookup.setUri(uri);
-                final ClientResource updatedResource;
-                try {
-                    updatedResource = singleRepositoryService.saveOrUpdate(resourceLookup, overwrite,
-                            createFolders, ClientTypeHelper.extractClientType(accept), dryRun);
-                } catch (NotAcceptableException e) {
-                    // original exception comes with client type, not Mime-Type. Throw exception with proper Mime-Type here
-                    throw new NotAcceptableException(accept);
-                }
+                final ClientResource updatedResource = singleRepositoryService.saveOrUpdate(resourceLookup, overwrite,
+                        createFolders, ClientTypeHelper.extractClientType(accept), dryRun, parameterMap);
                 int createdVersion = com.jaspersoft.jasperserver.api.metadata.common.domain.Resource.VERSION_NEW + 1;
                 // if current version is '0' (new version for the resource to be created is '-1') and previous version isn't '0',
                 // then send 201 (Created), otherwise - 200 (OK)
@@ -366,7 +365,8 @@ public class RepositoryJaxrsService {
                         ? Response.Status.CREATED : Response.Status.OK;
 
                 if (expanded != null && expanded) {
-                    response = Response.fromResponse(resourceDetailsJaxrsService.getResourceDetails(updatedResource.getUri(), mediaType.toString(), true, null))
+                    response = Response.fromResponse(resourceDetailsJaxrsService.getResourceDetails(
+                            updatedResource.getUri(), mediaType.toString(), true, expandTypes, null, parameterMap))
                             .status(status).build();
                 } else {
                     response = Response.status(status).entity(updatedResource).build();

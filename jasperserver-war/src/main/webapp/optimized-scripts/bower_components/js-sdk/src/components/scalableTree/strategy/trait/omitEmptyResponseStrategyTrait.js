@@ -1,1 +1,0 @@
-define(["require","underscore"],function(e){var r=e("underscore");return{omitEmptyResponse:function(e){return r.compact(e)}}});

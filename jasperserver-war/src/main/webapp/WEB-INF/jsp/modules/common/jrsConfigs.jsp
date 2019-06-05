@@ -1,27 +1,32 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ taglib uri="/spring" prefix="spring"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib uri="http://www.springframework.org/security/tags" prefix="authz"%>
 <%@ page import="com.jaspersoft.jasperserver.war.webHelp.WebHelpLookup" %>
 <%@ page import="com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder" %>
+<%@ page import="com.jaspersoft.jasperserver.api.security.SecurityConfiguration" %>
 
 <%--Global JRS State/Config object --%>
 
@@ -40,6 +45,7 @@
         tempFolderUri: "${not empty tempFolderUri ? tempFolderUri : commonProperties.tempFolderUri}",
         enableAccessibility: "${not empty enableAccessibility ? enableAccessibility : commonProperties.enableAccessibility}",
         organizationId: "${not empty organizationId ? organizationId : commonProperties.organizationId}",
+        userId: "${not empty userId ? userId : commonProperties.userId}",
         commonReportGeneratorsMetadata: ${not empty reportGenerators ? reportGenerators : '[]'},
         templatesFolderUri: '${not empty templatesFolderUri ? templatesFolderUri : templateProperties.templatesFolderUri}',
         defaultTemplateUri: '${not empty defaultTemplateUri ? defaultTemplateUri : templateProperties.defaultTemplateUri}',
@@ -118,7 +124,7 @@
      com.jaspersoft.jasperserver.war.common.HeartbeatBean heartbeat =
            (com.jaspersoft.jasperserver.war.common.HeartbeatBean) application.getAttribute("concreteHeartbeatBean");
     %>
-    <authz:authorize ifAnyGranted="ROLE_ADMINISTRATOR">
+    <authz:authorize access="hasRole('ROLE_ADMINISTRATOR')">
     <%
         if (heartbeat != null && heartbeat.haveToAskForPermissionNow()) {
     %>
@@ -127,7 +133,7 @@
     }
     %>
     </authz:authorize>
-    <authz:authorize ifAnyGranted="ROLE_USER,ROLE_ADMINISTRATOR">
+    <authz:authorize access="hasAnyRole('ROLE_USER','ROLE_ADMINISTRATOR')">
     <%
         if (heartbeat != null && heartbeat.isMakingCalls()
                 && session != null && session.getAttribute("jsHeartbeatSentClientInfo") == null) {
@@ -147,4 +153,10 @@
     }
 
     __jrsConfigs__.xssNonce = '${sessionScope.XSS_NONCE}';
+    __jrsConfigs__.xssHtmlTagWhiteList='<%=SecurityConfiguration.getProperty("xss.soft.html.escape.tag.whitelist")%>';
+    <%
+    String xssAttribMap = SecurityConfiguration.getProperty("xss.soft.html.escape.attrib.map");
+    if (xssAttribMap != null && xssAttribMap.trim().length() > 0)
+        out.write("__jrsConfigs__.xssAttribSoftHtmlEscapeMap=" + xssAttribMap + ";");
+    %>
 </script>

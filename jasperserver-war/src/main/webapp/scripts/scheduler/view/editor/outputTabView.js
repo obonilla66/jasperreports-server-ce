@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -39,7 +39,9 @@ define(function (require) {
 		resource = require('resource.base'),
 		outputTabTemplate = require("text!scheduler/template/editor/outputTabTemplate.htm"),
 		RepositoryChooserDialogFactory = require("bi/repository/dialog/resourceChooser/RepositoryChooserDialogFactory"),
-		repositoryResourceTypes = require("bi/repository/enum/repositoryResourceTypes");
+		repositoryResourceTypes = require("bi/repository/enum/repositoryResourceTypes"),
+
+		settings = require("settings!treeComponent");
 
 	return Backbone.View.extend({
 
@@ -174,7 +176,11 @@ define(function (require) {
 
 			var self = this;
 			var Dialog = RepositoryChooserDialogFactory.getDialog("folder");
-			this.folderChooserDialog = new Dialog();
+
+			this.folderChooserDialog = new Dialog({
+                treeBufferSize: parseInt(settings.treeLevelLimit, 10),
+				setMinSizeAsSize: true
+			});
 
 			this.listenTo(this.folderChooserDialog, "close", function () {
 				var resourceUri;
@@ -209,6 +215,7 @@ define(function (require) {
 			var Dialog = RepositoryChooserDialogFactory.getDialog("item");
 			this.sshKeyChooserDialog = new Dialog({
                 disableListTab: true,
+                treeBufferSize: parseInt(settings.treeLevelLimit, 10),
 				resourcesTypeToSelect: [repositoryResourceTypes.SECURE_FILE]
 			});
 

@@ -1,33 +1,45 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.SQLCriterion;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+
+
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +54,11 @@ import java.util.regex.Pattern;
  */
 public class ConcatenationAwareSqlCriterion extends SQLCriterion {
     private static final Pattern CONCAT_EXPR = Pattern.compile("CONCAT\\s*\\([^()]*\\)");
+    
+    @Autowired
+    @Qualifier("sessionFactory") SessionFactory sessionFactory; 
+
+	private static final Log log = LogFactory.getLog(ConcatenationAwareSqlCriterion.class);
 
     ConcatenationAwareSqlCriterion(String sql, Object[] values, Type[] types) {
         super(sql, values, types);
@@ -54,8 +71,21 @@ public class ConcatenationAwareSqlCriterion extends SQLCriterion {
     @Override
     public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
         String sql = super.toSqlString(criteria, criteriaQuery);
-        Dialect dialect = criteriaQuery.getFactory().getDialect();
-
+        
+        if(sessionFactory==null){
+        	log.error("ConcatenationAware: NO SESSION FACTORY!!!");
+        	return sql;
+        }
+        
+        log.error("ConcatenationAware: getting dialect from " + sessionFactory.toString());
+        
+        Dialect dialect = ((SessionFactoryImplementor)sessionFactory)
+        	.getServiceRegistry()
+        	.getService(JdbcServices.class)
+        		.getDialect();
+        
+        log.error("ConcatenationAware: dialect=" + dialect + "\ntransforming: " + sql);
+        
         if (dialect instanceof SQLServerDialect){
             sql = replaceToOperator(sql, "+");
         }
@@ -68,7 +98,10 @@ public class ConcatenationAwareSqlCriterion extends SQLCriterion {
             sql = replaceToOperator(sql, null);
         }
 
-        return replaceToOperator(sql, null);
+        String ret = replaceToOperator(sql, null);
+    
+        log.error("ConcatenationAware: final result: " + ret);
+        return ret;
     }
 
     private String replaceToOperator(String sql, String operator){

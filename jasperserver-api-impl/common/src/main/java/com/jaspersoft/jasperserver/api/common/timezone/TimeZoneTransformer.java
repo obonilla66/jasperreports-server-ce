@@ -1,36 +1,41 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.common.timezone;
 
 import com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder;
-import com.jaspersoft.jasperserver.dto.adhoc.DefaultISOFormats;
+import com.jaspersoft.jasperserver.dto.adhoc.CommonAdhocDateFormats;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
-
-import static com.jaspersoft.jasperserver.dto.adhoc.DefaultISOFormats.SIMPLE_TIMESTAMP_WITHOUT_TIMEZONE;
 
 /**
  * A helper class which help convert time and timestamp values
@@ -40,14 +45,23 @@ import static com.jaspersoft.jasperserver.dto.adhoc.DefaultISOFormats.SIMPLE_TIM
  * @version $Id: TimeZoneTransformer.java 64574 2017-11-29 16:48:19Z vspachyn $
  * @since 22.09.2017
  */
+@Service
 public class TimeZoneTransformer {
 
+    @Resource
+    private ClientTimezoneFormattingRulesResolver clientTimezoneFormattingRulesResolver;
+
     public static Set<String> timeZoneIndependentPattern = new HashSet<String>(){{
-        add(DefaultISOFormats.YEAR_PATTERN);
-        add(DefaultISOFormats.YEAR_OF_MONTH_PATTERN);
-        add(DefaultISOFormats.QUARTER_PATTERN);
-        add(DefaultISOFormats.DATE_PATTERN);
+        add(CommonAdhocDateFormats.YEAR_PATTERN);
+        add(CommonAdhocDateFormats.YEAR_OF_MONTH_PATTERN);
+        add(CommonAdhocDateFormats.QUARTER_PATTERN);
+        add(CommonAdhocDateFormats.DATE_PATTERN);
     }};
+
+    @Autowired
+    public TimeZoneTransformer(ClientTimezoneFormattingRulesResolver clientTimezoneFormattingRulesResolver) {
+        this.clientTimezoneFormattingRulesResolver = clientTimezoneFormattingRulesResolver;
+    }
 
     /**
      * Transform the value into {@code clientTimeZone}.
@@ -58,15 +72,17 @@ public class TimeZoneTransformer {
      * @param clientTimeZone the value have to be shifted with this timezone
      * @return shifted value
      */
-    public static Date toClientTimezone(Object value, TimeZone clientTimeZone) {
+    public Date toClientTimezone(Object value, TimeZone clientTimeZone) {
         if (value == null) return null;
 
         if (clientTimeZone == null) return (Date) value;
 
+        if (!clientTimezoneFormattingRulesResolver.isApplyClientTimezone(value)) return (Date) value;
+
         if (value instanceof Timestamp) {
             return new Timestamp(toTimeZone((Date) value, TimeZone.getDefault(), clientTimeZone).getTime());
         } else if (value instanceof Time) {
-            return new Time(timeToTimezoneTransformer((Date) value, TimeZone.getDefault(), clientTimeZone).getTime());
+            return new Time(transformTimeToTimeZone((Date) value, TimeZone.getDefault(), clientTimeZone).getTime());
         } else if (value instanceof Date) {
             return (Date) value;
         }
@@ -74,7 +90,7 @@ public class TimeZoneTransformer {
         throw new IllegalArgumentException("The value type can be Date,Time and Timestamp");
     }
 
-    public static Date toClientTimezone(Object value) {
+    public Date toClientTimezone(Object value) {
         return toClientTimezone(value, TimeZoneContextHolder.getTimeZone());
     }
 
@@ -87,10 +103,10 @@ public class TimeZoneTransformer {
      * <p>
      * Any non time or timestamp patterns would be ignored
      *
-     * @param value a simple time or timestamp value formatted by {@link DefaultISOFormats} pattern
-     * @param pattern a pattern from {@link DefaultISOFormats}* @param timeZone
+     * @param value a simple time or timestamp value formatted by {@link CommonAdhocDateFormats} pattern
+     * @param pattern a pattern from {@link CommonAdhocDateFormats}* @param timeZone
      */
-     public static String toTimeZone(String value, String pattern, TimeZone from, TimeZone to) {
+     public String toTimeZone(String value, String pattern, TimeZone from, TimeZone to) {
         if (timeZoneIndependentPattern.contains(pattern))
             return value;
 
@@ -116,16 +132,14 @@ public class TimeZoneTransformer {
      * @param to the value should be transformed into {@code to} timezone
      * @return shifted value
      */
-    public static Date toTimeZone(Date value, TimeZone from, TimeZone to) {
+    public Date toTimeZone(Date value, TimeZone from, TimeZone to) {
+        if (!clientTimezoneFormattingRulesResolver.isApplyClientTimezone(value)) return value;
+
         if (value instanceof Time) {
-            return timeToTimezoneTransformer(value, from, to);
+            return new Time(transformTimeToTimeZone(value, from, to).getTime());
         }
 
-        SimpleDateFormat format = new SimpleDateFormat(SIMPLE_TIMESTAMP_WITHOUT_TIMEZONE);
-        format.setTimeZone(to);
-        String formattedValue = format.format(value);
-
-        return parseWithTimezone(formattedValue, SIMPLE_TIMESTAMP_WITHOUT_TIMEZONE, from);
+        return transformDateToTimeZone(value, from, to);
     }
 
     /**
@@ -134,7 +148,9 @@ public class TimeZoneTransformer {
      * @param value is a {@link java.sql.Timestamp} value
      * @return {@link java.sql.Timestamp} value in server timezone
      */
-    public static Date toServerTimeZone(Object value) {
+    public Date toServerTimeZone(Object value) {
+        if (!clientTimezoneFormattingRulesResolver.isApplyClientTimezone(value)) return (Date) value;
+
         if (value instanceof Time) {
             return toServerTimeZone((Time) value);
         } else if (value instanceof Timestamp){
@@ -147,12 +163,12 @@ public class TimeZoneTransformer {
     }
 
     private static Time toServerTimeZone(Time value) {
-        Date date = timeToTimezoneTransformer(value, TimeZoneContextHolder.getTimeZone(), TimeZone.getDefault());
+        Date date = transformTimeToTimeZone(value, TimeZoneContextHolder.getTimeZone(), TimeZone.getDefault());
 
         return new Time(date.getTime());
     }
 
-    private static Timestamp toServerTimeZone(Timestamp value) {
+    private Timestamp toServerTimeZone(Timestamp value) {
         return new Timestamp(toTimeZone(value, TimeZoneContextHolder.getTimeZone(), TimeZone.getDefault()).getTime());
     }
 
@@ -181,7 +197,7 @@ public class TimeZoneTransformer {
      * @param to the {@code date} parameter should be transformet {@code to} timezone
      * @return
      */
-    private static Date timeToTimezoneTransformer(Date date, TimeZone from, TimeZone to) {
+    public static Date transformTimeToTimeZone(Date date, TimeZone from, TimeZone to) {
         int fromTimezoneOffset = from.getRawOffset();
         int toTimezoneOffset = to.getRawOffset();
 
@@ -213,4 +229,13 @@ public class TimeZoneTransformer {
 
         return new Date(resultTime);
     }
+
+    public static Date transformDateToTimeZone(Date date, TimeZone from, TimeZone to) {
+        DateTime shiftedDateTime = new DateTime(date.getTime())
+                .withZoneRetainFields(DateTimeZone.forTimeZone(from))
+                .withZone(DateTimeZone.forTimeZone(to));
+
+        return shiftedDateTime.toLocalDateTime().toDate();
+    }
+
 }

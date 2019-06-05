@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2014 - 2015 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -81,16 +81,18 @@ define(function (require, exports, module) {
             this.behavior = {
                 'down': [this, this._onDown, null],
                 'enter': null,
-                'exit': null,
+                'exit': [this, this._onExit, null],
                 'fixfocus': [this, this._fixFocus, null],
                 'fixsubfocus': [this, this._fixFocus, null],
                 'fixsuperfocus': [this, this._fixSuperfocus, null],
                 'focusin': [this, this._onFocusIn, null],
                 'focusout': [this, this._onFocusOut, null],
+                'subfocusin': [this, this._onSubfocusIn, null],
                 'left': [this, this._onLeft, null],
                 //'mouseout': [this, this._onMouseOut, null],
                 //'mouseover': [this, this._onMouseOver, null],
                 'right': [this, this._onRight, null],
+                'superfocusin': [this, this._onSuperfocusIn, null],
                 'superfocusout': [this, this._onSuperfocusOut, null],
                 'up': [this, this._onUp, null],
                 'inherit': false,
@@ -173,7 +175,7 @@ define(function (require, exports, module) {
         // However, context menus are _not_ 
         _fixSuperfocus: function (element) {
             var newSuperfocus;
-            var $root = $(element).closest('.menuRoot,.dropDown');
+            var $root = $(element).closest('.menuRoot,.dropDown,.context');
             if ($root.length > 0) {
                 newSuperfocus = $root[0];
             } else {
@@ -181,6 +183,30 @@ define(function (require, exports, module) {
                 newSuperfocus = null;
             }
             return newSuperfocus;
+        },
+
+        _onSuperfocusIn: function(element){
+            var $elem = $(element),
+                $parentList = $(this.lastMenuBarItem).closest(".menuRoot"),
+                $currentList = $elem.closest(".menu").length && $elem;
+
+            if( $currentList && ($parentList.attr("tabindex")>-1)){
+                this._parentTabindex = $parentList.attr("tabindex");
+
+                if (this._parentTabindex>-1) {
+                    $currentList.attr('js-suspended-tabindex', this._parentTabindex);
+                    $currentList.find("li:first").attr('tabindex', this._parentTabindex);
+                } else {
+                    $elem.attr('js-suspended-tabindex', 'none');
+                    $currentList.find("li:first").attr('tabindex', -1);
+                }
+
+                // Explicitly make the element unfocusable-- temporarily.
+                $currentList.attr('tabindex', '-1');
+                $parentList.attr("tabindex", "-1");
+            }
+
+            return element;
         },
 
         _onFocusIn: function (element) {
@@ -237,6 +263,7 @@ define(function (require, exports, module) {
                 // Don't remove the style if we've moved into a drop-down menu.
                 if (this.lastMenuBarItem!==element){
                     buttonManager.out($thisItem.find(layoutModule.BUTTON_PATTERN)[0]);
+                    $thisItem.removeAttr("tabindex");
                 }
                 //buttonManager.out($thisItem.find(layoutModule.MENU_LIST_PATTERN)[0]);
             } else {
@@ -244,6 +271,7 @@ define(function (require, exports, module) {
                 if ($thisItem.length>0) {
                     // An item in a drop-down or context menu has lost focus.
                     buttonManager.out($thisItem.find(layoutModule.BUTTON_PATTERN)[0]);
+                    $thisItem.removeAttr("tabindex");
                 }
             }
             return null;
@@ -253,9 +281,7 @@ define(function (require, exports, module) {
         // hover events and classes for actionMenu fire as expected, and that
         // the context menu is hidden.
         _onSuperfocusOut: function(element){
-            var $matched,
-                $next = $(element),
-                $nav = $("#"+layoutModule.MAIN_NAVIGATION_ID);
+            var $nav = $("#"+layoutModule.MAIN_NAVIGATION_ID);
 
             if ($nav.length<1){
                 // There is no main navigation in embedded mode.
@@ -265,15 +291,19 @@ define(function (require, exports, module) {
             // dropdown menu.  Because of the way actionModel works, the
             // dropdown menu is NOT a DOM descendant of the main menu.
             var newFocus=$(document.activeElement);
-            if (newFocus.closest('.dropDown').length<1){
+            if (newFocus.closest('.dropDown,.context').length<1){
                 var $selected = $nav.find("." + layoutModule.HOVERED_CLASS);
                 if ($selected.length>0) {
                     buttonManager.out($selected[0]);
                 }
-                // FIXME-- TURN THIS BACK ON once context-menu focus issues are
-                // resolved.  RETEST bug #43172, which is INTERMITTENT, after
-                // doing so.
-                //actionModel.hideMenu();
+                actionModel.hideMenu();
+
+                // Explicitly make the element unfocusable-- temporarily.
+                var $ul = $(this.lastMenuBarItem).closest(".menuRoot");
+
+                $ul.attr("tabindex", this._parentTabindex);
+
+                this.lastMenuBarItem = null;
             }
         },
 
@@ -325,19 +355,35 @@ define(function (require, exports, module) {
         /* ========== NAVTYPE BEHAVIOR CALLBACKS =========== */
 
         _onSubfocusIn: function (element) {
+            var $ul = $(element).closest(".menuRoot");
+
+            if($ul.attr('js-suspended-tabindex')>-1){
+                $(element).attr("tabindex", $ul.attr('js-suspended-tabindex'));
+            } else if ($ul.attr('tabindex')>-1){
+                $(element).attr("tabindex", $ul.attr('tabindex'));
+                $ul.attr('js-suspended-tabindex', $ul.attr('tabindex'));
+            }
+
             // Handle menus hosted in non-focusable elements (such as a cell in a grid).
             if (($(element).prop('nodeName') === 'li') === false) {
                 // Find a usable child element.
-                var subel = this._fixSubfocus(element);
+                var subel = this._fixFocus(element);
                 // Adjust subfocus without firing callbacks.
                 stdnav.setSubfocus(subel, false);
             }
         },
 
         _onExit: function (element) {
-            // Closes everything and returns focus to the menu root itself.
-            //ev.data.jsam._close_submenus_below($(ev.currentTarget).closest('.menuRoot'));
-            $(element).closest('.menuRoot').focus();
+            var $el = $(element);
+            if (!$el.closest("#"+layoutModule.MAIN_NAVIGATION_ID).length && $el.find("p").length > 0) {
+                // Closes everything and returns focus to the menu root itself.
+                element = this._onExitHandler(element);
+            } else {
+                // Closes everything and returns focus to the global entry-point (main search input).
+                element = $("#"+layoutModule.MAIN_SEARCH_INPUT_ID)[0];
+            }
+
+            return element;
         },
 
         /* ========== MOUSE BEHAVIOR =========== */
@@ -356,6 +402,11 @@ define(function (require, exports, module) {
         _onLeft: function (element){
             var $thisItem = $(element).closest(layoutModule.NAVIGATION_PATTERN);
             var $prev=$(element);
+
+            if(!$thisItem.length && $(element).closest(".menu").length){
+                $thisItem = $(this._onExitHandler(element));
+            }
+
             if ($thisItem.length>0){
                 // We're in the menu bar.
                 $prev = $thisItem.prev(layoutModule.NAVIGATION_PATTERN);
@@ -365,7 +416,6 @@ define(function (require, exports, module) {
                     // We're in the drop list.  Get the previous item for the
                     // last menu bar item and redirect focus to that.
                     $prev=$(this.lastMenuBarItem).prev(layoutModule.NAVIGATION_PATTERN);
-                    this.lastMenuBarItem=null;
                 }
             }
             if ($prev.length>0) {
@@ -374,12 +424,16 @@ define(function (require, exports, module) {
                 // FIXME: Wrap menu
                 return element;
             }
-            return element;
         },
 
         _onRight: function (element) {
             var $thisItem = $(element).closest(layoutModule.NAVIGATION_PATTERN);
             var $next=$(element);
+
+            if(!$thisItem.length && $(element).closest(".menu").length){
+                $thisItem = $(this._onExitHandler(element));
+            }
+
             if ($thisItem.length>0){
                 // We're in the menu bar.
                 $next = $thisItem.next(layoutModule.NAVIGATION_PATTERN);
@@ -389,7 +443,6 @@ define(function (require, exports, module) {
                     // We're in the drop list.  Get the previous item for the
                     // last menu bar item and redirect focus to that.
                     $next=$(this.lastMenuBarItem).next(layoutModule.NAVIGATION_PATTERN);
-                    this.lastMenuBarItem=null;
                 }
             }
             if ($next.length>0) {
@@ -398,7 +451,6 @@ define(function (require, exports, module) {
                 // FIXME: Wrap menu
                 return element;
             }
-            return element;
         },
 
         _onUp: function (element) {
@@ -420,7 +472,6 @@ define(function (require, exports, module) {
                 // menu bar.
                 if ($prev.length<1){
                     $prev=$(this.lastMenuBarItem);
-                    this.lastMenuBarItem=null;
                 }
             } else {
                 // If we're not in a popup/context menu, we should be in the main
@@ -430,7 +481,7 @@ define(function (require, exports, module) {
             if ($prev.length>0){
                 return $prev[0];
             } else {
-                return element;
+                return this._onExitHandler(element);
             }
         },
 
@@ -465,7 +516,12 @@ define(function (require, exports, module) {
                 // we come back to it via up-arrow or ESCAPE.
                 if (actionModel.isMenuShowing()) {
                     this.lastMenuBarItem=element;
+                    $(element).addClass("isParent");
+
                     $next=$(layoutModule.MENU_LIST_PATTERN);
+
+                    $menu = $next.closest(".menuRoot");
+                    $menu.attr("tabindex", $(element).attr("tabindex"));
                 }
             }
             if ($next.length>0){
@@ -473,6 +529,15 @@ define(function (require, exports, module) {
             } else {
                 return element;
             }
+        },
+
+        _onExitHandler: function (element) {
+            element = this.lastMenuBarItem;
+            if (!element) {
+                element = $(".isParent")[0];
+            }
+            $(element).removeClass("isParent");
+            return element;
         }
     });
 

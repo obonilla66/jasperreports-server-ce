@@ -56,7 +56,7 @@
         <span class="wrap">{{- i18n['resource.dataSource.aws.setting.region']}}:</span>
         <select class="fnormal" name="region">
             {{ _.each(awsRegions, function(region) { }}
-            <option value="{{- region }}" {{ if (region === modelAttributes.region) { }}selected="selected"{{ } }}>{{- i18n[region] }}</option>
+            <option value="{{- region }}" {{ if (region === modelAttributes.region) { }}selected="selected"{{ } }}>{{- i18n[region] || region }}</option>
             {{ }); }}
         </select>
         <span class="message warning"></span>

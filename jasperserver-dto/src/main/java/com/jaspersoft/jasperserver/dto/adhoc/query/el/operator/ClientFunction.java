@@ -1,26 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el.operator;
 
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressions;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.ast.ClientELVisitor;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressions;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientOperator;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ast.ClientELVisitor;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
@@ -29,34 +32,36 @@ import java.util.List;
 /**
  * @author Stas Chubar <schubar@tibco.com>
  * @author Grant Bacon <gbacon@tibco.com>
- * @version $Id $
+ * @version $Id$
  */
-@XmlRootElement(name = ClientFunction.FUNCTION_ID)
+@XmlRootElement(name = ClientFunction.EXPRESSION_ID)
 public class ClientFunction extends ClientOperator<ClientFunction> {
 
-    public static final String FUNCTION_ID = "function";
+    public static final String EXPRESSION_ID = "function";
     protected String functionName;
 
     public ClientFunction() {
-        super(ClientOperation.FUNCTION.getName(), new ArrayList<ClientExpression>());
-    }
-
-    public ClientFunction(String functionName) {
-        this();
-        this.setFunctionName(functionName);
+        super(ClientOperation.FUNCTION, new ArrayList<ClientExpression>());
     }
 
     public ClientFunction(String functionName, List<ClientExpression> operands) {
-        super(ClientOperation.FUNCTION.getName(), operands);
+        super(ClientOperation.FUNCTION, operands);
         this.functionName = functionName;
     }
 
     public ClientFunction(ClientFunction source){
-        this(source.getFunctionName(), source.getOperands());
+        super(source);
+        this.functionName = source.getFunctionName();
     }
 
     public String getFunctionName() {
         return functionName;
+    }
+
+    public ClientFunction(String functionName)
+    {
+        this();
+        this.functionName = functionName;
     }
 
     public ClientFunction setFunctionName(String functionName) {
@@ -71,20 +76,13 @@ public class ClientFunction extends ClientOperator<ClientFunction> {
 
     @Override
     public String toString() {
-        String args = "";
-        int len = (getOperands() != null) ? getOperands().size() : 0;
-        if (len > 0) {
-            StringBuilder sb = new StringBuilder(getOperands().get(0).toString());
-            for (int i = 1; i < len; i++) {
-                if (getOperands().get(i) != null) {
-                    sb.append(", ");
-                    sb.append(getOperands().get(i).toString());
-                }
-            }
-            args = sb.toString();
-        }
         final String functionNameString = (functionName != null) ? functionName : ClientExpressions.MISSING_REPRESENTATION;
-        return functionNameString + "(" + args + ")";
+        return functionNameString + "(" + operandsToString(getOperands(), ", ") + ")";
+    }
+
+    @Override
+    protected String addStringOperand(ClientExpression operand) {
+        return operand.toString();
     }
 
     @Override
@@ -115,5 +113,17 @@ public class ClientFunction extends ClientOperator<ClientFunction> {
     @Override
     public ClientFunction deepClone() {
         return new ClientFunction(this);
+    }
+
+
+    public int getPrecedence() {
+        return 6;
+    }
+    /*
+     * Operands for ClientFunctions never need to be surrounded by parentheses
+     */
+    @Override
+    protected boolean operandNeedsParens(ClientOperator operand) {
+        return false;
     }
 }

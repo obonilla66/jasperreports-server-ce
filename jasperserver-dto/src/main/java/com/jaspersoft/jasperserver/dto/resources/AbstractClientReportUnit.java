@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
@@ -21,10 +24,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -49,61 +52,10 @@ public abstract class AbstractClientReportUnit<BuilderType extends AbstractClien
 
     public AbstractClientReportUnit(AbstractClientReportUnit other) {
         super(other);
-
-        ClientReferenceableQuery srcClientReferenceableQuery = other.getQuery();
-        if (srcClientReferenceableQuery != null){
-            if (srcClientReferenceableQuery instanceof ClientQuery){
-                query = new ClientQuery((ClientQuery) srcClientReferenceableQuery);
-            } else if (srcClientReferenceableQuery instanceof ClientReference){
-                query = new ClientReference((ClientReference) srcClientReferenceableQuery);
-            }
-        }
-
-        ClientReferenceableFile srcSchema = other.getJrxml();
-        if (srcSchema != null) {
-            if (srcSchema instanceof ClientReference){
-                jrxml = new ClientReference((ClientReference) srcSchema);
-            } else if (srcSchema instanceof ClientFile){
-                jrxml = new ClientFile((ClientFile) srcSchema);
-            }
-        }
-
-        final List<ClientReferenceableInputControl> srcInputControls = other.getInputControls();
-        if(srcInputControls != null){
-            inputControls = new ArrayList<ClientReferenceableInputControl>(other.getInputControls().size());
-            for(ClientReferenceableInputControl inputControl : srcInputControls){
-                ClientReferenceableInputControl clientReferenceableInputControlCopy = null;
-                if (inputControl instanceof ClientInputControl){
-                    clientReferenceableInputControlCopy = new ClientInputControl((ClientInputControl) inputControl);
-                } else if (inputControl instanceof ClientReference){
-                    clientReferenceableInputControlCopy = new ClientReference((ClientReference) inputControl);
-                }
-                if (clientReferenceableInputControlCopy != null){
-                    inputControls.add(clientReferenceableInputControlCopy);
-                }
-            }
-        }
-
-        final Map<String, ClientReferenceableFile> srcFiles = other.getFiles();
-        if (srcFiles != null){
-            files = new HashMap<String, ClientReferenceableFile>();
-            for (Map.Entry<String, ClientReferenceableFile> entry : srcFiles.entrySet()) {
-                String key = entry.getKey();
-                ClientReferenceableFile srcClientReferenceableFile = entry.getValue();
-
-                ClientReferenceableFile clientReferenceableFileCopy = null;
-                if (srcClientReferenceableFile instanceof ClientReference){
-                    clientReferenceableFileCopy = new ClientReference((ClientReference) srcClientReferenceableFile);
-                } else if (srcClientReferenceableFile instanceof ClientFile){
-                    clientReferenceableFileCopy = new ClientFile((ClientFile) srcClientReferenceableFile);
-                }
-
-                if (clientReferenceableFileCopy != null){
-                    files.put(key, clientReferenceableFileCopy);
-                }
-            }
-        }
-
+        this.query = copyOf(other.getQuery());
+        this.jrxml = copyOf(other.getJrxml());
+        this.inputControls = copyOf(other.getInputControls());
+        this.files = copyOf(other.getFiles());
         this.inputControlRenderingView = other.getInputControlRenderingView();
         this.reportRenderingView = other.getReportRenderingView();
         this.alwaysPromptControls = other.isAlwaysPromptControls();

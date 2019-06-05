@@ -1,35 +1,44 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.dataset;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.hashCodeOfListOfArrays;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.isListsOfArraysEquals;
 
 /**
  * @author Volodya Sabadosh
  * @version $Id$
  */
 @XmlRootElement(name = "flatDataset")
-public class ClientFlatDataset {
+public class ClientFlatDataset implements DeepCloneable<ClientFlatDataset> {
     private int counts;
     private List<ClientFlatDatasetFieldReference> fields = new ArrayList<ClientFlatDatasetFieldReference>();
     private List<String[]> rows;
@@ -39,18 +48,11 @@ public class ClientFlatDataset {
     }
 
     public ClientFlatDataset(ClientFlatDataset dataset) {
+        checkNotNull(dataset);
+
         this.counts = dataset.getCounts();
-        if (dataset.getFields() != null) {
-            for (ClientFlatDatasetFieldReference field : dataset.getFields()) {
-                fields.add(new ClientFlatDatasetFieldReference(field));
-            }
-        }
-        if (dataset.getRows() != null) {
-            this.rows = new ArrayList<String[]>();
-            for (String[] row : dataset.getRows()) {
-                this.rows.add(Arrays.copyOf(row, row.length));
-            }
-        }
+        this.fields = copyOf(dataset.getFields());
+        this.rows = copyOf(dataset.getRows());
     }
 
     @XmlElement(name = "counts")
@@ -67,8 +69,13 @@ public class ClientFlatDataset {
         return fields;
     }
 
-    public void setFields(List<ClientFlatDatasetFieldReference> fields) {
-        this.fields = fields;
+    public ClientFlatDataset setFields(List<ClientFlatDatasetFieldReference> fields) {
+        if (fields == null) {
+            this.fields = new ArrayList<ClientFlatDatasetFieldReference>();
+        } else {
+            this.fields = fields;
+        }
+        return this;
     }
 
     @XmlElementWrapper(name = "rows")
@@ -90,16 +97,16 @@ public class ClientFlatDataset {
         ClientFlatDataset that = (ClientFlatDataset) o;
 
         if (counts != that.counts) return false;
-        if (fields != null ? !fields.equals(that.fields) : that.fields != null) return false;
-        return !(rows != null ? !rows.equals(that.rows) : that.rows != null);
-
+        if (!fields.equals(that.fields)) return false;
+        return isListsOfArraysEquals(rows, that.rows);
     }
+
 
     @Override
     public int hashCode() {
         int result = counts;
-        result = 31 * result + (fields != null ? fields.hashCode() : 0);
-        result = 31 * result + (rows != null ? rows.hashCode() : 0);
+        result = 31 * result + fields.hashCode();
+        result = 31 * result + hashCodeOfListOfArrays(rows);
         return result;
     }
 
@@ -110,5 +117,10 @@ public class ClientFlatDataset {
                 ", fields=" + fields +
                 ", rows=" + rows +
                 '}';
+    }
+
+    @Override
+    public ClientFlatDataset deepClone() {
+        return new ClientFlatDataset(this);
     }
 }

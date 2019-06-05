@@ -1,27 +1,34 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources.domain;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -29,7 +36,7 @@ import java.util.List;
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public class JoinInfo {
+public class JoinInfo implements DeepCloneable<JoinInfo> {
 
     private Boolean includeAllJoinsForQueryFieldTables;
     private Boolean includeAllDataIslandJoins;
@@ -41,22 +48,18 @@ public class JoinInfo {
     public JoinInfo(){}
 
     public JoinInfo(JoinInfo source){
+        checkNotNull(source);
+
         includeAllJoinsForQueryFieldTables = source.getIncludeAllJoinsForQueryFieldTables();
         includeAllDataIslandJoins = source.getIncludeAllDataIslandJoins();
         suppressCircularJoins = source.getSuppressCircularJoins();
-        final List<Join> sourceJoins = source.getJoins();
-        if(sourceJoins != null){
-            joins = new ArrayList<Join>(sourceJoins.size()){{
-                for(Join join : sourceJoins){
-                    add(new Join(join));
-                }
-            }};
-        }
-        final List<String> sourceMandatoryTables = source.getMandatoryTables();
-        if(sourceMandatoryTables != null){
-            mandatoryTables = new ArrayList<String>();
-            mandatoryTables.addAll(sourceMandatoryTables);
-        }
+        joins = copyOf(source.getJoins());
+        mandatoryTables = copyOf(source.getMandatoryTables());
+    }
+
+    @Override
+    public JoinInfo deepClone() {
+        return new JoinInfo(this);
     }
 
     public Boolean getIncludeAllJoinsForQueryFieldTables() {

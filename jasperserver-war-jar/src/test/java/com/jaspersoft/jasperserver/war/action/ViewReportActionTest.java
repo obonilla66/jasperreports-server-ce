@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.action;
@@ -26,10 +29,10 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportI
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportLoadingService;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
-import com.jaspersoft.jasperserver.war.cascade.InputControlValidationError;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsLogicService;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsValidationException;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationError;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
 import com.jaspersoft.jasperserver.war.util.SessionObjectSerieAccessor;
 import net.sf.jasperreports.web.servlets.JasperPrintAccessor;
 import net.sf.jasperreports.web.servlets.ReportPageStatus;
@@ -47,9 +50,9 @@ import org.unitils.UnitilsJUnit4;
 import org.unitils.inject.annotation.InjectInto;
 import org.unitils.inject.annotation.TestedObject;
 import org.unitils.mock.Mock;
-import org.unitils.mock.MockUnitils;
+import org.unitils.mock.core.MockObject;
+import org.unitils.mock.core.proxy.ProxyInvocation;
 import org.unitils.mock.mockbehavior.MockBehavior;
-import org.unitils.mock.proxy.ProxyInvocation;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -113,7 +116,7 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
     public void setUp() {
         mockMessageSource();
         
-        Mock<WebflowReportContext> reportContextMock = MockUnitils.createMock(WebflowReportContext.class);
+        Mock<WebflowReportContext> reportContextMock = new MockObject<WebflowReportContext>(WebflowReportContext.class, this);
 		reportContextAccessor.returns(reportContextMock).getContext(requestContext.getMock());
     }
 
@@ -187,9 +190,9 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
             }
         }).getTypedParameters(null, null);
 
-        Mock<ReportUnitResult> reportUnitResultMock = MockUnitils.createMock(ReportUnitResult.class);
-        Mock<JasperPrintAccessor> jasperPrintAccessorMock = MockUnitils.createMock(JasperPrintAccessor.class);
-        Mock<ReportPageStatus> reportPageStatusMock = MockUnitils.createMock(ReportPageStatus.class);
+        Mock<ReportUnitResult> reportUnitResultMock = new MockObject<ReportUnitResult>(ReportUnitResult.class, this);
+        Mock<JasperPrintAccessor> jasperPrintAccessorMock = new MockObject<JasperPrintAccessor>(JasperPrintAccessor.class, this);
+        Mock<ReportPageStatus> reportPageStatusMock = new MockObject<ReportPageStatus>(ReportPageStatus.class, this);
         engineServiceMock.returns(reportUnitResultMock).execute(null, null);
         reportUnitResultMock.returns(jasperPrintAccessorMock).getJasperPrintAccessor();
         jasperPrintAccessorMock.returns(reportPageStatusMock.getMock()).pageStatus(-1, null);
@@ -215,9 +218,9 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
             }
         }).getTypedParameters(null, null);
 
-        Mock<ReportUnitResult> reportUnitResultMock = MockUnitils.createMock(ReportUnitResult.class);
-        Mock<JasperPrintAccessor> jasperPrintAccessorMock = MockUnitils.createMock(JasperPrintAccessor.class);
-        Mock<ReportPageStatus> reportPageStatusMock = MockUnitils.createMock(ReportPageStatus.class);
+        Mock<ReportUnitResult> reportUnitResultMock = new MockObject<ReportUnitResult>(ReportUnitResult.class, this);
+        Mock<JasperPrintAccessor> jasperPrintAccessorMock = new MockObject<JasperPrintAccessor>(JasperPrintAccessor.class, this);
+        Mock<ReportPageStatus> reportPageStatusMock = new MockObject<ReportPageStatus>(ReportPageStatus.class, this);
         engineServiceMock.performs(new MockBehavior() {
             @Override
             public Object execute(ProxyInvocation proxyInvocation) throws Throwable {
@@ -235,14 +238,14 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
 
     @Test
     public void testGetRequestParametersAsJSON() throws IOException {
-        Mock<RequestContext> requestContextMock = MockUnitils.createMock(RequestContext.class);
+        Mock<RequestContext> requestContextMock = new MockObject<RequestContext>(RequestContext.class, this);
         Map<String, String[]> nativeParameterMap = new LinkedHashMap<String, String[]>();
         nativeParameterMap.put("p1", new String[]{"v1"});
         nativeParameterMap.put("p2", new String[]{"v1", "v2"});
 
-        Mock<ServletRequest> servletRequestMock = MockUnitils.createMock(ServletRequest.class);
+        Mock<ServletRequest> servletRequestMock = new MockObject<ServletRequest>(ServletRequest.class, this);
         servletRequestMock.returns(nativeParameterMap).getParameterMap();
-        Mock<ExternalContext> externalContextMock = MockUnitils.createMock(ExternalContext.class);
+        Mock<ExternalContext> externalContextMock = new MockObject<ExternalContext>(ExternalContext.class, this);
         externalContextMock.returns(servletRequestMock.getMock()).getNativeRequest();
         requestContextMock.returns(externalContextMock.getMock()).getExternalContext();
 
@@ -254,10 +257,10 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
     private void mockRequestContext(
             Map<String, Object> requestParams, Map<String, Object> flowScopeParams, final Map<String, Object> sessionParams) {
 
-        Mock<ServletExternalContext> externalContext = MockUnitils.createMock(ServletExternalContext.class);
-        Mock<HttpServletRequest> httpServletRequestMock = MockUnitils.createMock(HttpServletRequest.class);
-        Mock<HttpSession> httpSessionMock = MockUnitils.createMock(HttpSession.class);
-        Mock<FlowExecutionContext> flowExecutionContextMock = MockUnitils.createMock(FlowExecutionContext.class);
+        Mock<ServletExternalContext> externalContext = new MockObject<ServletExternalContext>(ServletExternalContext.class, this);
+        Mock<HttpServletRequest> httpServletRequestMock = new MockObject<HttpServletRequest>(HttpServletRequest.class, this);
+        Mock<HttpSession> httpSessionMock = new MockObject<HttpSession>(HttpSession.class, this);
+        Mock<FlowExecutionContext> flowExecutionContextMock = new MockObject<FlowExecutionContext>(FlowExecutionContext.class, this);
 
         requestContext.returns(setupMutableAttributeMap(flowScopeParams)).getFlowScope();
         requestContext.returns(setupMutableAttributeMap(requestParams)).getRequestScope();
@@ -296,7 +299,7 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
     }
 
     private ParameterMap setupParameterMap(final Map<String, Object> properties) {
-        Mock<ParameterMap> parameterMapMock = MockUnitils.createMock(ParameterMap.class);
+        Mock<ParameterMap> parameterMapMock = new MockObject<ParameterMap>(ParameterMap.class, this);
         parameterMapMock.performs(new MockBehavior() {
             @Override
             public Object execute(ProxyInvocation proxyInvocation) throws Throwable {
@@ -308,7 +311,7 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
     }
 
     private MutableAttributeMap setupMutableAttributeMap(final Map<String, Object> properties) {
-        Mock<MutableAttributeMap> attributeMapMock = MockUnitils.createMock(MutableAttributeMap.class);
+        Mock<MutableAttributeMap> attributeMapMock = new MockObject<MutableAttributeMap>(MutableAttributeMap.class, this);
         attributeMapMock.performs(new MockBehavior() {
             @Override
             public Object execute(ProxyInvocation proxyInvocation) throws Throwable {
@@ -329,7 +332,7 @@ public class ViewReportActionTest extends UnitilsJUnit4 {
     }
 
     private SharedAttributeMap setupSharedAttributeMap(final Map<String, Object> properties) {
-        Mock<SharedAttributeMap> attributeMapMock = MockUnitils.createMock(SharedAttributeMap.class);
+        Mock<SharedAttributeMap> attributeMapMock = new MockObject<SharedAttributeMap>(SharedAttributeMap.class, this);
         attributeMapMock.performs(new MockBehavior() {
             @Override
             public Object execute(ProxyInvocation proxyInvocation) throws Throwable {

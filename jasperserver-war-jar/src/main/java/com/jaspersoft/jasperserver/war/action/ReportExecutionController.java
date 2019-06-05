@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
@@ -30,6 +33,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.jaspersoft.jasperserver.api.engine.common.service.GlobalReportExecutionAccessor;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,12 +54,11 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.service.DataCachePro
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CopyDestinationExistsException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.ExportUtil;
 import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceNotFoundException;
-import com.jaspersoft.jasperserver.war.action.hyperlinks.HyperlinkProducerFactoryFlowFactory;
+import com.jaspersoft.jasperserver.api.engine.export.HyperlinkProducerFactoryFlowFactory;
 import com.jaspersoft.jasperserver.war.action.hyperlinks.ReportContextFactory;
 import com.jaspersoft.jasperserver.war.util.SessionObjectSerieAccessor;
 
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
-import net.sf.jasperreports.engine.JRPropertiesUtil;
 import net.sf.jasperreports.engine.JRRuntimeException;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.ReportContext;
@@ -89,7 +92,7 @@ public class ReportExecutionController extends MultiActionController {
     //TODO: move to front-end
 	private static final List<String> MODULES_NAMES = Arrays.asList(
             "jr.LocalAnchor", "jr.LocalPage", "jr.Reference",
-            "jr.RemoteAnchor", "jr.ReportExecution", "jr.ReportDataSeries", "jasperreports-loader"
+            "jr.RemoteAnchor", "jr.ReportExecution", "jasperreports-loader"
     );
 
 	public static final String REPORT_EXECUTION_PREFIX = "flowReportExecution";
@@ -120,7 +123,7 @@ public class ReportExecutionController extends MultiActionController {
 	private DataCacheProvider dataCacheProvider;
     private JasperReportsContext jasperReportsContext;
     private WebflowReportContextAccessor reportContextAccessor;
-    private HyperlinkProducerFactoryFlowFactory hyperlinkProducerFactory;
+    private HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> hyperlinkProducerFactory;
     @Resource(name="reportExecutionAccessor")
     private GlobalReportExecutionAccessor reportExecutionAccessor;
     private ReportContextFactory reportContextFactory;
@@ -204,7 +207,7 @@ public class ReportExecutionController extends MultiActionController {
 	}
         ReportUnitResult result = (ReportUnitResult) getJasperPrintAccessor().getObject(req, jasperPrintName);
         if(result == null){
-            result = reportExecutionAccessor.getReportUnitResult(jasperPrintName);
+            result = (ReportUnitResult) reportExecutionAccessor.getReportResult(jasperPrintName);
         }
         return result;
         
@@ -254,11 +257,16 @@ public class ReportExecutionController extends MultiActionController {
             ReportContext reportContext = reportContextAccessor.getContextById(req, reportContextId);
             JasperReportsContext currentJasperReportsContext = jasperReportsContext;
             if (reportContext == null) {
-                ReportUnitResult reportUnitResult = reportExecutionAccessor.getReportUnitResult(reportContextId);
+                ReportUnitResult reportUnitResult = (ReportUnitResult) reportExecutionAccessor.getReportResult(reportContextId);
                 if (reportUnitResult != null) {
                     reportContext = reportUnitResult.getReportContext();
                     currentJasperReportsContext = reportExecutionAccessor.getJasperReportsContext(reportContextId);
                     shouldRefreshExecutionOutput = true;
+
+                    //make sure that the latest JasperPrint is available for the action
+                    if (reportContext.getParameterValue("net.sf.jasperreports.web.jasper_print.accessor") != null){
+                        reportContext.setParameterValue("net.sf.jasperreports.web.jasper_print.accessor", reportUnitResult.getJasperPrintAccessor());
+                    }
                 }
             }
             if (reportContext == null) {
@@ -269,7 +277,7 @@ public class ReportExecutionController extends MultiActionController {
                 JSController controller = new JSController(currentJasperReportsContext);
 
                 if (reportContext.getParameterValue(WebReportContext.REPORT_CONTEXT_PARAMETER_JASPER_PRINT_ACCESSOR) == null) {
-                    ReportUnitResult reportUnitResult = reportExecutionAccessor.getReportUnitResult(reportContextId);
+                    ReportUnitResult reportUnitResult = (ReportUnitResult) reportExecutionAccessor.getReportResult(reportContextId);
                     if (reportUnitResult != null) {
                         reportContext.setParameterValue(WebReportContext.REPORT_CONTEXT_PARAMETER_JASPER_PRINT_ACCESSOR, reportUnitResult.getJasperPrintAccessor());
                     }
@@ -416,6 +424,7 @@ public class ReportExecutionController extends MultiActionController {
 					contextPath = request.getContextPath();
 				}
 				jsonExporterOutput.setFontHandler(new WebHtmlResourceHandler(response.encodeURL(contextPath + "/reportresource?&font={0}")));
+				jsonExporterOutput.setResourceHandler(new WebHtmlResourceHandler(response.encodeURL(contextPath + "/rest_v2/resources" + reportResult.getReportUnitURI() + "_files/{0}")));
                 exporter.setExporterOutput(jsonExporterOutput);
 				exporter.getExporterContext().setValue(ExportUtil.HTTP_SERVLET_REQUEST, request);//key does not really matter here, as first value of type request is taken, regardless of key
 				jsonExporterConfig.setReportComponentsExportOnly(isReportComponentsExportOnly);
@@ -498,7 +507,7 @@ public class ReportExecutionController extends MultiActionController {
                     modulePath = ".." + webUtil.getResourcesBasePath() + modulePath;
                 }else if (MODULES_NAMES.contains(moduleName) && isPro){
                     //in pro we need to reference to ReportViewer as part of jrs-ui package
-                    modulePath = "bower_components/jrs-ui/src/" + modulePath;
+                    modulePath = "runtime_dependencies/jrs-ui/src/" + modulePath;
                 }
 
                 modulePaths.put(moduleName, modulePath);
@@ -627,12 +636,12 @@ public class ReportExecutionController extends MultiActionController {
         this.reportContextAccessor = reportContextAccessor;
     }
 
-	public HyperlinkProducerFactoryFlowFactory getHyperlinkProducerFactory() {
+	public HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> getHyperlinkProducerFactory() {
 		return hyperlinkProducerFactory;
 	}
 
 	public void setHyperlinkProducerFactory(
-			HyperlinkProducerFactoryFlowFactory hyperlinkProducerFactory) {
+			HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> hyperlinkProducerFactory) {
 		this.hyperlinkProducerFactory = hyperlinkProducerFactory;
 	}
 

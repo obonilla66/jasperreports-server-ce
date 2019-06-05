@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.metadata.tenant.service.impl;
@@ -37,13 +40,16 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoT
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 
+import com.jaspersoft.jasperserver.core.util.DBUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.criterion.*;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -178,10 +184,12 @@ public class TenantServiceImpl extends HibernateDaoImpl
 
     protected List<RepoTenant> getRepoTenantListByIds(List<String> tenantIds) {
         DetachedCriteria criteria = DetachedCriteria.forClass(persistentTenantClass());
-        criteria.add(Restrictions.in("tenantId", tenantIds));
+        if(CollectionUtils.isNotEmpty(tenantIds)){
+            criteria.add(DBUtil.getBoundedInCriterion("tenantId", tenantIds));
+        }
         criteria.getExecutableCriteria(getSession()).setCacheable(true);
         @SuppressWarnings("unchecked")
-        List<RepoTenant> tenantList = getHibernateTemplate().findByCriteria(criteria);
+        List<RepoTenant> tenantList = (List<RepoTenant>)getHibernateTemplate().findByCriteria(criteria);
         if (tenantList.isEmpty()) {
             log.debug("Tenants not found with ids \"" + tenantIds + "\"");
         }
@@ -212,18 +220,22 @@ public class TenantServiceImpl extends HibernateDaoImpl
 	 */
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
 	public void putTenant(ExecutionContext context, Tenant aTenant) {
+//    	log.error("EUGENE!!!!!!! putTenant called for " + aTenant.getId());
 		RepoTenant existingTenant = getRepoTenant(aTenant.getId(), false);
 		if (existingTenant == null) {
+//			log.error("EUGENE!!!!! tenant " + aTenant + " doesn't exist, creating new class");
 			existingTenant = (RepoTenant) getPersistentClassFactory().newObject(Tenant.class);
 		}
 		existingTenant.copyFromClient(aTenant, this);
 		getHibernateTemplate().saveOrUpdate(existingTenant);
+		getHibernateTemplate().flush();
+//		log.error("EUGENE!!!!! now tenant " + existingTenant.getTenantId() + " saved/update");;
 	}
 	
 	protected List getRepoSubTenants(ExecutionContext context, String parentTenantId) {
 		RepoTenant parent = getRepoTenant(parentTenantId, false);
 		if (parent == null || parent.getSubTenants() == null) {
-			return new ArrayList(0);
+			return Collections.EMPTY_LIST;
 		}
 		return new ArrayList(parent.getSubTenants());
 	}
@@ -264,23 +276,26 @@ public class TenantServiceImpl extends HibernateDaoImpl
 	}
 
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
-	public void deleteTenant(ExecutionContext context, String tenantId) {
-		RepoTenant tenant = getRepoTenant(tenantId, false);
-		if (tenant != null) {
-		   getHibernateTemplate().delete(tenant);
-           getHibernateTemplate().flush();
-		} else {
-			if (log.isInfoEnabled()) {
-				log.info("Tenant " + tenantId + " not found for deletion");
-			}
-		}
-	}
+    public void deleteTenant(ExecutionContext context, String tenantId) {
+        RepoTenant tenant = getRepoTenant(tenantId, false);
+        if (tenant != null) {
+            //In some cases during tenant deletion we can lose session - so we initialize all lazy collections before delete sequence
+            getHibernateTemplate().refresh(tenant);
+            Hibernate.initialize(tenant.getSubTenants());
+            Hibernate.initialize(tenant.getRoles());
+            Hibernate.initialize(tenant.getUsers());
+            getHibernateTemplate().delete(tenant);
+            getHibernateTemplate().flush();
+        } else {
+            log.error("Tenant " + tenantId + " not found for deletion");
+        }
+    }
 
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
-	public void updateTenant(ExecutionContext context, Tenant aTenant) {
-		putTenant(context, aTenant);
-	}
-	
+    public void updateTenant(ExecutionContext context, Tenant aTenant) {
+        putTenant(context, aTenant);
+    }
+
     @Transactional(propagation = Propagation.REQUIRED)
     public List getAllSubTenantList(ExecutionContext context, final String parentTenantId) {
         return getAllSubTenantList(context, parentTenantId, null);
@@ -298,7 +313,7 @@ public class TenantServiceImpl extends HibernateDaoImpl
             DetachedCriteria criteria = createSubTenantsCriteria(parent, null, -1, null);
             criteria.getExecutableCriteria(getSession()).setCacheable(true);
             criteria.setProjection(Projections.property("tenantId"));
-            subTenantIdList.addAll(getHibernateTemplate().findByCriteria(criteria));
+            subTenantIdList.addAll((List<String>)getHibernateTemplate().findByCriteria(criteria));
         }
 
         return subTenantIdList;
@@ -571,7 +586,7 @@ public class TenantServiceImpl extends HibernateDaoImpl
             List results = getHibernateTemplate().findByCriteria(criteria);
             if (results != null && !results.isEmpty()) {
 
-                rowCount = (Integer) results.get(0);
+                rowCount = ((Long) results.get(0)).intValue();
             }
         }
 
@@ -587,7 +602,8 @@ public class TenantServiceImpl extends HibernateDaoImpl
         List results = getHibernateTemplate().findByCriteria(criteria);
 
         if (results != null && !results.isEmpty()) {
-            return (Integer) results.get(0);
+            Long rowCount = (Long) results.get(0);
+            return rowCount.intValue();
         }
 
         return 0;
@@ -598,9 +614,9 @@ public class TenantServiceImpl extends HibernateDaoImpl
      */
     @Transactional(propagation = Propagation.REQUIRED)
     protected int getTotalTenantsCount(ExecutionContext context) {
-        Integer rowCount = (Integer) getHibernateTemplate().execute(new HibernateCallback<Object>() {
+        Long rowCount = (Long) getHibernateTemplate().execute(new HibernateCallback<Object>() {
             @Override
-            public Object doInHibernate(Session session) throws HibernateException, SQLException {
+            public Object doInHibernate(Session session) throws HibernateException {
                 Criteria criteria = session.createCriteria(persistentTenantClass());
                 criteria.add(Restrictions.not(Restrictions.eq("tenantId", ORGANIZATIONS)));
                 criteria.setProjection(Projections.rowCount());
@@ -608,7 +624,7 @@ public class TenantServiceImpl extends HibernateDaoImpl
             }
         });
 
-        return rowCount;
+        return rowCount.intValue();
     }
 
     public List<Tenant> getSubTenants(ExecutionContext context, String parentTenantId, String text, int firstResult,
@@ -657,8 +673,9 @@ public class TenantServiceImpl extends HibernateDaoImpl
         DetachedCriteria criteria = DetachedCriteria.forClass(persistentTenantClass());
 
         criteria.createAlias("parent", "p");
-        criteria.add(Restrictions.in("p.tenantId", tenantIds));
-
+        if(CollectionUtils.isNotEmpty(tenantIds)){
+            criteria.add(DBUtil.getBoundedInCriterion("p.tenantId", tenantIds));
+        }
         criteria.setProjection(Projections.projectionList()
         .add(Projections.rowCount())
         .add(Projections.groupProperty("p.tenantId")));
@@ -670,7 +687,8 @@ public class TenantServiceImpl extends HibernateDaoImpl
         if (results != null && results.size() > 0) {
             for (Object result: results) {
                 String tenantId = (String)((Object[])result)[1];
-                Integer count = (Integer)((Object[])result)[0];
+                Long rowCount = (Long)((Object[])result)[0];
+                Integer count = rowCount.intValue();
 
                 subTenantCounts.put(tenantId, count);
             }

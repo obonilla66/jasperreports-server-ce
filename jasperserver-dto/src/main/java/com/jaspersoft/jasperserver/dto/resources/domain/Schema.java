@@ -1,23 +1,30 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+import com.jaspersoft.jasperserver.dto.resources.domain.validation.NoNullElements;
 import com.jaspersoft.jasperserver.dto.resources.domain.validation.ValidReferences;
+import com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -29,6 +36,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * <p></p>
  *
@@ -36,20 +46,31 @@ import java.util.List;
  * @version $Id$
  */
 @ValidReferences
-public class Schema {
+public class Schema implements DeepCloneable<Schema> {
 
+    @NotNull
     @Valid
     private List<ResourceElement> resources;
+
+    @NotNull
     @Valid
+    @NoNullElements(errorCode = PresentationGroupElement.DOMAIN_SCHEMA_PRESENTATION_CONTAINS_NULL_ELEMENT,
+            message = "Domain schema presentation can't contain null elements")
     private List<PresentationGroupElement> presentation;
 
     public Schema(){}
     public Schema (Schema source){
-        final List<PresentationGroupElement> sourcePresentation = source.getPresentation();
-        if(sourcePresentation != null) presentation = new ArrayList<PresentationGroupElement>(sourcePresentation);
-        final List<ResourceElement> sourceResources = source.getResources();
-        if (sourceResources != null) resources = new ArrayList<ResourceElement>(sourceResources);
+        checkNotNull(source);
+
+        resources = copyOf(source.getResources());
+        presentation = copyOf(source.getPresentation());
     }
+
+    @Override
+    public Schema deepClone() {
+        return new Schema(this);
+    }
+
     @XmlElementWrapper(name = "resources")
     @XmlElements({
             @XmlElement(name = "group", type = ResourceGroupElement.class),
@@ -86,77 +107,20 @@ public class Schema {
         if (!(o instanceof Schema)) return false;
 
         Schema schema = (Schema) o;
-
-        if (presentation != null ? !presentation.equals(schema.presentation) : schema.presentation != null)
-            return false;
-        if (resources != null  && schema.resources != null && !equalGroupElements(resources, schema.resources)) return false;
+        if (presentation != null ? !presentation.equals(schema.presentation) : schema.presentation != null) return false;
+        if ((resources != null && schema.resources != null) && !ValueObjectUtils.equalGroupElements(resources, schema.resources)) return false;
+        if ((resources == null && schema.resources != null) || (resources != null && schema.resources == null)) return false;
 
         return true;
     }
 
-    private boolean equalGroupElements(List<? extends ResourceElement> groupElements1, List<? extends ResourceElement> groupElements2) {
-        if(groupElements1 == null && groupElements2 == null) return true;
-        if(groupElements1 == null || groupElements2 == null) return false;
-        if (groupElements1.size() != groupElements2.size())  return false;
-
-        if (!(groupElements1.get(0) instanceof AbstractResourceGroupElement)) {
-            return groupElements1.containsAll(groupElements2);
-        }
-
-        Comparator<ResourceElement> comparator = new Comparator<ResourceElement>() {
-            public int compare(ResourceElement elem1, ResourceElement elem2) {
-                return elem1.getName().compareTo(elem2.getName());
-            }
-        };
-        Collections.sort(groupElements1, comparator);
-        Collections.sort(groupElements2, comparator);
-        boolean result = false;
-        for (int i = 0; i < groupElements1.size(); i++) {
-            final ResourceElement resourceElement1 = groupElements1.get(i);
-            final ResourceElement resourceElement2 = groupElements2.get(i);
-            if(resourceElement1.getName().equals(resourceElement2.getName())
-                    && resourceElement1.getClass() == resourceElement2.getClass()) {
-                if(resourceElement1 instanceof AbstractResourceGroupElement) {
-                    result = equalGroupElements(((AbstractResourceGroupElement) resourceElement1).getElements(),
-                                    ((AbstractResourceGroupElement) resourceElement2).getElements());
-                } else if (resourceElement1 instanceof ConstantsResourceGroupElement) {
-                    result =  equalGroupElements(((ConstantsResourceGroupElement) resourceElement1).getElements(),
-                            ((ConstantsResourceGroupElement) resourceElement2).getElements());
-                }
-            }
-        }
-        return result;
-    }
-
     @Override
     public int hashCode() {
-        int result = resources != null ? sortResourceGroupElement(resources).hashCode() : 0;
+        int result = resources != null ? ValueObjectUtils.sortResourceGroupElement(resources).hashCode() : 0;
         result = 31 * result + (presentation != null ? presentation.hashCode() : 0);
         return result;
     }
 
-    private List<? extends SchemaElement> sortResourceGroupElement(List<? extends SchemaElement> list) {
-        if(list == null || list.isEmpty()) {
-            return list;
-        }
-        Comparator<SchemaElement> comparator = new Comparator<SchemaElement>() {
-            public int compare(SchemaElement elem1, SchemaElement elem2) {
-                return elem1.getName().compareTo(elem2.getName());
-            }
-        };
-        Collections.sort(list, comparator);
-
-        if (list.get(0) instanceof AbstractResourceGroupElement || list.get(0) instanceof ConstantsResourceGroupElement) {
-            for (SchemaElement element : list) {
-                if (element instanceof AbstractResourceGroupElement) {
-                    sortResourceGroupElement(((AbstractResourceGroupElement) element).getElements());
-                } else if (element instanceof ConstantsResourceGroupElement) {
-                    sortResourceGroupElement(((ConstantsResourceGroupElement) element).getElements());
-                }
-            }
-        }
-        return list;
-    }
 
     @Override
     public String toString() {

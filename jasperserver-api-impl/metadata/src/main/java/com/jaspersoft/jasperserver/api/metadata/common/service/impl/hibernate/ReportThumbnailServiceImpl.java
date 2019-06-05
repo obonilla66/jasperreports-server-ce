@@ -1,26 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate;
 
 import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.common.util.TibcoDriverManager;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ComparableBlob;
 import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceNotFoundException;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateDaoImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoReportThumbnail;
@@ -29,6 +32,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +40,12 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -92,7 +100,11 @@ public class ReportThumbnailServiceImpl extends HibernateDaoImpl implements Repo
             repoThumbnail = new RepoReportThumbnail();
         }
 
-        repoThumbnail.setThumbnail(new ComparableBlob(thumbnail));
+        try {
+            repoThumbnail.setThumbnail(new SerialBlob(thumbnail));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         if (update) {
             getHibernateTemplate().update(repoThumbnail);
@@ -127,7 +139,7 @@ public class ReportThumbnailServiceImpl extends HibernateDaoImpl implements Repo
                 .add(Restrictions.eq("user", repoUser))
                 .add(Restrictions.eq("resource", repoResource));
 
-        List<RepoReportThumbnail> results = getHibernateTemplate().findByCriteria(criteria);
+        List<RepoReportThumbnail> results = (List<RepoReportThumbnail>)getHibernateTemplate().findByCriteria(criteria);
         if (results.size() > 0) {
             ByteArrayInputStream resultStream;
             RepoReportThumbnail result = results.get(0); // given unique constrain on user, resource, we can expect this to only have a 0 element
@@ -139,6 +151,63 @@ public class ReportThumbnailServiceImpl extends HibernateDaoImpl implements Repo
         }
     }
 
+    
+    /**
+     * Refactoring: moved out identical pieces of the code from two methods into one method.
+     * @param repoUser
+     * @param repoResource
+     * @return
+     */
+    private ByteArrayInputStream retrieveThumbnailAsBAIS(RepoUser repoUser, RepoResource repoResource) {
+        RepoReportThumbnail result;
+        ByteArrayInputStream resultStream = null;
+        try {
+           result = retrieveThumbnail(repoUser, repoResource);
+           Blob thumbnail = result.getThumbnail();
+           InputStream intermediate = thumbnail.getBinaryStream();
+           if(ByteArrayInputStream.class.isAssignableFrom(intermediate.getClass())){
+               resultStream = (ByteArrayInputStream) intermediate;
+           } else {
+               // JRS-17060 - Progress driver for Oracle seems to be buggy and returns obfuscated class instead of InputStream
+               // in case we somehow can't get true InputStream here is manual workaround
+               resultStream = InputStream2BAIS(intermediate);
+           }
+        } catch (JSResourceNotFoundException e) {
+            return null;
+        } catch (JSException e) {
+            return null;
+        } catch (SQLException e) {
+            logger.error(e, e);
+            return null;
+        } catch(IOException e){
+            logger.error(e, e);
+            return null;
+        }
+        return resultStream;
+    }
+
+
+    /**
+     * This is an Auxiliary method to convert InputStream to ByteArrayInputStream when simple cast doesn't work
+     * (thanks, Progress). Conversion is done through reading bytes from InputStream into ByteArrayOutputStream
+     * and then converting that ByteArray back into ByteArrayInputStream.
+     * @param in - InputStream
+     * @return ByteArrayInputStream
+     * @throws IOException
+     */
+    private static ByteArrayInputStream InputStream2BAIS(final InputStream in) throws IOException{
+        int available = in.available();
+        int bufferSize = available>0? available:8000;
+        byte[] buff = new byte[bufferSize];
+
+        ByteArrayOutputStream bao = new ByteArrayOutputStream(bufferSize);
+        for(int bytesRead=0; (bytesRead = in.read(buff)) != -1;) {
+           bao.write(buff, 0, bytesRead);
+        }
+        return new ByteArrayInputStream(bao.toByteArray());
+    }
+
+    
     @Transactional(propagation = Propagation.REQUIRED)
     public ByteArrayInputStream getReportThumbnail(User user, Resource resource)
     {
@@ -147,24 +216,11 @@ public class ReportThumbnailServiceImpl extends HibernateDaoImpl implements Repo
 
         if (repoResource == null || repoUser == null)
             throw new JSException("ReportThumbnailServiceImpl: invalid.resource.or.user");
-
-        RepoReportThumbnail result;
-        ByteArrayInputStream resultStream = null;
-        try {
-           result = retrieveThumbnail(repoUser, repoResource);
-           resultStream = (ByteArrayInputStream) result.getThumbnail().getBinaryStream();
-        } catch (JSResourceNotFoundException e) {
-            return null;
-        } catch (JSException e) {
-            return null;
-        } catch (SQLException e) {
-            logger.error(e, e);
-            return null;
-        }
-
-        return resultStream;
+        
+        return retrieveThumbnailAsBAIS(repoUser, repoResource);
     }
 
+    
     @Transactional(propagation = Propagation.REQUIRED)
     public ByteArrayInputStream getReportThumbnail(User user, String reportUri)
     {
@@ -176,21 +232,7 @@ public class ReportThumbnailServiceImpl extends HibernateDaoImpl implements Repo
         else if (repoUser == null)
             throw new JSException("ReportThumbnailServiceImpl: invalid.user");
 
-        RepoReportThumbnail result;
-        ByteArrayInputStream resultStream;
-
-        try {
-            result = retrieveThumbnail(repoUser, repoResource);
-            resultStream = (ByteArrayInputStream) result.getThumbnail().getBinaryStream();
-        } catch (JSResourceNotFoundException e) {
-            return null;
-        } catch (JSException e) {
-            return null;
-        } catch (SQLException e) {
-            logger.error(e, e);
-            return null;
-        }
-        return resultStream;
+        return retrieveThumbnailAsBAIS(repoUser, repoResource);
     }
 
     @Transactional(propagation = Propagation.REQUIRED)

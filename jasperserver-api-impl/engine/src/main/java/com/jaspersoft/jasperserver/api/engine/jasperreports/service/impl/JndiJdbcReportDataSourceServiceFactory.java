@@ -1,42 +1,41 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSDataSourceConnectionFailedException;
+import com.jaspersoft.jasperserver.api.metadata.common.util.JndiFallbackResolver;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.naming.NoInitialContextException;
 import javax.sql.DataSource;
-
-import com.jaspersoft.jasperserver.api.common.util.TibcoDriverManager;
-import com.jaspersoft.jasperserver.api.metadata.common.util.JndiFallbackResolver;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * @author swood
@@ -69,6 +68,7 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
         String jndiName;
         DataSource ds;
         JndiJdbcReportDataSource jndiDataSource = (JndiJdbcReportDataSource) dataSource;
+		if (getProfileAttributesResolver() != null) jndiDataSource = getProfileAttributesResolver().mergeResource(jndiDataSource);
         TimeZone timeZone = getTimeZoneByDataSourceTimeZone(jndiDataSource.getTimezone());
         jndiName = jndiDataSource.getJndiName();
         if (disableJndi || ctx == null) {
@@ -91,13 +91,13 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
             } catch (NamingException ex) {
                 if (log.isDebugEnabled())
                     log.debug(e, e);
-                throw new JSExceptionWrapper(e);
+                throw new JSDataSourceConnectionFailedException(e);
             }
 		}
 	}
 
 	/**
-	 * The buildomatic file js.jdbc.properties has all the info for standard datasources. 
+	 * The buildomatic file js.jdbc.properties has all the info for standard datasources.
 	 * Here's an example:
 	 * 
 	 * # jasperserver repo db settings

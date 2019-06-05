@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war;
@@ -30,6 +33,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.jaspersoft.jasperserver.war.common.JasperServerHttpConstants.FORWARDED_PARAMETERS;
 
 /**
  * This servlet forwards requests from a path like
@@ -48,11 +53,7 @@ import java.util.Set;
 public class ResourceForwardingServlet extends HttpServlet {
     private static Logger logger = LogManager.getLogger(ResourceForwardingServlet.class);
 
-    //Forwarded parameter was added 'cos WebSphere erase parameters from request on forward which results in bug JRS-10031
-    //Do not remove this to avoid possible issues with WebSphere
-    public static final String FORWARDED_PARAMETERS = "forwardedParameters";
-
-    private static final String FORWARD_WHITELIST_PARAM = "forwardWhitelist";
+    public static final String FORWARD_WHITELIST_PARAM = "forwardWhitelist";
     private Set<String> forwardWhitelist = new HashSet<String>();
 
     // Max number of the directories in the whitelist entries

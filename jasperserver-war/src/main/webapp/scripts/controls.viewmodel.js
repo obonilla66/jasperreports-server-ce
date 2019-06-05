@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -49,6 +49,29 @@ JRS.Controls = (function (jQuery, _, Controls) {
         isIE = browserDetection.isIE();
     });
 
+    // JS-33242
+    var scrollStartStopCallback = (function() {
+        var lastScrollAt = (new Date()).getTime(),
+            scrollTimeout;
+
+        return function() {
+            var now = (new Date()).getTime();
+            var self = this;
+
+            if (now - lastScrollAt > 400) {
+                lastScrollAt = now;
+
+                jQuery(this).trigger("scrollstart");
+            }
+
+            clearTimeout(scrollTimeout);
+
+            scrollTimeout = setTimeout(function(){
+                jQuery(self).trigger("scrollstop");
+            }, 300);
+        }
+    })();
+
     // ViewModel initialize, updates and adds controls to the DOM
     var ViewModel = Controls.Base.extend({
 
@@ -61,7 +84,8 @@ JRS.Controls = (function (jQuery, _, Controls) {
                 return this;
             }, this);
 
-            _.bindAll(this);
+            _.bindAll(this, "registerEvents", "onControlChange", "_getAllSlaveControlIds",
+                "_getParentControlIds");
 
             this.registerEvents();
         },
@@ -282,6 +306,7 @@ JRS.Controls = (function (jQuery, _, Controls) {
         draw:function (jsonStructure) {
 
             var container = this.getContainer();
+
             container.empty();
 
             if (isIE) {
@@ -303,20 +328,10 @@ JRS.Controls = (function (jQuery, _, Controls) {
             if (window.Report && window.Report.icReorderEnabled) {
                 var horizontalLayout = window.Controls.layouts.LAYOUT_TOP_OF_PAGE == Report.reportControlsLayout;
                 if(!(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent))) {
-                     jQuery(container).sortable({
-                         delay: 200,
-                         placeholder: horizontalLayout ? "verticalPlaceholder" : "horizontalPlaceholder",
-                         axis: horizontalLayout ? "x" : "y",
-                         items: "> .leaf",
-                         cancel: "input,textarea,button,select,option,.list.inputSet,.jr-mSizer",
-                         start: function(event, ui) {
-                             ui.item.data('oldIndex', ui.item.index());
-                         },
-                         stop: _.bind(function(event, ui) {
-                             var oldIndex = ui.item.data('oldIndex');
-                             var newIndex = ui.item.index();
-                             oldIndex != newIndex && this.reorderControl(oldIndex, newIndex);
-                         }, this)});
+                     this._initSortable({
+                         container: container,
+                         horizontalLayout: horizontalLayout
+                     });
                 }
             }
         },
@@ -380,6 +395,59 @@ JRS.Controls = (function (jQuery, _, Controls) {
             _.each(this.getControls(), function (control) {
                 control.set({ disabled:false});
             });
+        },
+
+        _initSortable: function(options) {
+            var container = options.container,
+                horizontalLayout = options.horizontalLayout,
+                keepSortableAlive = false;
+
+            var self = this;
+
+            var sortableContainer = jQuery(container).sortable({
+                delay: 200,
+                placeholder: horizontalLayout ? "verticalPlaceholder" : "horizontalPlaceholder",
+                axis: horizontalLayout ? "x" : "y",
+                items: "> .leaf",
+                cancel: "input,textarea,button,select,option,.list.inputSet,.jr-mSizer",
+                start: function(event, ui) {
+                    ui.item.data('oldIndex', ui.item.index());
+                    keepSortableAlive = true;
+                },
+                stop: _.bind(function(event, ui) {
+                    var oldIndex = ui.item.data('oldIndex');
+                    var newIndex = ui.item.index();
+                    oldIndex != newIndex && this.reorderControl(oldIndex, newIndex);
+                    keepSortableAlive = false;
+                }, this)
+            });
+
+            // JS-33242
+            if (isIE) {
+                var parent = options.parent || sortableContainer.parent();
+
+                parent.off("scroll", scrollStartStopCallback);
+                parent.off("scrollstart");
+                parent.off("scrollstop");
+
+                parent.on("scroll", scrollStartStopCallback);
+
+                parent.on("scrollstart", function () {
+                    if (!keepSortableAlive) {
+                        try {
+                            sortableContainer.sortable("destroy");
+                        } catch (e) {}
+                    }
+                });
+
+                parent.on("scrollstop", function () {
+                    !keepSortableAlive && self._initSortable({
+                        parent: parent,
+                        container: container,
+                        horizontalLayout: horizontalLayout
+                    });
+                });
+            }
         }
     };
 

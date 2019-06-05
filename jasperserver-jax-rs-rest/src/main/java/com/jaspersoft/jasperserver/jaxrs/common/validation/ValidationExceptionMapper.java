@@ -1,47 +1,44 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.common.validation;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.jaspersoft.jasperserver.api.metadata.common.util.ConstraintValidatorContextDecorator;
+import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
-import com.jaspersoft.jasperserver.dto.common.ValidationErrorDescriptorBuilder;
-import org.springframework.context.MessageSource;
-import org.springframework.context.NoSuchMessageException;
-import org.springframework.stereotype.Component;
-
+import com.jaspersoft.jasperserver.remote.exception.builders.DefaultMessageApplier;
+import com.jaspersoft.jasperserver.remote.validation.ValidationErrorPostProcessor;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Resource;
-import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
-import javax.validation.metadata.ConstraintDescriptor;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import static com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException.MANDATORY_PARAMETER_ERROR;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link ExceptionMapper} for {@link ValidationException}.
@@ -55,10 +52,12 @@ import static com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNot
 @Component
 public class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
     @Resource
-    private MessageSource messageSource;
+    private GenericTypeProcessorRegistry genericTypeProcessorRegistry;
+    @Resource
+    private ErrorDescriptorBuilderFinder errorDescriptorBuilderFinder;
+    @Resource
+    private DefaultMessageApplier defaultMessageApplier;
     private static final Logger LOGGER = Logger.getLogger(ValidationExceptionMapper.class.getName());
-    public static final String BUNDLE_PREFIX = "exception.remote.";
-    public static final String METHOD_MESSAGE = "message";
 
     @Override
     public Response toResponse(final ValidationException exception) {
@@ -68,7 +67,9 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
             final ConstraintViolationException cve = (ConstraintViolationException) exception;
             final Response.ResponseBuilder response = Response.status(Response.Status.BAD_REQUEST);
 
-            response.entity(toErrorDescriptors(cve));
+            List<ErrorDescriptor> errorDescriptors = toErrorDescriptors(cve);
+            response.entity(errorDescriptors.size() == 1 ? errorDescriptors.get(0) :
+                    new GenericEntity<List<ErrorDescriptor>>(errorDescriptors){});
 
             return response.build();
         } else {
@@ -85,151 +86,30 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
      * @param violation exception containing constraint violations.
      * @return list of validation errors (not {@code null}).
      */
-    public List<ErrorDescriptor> toErrorDescriptors(final ConstraintViolationException violation) {
+    @SuppressWarnings("unchecked")
+    private List<ErrorDescriptor> toErrorDescriptors(final ConstraintViolationException violation) {
         return Lists.transform(Lists.newArrayList(violation.getConstraintViolations()),
                 new Function<ConstraintViolation, ErrorDescriptor>() {
                     @Override
                     public ErrorDescriptor apply(final ConstraintViolation violation) {
-                        final ConstraintDescriptor constraintDescriptor = violation.getConstraintDescriptor();
-                        final List<Class<ConstraintValidator>> constraintValidatorClasses =
-                                constraintDescriptor.getConstraintValidatorClasses();
-                        if (constraintValidatorClasses != null) {
-                            for (Class<ConstraintValidator> constraintValidatorClass : constraintValidatorClasses) {
-                                if (ValidationErrorDescriptorBuilder.class.isAssignableFrom(constraintValidatorClass)) {
-                                    try {
-                                        final ConstraintValidator validator = constraintValidatorClass.newInstance();
-                                        validator.initialize(constraintDescriptor.getAnnotation());
-                                        final ErrorDescriptor errorDescriptor = ((ValidationErrorDescriptorBuilder) validator)
-                                                .build(violation);
-                                        if (errorDescriptor != null) {
-                                            if (errorDescriptor.getMessage() == null) {
-                                                errorDescriptor.setMessage(getDefaultMessage(errorDescriptor.getErrorCode(),
-                                                        errorDescriptor.getParameters()));
-                                            }
-                                            return errorDescriptor;
-                                        }
-                                    } catch (Exception e) {
-                                        throw new IllegalStateException("Failed to instantiate validator", e);
-                                    }
-                                }
-                            }
-                        }
-                        Object[] args;
-                        String errorCode = getErrorCode(violation);
-                        if (ConstraintValidatorContextDecorator.getArguments(violation) != null) {
-                            args = ConstraintValidatorContextDecorator.getArguments(violation).toArray();
-                        } else if (MANDATORY_PARAMETER_ERROR.equals(errorCode) && violation.getInvalidValue() == null) {
-                            args = new Object[]{
-                                    getViolationPath(violation)
-                            };
-                        } else {
-                            args = new Object[]{
-                                    getViolationPath(violation),
-                                    getViolationInvalidValue(violation.getInvalidValue())
-                            };
-                        }
-
-                        return new ErrorDescriptor()
-                                .setErrorCode(errorCode)
-                                .addParameters(args)
-                                .setMessage(getDefaultMessage(errorCode, args));
+                        ErrorDescriptor errorDescriptor = errorDescriptorBuilderFinder.find(violation).build(violation);
+                        ErrorDescriptor processedErrorDescriptor = postProcessErrorDescriptor(violation, errorDescriptor);
+                        return defaultMessageApplier.applyDefaultMessageIfNotSet(processedErrorDescriptor, true);
                     }
                 });
     }
 
-    /**
-     * Get a path to a field causing constraint violations.
-     *
-     * @param violation constraint violation.
-     * @return path to a property that caused constraint violations.
-     */
-    private String getViolationPath(final ConstraintViolation violation) {
-        return violation.getPropertyPath().toString();
-    }
-
-    private String getDefaultMessage(String errorCode, Object[] args) {
-        try {
-            String message = null;
-            if (messageSource != null) {
-                message = messageSource.getMessage(BUNDLE_PREFIX.concat(errorCode), args, Locale.ENGLISH);
-                if (message == null || message.equals(BUNDLE_PREFIX.concat(errorCode))) {
-                    message = messageSource.getMessage(errorCode, args, Locale.ENGLISH);
-                }
-            }
-
-            return message;
-        } catch (NoSuchMessageException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Provide a string value of (invalid) value that caused the exception.
-     *
-     * @param invalidValue invalid value causing BV exception.
-     * @return string value of given object or {@code null}.
-     */
-    private static String getViolationInvalidValue(final Object invalidValue) {
-        if (invalidValue == null) {
-            return null;
-        }
-
-        if (invalidValue.getClass().isArray()) {
-            if (invalidValue instanceof Object[]) {
-                return Arrays.toString((Object[]) invalidValue);
-            } else if (invalidValue instanceof boolean[]) {
-                return Arrays.toString((boolean[]) invalidValue);
-            } else if (invalidValue instanceof byte[]) {
-                return Arrays.toString((byte[]) invalidValue);
-            } else if (invalidValue instanceof char[]) {
-                return Arrays.toString((char[]) invalidValue);
-            } else if (invalidValue instanceof double[]) {
-                return Arrays.toString((double[]) invalidValue);
-            } else if (invalidValue instanceof float[]) {
-                return Arrays.toString((float[]) invalidValue);
-            } else if (invalidValue instanceof int[]) {
-                return Arrays.toString((int[]) invalidValue);
-            } else if (invalidValue instanceof long[]) {
-                return Arrays.toString((long[]) invalidValue);
-            } else if (invalidValue instanceof short[]) {
-                return Arrays.toString((short[]) invalidValue);
+    @SuppressWarnings("unchecked")
+    private ErrorDescriptor postProcessErrorDescriptor(final ConstraintViolation violation, ErrorDescriptor descriptor) {
+        final Object rootBean = violation.getRootBean();
+        if (rootBean != null) {
+            final ValidationErrorPostProcessor errorPostProcessor = genericTypeProcessorRegistry.
+                    getTypeProcessor(rootBean.getClass(), ValidationErrorPostProcessor.class, false);
+            if (errorPostProcessor != null) {
+                return errorPostProcessor.process(descriptor, violation);
             }
         }
-
-        return invalidValue.toString();
-    }
-
-    private static String getErrorCode(final ConstraintViolation violation) {
-        for (DefaultConstraintAnnotation annotationEnum : DefaultConstraintAnnotation.values()) {
-            if (violation.getConstraintDescriptor().getAnnotation().annotationType() == annotationEnum.clazz &&
-                    violation.getMessageTemplate().equals(annotationEnum.defaultErrorCode)) {
-                return annotationEnum.overrideErrorCode;
-            }
-        }
-
-        return violation.getMessageTemplate();
-    }
-
-    enum DefaultConstraintAnnotation {
-        NotNull(javax.validation.constraints.NotNull.class, MANDATORY_PARAMETER_ERROR);
-
-        Class clazz;
-        String overrideErrorCode;
-        String defaultErrorCode;
-
-        DefaultConstraintAnnotation(Class clazz, String overrideErrorCode) {
-            this.clazz = clazz;
-            this.overrideErrorCode = overrideErrorCode;
-            this.defaultErrorCode = getDefaultValue(clazz, METHOD_MESSAGE);
-        }
-    }
-
-    public static <T> T getDefaultValue(Class<?> type, String method) {
-        try {
-            return (T) type.getMethod(method).getDefaultValue();
-        } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Please verify that method \"" + method + "\" for class \"" + type + "\" exists", e);
-        }
+        return descriptor;
     }
 
 }

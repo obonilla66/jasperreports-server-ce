@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.report;
 
@@ -25,12 +28,12 @@ import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControls
 import com.jaspersoft.jasperserver.remote.common.CallTemplate;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceWrapper;
 import com.jaspersoft.jasperserver.remote.exception.ModificationNotAllowedException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
-import com.jaspersoft.jasperserver.war.cascade.CascadeResourceNotFoundException;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsLogicService;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsValidationException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -53,7 +56,6 @@ import java.util.*;
 @Service
 @Path("/reports/{reportUnitURI: .+}/inputControls")
 @CallTemplate(ReportsServiceCallTemplate.class)
-@Scope("prototype")
 public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControlsLogicService> {
     public static String EXCLUDE_PARAMETER = "exclude";
     public static String STATE_VALUE = "state";
@@ -89,7 +91,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     protected Response internalGetReportInputParameters(final String reportUnitUri, final Set<String> inputControlIds, final Map<String, String[]> rawParameters) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(InputControlsLogicService remoteService) throws RemoteException {
+            public Response call(InputControlsLogicService remoteService) throws ErrorDescriptorException {
                 List<ReportInputControl> inputControlsForReport;
                 try {
                     if (rawParameters.containsKey(EXCLUDE_PARAMETER) && Arrays.asList(rawParameters.get(EXCLUDE_PARAMETER)).contains(STATE_VALUE)){
@@ -114,7 +116,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     public Response reorderInputControls(@PathParam("reportUnitURI") final String reportUnitURI, final ReportInputControlsListWrapper toUpdateWrapper) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(InputControlsLogicService remoteService) throws RemoteException {
+            public Response call(InputControlsLogicService remoteService) throws ErrorDescriptorException {
                 final List<ReportInputControl> toUpdate = toUpdateWrapper.getInputParameters();
                 List<String> newList = new ArrayList<String>(toUpdate.size());
                 for (ReportInputControl control : toUpdate) {
@@ -197,7 +199,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
 
     protected Response internalGetInputControlsInitialValues(final String reportUnitURI, final Map<String, String[]> parameters, final boolean freshData) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(InputControlsLogicService remoteService) throws RemoteException {
+            public Response call(InputControlsLogicService remoteService) throws ErrorDescriptorException {
                 final String completeInputControlUri = Folder.SEPARATOR + reportUnitURI;
                 List<InputControlState> values;
                 try {
@@ -259,7 +261,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
             final Map<String, String[]> parameters,
             final boolean freshData) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(InputControlsLogicService remoteService) throws RemoteException {
+            public Response call(InputControlsLogicService remoteService) throws ErrorDescriptorException {
                 List<InputControlState> values;
                 try {
                     values = remoteService.getValuesForInputControls(reportUnitUri, getInputControlIdsFromPathSegment(inputControlIdsSegment), parameters, freshData);

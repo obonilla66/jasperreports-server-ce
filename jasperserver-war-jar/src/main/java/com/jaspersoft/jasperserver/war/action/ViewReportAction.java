@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
@@ -36,12 +39,12 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.Ehcache
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.RepositoryUtils;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.api.security.IPadSupportFilter;
-import com.jaspersoft.jasperserver.war.action.hyperlinks.HyperlinkProducerFactoryFlowFactory;
-import com.jaspersoft.jasperserver.war.cascade.InputControlValidationError;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationError;
+import com.jaspersoft.jasperserver.api.engine.export.HyperlinkProducerFactoryFlowFactory;
 import com.jaspersoft.jasperserver.war.util.JSExceptionUtils;
 import com.jaspersoft.jasperserver.war.util.SessionObjectSerieAccessor;
 import net.sf.jasperreports.engine.JRParameter;
@@ -81,6 +84,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -116,7 +120,7 @@ public class ViewReportAction extends ReportParametersAction
 	private String flowAttributeDepth;//TODO remove?
 	private String flowAttributeJasperPrintName;
 	private String flowAttributeReportRequestId = "reportRequestId";//default value
-	private HyperlinkProducerFactoryFlowFactory hyperlinkProducerFactory;
+	private HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> hyperlinkProducerFactory;
 	private String flowAttributeIsSubflow;
 	private String requestParameterReportOutput;
 	private String flowAttributeReportOutput;
@@ -146,7 +150,7 @@ public class ViewReportAction extends ReportParametersAction
     private String attributeAsyncReport = "asyncReport";
 
     private SecurityContextProvider securityContextProvider;
-    private ConfigurationBean configuration;
+    private RepositoryConfiguration configuration;
     private JasperReportsContext jasperReportsContext;
 
     @Resource(name = "uiExceptionRouter")
@@ -164,7 +168,7 @@ public class ViewReportAction extends ReportParametersAction
      */
     private Boolean showDialogForMandatoryInputControlsWithoutDefaultValue = false;
 
-    public void setConfiguration(ConfigurationBean configuration) {
+    public void setConfiguration(RepositoryConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -939,12 +943,12 @@ public class ViewReportAction extends ReportParametersAction
 		this.flowAttributeJasperPrintName = flowAttributeJasperPrintName;
 	}
 
-	public HyperlinkProducerFactoryFlowFactory getHyperlinkProducerFactory() {
+	public HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> getHyperlinkProducerFactory() {
 		return hyperlinkProducerFactory;
 	}
 
 	public void setHyperlinkProducerFactory(
-			HyperlinkProducerFactoryFlowFactory hyperlinkProducerFactory) {
+			HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> hyperlinkProducerFactory) {
 		this.hyperlinkProducerFactory = hyperlinkProducerFactory;
 	}
 

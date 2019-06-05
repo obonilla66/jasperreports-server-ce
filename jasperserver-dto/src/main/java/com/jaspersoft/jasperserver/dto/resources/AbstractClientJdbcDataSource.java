@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
@@ -53,15 +56,14 @@ public abstract class AbstractClientJdbcDataSource<JdbcDataSourceType extends  A
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        AbstractClientJdbcDataSource that = (AbstractClientJdbcDataSource) o;
+        AbstractClientJdbcDataSource<?> that = (AbstractClientJdbcDataSource<?>) o;
 
-        if (connectionUrl != null ? !connectionUrl.equals(that.connectionUrl) : that.connectionUrl != null)
-            return false;
         if (driverClass != null ? !driverClass.equals(that.driverClass) : that.driverClass != null) return false;
         if (password != null ? !password.equals(that.password) : that.password != null) return false;
         if (username != null ? !username.equals(that.username) : that.username != null) return false;
-
-        return true;
+        if (connectionUrl != null ? !connectionUrl.equals(that.connectionUrl) : that.connectionUrl != null)
+            return false;
+        return timezone != null ? timezone.equals(that.timezone) : that.timezone == null;
     }
 
     @Override
@@ -71,6 +73,7 @@ public abstract class AbstractClientJdbcDataSource<JdbcDataSourceType extends  A
         result = 31 * result + (password != null ? password.hashCode() : 0);
         result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (connectionUrl != null ? connectionUrl.hashCode() : 0);
+        result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         return result;
     }
 
@@ -127,7 +130,7 @@ public abstract class AbstractClientJdbcDataSource<JdbcDataSourceType extends  A
 
     @Override
     public String toString() {
-        return "AbstractClientJdbcDataSource{" +
+        return getClass().getSimpleName() + "{" +
                 "driverClass='" + driverClass + '\'' +
                 ", password='" + password + '\'' +
                 ", username='" + username + '\'' +

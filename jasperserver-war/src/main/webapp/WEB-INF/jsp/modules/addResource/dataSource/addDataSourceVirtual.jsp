@@ -1,25 +1,29 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
-
+<%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
 
 <t:insertTemplate template="/WEB-INF/jsp/modules/addResource/dataSource/addDataSourceTemplate.jsp">
 <t:putAttribute name="pageTitle">
@@ -33,7 +37,6 @@
 <t:putAttribute name="testAvailable" value="${false}"/>
 <t:putAttribute name="typeSpecificScripts">
     <script type="text/javascript" src="${pageContext.request.contextPath}/scripts/components.dependent.dialog.js"></script>
-    <script type="text/javascript" language="JavaScript" src="${pageContext.request.contextPath}/scripts/lib/mustache-0.4.0.js"></script>
 </t:putAttribute>
 <t:putAttribute name="typeSpecificContentAfterFolder">
     <fieldset class="group">
@@ -101,25 +104,24 @@
         --%>
         <div class="hidden">
             <ul id="selectedDataSourcesTemplate" class="list tabular twoColumn">
+                <js:xssNonce/>
                 <li id="selectedDataSourcesTemplate:leaf" class="leaf">
-                    {{#readOnly}}
+                    {{ if (readOnly) { }}
                     <div class="wrap button disabled">
-                        {{/readOnly}}
-                        {{^readOnly}}
+                        {{ } else { }}
                         <div class="wrap button">
-                            {{/readOnly}}
+                            {{ } }}
 
                             <div class="column one">
-                                <p class="dataSourceName">{{dsName}}</p>
+                                <p class="dataSourceName">{{-dsName}}</p>
                             </div>
                             <div class="column two">
                                     <%-- TODO fix markup: would be better if input takes all available width --%>
-                                {{#readOnly}}
-                                <input type="text" size="30" class="dataSourceID noSubmit" value="{{dsId}}" readonly="true"/><%-- TODO maybe we'll need DIV of SPAN for read-only mode--%>
-                                {{/readOnly}}
-                                {{^readOnly}}
-                                <input type="text" size="30" class="dataSourceID noSubmit" value="{{dsId}}"/><%-- TODO specify size with CSS --%>
-                                {{/readOnly}}
+                                {{if (readOnly) { }}
+                                <input type="text" size="30" class="dataSourceID noSubmit" value="{{-dsId}}" readonly="true"/><%-- TODO maybe we'll need DIV of SPAN for read-only mode--%>
+                                {{ } else { }}
+                                <input type="text" size="30" class="dataSourceID noSubmit" value="{{-dsId}}"/><%-- TODO specify size with CSS --%>
+                                {{ } }}
                                 <div class="wrap validatorMessageContainer">
                                     <span class="message warning"></span>
                                 </div>

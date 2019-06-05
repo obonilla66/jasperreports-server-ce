@@ -1,38 +1,56 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection.datadiscovery;
 
+import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
+import com.jaspersoft.jasperserver.api.engine.common.domain.JdbcMetaConfiguration;
+import com.jaspersoft.jasperserver.dto.common.JavaAliasConverter;
 import com.jaspersoft.jasperserver.dto.connection.datadiscovery.FlatDataSet;
 import com.jaspersoft.jasperserver.dto.resources.domain.ResourceGroupElement;
 import com.jaspersoft.jasperserver.dto.resources.domain.ResourceSingleElement;
 import com.jaspersoft.jasperserver.dto.resources.domain.SchemaElement;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import com.jaspersoft.jasperserver.remote.exception.OperationCancelledException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+
+import static com.jaspersoft.jasperserver.remote.common.ThreadInterruptionHelper.checkInterrupted;
 
 /**
  * <p></p>
@@ -40,13 +58,14 @@ import java.util.Map;
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
+@Component
 public class JdbcQueryExecutor implements QueryExecutor<String, Connection, FlatDataSet, ResourceGroupElement> {
     protected final Log log = LogFactory.getLog(getClass());
+    private ExecutorService executor = Executors.newCachedThreadPool();
     protected SQLQueryValidator validator;
 
-    public JdbcQueryExecutor(SQLQueryValidator validator) {
-        this.validator = validator;
-    }
+    @Resource(name="jdbcMetaConfiguration")
+    private JdbcMetaConfiguration jdbcMetaConfiguration;
 
     @Override
     public FlatDataSet executeQuery(String query, Connection connection) {
@@ -58,38 +77,58 @@ public class JdbcQueryExecutor implements QueryExecutor<String, Connection, Flat
         return executeQuery(query, connection, true).getMetadata();
     }
 
-    protected FlatDataSet executeQuery(String query, Connection connection, boolean skipData) {
-        validator.validate(query);
+    protected FlatDataSet executeQuery(final String query, Connection connection, boolean skipData) {
+        validator.validate(query, connection);
         final List<String[]> result = new ArrayList<String[]>();
-        final Map<String, Class<?>> columns;
+
         final ArrayList<SchemaElement> columnElements = new ArrayList<SchemaElement>();
         final ResourceGroupElement metadata = new ResourceGroupElement().setKind("resultSet").setElements(columnElements);
         Statement stmt = null;
         try {
             stmt = connection.createStatement();
-            ResultSet resultSet = stmt.executeQuery(query);
-            columns = new HashMap<String, Class<?>>();
+            final Statement statementClosure = stmt;
+            final Future<ResultSet> future = executor.submit(new Callable<ResultSet>() {
+                @Override
+                public ResultSet call() throws Exception {
+                    return statementClosure.executeQuery(query);
+                }
+            });
+            ResultSet resultSet;
+            try {
+                resultSet = future.get();
+            } catch (CancellationException e){
+                if(log.isDebugEnabled()) log.debug("Query execution cancelled.");
+                throw new OperationCancelledException(e);
+            } catch (ExecutionException e){
+                if(log.isDebugEnabled()) log.debug("Query execution failed.");
+                final Throwable cause = e.getCause();
+                if(cause instanceof RuntimeException){
+                    throw (RuntimeException)cause;
+                } else {
+                    throw new JSExceptionWrapper((Exception) cause);
+                }
+            } catch (Exception e) {
+                if(log.isDebugEnabled()) log.debug("Query execution failed.");
+                throw new JSExceptionWrapper(e);
+            }
+            final Set<String> columns = new HashSet<String>();
             final ResultSetMetaData metaData = resultSet.getMetaData();
             for (int i = 1; i < metaData.getColumnCount() + 1; i++) {
-                final String columnClassName = metaData.getColumnClassName(i);
-                final String columnName = metaData.getColumnName(i);
-                if (columns.containsKey(columnName)) {
+                final String javaType = jdbcMetaConfiguration.getJavaType(metaData.getColumnTypeName(i), metaData.getColumnType(i));
+                final String columnName = metaData.getColumnLabel(i);
+                if (columns.contains(columnName)) {
                     throw new QueryExecutionException("The query returned more than one field with the same name: "
                             + columnName
                             + " To use the fields, rename them with unique aliases. For example, you could " +
                             "rename a.account_id as my_account_a_id. ", query, null);
                 }
-                columnElements.add(new ResourceSingleElement().setName(columnName).setType(columnClassName));
-                try {
-                    columns.put(columnName, Class.forName(columnClassName));
-                } catch (ClassNotFoundException e) {
-                    // shouldn't happen, but let's fail gracefully if happen.
-                    throw new QueryExecutionException("Column metadata processing failed. Column class not found. " +
-                            "Column name: " + columnName + " Column class: " + columnClassName, query, e);
-                }
+                final String type = javaType != null ? JavaAliasConverter.toAlias(javaType) : null;
+                columnElements.add(new ResourceSingleElement().setName(columnName).setType(type));
+                columns.add(columnName);
             }
             if(!skipData) {
                 while (resultSet.next()) {
+                    checkInterrupted();
                     final int size = columnElements.size();
                     String[] row = new String[size];
                     for (int i = 0; i < size; i++) {
@@ -113,5 +152,9 @@ public class JdbcQueryExecutor implements QueryExecutor<String, Connection, Flat
             }
         }
         return new FlatDataSet().setData(result).setMetadata(metadata);
+    }
+
+    public void setValidator(SQLQueryValidator validator) {
+        this.validator = validator;
     }
 }

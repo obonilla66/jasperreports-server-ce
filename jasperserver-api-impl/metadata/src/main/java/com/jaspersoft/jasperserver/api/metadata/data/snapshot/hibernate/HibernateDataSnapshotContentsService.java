@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.data.snapshot.hibernate;
 
@@ -30,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,8 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.util.DataContainer
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateDaoImpl;
 import com.jaspersoft.jasperserver.api.metadata.data.cache.DataSnapshotContentsPersistenceService;
 import com.jaspersoft.jasperserver.api.metadata.data.cache.DataSnapshotSerializer;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
@@ -57,7 +62,7 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
 	public DataSnapshot loadDataSnapshot(ExecutionContext context, final long id) {
 		return getHibernateTemplate().execute(new HibernateCallback<DataSnapshot>() {
-			public DataSnapshot doInHibernate(Session session) throws HibernateException, SQLException {
+			public DataSnapshot doInHibernate(Session session) throws HibernateException {
 				if (log.isDebugEnabled()) {
 					log.debug("loading data snapshot " + id);
 				}
@@ -68,14 +73,17 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
 				}
 				
 				DataSnapshot snapshot;
-				InputStream dataStream = dataBlob.getBinaryStream();
+				InputStream dataStream=null;
 				try {
+					dataStream = dataBlob.getBinaryStream();
 					snapshot = getSnapshotSerializer().readSnapshot(dataStream);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					throw new JSExceptionWrapper("Failed to read data snapshot", e);
 				} finally {
 					try {
-						dataStream.close();
+						if (dataStream!=null) {
+							dataStream.close();
+						}
 					} catch (IOException e) {
 						log.warn("Failed to close blob stream for data snapshot " + id, e);
 					}
@@ -88,7 +96,7 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
 	public DataContainer loadDataSnapshotData(ExecutionContext context, final long id) {
 		return getHibernateTemplate().execute(new HibernateCallback<DataContainer>() {
-			public DataContainer doInHibernate(Session session) throws HibernateException, SQLException {
+			public DataContainer doInHibernate(Session session) throws HibernateException {
 				if (log.isDebugEnabled()) {
 					log.debug("loading snapshot data " + id);
 				}
@@ -99,8 +107,9 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
 				}
 				
 				FileBufferedDataContainer dataContainer;
-				InputStream dataStream = dataBlob.getBinaryStream();
+				InputStream dataStream=null;
 				try {
+					dataStream = dataBlob.getBinaryStream();
 					dataContainer = new FileBufferedDataContainer();
 					OutputStream dataOut = dataContainer.getOutputStream();
 					try {
@@ -108,11 +117,13 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
 					} finally {
 						dataOut.close();// fail on close exception
 					}
-				} catch (IOException e) {
+				} catch (Exception e) {
 					throw new JSExceptionWrapper("Failed to read data snapshot", e);
 				} finally {
 					try {
-						dataStream.close();
+						if (dataStream!=null) {
+							dataStream.close();
+						}
 					} catch (IOException e) {
 						log.warn("Failed to close blob stream for data snapshot " + id, e);
 					}
@@ -166,7 +177,7 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
     @Transactional(propagation = Propagation.MANDATORY, readOnly = false)
 	public void deleteDataSnapshot(ExecutionContext context, final long id) {
 		getHibernateTemplate().execute(new HibernateCallback<Void>() {
-			public Void doInHibernate(Session session) throws HibernateException, SQLException {
+			public Void doInHibernate(Session session) throws HibernateException {
 				if (log.isDebugEnabled()) {
 					log.debug("deleting snapshot data " + id);
 				}
@@ -215,19 +226,20 @@ public class HibernateDataSnapshotContentsService extends HibernateDaoImpl imple
 
 	protected long saveSnapshotData(final DataContainer snapshotData) {
 		return getHibernateTemplate().execute(new HibernateCallback<Long>() {
-			public Long doInHibernate(Session session) throws HibernateException, SQLException {
+			public Long doInHibernate(Session session) throws HibernateException {
 				PersistentDataSnapshotContents persistentSnapshot = new PersistentDataSnapshotContents();
 				
 				// create the blob
 				Blob dataBlob;
+//				TODO: next blob was creating from Stream, replaced with byte[] - this could create performance issue
 				try {
-					dataBlob = Hibernate.createBlob(snapshotData.getInputStream());
-				} catch (IOException e) {
-					throw new JSExceptionWrapper("Failed to create data snapshot blob", e);
+					dataBlob = new SerialBlob(snapshotData.getData());
+					persistentSnapshot.setData(dataBlob);
+				} catch (SQLException e) {
+					e.printStackTrace();
 				}
-				
-				persistentSnapshot.setData(dataBlob);
-				
+
+
 				if (log.isDebugEnabled()) {
 					log.debug("saving data snapshot to the DB");
 				}

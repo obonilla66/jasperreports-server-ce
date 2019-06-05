@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.reports.inputcontrols;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.common.validations.DateTimeFormatValidationRule;
 import com.jaspersoft.jasperserver.dto.common.validations.MandatoryValidationRule;
 import com.jaspersoft.jasperserver.dto.common.validations.RangeValidationRule;
@@ -31,12 +35,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author akasych
  * @version $Id$
  */
 @XmlRootElement
-public class ReportInputControl {
+public class ReportInputControl implements DeepCloneable<ReportInputControl> {
     private String id;
     private String description;
     private String type;
@@ -52,6 +59,8 @@ public class ReportInputControl {
     private ClientDataType dataType;
 
     public ReportInputControl(ReportInputControl other) {
+        checkNotNull(other);
+
         this.id = other.getId();
         this.description = other.getDescription();
         this.type = other.getType();
@@ -60,33 +69,11 @@ public class ReportInputControl {
         this.mandatory = other.getMandatory();
         this.readOnly = other.getReadOnly();
         this.visible = other.getVisible();
-        this.masterDependencies = new ArrayList<String>(other.getMasterDependencies());
-        this.slaveDependencies = new ArrayList<String>(other.getSlaveDependencies());
-
-        final List<ValidationRule> clientAttributes = other.getValidationRules();
-        if(clientAttributes != null){
-            validationRules = new ArrayList<ValidationRule>(other.getValidationRules().size());
-            for(ValidationRule item : clientAttributes){
-                ValidationRule validationRule = null;
-                if (item instanceof DateTimeFormatValidationRule){
-                    validationRule = new DateTimeFormatValidationRule((DateTimeFormatValidationRule) item);
-                } else if (item instanceof MandatoryValidationRule){
-                    validationRule = new MandatoryValidationRule((MandatoryValidationRule) item);
-                } else if (item instanceof RangeValidationRule){
-                    validationRule = new RangeValidationRule((RangeValidationRule) item);
-                } else if (item instanceof RegexpValidationRule){
-                    validationRule = new RegexpValidationRule((RegexpValidationRule) item);
-                }
-                if (validationRule != null){
-                    validationRules.add(validationRule);
-                }
-            }
-        }
-        final ClientDataType otherDataType = other.getDataType();
-        if(otherDataType != null){
-            setDataType(otherDataType);
-        }
-        this.state = new InputControlState(other.getState());
+        this.masterDependencies = copyOf(other.getMasterDependencies());
+        this.slaveDependencies = copyOf(other.getSlaveDependencies());
+        this.validationRules = copyOf(other.getValidationRules());
+        this.state = copyOf(other.getState());
+        this.dataType = copyOf(other.getDataType());
     }
 
     public ReportInputControl() {
@@ -114,12 +101,12 @@ public class ReportInputControl {
     }
 
     public ReportInputControl setMasterDependencies(List<String> masterDependencies) {
-        this.masterDependencies = masterDependencies;
+        this.masterDependencies = masterDependencies == null ? new ArrayList<String>() : masterDependencies;
         return this;
     }
 
     public ReportInputControl setSlaveDependencies(List<String> slaveDependencies) {
-        this.slaveDependencies = slaveDependencies;
+        this.slaveDependencies = slaveDependencies == null ? new ArrayList<String>() : slaveDependencies;
         return this;
     }
 
@@ -230,39 +217,63 @@ public class ReportInputControl {
 
         ReportInputControl that = (ReportInputControl) o;
 
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (description != null ? !description.equals(that.description) : that.description != null) return false;
-        if (!id.equals(that.id)) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (uri != null ? !uri.equals(that.uri) : that.uri != null) return false;
         if (label != null ? !label.equals(that.label) : that.label != null) return false;
         if (mandatory != null ? !mandatory.equals(that.mandatory) : that.mandatory != null) return false;
-        if (masterDependencies != null ? !masterDependencies.equals(that.masterDependencies) : that.masterDependencies != null)
-            return false;
         if (readOnly != null ? !readOnly.equals(that.readOnly) : that.readOnly != null) return false;
-        if (slaveDependencies != null ? !slaveDependencies.equals(that.slaveDependencies) : that.slaveDependencies != null)
+        if (visible != null ? !visible.equals(that.visible) : that.visible != null) return false;
+        if (!masterDependencies.equals(that.masterDependencies))
             return false;
-        if (state != null ? !state.equals(that.state) : that.state != null) return false;
-        if (!type.equals(that.type)) return false;
-        if (!uri.equals(that.uri)) return false;
+        if (!slaveDependencies.equals(that.slaveDependencies))
+            return false;
         if (validationRules != null ? !validationRules.equals(that.validationRules) : that.validationRules != null)
             return false;
-        if (visible != null ? !visible.equals(that.visible) : that.visible != null) return false;
-
-        return true;
+        if (state != null ? !state.equals(that.state) : that.state != null) return false;
+        return dataType != null ? dataType.equals(that.dataType) : that.dataType == null;
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
+        int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + type.hashCode();
-        result = 31 * result + uri.hashCode();
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (uri != null ? uri.hashCode() : 0);
         result = 31 * result + (label != null ? label.hashCode() : 0);
         result = 31 * result + (mandatory != null ? mandatory.hashCode() : 0);
         result = 31 * result + (readOnly != null ? readOnly.hashCode() : 0);
         result = 31 * result + (visible != null ? visible.hashCode() : 0);
-        result = 31 * result + (masterDependencies != null ? masterDependencies.hashCode() : 0);
-        result = 31 * result + (slaveDependencies != null ? slaveDependencies.hashCode() : 0);
+        result = 31 * result + (masterDependencies.hashCode());
+        result = 31 * result + (slaveDependencies.hashCode());
         result = 31 * result + (validationRules != null ? validationRules.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (dataType != null ? dataType.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ReportInputControl{" +
+                "id='" + id + '\'' +
+                ", description='" + description + '\'' +
+                ", type='" + type + '\'' +
+                ", uri='" + uri + '\'' +
+                ", label='" + label + '\'' +
+                ", mandatory=" + mandatory +
+                ", readOnly=" + readOnly +
+                ", visible=" + visible +
+                ", masterDependencies=" + masterDependencies +
+                ", slaveDependencies=" + slaveDependencies +
+                ", validationRules=" + validationRules +
+                ", state=" + state +
+                ", dataType=" + dataType +
+                '}';
+    }
+
+    @Override
+    public ReportInputControl deepClone() {
+        return new ReportInputControl(this);
     }
 }

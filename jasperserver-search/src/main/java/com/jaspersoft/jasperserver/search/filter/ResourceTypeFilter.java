@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.search.filter;
 
@@ -25,13 +28,12 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFileResource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.impl.RepoReportUnit;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.impl.datasource.RepoCustomDataSource;
 import com.jaspersoft.jasperserver.api.search.SearchCriteria;
+import com.jaspersoft.jasperserver.core.util.DBUtil;
 import com.jaspersoft.jasperserver.search.common.SearchAttributes;
 import com.jaspersoft.jasperserver.search.service.RepositorySearchCriteria;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
@@ -40,7 +42,11 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>Filters resources by resourceType field.</p>
@@ -77,41 +83,65 @@ public class ResourceTypeFilter extends BaseSearchFilter implements Serializable
                 resourceTypes = filterOptionToResourceTypes.get(resourceTypeFilterOption);
             }
 
-            if (resourceTypes != null) {
-                criteria.add(Restrictions.in("resourceType", resourceTypes));
+            if (CollectionUtils.isNotEmpty(resourceTypes)) {
+                criteria.add(DBUtil.getBoundedInCriterion("resourceType", resourceTypes));
             }
         } else {
             final RepositorySearchCriteria repositorySearchCriteria = getTypedAttribute(context, RepositorySearchCriteria.class);
             if (repositorySearchCriteria != null) {
-                if (!CollectionUtils.isEmpty(repositorySearchCriteria.getResourceTypes()) ||
-                        !CollectionUtils.isEmpty(repositorySearchCriteria.getFileResourceTypes())) {
-
-                    List<String> types = new ArrayList<String>(repositorySearchCriteria.getResourceTypes());
+                final List<String> customDataSourceTypes = repositorySearchCriteria.getCustomDataSourceTypes();
+                final List<String> fileResourceTypes = repositorySearchCriteria.getFileResourceTypes();
+                final List<String> resourceTypes = repositorySearchCriteria.getResourceTypes();
+                if (!CollectionUtils.isEmpty(resourceTypes) ||
+                        !CollectionUtils.isEmpty(fileResourceTypes) ||
+                        !CollectionUtils.isEmpty(customDataSourceTypes)) {
+                    List<String> types = new ArrayList<String>(resourceTypes);
                     List<Criterion> includeTypes = new ArrayList<Criterion>();
 
                     boolean addFolders = types.remove(Folder.class.getName());
                     boolean extractTopics = types.remove("com.jaspersoft.commons.semantic.datasource.Topic");
-                    boolean filterSecureFileType = types.remove(FileResource.TYPE_SECURE_FILE);
 
-                    Criterion criterion = types.isEmpty()  ? null : Restrictions.in("resourceType", types);
+                    //Criterion criterion = types.isEmpty()  ? null : Restrictions.in("resourceType", types);
+                    Criterion criterion = null;
 
-                    // TODO: implement generic solution handling any fileType of FileResource
-                    if (filterSecureFileType && types.contains(FileResource.class.getName())) {
-                                               DetachedCriteria secureFileCriteria = DetachedCriteria.forClass(RepoFileResource.class, "U");
+                    if(CollectionUtils.isNotEmpty(types)) {
+                        criterion = DBUtil.getBoundedInCriterion("resourceType", types);
+                    }
 
-                        Criterion isSecureFile = Restrictions.eq("U.fileType", FileResource.TYPE_SECURE_FILE);;
+                    if (fileResourceTypes != null && !fileResourceTypes.isEmpty()){
+                        for (String fileType : fileResourceTypes) {
+                            DetachedCriteria fileTypeCriteria = DetachedCriteria.forClass(RepoFileResource.class, "U");
+                            Criterion isFileType = Restrictions.eq("U.fileType", fileType);
 
-                        secureFileCriteria
-                                .add(isSecureFile)
-                                .add(Property.forName("U.id").eqProperty(criteria.getAlias()+".id"))
-                                .setProjection(Projections.property("U.id"));
+                            fileTypeCriteria
+                                    .add(isFileType)
+                                    .add(Property.forName("U.id").eqProperty(criteria.getAlias() + ".id"))
+                                    .setProjection(Projections.property("U.id"));
 
-                        criterion = Subqueries.exists(secureFileCriteria);
+                            criterion = criterion == null ? Subqueries.exists(fileTypeCriteria) :
+                                    Restrictions.or(Subqueries.exists(fileTypeCriteria), criterion);
+                        }
+                    }
+
+                    if(customDataSourceTypes != null && !customDataSourceTypes.isEmpty()){
+                        for (String customDataSourceType : customDataSourceTypes) {
+                            DetachedCriteria customDataSourceTypeCriteria = DetachedCriteria.forClass(RepoCustomDataSource.class, "cds");
+
+                            customDataSourceTypeCriteria
+                                    .createAlias("properties", "cds_props")
+                                    .add(Restrictions.eq("cds_props.name", RepoCustomDataSource.CDS_NAME_PROPERTY))
+                                    .add(Restrictions.eq("cds_props.value", customDataSourceType))
+                                    .add(Property.forName("cds.id").eqProperty(criteria.getAlias() + ".id"))
+                                    .setProjection(Projections.property("cds.id"));
+
+                            criterion = criterion == null ? Subqueries.exists(customDataSourceTypeCriteria) :
+                                    Restrictions.or(Subqueries.exists(customDataSourceTypeCriteria), criterion);
+                        }
 
                     }
 
                     if (addFolders && (ResourceLookup.class.getName().equals(type) || (types.isEmpty() && Resource.class.getName().equals(type)))) {
-                                               // folders only are requested
+                        // folders only are requested
                         Criterion folderCriterion = Restrictions.isNull("resourceType");
                         criterion = criterion == null ? folderCriterion : Restrictions.or(folderCriterion, criterion);
                     }
@@ -122,24 +152,23 @@ public class ResourceTypeFilter extends BaseSearchFilter implements Serializable
                         criterion = (criterion == null) ? includeType : Restrictions.or(criterion, includeType);
                     }
 
-                    if (repositorySearchCriteria.getFileResourceTypes() != null &&
-                            !repositorySearchCriteria.getFileResourceTypes().isEmpty()) {
+                    if (CollectionUtils.isNotEmpty(repositorySearchCriteria.getFileResourceTypes())) {
                         Criterion fileTypeCriterion = Restrictions.or(
-                                Restrictions.in("fileType", repositorySearchCriteria.getFileResourceTypes()),
-                                Restrictions.in("contentFileType", repositorySearchCriteria.getFileResourceTypes())
+                                DBUtil.getBoundedInCriterion("fileType", repositorySearchCriteria.getFileResourceTypes()),
+                                DBUtil.getBoundedInCriterion("contentFileType", repositorySearchCriteria.getFileResourceTypes())
                         );
                         criterion = criterion == null ? fileTypeCriterion : Restrictions.or(criterion, fileTypeCriterion);
                     }
 
                     criteria.add(criterion);
 
-                } else if (!CollectionUtils.isEmpty(repositorySearchCriteria.getExcludeResourceTypes())) {
+                } else if (CollectionUtils.isNotEmpty(repositorySearchCriteria.getExcludeResourceTypes())) {
                     List<String> excludeTypes = new ArrayList<String>(repositorySearchCriteria.getExcludeResourceTypes());
                     // Additional types that require additional criterions to be search for.
                     // And only those types that are not present in excluded one
                     List<Criterion> includeTypes = new ArrayList<Criterion>();
 
-                    Criterion criterion = Restrictions.not(Restrictions.in("resourceType", repositorySearchCriteria.getExcludeResourceTypes()));
+                    Criterion criterion = Restrictions.not(DBUtil.getBoundedInCriterion("resourceType", repositorySearchCriteria.getExcludeResourceTypes()));
 
                     boolean addFolders = !excludeTypes.remove(Folder.class.getName());
                     boolean extractTopics = !excludeTypes.remove("com.jaspersoft.commons.semantic.datasource.Topic");

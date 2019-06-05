@@ -1,36 +1,45 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.search.action;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.user.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
 import com.jaspersoft.jasperserver.search.helper.PermissionJSONHelper;
-import com.jaspersoft.jasperserver.search.model.permission.*;
+import com.jaspersoft.jasperserver.search.model.permission.Permission;
+import com.jaspersoft.jasperserver.search.model.permission.PermissionToDisplay;
+import com.jaspersoft.jasperserver.search.model.permission.RoleWithPermission;
+import com.jaspersoft.jasperserver.search.model.permission.UserWithPermission;
 import com.jaspersoft.jasperserver.war.action.EntitiesListManager;
 import com.jaspersoft.jasperserver.war.action.EntitiesListState;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-
+import com.jaspersoft.jasperserver.war.common.WebConfiguration;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.webflow.execution.Event;
@@ -134,7 +143,8 @@ public class ResourcePermissionsAction extends BaseSearchAction {
 	private ObjectPermissionService objectPermissionService;
 	private RepositoryService repository;
 	private UserAuthorityService userService;
-    private ConfigurationBean configuration;
+    private WebConfiguration webConfiguration;
+    private RepositoryConfiguration repositoryConfiguration;
 
     private List<String> rolesToDisablePermissionEditForEveryone; // Only root roles are supported.
     private List<String> rolesToDisablePermissionEditForNonSuperuser; // Only root roles are supported.
@@ -205,7 +215,7 @@ public class ResourcePermissionsAction extends BaseSearchAction {
             JSONObject json;
             switch (resourcePermissionsState.getObjectType()) {
                 case USER:
-                    List<User> users = getEntitiesAndUpdateState(entitiesListState, configuration.getRoleItemsPerPage(),
+                    List<User> users = getEntitiesAndUpdateState(entitiesListState, webConfiguration.getRoleItemsPerPage(),
                             new EntitiesListManager() {
                                 public int getResultsCount() {
                                     return userService.getTenantUsersCount(executionContext, tenantIdSet,
@@ -226,7 +236,7 @@ public class ResourcePermissionsAction extends BaseSearchAction {
 
                     break;
                 case ROLE:
-                    List<Role> roles = getEntitiesAndUpdateState(entitiesListState, configuration.getRoleItemsPerPage(),
+                    List<Role> roles = getEntitiesAndUpdateState(entitiesListState, webConfiguration.getRoleItemsPerPage(),
                             new EntitiesListManager() {
                                 public int getResultsCount() {
                                     return userService.getTenantVisibleRolesCount(executionContext, tenantIdSet,
@@ -378,7 +388,7 @@ public class ResourcePermissionsAction extends BaseSearchAction {
 
         String resourceTenantId = resourceTenant == null ? TenantService.ORGANIZATIONS : resourceTenant.getId();
 
-        if (resourcePermissionsState.getResourceUri().startsWith(configuration.getPublicFolderUri())) {
+        if (resourcePermissionsState.getResourceUri().startsWith(repositoryConfiguration.getPublicFolderUri())) {
             String currentTenantId = getCurrentTenantId();
 
             return getSubTenantIdsSet(currentTenantId == null ? TenantService.ORGANIZATIONS : currentTenantId);
@@ -657,11 +667,15 @@ public class ResourcePermissionsAction extends BaseSearchAction {
 	}
 
 	protected ExecutionContext getExecutionContext(RequestContext context) {
-		return JasperServerUtil.getExecutionContext(context);
+		return StaticExecutionContextProvider.getExecutionContext();
 	}
 
-    public void setConfiguration(ConfigurationBean configuration) {
-        this.configuration = configuration;
+    public void setWebConfiguration(WebConfiguration webConfiguration) {
+        this.webConfiguration = webConfiguration;
+    }
+
+    public void setRepositoryConfiguration(RepositoryConfiguration repositoryConfiguration) {
+        this.repositoryConfiguration = repositoryConfiguration;
     }
 
     public void setRolesToDisablePermissionEditForEveryone(List<String> rolesToDisablePermissionEditForEveryone) {

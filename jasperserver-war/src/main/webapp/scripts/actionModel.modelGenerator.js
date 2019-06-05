@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -112,7 +112,7 @@ actionModel.showDynamicMenu = function(menuContext, event, className, coordinate
         }
     }
 
-    actionModel.resetMenu();
+    actionModel.resetMenu(menuContext);
     actionModel.updateCSSClass(className);
     actionModel.initActionModelData(actionModelScriptTag);
     actionModel.assembleMenuFromActionModel(menuContext, event, actionModel.menuListDom, updateContextActionModel);
@@ -144,16 +144,19 @@ actionModel.closeHandler = function (event) {
  * Hide any menus created by the action model.
  * This means removing all child nodes and setting it back to default state.
  */
-actionModel.resetMenu = function(){
+actionModel.resetMenu = function(menuContext){
+    var navtype = menuContext.indexOf("toolbar")>-1 ? "toolbar" : "actionmenu";
     var dom = $("menu");
     dom.parentId = undefined;
     dom.setAttribute("tabIndex",-1);
+    dom.setAttribute("js-navtype",navtype);
     dom.childElements().each(function(child){Element.remove(child);});
     //add common template
-    dom.innerHTML = $('commonMenu').cloneNode(true).innerHTML;
+    jQuery(dom).html( jQuery($('commonMenu').cloneNode(true)).html());
     var menuList = dom.down("ul");
     var menuListId = menuList.readAttribute("id");
     menuList.writeAttribute("id", actionModel.updateTemplateId(menuListId));
+    menuList.writeAttribute("js-navtype", dom.getAttribute("js-navtype"));
     //remove any generated styles.
     dom.className = actionModel.PARENT_MENU_STYLE;
     dom.writeAttribute("style", "");
@@ -445,7 +448,7 @@ actionModel.addSelector = function(thisAction, contentParent, event) {
             var submenu = actionModel.menuDom.cloneNode(false);
             submenu.writeAttribute("id", parentSelector.readAttribute("id") + "_subMenu");
             //add common template
-            submenu.innerHTML = $('commonMenu').cloneNode(true).innerHTML;
+            jQuery(submenu).html( jQuery($('commonMenu').cloneNode(true)).html());
             var submenuList = submenu.down("ul");
             var submenuListId = submenuList.readAttribute("id");
             submenuList.writeAttribute("id", actionModel.updateTemplateId(submenuListId));
@@ -616,7 +619,7 @@ actionModel.isMenuShowing = function(){
  */
 actionModel.updateRowDom = function(domObject, actionText){
     if(domObject){
-        domObject.innerHTML = actionText;
+        jQuery(domObject).html( actionText );
         var domObjectId = domObject.readAttribute("id") + getRandomId();
         domObject.writeAttribute("id", domObjectId);
     }
@@ -655,6 +658,9 @@ actionModel.insertMenuRow = function(container, newMenuRow, isSeparator, isDisab
     if(className){
         newMenuRow.addClassName(className);
     }
+
+    newMenuRow.setAttribute('js-navtype',container.getAttribute('js-navtype'));
+
     container.appendChild(newMenuRow);
     actionModel.lastItemWasSeparator = isSeparator;
     actionModel.noItemsYet = false;

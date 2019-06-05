@@ -1,29 +1,37 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.services.impl;
 
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFolder;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResourceLookup;
@@ -31,7 +39,6 @@ import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceInUseException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import com.jaspersoft.jasperserver.remote.resources.converters.LookupResourceConverter;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
 import com.jaspersoft.jasperserver.remote.services.BatchRepositoryService;
@@ -52,7 +59,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -241,12 +253,12 @@ public class BatchRepositoryServiceImpl implements BatchRepositoryService {
         List<String> types = searchCriteria.getResourceTypes();
         List<String> excludeTypes = searchCriteria.getExcludeResourceTypes();
         if (!CollectionUtils.isEmpty(types)) {
-            if (types.contains(ClientTypeHelper.extractClientType(ClientResource.class))) {
+            if (types.contains(ClientTypeUtility.extractClientType(ClientResource.class))) {
                 // ResourceLookup is a valid repository resource, but without persistence. So, search for resource lookups isn't suitable.
                 searchSuitable = false;
             } else {
                 List<String> serverTypes = new LinkedList<String>();
-                if (types.remove(ClientTypeHelper.extractClientType(ClientFile.class))) {
+                if (types.remove(ClientTypeUtility.extractClientType(ClientFile.class))) {
                     // here is an exception from a common rule: one client object corresponds to te only server object and back
                     // Single ClientFile client object corresponds to either FileResource or ContentResource on server side.
                     // Do this trick here
@@ -254,13 +266,8 @@ public class BatchRepositoryServiceImpl implements BatchRepositoryService {
                     serverTypes.add(ContentResource.class.getName());
                 }
 
-                // TODO: implement generic solution handling any fileType of FileResource
-                if (types.remove(FileResource.TYPE_SECURE_FILE)) {
-                    serverTypes.add(FileResource.TYPE_SECURE_FILE);
-                    serverTypes.add(FileResource.class.getName());
-                }
-
                 List<String> fileTypes = new ArrayList<String>();
+                List<String> unknownTypes = new ArrayList<String>();
                 for (String type : types) {
                     try {
                         if (FILE_TYPES.contains(type)){
@@ -269,13 +276,15 @@ public class BatchRepositoryServiceImpl implements BatchRepositoryService {
                             serverTypes.add(resourceConverterProvider.getToServerConverter(type).getServerResourceType());
                         }
                     } catch (IllegalParameterValueException e) {
-                        // ignore wrong or unknown types
+                        unknownTypes.add(type);
                     }
                 }
                 searchCriteria.setResourceTypes(serverTypes);
                 searchCriteria.setFileResourceTypes(fileTypes);
+                // custom data sources are pluggable. So, unknown types could be just custom data source types. Let's try.
+                searchCriteria.setCustomDataSourceTypes(unknownTypes);
                 // if all types incorrect - we should not search anything
-                searchSuitable = !serverTypes.isEmpty() || !fileTypes.isEmpty();
+                searchSuitable = !serverTypes.isEmpty() || !fileTypes.isEmpty() || !unknownTypes.isEmpty();
 
                 if (searchCriteria.getContainerResourceTypes() != null){
                     List<String> containerServerTypes = new ArrayList<String>();

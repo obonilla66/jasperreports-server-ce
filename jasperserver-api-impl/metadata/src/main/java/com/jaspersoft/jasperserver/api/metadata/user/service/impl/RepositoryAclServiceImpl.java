@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.metadata.user.service.impl;
@@ -48,6 +51,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static com.jaspersoft.jasperserver.api.metadata.user.service.impl.InternalURIUtil.getInternalUriFor;
+
 /**
  * @author Oleg.Gavavka
  */
@@ -64,7 +69,7 @@ public class RepositoryAclServiceImpl implements AclService {
     private ObjectPermissionService permissionService;
     private JasperServerSidRetrievalStrategyImpl sidRetrievalStrategy;
     private AclService aclLookupStrategy;
-    
+
 //    private boolean grantedSuperUser(){
 //    	try{
 //        	List<Sid> sids = sidRetrievalStrategy.getSids(SecurityContextHolder.getContext().getAuthentication());
@@ -173,22 +178,8 @@ public class RepositoryAclServiceImpl implements AclService {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Acl readAclById(ObjectIdentity object) throws NotFoundException {
-		String identifier = object.getIdentifier().toString();
-        if (identifier.contains(PermissionUriProtocol.DOBLE_FOLDER_SEPARATOR)) {
-            log.warn("RepositoryACLService: incorrect URI detected !!!");
-            Thread.dumpStack();
-        }
+        InternalURI uri = getInternalUriFor(object);
 
-        InternalURI uri = object instanceof InternalURI && !identifier.contains(PermissionUriProtocol.DOBLE_FOLDER_SEPARATOR) ? (InternalURI) object : new InternalURIDefinition(identifier);
-        // cut "repo:" or "attr:" from internalURI, because getObjectPermissionsForObject always adds "repo:" to uri
-        
-        for (PermissionUriProtocol protocol : PermissionUriProtocol.values()) {
-            if (uri.getPath().startsWith(protocol.getProtocolPrefix())) {
-                uri = new InternalURIDefinition(PermissionUriProtocol.removePrefix(uri.getPath()),
-                        PermissionUriProtocol.getProtocol(uri.getPath()));
-            }
-        }
-        
         if(!uri.getProtocol().startsWith("repo")){
         	return _old_readAclById(object);
 //        	return readAclById(object);
@@ -205,17 +196,17 @@ public class RepositoryAclServiceImpl implements AclService {
         }
 
         Object[] existingAcl = new Object[2];
-        List objectPermisions = permissionService.getObjectPermissionsForObject(null,uri, existingAcl);
+        List objectPermisions = permissionService.getObjectPermissionsForObject(null, uri, existingAcl);
         result = unwindObjectPermissions(uri, (Collection<ObjectPermission>)objectPermisions, existingAcl);
         if(result == null){
-            result = new JasperServerAclImpl(uri,aces);
+            result = new JasperServerAclImpl(uri, aces);
         }
 
         validateAcl(result);
         return result;
     }
 
-    
+
     @SuppressWarnings("rawtypes")
 	private Acl _old_readAclById(ObjectIdentity object) throws NotFoundException {
     	if(log.isDebugEnabled()){

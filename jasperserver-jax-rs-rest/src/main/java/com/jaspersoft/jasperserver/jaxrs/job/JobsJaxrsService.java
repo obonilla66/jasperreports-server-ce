@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.job;
 
@@ -32,7 +35,7 @@ import com.jaspersoft.jasperserver.dto.job.wrappers.ClientJobIdListWrapper;
 import com.jaspersoft.jasperserver.dto.job.wrappers.ClientJobSummariesListWrapper;
 import com.jaspersoft.jasperserver.remote.common.CallTemplate;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceWrapper;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.services.JobsService;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,7 +91,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Path("/{id: \\d+}")
     public Response deleteJob(@PathParam("id") final long id) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 service.deleteJob(id);
                 return Response.ok("" + id).build();
             }
@@ -99,7 +102,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response deleteJobs(@QueryParam("id") final List<Long> ids) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 long[] idsArray = new long[ids.size()];
                 for (int i = 0; i < ids.size(); i++)
                     idsArray[i] = ids.get(i);
@@ -115,7 +118,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({"application/json;qs=.5", "application/xml;qs=1"})
     public Response getJob(@PathParam("id") final long id) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 return Response.ok(reportJobConverter.toClient(service.getJob(id), null)).build();
             }
         });
@@ -126,7 +129,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces(JobClientConstants.JOB_V_1_1_JSON_MEDIA_TYPE)
     public Response getJobWithProcessedParameters(@PathParam("id") final long id) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 return Response.ok(reportJobConverter.toClient(service.getJob(id), null)).build();
             }
         });
@@ -138,7 +141,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Consumes(JobClientConstants.JOB_V_1_1_JSON_MEDIA_TYPE)
     public Response scheduleJobWithProcessedParameters(final ClientReportJob clientReportJob) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
             }
         });
@@ -149,7 +152,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response scheduleJob(final ClientReportJob clientReportJob) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
             }
         });
@@ -161,7 +164,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Consumes(JobClientConstants.JOB_V_1_1_JSON_MEDIA_TYPE)
     public Response updateJobWithProcessedParameters(@PathParam("id") final long id, final ClientReportJob clientReportJob) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 if (clientReportJob.getId() == null || id != clientReportJob.getId())
                     clientReportJob.setId(id);
 
@@ -176,7 +179,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateJob(@PathParam("id") final long id, final ClientReportJob clientReportJob) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 if (clientReportJob.getId() == null || id != clientReportJob.getId())//null safe
                     clientReportJob.setId(id);
                 return Response.ok(reportJobConverter.toClient(service.updateJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
@@ -198,7 +201,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     public Response updateJobsWithProcessedParameters(@QueryParam("id") final List<Long> jobIds, final ClientReportJobModel clientReportJobModel,
                                                       @QueryParam("replaceTriggerIgnoreType") @DefaultValue("false") final Boolean replaceTriggerIgnoreType) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 remoteService.updateJobs(jobIds, reportJobModelConverter.toServer(clientReportJobModel, null), replaceTriggerIgnoreType);
                 return Response.ok(new ClientJobIdListWrapper(jobIds)).build();
             }
@@ -219,7 +222,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     public Response updateJobs(@QueryParam("id") final List<Long> jobIds, final ClientReportJobModel clientReportJobModel,
                                @QueryParam("replaceTriggerIgnoreType") @DefaultValue("false") final Boolean replaceTriggerIgnoreType) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 List<Long> updatedJobIds = remoteService.updateJobs(jobIds, reportJobModelConverter.toServer(clientReportJobModel, null), replaceTriggerIgnoreType);
                 return Response.ok(new ClientJobIdListWrapper(updatedJobIds)).build();
             }
@@ -265,7 +268,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
             @QueryParam("isAscending") final Boolean isAscending
     ) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 ReportJobModel criteriaObject = exampleConverter != null ? exampleConverter.getObject() : null;
 
                 if (reportURI != null
@@ -322,7 +325,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getJobState(@PathParam("id") final long id) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws RemoteException {
+            public Response call(JobsService service) throws ErrorDescriptorException {
                 ReportJobRuntimeInformation reportJobState = service.getReportJobState(id);
                 if (reportJobState != null)
                     return Response.ok(reportJobSummaryConverter.toClientJobState(reportJobState)).build();
@@ -344,7 +347,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response pause(final ClientJobIdListWrapper jobIdListWrapper) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 List<Long> pausedIds = remoteService.pauseJobs(jobIdListWrapper.getIds());
                 return Response.ok(new JobIdListWrapper(pausedIds)).build();
             }
@@ -363,7 +366,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response resume(final ClientJobIdListWrapper jobIdListWrapper) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 List<Long> resumedJobs = remoteService.resumeJobs(jobIdListWrapper.getIds());
                 return Response.ok(new JobIdListWrapper(resumedJobs)).build();
             }
@@ -376,7 +379,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response scheduleJobsOnceNow(final ClientJobIdListWrapper jobIdListWrapper) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 remoteService.scheduleJobsOnceNow(jobIdListWrapper.getIds());
                 return Response.ok(jobIdListWrapper).build();
             }
@@ -388,7 +391,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCalendarNames(final @QueryParam("calendarType") String calendarType) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 ClientJobCalendar.Type type = null;
                 if (calendarType != null) {
                     try {
@@ -414,7 +417,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCalendarByName(@PathParam("calendarName") final String calendarName) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 final ClientJobCalendar calendar = remoteService.getCalendar(calendarName);
                 if (calendar != null)
                     return Response.ok(calendar).build();
@@ -429,7 +432,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response deleteCalendar(@PathParam("calendarName") final String calendarName) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 final ClientJobCalendar calendar = remoteService.getCalendar(calendarName);
                 //Bug 42132
                 if (calendar != null) {
@@ -453,7 +456,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
             @QueryParam("replace") @DefaultValue("false") final Boolean replace,
             @QueryParam("updateTriggers") @DefaultValue("false") final Boolean updateTriggers) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService remoteService) throws RemoteException {
+            public Response call(JobsService remoteService) throws ErrorDescriptorException {
                 remoteService.addCalendar(calendarName, calendar, replace, updateTriggers);
                 return Response.ok(calendar).build();
             }

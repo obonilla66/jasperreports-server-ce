@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.query.el.range;
@@ -26,18 +29,20 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.ast.ClientELVisitor;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  *
  * @version $Id$
  */
-@XmlRootElement(name = ClientRange.RANGE_ID)
+@XmlRootElement(name = ClientRange.EXPRESSION_ID)
 @XmlType(propOrder = {"start", "end"})
 public class ClientRange implements ClientExpression<ClientRange> {
-    public static final String RANGE_ID = "range";
+    public static final String EXPRESSION_ID = "range";
 
     private ClientRangeBoundary start;
     private ClientRangeBoundary end;
-    protected Boolean paren = null;
 
     public ClientRange() {
     }
@@ -56,7 +61,10 @@ public class ClientRange implements ClientExpression<ClientRange> {
     }
 
     public ClientRange(ClientRange range) {
-        this(new ClientRangeBoundary(range.getStart()), new ClientRangeBoundary(range.getEnd()));
+        checkNotNull(range);
+
+        this.start = copyOf(range.getStart());
+        this.end = copyOf(range.getEnd());
     }
 
     public ClientRangeBoundary getEnd() {
@@ -79,11 +87,11 @@ public class ClientRange implements ClientExpression<ClientRange> {
 
     @Override
     public void accept(ClientELVisitor visitor) {
-        if (this.start != null) {
-            this.start.accept(visitor);
+        if (start != null && start.getBoundary() != null) {
+            start.getBoundary().accept(visitor);
         }
-        if (this.end != null) {
-            this.end.accept(visitor);
+        if (end != null && end.getBoundary() != null) {
+            end.getBoundary().accept(visitor);
         }
         visitor.visit(this);
     }
@@ -91,21 +99,18 @@ public class ClientRange implements ClientExpression<ClientRange> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ClientRange)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         ClientRange that = (ClientRange) o;
 
         if (start != null ? !start.equals(that.start) : that.start != null) return false;
-        if (end != null ? !end.equals(that.end) : that.end != null) return false;
-        return paren != null ? paren.equals(that.paren) : that.paren == null;
-
+        return end != null ? end.equals(that.end) : that.end == null;
     }
 
     @Override
     public int hashCode() {
         int result = start != null ? start.hashCode() : 0;
         result = 31 * result + (end != null ? end.hashCode() : 0);
-        result = 31 * result + (paren != null ? paren.hashCode() : 0);
         return result;
     }
 
@@ -124,15 +129,6 @@ public class ClientRange implements ClientExpression<ClientRange> {
             endString = ClientExpressions.MISSING_REPRESENTATION;
         }
         return "(" + startString + ":" + endString + ")";
-    }
-
-    public Boolean isParen() {
-        return (paren == null) ? null : paren;
-    }
-
-    @Override
-    public Boolean hasParen() {
-        return isParen() != null && paren;
     }
 
     @Override

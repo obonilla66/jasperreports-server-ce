@@ -1,24 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.authority;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * <p></p>
@@ -27,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @version $Id$
  */
 @XmlRootElement(name = "organization")
-public class ClientTenant {
+public class ClientTenant implements DeepCloneable<ClientTenant> {
 
     private String id = null;
     private String alias = null;
@@ -39,9 +46,12 @@ public class ClientTenant {
     private String tenantFolderUri = null;
     private String theme = null;
 
-    public ClientTenant(){}
+    public ClientTenant() {
+    }
 
     public ClientTenant(ClientTenant other) {
+        checkNotNull(other);
+
         this.id = other.getId();
         this.alias = other.getAlias();
         this.parentId = other.getParentId();
@@ -51,6 +61,11 @@ public class ClientTenant {
         this.tenantUri = other.getTenantUri();
         this.tenantFolderUri = other.getTenantFolderUri();
         this.theme = other.getTheme();
+    }
+
+    @Override
+    public ClientTenant deepClone() {
+        return new ClientTenant(this);
     }
 
     public String getTenantDesc() {
@@ -74,6 +89,7 @@ public class ClientTenant {
     public String getId() {
         return id;
     }
+
     public ClientTenant setId(String pid) {
         id = pid;
         return this;
@@ -118,6 +134,7 @@ public class ClientTenant {
     public String getTenantFolderUri() {
         return tenantFolderUri;
     }
+
     public ClientTenant setTenantFolderUri(String tenantFolderUri) {
         this.tenantFolderUri = tenantFolderUri;
         return this;
@@ -139,18 +156,16 @@ public class ClientTenant {
 
         ClientTenant that = (ClientTenant) o;
 
-        if (alias != null ? !alias.equals(that.alias) : that.alias != null) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (alias != null ? !alias.equals(that.alias) : that.alias != null) return false;
         if (parentId != null ? !parentId.equals(that.parentId) : that.parentId != null) return false;
-        if (tenantDesc != null ? !tenantDesc.equals(that.tenantDesc) : that.tenantDesc != null) return false;
-        if (tenantFolderUri != null ? !tenantFolderUri.equals(that.tenantFolderUri) : that.tenantFolderUri != null)
-            return false;
         if (tenantName != null ? !tenantName.equals(that.tenantName) : that.tenantName != null) return false;
+        if (tenantDesc != null ? !tenantDesc.equals(that.tenantDesc) : that.tenantDesc != null) return false;
         if (tenantNote != null ? !tenantNote.equals(that.tenantNote) : that.tenantNote != null) return false;
         if (tenantUri != null ? !tenantUri.equals(that.tenantUri) : that.tenantUri != null) return false;
-        if (theme != null ? !theme.equals(that.theme) : that.theme != null) return false;
-
-        return true;
+        if (tenantFolderUri != null ? !tenantFolderUri.equals(that.tenantFolderUri) : that.tenantFolderUri != null)
+            return false;
+        return theme != null ? theme.equals(that.theme) : that.theme == null;
     }
 
     @Override

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.action;
@@ -80,14 +83,14 @@ public class UserManagerAction extends BaseManagerAction {
 
         JSONObject jsonConfiguration = new JSONObject();
         jsonConfiguration.put(JSON_ATTRIBUTE_USER_NAME_NOT_SUPPORTED_SYMBOLS,
-                configuration.getUserNameNotSupportedSymbols());
-        jsonConfiguration.put(JSON_ATTRIBUTE_USER_NAME_SEPARATOR, configuration.getUserNameSeparator());
-        jsonConfiguration.put(JSON_ATTRIBUTE_USER_DEFAULT_ROLE, configuration.getDefaultRole());
-        jsonConfiguration.put(JSON_ATTRIBUTE_USER_PASSWORD_MASK, configuration.getPasswordMask());
+                tenantConfiguration.getUserNameNotSupportedSymbols());
+        jsonConfiguration.put(JSON_ATTRIBUTE_USER_NAME_SEPARATOR, tenantConfiguration.getUserNameSeparator());
+        jsonConfiguration.put(JSON_ATTRIBUTE_USER_DEFAULT_ROLE, tenantConfiguration.getDefaultRole());
+        jsonConfiguration.put(JSON_ATTRIBUTE_USER_PASSWORD_MASK, webConfiguration.getPasswordMask());
         jsonConfiguration.put(JSON_ATTRIBUTE_USER_PASSWORD_PATTERN, userService.getAllowedPasswordPattern());
         jsonConfiguration.put(JSON_ATTRIBUTE_SUPERUSER_ROLE, ROLE_SUPERUSER);
         jsonConfiguration.put(JSON_ATTRIBUTE_ADMIN_ROLE, ROLE_ADMINISTRATOR);
-        jsonConfiguration.put(UM_EMAIL_REG_EXP_PATTERN, configuration.getEmailRegExpPattern());
+        jsonConfiguration.put(UM_EMAIL_REG_EXP_PATTERN, tenantConfiguration.getEmailRegExpPattern());
 
         context.getFlowScope().put(FLOW_ATTRIBUTE_CONFIGURATION, jsonConfiguration.toString());
 
@@ -108,7 +111,7 @@ public class UserManagerAction extends BaseManagerAction {
         try {
             final Set tenantIdSet = getSubTenantIdsSet(state.getTenantId());
 
-            List users = getEntitiesAndUpdateState(entitiesState, configuration.getRoleItemsPerPage(),
+            List users = getEntitiesAndUpdateState(entitiesState, webConfiguration.getRoleItemsPerPage(),
                     new EntitiesListManager() {
                         public int getResultsCount() {
                             return userService.getTenantUsersCount(null, tenantIdSet, entitiesState.getText());
@@ -125,8 +128,8 @@ public class UserManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(usersJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -154,8 +157,8 @@ public class UserManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -171,7 +174,7 @@ public class UserManagerAction extends BaseManagerAction {
 
         String responseModel;
         try {
-            List roles = getEntitiesAndUpdateState(entitiesState, configuration.getEntitiesPerPage(),
+            List roles = getEntitiesAndUpdateState(entitiesState, webConfiguration.getEntitiesPerPage(),
                     new EntitiesListManager() {
                         @SuppressWarnings({"unchecked"})
                         public int getResultsCount() {
@@ -189,8 +192,8 @@ public class UserManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(rolesJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -206,7 +209,7 @@ public class UserManagerAction extends BaseManagerAction {
 
         String responseModel;
         try {
-            List roles = getEntitiesAndUpdateState(entitiesState, configuration.getEntitiesPerPage(),
+            List roles = getEntitiesAndUpdateState(entitiesState, webConfiguration.getEntitiesPerPage(),
                     new EntitiesListManager() {
                         @SuppressWarnings({"unchecked"})
                         public int getResultsCount() {
@@ -224,8 +227,8 @@ public class UserManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(rolesJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -246,8 +249,8 @@ public class UserManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(existJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -277,8 +280,8 @@ public class UserManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -315,8 +318,8 @@ public class UserManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -368,7 +371,7 @@ public class UserManagerAction extends BaseManagerAction {
         } catch (Exception e) {
             try {
                 responseModel = createUnexpectedExceptionResponseModel(e);
-            } catch (JSONException e1) {
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -391,7 +394,7 @@ public class UserManagerAction extends BaseManagerAction {
                 throw new IllegalArgumentException("Username is empty.");
             }
         } catch (Exception e) {
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -412,7 +415,7 @@ public class UserManagerAction extends BaseManagerAction {
                 throw new IllegalArgumentException("Username is empty.");
             }
         } catch (Exception e) {
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -473,7 +476,7 @@ public class UserManagerAction extends BaseManagerAction {
                 }
             }
         } catch (Exception e) {
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -522,7 +525,7 @@ public class UserManagerAction extends BaseManagerAction {
 //            }
         } catch (Exception e) {
 
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -532,7 +535,7 @@ public class UserManagerAction extends BaseManagerAction {
 
     public String hidePassword(String password) {
 
-        return (password == null) ? password : password.replaceAll(".", configuration.getPasswordMask());
+        return (password == null) ? password : password.replaceAll(".", webConfiguration.getPasswordMask());
     }
 
     private String getUserJson(RequestContext context) {

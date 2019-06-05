@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.authority;
 
@@ -23,7 +26,7 @@ import com.jaspersoft.jasperserver.dto.authority.RolesListWrapper;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.common.RoleSearchCriteria;
 import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.resources.converters.RoleConverter;
@@ -53,7 +56,7 @@ public class RolesJaxrsService {
                              Boolean includeSubOrgs,
                              String search,
                              Boolean hasAllUsers,
-                             List<String> userNames) throws RemoteException {
+                             List<String> userNames) throws ErrorDescriptorException {
 
         RoleSearchCriteria criteria = new RoleSearchCriteria();
         criteria.setRoleName("".equals(search) ? null : search);
@@ -105,7 +108,7 @@ public class RolesJaxrsService {
 
     }
 
-    public Response getRoles(String name, String tenantId) throws RemoteException {
+    public Response getRoles(String name, String tenantId) throws ErrorDescriptorException {
         Role role = findRole(name, tenantId);
         if (role == null) {
             throw new ResourceNotFoundException(name);
@@ -114,7 +117,7 @@ public class RolesJaxrsService {
         return Response.ok(converter.toClient(role, null)).build();
     }
 
-    public Response deleteRole(String name, String tenantId) throws RemoteException{
+    public Response deleteRole(String name, String tenantId) throws ErrorDescriptorException {
         Role role = findRole(name, tenantId);
         if (role == null) {
             throw new ResourceNotFoundException(name);
@@ -128,7 +131,7 @@ public class RolesJaxrsService {
         return Response.noContent().build();
     }
 
-    public Response createRole(ClientRole clientRole) throws RemoteException{
+    public Response createRole(ClientRole clientRole) throws ErrorDescriptorException {
         Role role = converter.toServer(clientRole, null);
 
         if (findRole(role.getRoleName(), role.getTenantId()) != null){
@@ -139,7 +142,7 @@ public class RolesJaxrsService {
         return Response.status(Response.Status.CREATED).entity(resultRole).build();
     }
 
-    public Response updateRole(ClientRole newRole, String name, String tenantId) throws RemoteException{
+    public Response updateRole(ClientRole newRole, String name, String tenantId) throws ErrorDescriptorException {
         Role oldRole = findRole(name, tenantId);
         ClientRole resultRole;
         if (oldRole != null) {
@@ -164,7 +167,7 @@ public class RolesJaxrsService {
              (role.getTenantId() != null && role.getTenantId().equals(tenantId)));
     }
 
-    private Role findRole(String name, String tenantId) throws RemoteException{
+    private Role findRole(String name, String tenantId) throws ErrorDescriptorException {
         RoleSearchCriteria crit = new RoleSearchCriteria();
         crit.setRoleName(name);
         crit.setTenantId(tenantId);

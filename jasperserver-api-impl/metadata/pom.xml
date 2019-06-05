@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
@@ -28,7 +31,7 @@
     <parent>
         <groupId>com.jaspersoft.jasperserver</groupId>
         <artifactId>jasperserver-api-impl</artifactId>
-        <version>7.1.1</version>
+        <version>${buildArtifactVersionName}</version>
     </parent>
     <dependencies>
         <dependency>
@@ -110,7 +113,16 @@
                     <groupId>org.springframework</groupId>
                     <artifactId>spring-tx</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-test</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <version>${ehcache.version}</version>
         </dependency>
         <dependency>
             <groupId>oro</groupId>
@@ -149,7 +161,7 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.12</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>cglib</groupId>
@@ -159,13 +171,13 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.8.8</version>
+            <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.9.0</version>
+            <version>${mockito-all.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -198,6 +210,18 @@
             <version>3.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- SECURITY DEPENDENCIES: START -->
 		<dependency>
             <groupId>json</groupId>
@@ -220,15 +244,38 @@
             <artifactId>hibernate-validator</artifactId>
             <version>${hibernate.validator.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+            <version>2.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>2.2.4</version>
+            <scope>test</scope>
+        </dependency>
         <!-- OWASP ESAPI: START -->
         <dependency>
             <groupId>org.owasp.esapi</groupId>
             <artifactId>esapi</artifactId>
-            <version>2.0GA</version>
+            <version>2.1.0.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>xerces</groupId>
                     <artifactId>xmlParserAPIs</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.xmlgraphics</groupId>
+                    <artifactId>batik-css</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.xmlgraphics</groupId>
+                    <artifactId>batik-ext</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.xmlgraphics</groupId>
+                    <artifactId>batik-util</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>commons-beanutils</groupId>
@@ -259,12 +306,12 @@
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.8.9</version>
+            <version>${aspectj.version}</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
-            <version>1.8.9</version>
+            <version>${aspectj.version}</version>
         </dependency>
         <!-- OWASP ESAPI: STOP -->
         <!-- OWASP csrfguard: START -->
@@ -285,51 +332,57 @@
         <!-- OWASP csrfguard: STOP -->
         <!-- SECURITY DEPENDENCIES: STOP -->
     </dependencies>
+    <!-- This pluging showing that all found classes was succesfully enhanced,
+    but realy enhancing only classes with javax.persistence.Entity annotation-->
     <build>
         <plugins>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
+                <version>${maven.surefire.plugin.version}</version>
                 <configuration>
                     <excludes>
                     </excludes>
-                    <argLine>${argLine} </argLine>
+                    <argLine>${argLine}</argLine>
                 </configuration>
             </plugin>
 
 
             <plugin>
+                <groupId>org.hibernate.orm.tooling</groupId>
+                <artifactId>hibernate-enhance-maven-plugin</artifactId>
+                <version>${hibernate.core.version}</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <failOnError>true</failOnError>
+                            <enableLazyInitialization>true</enableLazyInitialization>
+                            <enableDirtyTracking>true</enableDirtyTracking>
+                            <enableAssociationManagement>false</enableAssociationManagement>
+
+                            <!--<enableFieldAccessEnhancement>false</enableFieldAccessEnhancement>-->
+                        </configuration>
+                        <goals>
+                            <goal>enhance</goal>
+                        </goals>
+
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>javax.transaction</groupId>
+                        <artifactId>jta</artifactId>
+                        <version>1.1</version>
+                    </dependency>
+                </dependencies>
+             </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.7</version>
                 <executions>
-                    <execution>
-                        <id>Instrument domain classes</id>
-                        <configuration>
-                            <tasks>
-                                <taskdef name="instrument"
-                                         classname="org.hibernate.tool.instrument.cglib.InstrumentTask">
-                                    <classpath>
-                                        <path refid="maven.dependency.classpath"/>
-                                        <path refid="maven.plugin.classpath"/>
-                                    </classpath>
-                                </taskdef>
-                                <instrument verbose="true">
-                                    <fileset dir="${project.build.outputDirectory}">
-                                        <include name="**/ContentRepoFileResource.class"/>
-                                        <include name="**/RepoResource.class"/>
-                                        <include name="**/RepoFileResource.class"/>
-                                    </fileset>
-                                </instrument>
-                            </tasks>
-                        </configuration>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
                     <execution>
                         <id>test</id>
                         <phase>process-test-resources</phase>
@@ -353,23 +406,8 @@
                 <dependencies>
                     <dependency>
                         <groupId>cglib</groupId>
-                        <artifactId>cglib</artifactId>
+                        <artifactId>cglib-nodep</artifactId>
                         <version>2.2</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate-core</artifactId>
-                        <version>3.3.2.GA-HHH-2763</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>net.sf.ehcache</groupId>
-                                <artifactId>ehcache</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                        </exclusions>
                     </dependency>
                     <dependency>
                         <groupId>org.slf4j</groupId>
@@ -394,10 +432,30 @@
                             </exclusion>
                         </exclusions>
                     </dependency>
+
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.12</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <includes>
+                        <include>**/ProfileAttributesResolverImplTest.java</include>
+                    </includes>
+                    <argLine>-Xmx1024m</argLine>
+                    <!--<argLine>-Xms512m -Xmx1024m -XX:PermSize=32m -XX:MaxPermSize=128m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</argLine>-->
+                </configuration>
+            </plugin>
         </plugins>
-		<pluginManagement>
+<!--		<pluginManagement>
 			<plugins>
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -439,6 +497,6 @@
 					</configuration>
 				</plugin>
 			</plugins>
-		</pluginManagement>
+		</pluginManagement>-->
     </build>
 </project>

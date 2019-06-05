@@ -1,65 +1,69 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p/>
  * <p/>
  *
  * @author tetiana.iefimenko
+ * @author Andriy Tivodar <ativodar@tibco>
  * @version $Id$
  * @see
  */
-public class ResourceElementTest {
+public class ResourceElementTest extends BaseDTOTest<ResourceElement> {
 
-    public static final String ELEMENT_NAME = "name";
-    public static final String SOURCE_NAME = "SourceName";
-    ResourceElement<Builder> sourceElement;
-    ResourceElement<Builder> clonedElement;
-
-    private static class Builder extends ResourceElement<Builder>{}
-
-    @Before
-    public void setUp() {
-
-        sourceElement = new Builder()
-                .setName(ELEMENT_NAME)
-                .setSourceName(SOURCE_NAME);
+    @Override
+    protected List<ResourceElement> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                ((ResourceElement) createFullyConfiguredInstance().setName("name2")),
+                createFullyConfiguredInstance().setSourceName("sourceName2"),
+                // with null values
+                ((ResourceElement) createFullyConfiguredInstance().setName(null)),
+                createFullyConfiguredInstance().setSourceName(null)
+        );
     }
 
-    @Test
-    public void testCloningConstructor() {
-
-        clonedElement = new ResourceElement<Builder>(sourceElement);
-
-        assertTrue(clonedElement.equals(sourceElement));
-        assertFalse(sourceElement == clonedElement);
-        assertNotNull(clonedElement.getName());
-        assertEquals(ELEMENT_NAME, clonedElement.getName());
-        assertNotNull(clonedElement.getSourceName());
-        assertEquals(SOURCE_NAME, clonedElement.getSourceName());
+    @Override
+    protected ResourceElement createFullyConfiguredInstance() {
+        ResourceElement resourceElement = new ResourceElement();
+        resourceElement.setSourceName("sourceName");
+        resourceElement.setName("name");
+        return resourceElement;
     }
 
+    @Override
+    protected ResourceElement createInstanceWithDefaultParameters() {
+        return new ResourceElement();
+    }
+
+    @Override
+    protected ResourceElement createInstanceFromOther(ResourceElement other) {
+        return new ResourceElement(other);
+    }
 
 }

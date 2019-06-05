@@ -1,5 +1,7 @@
 <fieldset class="group shortFields mongoDbJdbcSpecificFields">
 
+    <js-templateNonce></js-templateNonce>
+
 	<legend class="offLeft"><span></span></legend>
 
 	<label title="{{- i18n['resource.datasource.mongoJdbc.host'] }}" class="control input text">
@@ -48,7 +50,7 @@
 		<label for="__jrs_autoSchemaDefinitionCheckbox" title="{{- i18n['resource.datasource.mongoJdbc.schema.auto.generate']}}" class="wrap">
 			{{- i18n['resource.datasource.mongoJdbc.schema.auto.generate']}}
 		</label>
-		<input type="checkbox" id="__jrs_autoSchemaDefinitionCheckbox" name="autoSchemaDefinition" {{ if (modelAttributes.autoSchemaDefinition) { }}checked{{ } }} {{- isEditMode ? 'disabled="disabled"' : ''}} >
+		<input type="checkbox" id="__jrs_autoSchemaDefinitionCheckbox" name="autoSchemaDefinition" {{ if (modelAttributes.autoSchemaDefinition) { }}checked{{ } }} {{- isEditMode ? 'disabled=disabled' : ''}} >
 	</div>
 
 	<div name="fileLocationContainer" class="section"></div>

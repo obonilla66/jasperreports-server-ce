@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
@@ -43,7 +46,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.impl.ObjectPermissi
 import com.jaspersoft.jasperserver.api.security.JasperServerAclHelper;
 import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentity;
@@ -63,7 +66,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.acls.model.Permission;
 
@@ -149,12 +152,12 @@ public class PermissionsServiceImpl implements PermissionsService {
         this.auditHelper = auditHelper;
     }
 
-    public List<ObjectPermission> getPermissions(String resourceURI) throws RemoteException {
+    public List<ObjectPermission> getPermissions(String resourceURI) throws ErrorDescriptorException {
         Resource resource = resourcesManagementRemoteService.locateResource(resourceURI);
         return objectPermissionService.getObjectPermissionsForObject(makeExecutionContext(), resource);
     }
 
-    public List<ObjectPermission> getPermissions(String resourceURI, Class<?> recipientType, String recipientId, boolean effectivePermissions, boolean resolveAll) throws RemoteException {
+    public List<ObjectPermission> getPermissions(String resourceURI, Class<?> recipientType, String recipientId, boolean effectivePermissions, boolean resolveAll) throws ErrorDescriptorException {
         List<ObjectPermission> result;
 
         PermissionUriProtocol uriProtocol = PermissionUriProtocol.RESOURCE;
@@ -204,7 +207,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         }
 
     }
-    public ObjectPermission getPermission(String resourceURI, Class<?> recipientType, String recipientId) throws RemoteException {
+    public ObjectPermission getPermission(String resourceURI, Class<?> recipientType, String recipientId) throws ErrorDescriptorException {
         Object recipient = resolveRecipientObject(recipientType, recipientId);
         Resource object = resolveResource(resourceURI);
         List<ObjectPermission> permissions = objectPermissionService.getObjectPermissionsForObjectAndRecipient(makeExecutionContext(), object, recipient);
@@ -254,7 +257,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return permission;
     }
 
-    public List<ObjectPermission> getPermissionsForObject(String targetURI) throws RemoteException {
+    public List<ObjectPermission> getPermissionsForObject(String targetURI) throws ErrorDescriptorException {
         if (!aclPermissionsSecurityChecker.isPermitted(JasperServerPermission.ADMINISTRATION, targetURI)) {
             throw new AccessDeniedException("Access is denied");
         }
@@ -263,22 +266,22 @@ public class PermissionsServiceImpl implements PermissionsService {
             res = repositoryService.getFolder(makeExecutionContext(), targetURI);
 
             if (res == null) {
-                throw new RemoteException("There is no resource or folder for target URI \"" + targetURI + "\"");
+                throw new ErrorDescriptorException("There is no resource or folder for target URI \"" + targetURI + "\"");
             }
         }
 
         return objectPermissionService.getObjectPermissionsForObject(makeExecutionContext(), res);
     }
 
-    public ObjectPermission createPermission(ObjectPermission objectPermission) throws RemoteException {
+    public ObjectPermission createPermission(ObjectPermission objectPermission) throws ErrorDescriptorException {
         return doPutPermission(objectPermission, false);
     }
 
-    public ObjectPermission putPermission(ObjectPermission objectPermission) throws RemoteException {
+    public ObjectPermission putPermission(ObjectPermission objectPermission) throws ErrorDescriptorException {
         return doPutPermission(objectPermission, true);
     }
 
-    public List<ObjectPermission> putPermissions(InternalURI internalURI, List<ObjectPermission> objectPermissions) throws RemoteException {
+    public List<ObjectPermission> putPermissions(InternalURI internalURI, List<ObjectPermission> objectPermissions) throws ErrorDescriptorException {
         PermissionUriProtocol protocol = PermissionUriProtocol.fromString(internalURI.getProtocol());
         String uri = protocol.addPrefix(internalURI.getPath());
 
@@ -289,11 +292,11 @@ public class PermissionsServiceImpl implements PermissionsService {
         return doPutPermissions(internalURI, objectPermissions, false);
     }
 
-    public List<ObjectPermission> createPermissions(List<ObjectPermission> objectPermissions) throws RemoteException {
+    public List<ObjectPermission> createPermissions(List<ObjectPermission> objectPermissions) throws ErrorDescriptorException {
         return doPutPermissions(null, objectPermissions, true);
     }
 
-    public void deletePermission(ObjectPermission objectPermission) throws RemoteException {
+    public void deletePermission(ObjectPermission objectPermission) throws ErrorDescriptorException {
         changePermissionConsistencyCheck(objectPermission);
 
         auditHelper.createAuditEvent("deletePermission");
@@ -311,15 +314,15 @@ public class PermissionsServiceImpl implements PermissionsService {
      *
      * @param targetURI resource URI.
      * @return
-     * @throws RemoteException
+     * @throws ErrorDescriptorException
      */
-    public int getAppliedPermissionMaskForObjectAndCurrentUser(String targetURI) throws RemoteException {
+    public int getAppliedPermissionMaskForObjectAndCurrentUser(String targetURI) throws ErrorDescriptorException {
         Resource resource = repositoryService.getResource(makeExecutionContext(), targetURI);
         if (resource == null) {
             resource = repositoryService.getFolder(makeExecutionContext(), targetURI);
 
             if (resource == null) {
-                throw new RemoteException("There is no resource or folder for target URI \"" + targetURI + "\"");
+                throw new ErrorDescriptorException("There is no resource or folder for target URI \"" + targetURI + "\"");
             }
         }
 
@@ -336,7 +339,7 @@ public class PermissionsServiceImpl implements PermissionsService {
     }
 
 
-    protected void changePermissionConsistencyCheck(ObjectPermission objectPermission) throws RemoteException {
+    protected void changePermissionConsistencyCheck(ObjectPermission objectPermission) throws ErrorDescriptorException {
         if (StringUtils.isBlank(objectPermission.getURI())) {
             throw new IllegalParameterValueException("URI is blank", "uri", objectPermission.getURI());
         }
@@ -391,7 +394,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return ExecutionContextImpl.getRuntimeExecutionContext();
     }
 
-    protected ObjectPermission doPutPermission(ObjectPermission objectPermission, boolean allowUpdate) throws RemoteException {
+    protected ObjectPermission doPutPermission(ObjectPermission objectPermission, boolean allowUpdate) throws ErrorDescriptorException {
         changePermissionConsistencyCheck(objectPermission);
 
         ObjectPermission existingObjectPermission =
@@ -415,7 +418,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return objectPermissionService.getObjectPermission(makeExecutionContext(), objectPermission);
     }
 
-    protected List<ObjectPermission> doPutPermissions(InternalURI internalURI, List<ObjectPermission> objectPermissions, boolean addTo) throws RemoteException {
+    protected List<ObjectPermission> doPutPermissions(InternalURI internalURI, List<ObjectPermission> objectPermissions, boolean addTo) throws ErrorDescriptorException {
         if (!addTo) {
             String uri = internalURI.getPath();
             PermissionUriProtocol protocol = PermissionUriProtocol.fromString(internalURI.getProtocol());
@@ -474,7 +477,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return res;
     }
 
-    protected InternalURI resolveResource(String uri, PermissionUriProtocol protocol) throws RemoteException {
+    protected InternalURI resolveResource(String uri, PermissionUriProtocol protocol) throws ErrorDescriptorException {
         InternalURI resource;
         if (protocol == PermissionUriProtocol.RESOURCE) {
             resource = repositoryService.getResource(makeExecutionContext(), uri);
@@ -495,7 +498,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return resource;
     }
 
-    protected Resource resolveResource(String uri) throws RemoteException {
+    protected Resource resolveResource(String uri) throws ErrorDescriptorException {
         if (uri.startsWith(REPO_URI_PREFIX)) {
             uri = uri.substring(REPO_URI_PREFIX.length());
         }
@@ -542,7 +545,7 @@ public class PermissionsServiceImpl implements PermissionsService {
 
     protected Authentication createAuthentication(Role role) {
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>(1);
-        authorities.add(new GrantedAuthorityImpl(role.getRoleName()));
+        authorities.add(new SimpleGrantedAuthority(role.getRoleName()));
         MetadataUserDetails dummy = new MetadataUserDetails(new UserImpl());
         dummy.setUsername("dummyUserdummyUserdummyUserdummyUserdummyUser");
 
@@ -554,13 +557,13 @@ public class PermissionsServiceImpl implements PermissionsService {
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>(roles.size());
 
         for (Role role : roles) {
-            authorities.add(new GrantedAuthorityImpl(role.getRoleName()));
+            authorities.add(new SimpleGrantedAuthority(role.getRoleName()));
         }
 
         return new UsernamePasswordAuthenticationToken(new MetadataUserDetails(user), null, authorities);
     }
 
-    private List<ObjectPermission> resolveAll(String resourceURI, Class<?> recipientType, String recipientId, boolean effectivePermissions) throws RemoteException {
+    private List<ObjectPermission> resolveAll(String resourceURI, Class<?> recipientType, String recipientId, boolean effectivePermissions) throws ErrorDescriptorException {
         List<ObjectPermission> res;
         if (recipientType == null) {
             res = resolveAllUsers(resourceURI, recipientId, effectivePermissions);
@@ -575,7 +578,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return res;
     }
 
-    private List<ObjectPermission> resolveAllRoles(String resourceURI, String recipientId) throws RemoteException {
+    private List<ObjectPermission> resolveAllRoles(String resourceURI, String recipientId) throws ErrorDescriptorException {
         List<Role> roles = getRolesForResource(resourceURI, recipientId);
         Resource resource = resolveResource(resourceURI);
 
@@ -587,7 +590,7 @@ public class PermissionsServiceImpl implements PermissionsService {
         return res;
     }
 
-    private List<ObjectPermission> resolveAllUsers(String resourceURI, String recipientId, boolean effectivePermissions) throws RemoteException {
+    private List<ObjectPermission> resolveAllUsers(String resourceURI, String recipientId, boolean effectivePermissions) throws ErrorDescriptorException {
         List<User> users = getUsersForResource(resourceURI, recipientId);
         Resource resource = resolveResource(resourceURI);
 

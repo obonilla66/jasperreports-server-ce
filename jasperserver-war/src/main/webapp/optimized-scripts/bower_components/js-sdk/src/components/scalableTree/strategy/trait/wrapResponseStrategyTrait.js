@@ -1,1 +1,0 @@
-define(["require","underscore"],function(e){var r=e("underscore");return{wrapResponse:function(e){return e=r.isNumber(e[1])?[e]:e}}});

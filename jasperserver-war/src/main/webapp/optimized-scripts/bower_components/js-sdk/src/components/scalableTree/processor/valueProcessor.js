@@ -1,1 +1,0 @@
-define([],function(){return{processItem:function(e){return e.value=e.id,e}}});

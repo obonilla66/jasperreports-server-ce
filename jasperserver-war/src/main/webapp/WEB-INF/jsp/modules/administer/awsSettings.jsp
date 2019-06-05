@@ -1,25 +1,30 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
+<%@ include file="../common/jsEdition.jsp" %>
 <t:insertTemplate template="/WEB-INF/jsp/templates/page.jsp">
     <t:putAttribute name="pageTitle"><spring:message code="menu.aws.settings"/></t:putAttribute>
     <t:putAttribute name="bodyID" value="awsOptions"/>
@@ -29,7 +34,6 @@
     <t:putAttribute name="headerContent">
 
         <%@ include file="administerState.jsp" %>
-        <%@ include file="../common/jsEdition.jsp" %>
         <script type="text/javascript">
             __jrsConfigs__.Administer = Administer;
         </script>
@@ -49,34 +53,30 @@
                         <p class="description"><spring:message code="cloud.settings.general.description"/></p>
                         <ol class="list settings">
 
-                            <%
-                                request.setAttribute("oName", "aws.db.security.group.changes.enabled");
-                                request.setAttribute("oDesc", "aws.db.security.group.changes.enabled.explain");
-                                request.setAttribute("oLabelCode", "aws.db.security.group.changes.enabled");
-                                request.setAttribute("oValue", request.getAttribute("aws.db.security.group.changes.enabled"));
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-                            <%
-                                request.setAttribute("oName", "aws.db.security.group.name");
-                                request.setAttribute("oDesc", "aws.db.security.group.name.explain");
-                                request.setAttribute("oLabelCode", "aws.db.security.group.name");
-                                request.setAttribute("oValue", request.getAttribute("aws.db.security.group.name"));
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-                            <%
-                                request.setAttribute("oName", "aws.db.security.group.description");
-                                request.setAttribute("oDesc", "aws.db.security.group.description.explain");
-                                request.setAttribute("oLabelCode", "aws.db.security.group.description");
-                                request.setAttribute("oValue", request.getAttribute("aws.db.security.group.description"));
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-                            <%
-                                request.setAttribute("oName", "aws.db.security.group.ingressPublicIp");
-                                request.setAttribute("oDesc", "aws.db.security.group.ingressPublicIp.explain");
-                                request.setAttribute("oLabelCode", "aws.db.security.group.ingressPublicIp");
-                                request.setAttribute("oValue", request.getAttribute("aws.db.security.group.ingressPublicIp"));
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="aws.db.security.group.changes.enabled"/>
+                                <jsp:param name="oDesc" value="aws.db.security.group.changes.enabled.explain"/>
+                                <jsp:param name="oLabelCode" value="aws.db.security.group.changes.enabled"/>
+                                <jsp:param name="oValue" value='<%=request.getAttribute("aws.db.security.group.changes.enabled")%>'/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="aws.db.security.group.name"/>
+                                <jsp:param name="oDesc" value="aws.db.security.group.name.explain"/>
+                                <jsp:param name="oLabelCode" value="aws.db.security.group.name"/>
+                                <jsp:param name="oValue" value='<%=request.getAttribute("aws.db.security.group.name")%>'/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="aws.db.security.group.description"/>
+                                <jsp:param name="oDesc" value="aws.db.security.group.description.explain"/>
+                                <jsp:param name="oLabelCode" value="aws.db.security.group.description"/>
+                                <jsp:param name="oValue" value='<%=request.getAttribute("aws.db.security.group.description")%>'/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="aws.db.security.group.ingressPublicIp"/>
+                                <jsp:param name="oDesc" value="aws.db.security.group.ingressPublicIp.explain"/>
+                                <jsp:param name="oLabelCode" value="aws.db.security.group.ingressPublicIp"/>
+                                <jsp:param name="oValue" value='<%=request.getAttribute("aws.db.security.group.ingressPublicIp")%>'/>
+                            </jsp:include>
 
                         </ol>
                     </li>
@@ -91,13 +91,12 @@
 
                             <%@include file="awsConfigurationInclude.jsp"%>
 
-                            <%
-                                request.setAttribute("oName", "aws.db.security.group.suppressEc2CredentialsWarnings");
-                                request.setAttribute("oDesc", "aws.db.security.group.suppressEc2CredentialsWarnings.explain");
-                                request.setAttribute("oLabelCode", "aws.db.security.group.suppressEc2CredentialsWarnings");
-                                request.setAttribute("oValue", request.getAttribute("aws.db.security.group.suppressEc2CredentialsWarnings"));
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="aws.db.security.group.suppressEc2CredentialsWarnings"/>
+                                <jsp:param name="oDesc" value="aws.db.security.group.suppressEc2CredentialsWarnings.explain"/>
+                                <jsp:param name="oLabelCode" value="aws.db.security.group.suppressEc2CredentialsWarnings"/>
+                                <jsp:param name="oValue" value='<%=request.getAttribute("aws.db.security.group.suppressEc2CredentialsWarnings")%>'/>
+                            </jsp:include>
 
                         </ol>
                     </li>

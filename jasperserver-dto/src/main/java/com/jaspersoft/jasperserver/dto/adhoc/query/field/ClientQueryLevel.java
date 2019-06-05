@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 
@@ -35,14 +38,10 @@ public class ClientQueryLevel extends ClientQueryGroup {
         // No op
     }
 
-    public ClientQueryLevel(ClientQueryLevel level) {
-        super(level);
-
-        if (level != null) {
-            this
-                    .setDimension(level.getDimension())
-                    .setHierarchyName(level.getHierarchyName());
-        }
+    public ClientQueryLevel(ClientQueryLevel source) {
+        super(source);
+        dimension = source.getDimension();
+        hierarchyName = source.getHierarchyName();
     }
 
     @Override
@@ -91,6 +90,9 @@ public class ClientQueryLevel extends ClientQueryGroup {
         if (field != null) {
             setDimension(field.getDimensionName());
             setHierarchyName(field.getHierarchyName());
+        } else {
+            dimension = null;
+            hierarchyName = null;
         }
         return this;
     }
@@ -101,6 +103,7 @@ public class ClientQueryLevel extends ClientQueryGroup {
     }
 
     @Override
+    @XmlTransient
     public ClientQueryLevel setDataSourceField(ClientDataSourceField field) {
         return (ClientQueryLevel) super.setDataSourceField(field);
     }
@@ -145,7 +148,7 @@ public class ClientQueryLevel extends ClientQueryGroup {
         sb.append(", dimension='").append(dimension).append('\'');
         sb.append(", hierarchyName='").append(hierarchyName).append('\'');
         sb.append(", categorizer='").append(getCategorizer()).append('\'');
-        sb.append(", includeAll=").append(getIncludeAll()).append('\'');
+        sb.append(", includeAll='").append(getIncludeAll()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -158,6 +161,10 @@ public class ClientQueryLevel extends ClientQueryGroup {
         public ClientLevelAggregationsRef() {
             setId(AGGREGATIONS_ID);
             setFieldName(AGGREGATIONS_LEVEL_NAME);
+        }
+
+        public ClientLevelAggregationsRef(ClientLevelAggregationsRef other) {
+            super(other);
         }
 
         @XmlTransient
@@ -174,7 +181,7 @@ public class ClientQueryLevel extends ClientQueryGroup {
 
         @Override
         public ClientLevelAggregationsRef deepClone() {
-            return new ClientLevelAggregationsRef();
+            return new ClientLevelAggregationsRef(this);
         }
 
         @Override
@@ -182,6 +189,19 @@ public class ClientQueryLevel extends ClientQueryGroup {
             if (this == o) return true;
             if (!(o instanceof ClientLevelAggregationsRef)) return false;
             return super.equals(o);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("ClientLevelAggregationsRef{");
+            sb.append("id='").append(getId()).append('\'');
+            sb.append(", fieldName='").append(getFieldName()).append('\'');
+            sb.append(", dimension='").append(getDimension()).append('\'');
+            sb.append(", hierarchyName='").append(getHierarchyName()).append('\'');
+            sb.append(", categorizer='").append(getCategorizer()).append('\'');
+            sb.append(", includeAll=").append(getIncludeAll()).append('\'');
+            sb.append('}');
+            return sb.toString();
         }
     }
 
@@ -221,6 +241,19 @@ public class ClientQueryLevel extends ClientQueryGroup {
             if (this == o) return true;
             if (!(o instanceof ClientAllLevel)) return false;
             return super.equals(o);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("ClientAllLevel{");
+            sb.append("id='").append(getId()).append('\'');
+            sb.append(", fieldName='").append(getFieldName()).append('\'');
+            sb.append(", dimension='").append(getDimension()).append('\'');
+            sb.append(", hierarchyName='").append(getHierarchyName()).append('\'');
+            sb.append(", categorizer='").append(getCategorizer()).append('\'');
+            sb.append(", includeAll=").append(getIncludeAll()).append('\'');
+            sb.append('}');
+            return sb.toString();
         }
     }
 }

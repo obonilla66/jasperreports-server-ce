@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.filters;
@@ -21,14 +24,16 @@ package com.jaspersoft.jasperserver.dto.adhoc.filters;
 import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientAggregates;
 import com.jaspersoft.jasperserver.dto.adhoc.query.MultiLevelQueryBuilder;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryAggregatedField;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -78,7 +83,8 @@ public class AggregationExpressionDeserializationFromJSONTest extends FilterTest
     public void ensureObjectExpressionWithEquals() throws Exception {
         ClientQueryAggregatedField field = new ClientQueryAggregatedField()
                 .setExpressionContainer(new ClientExpressionContainer(
-                        new ClientEquals(Arrays.asList(new ClientVariable("sales"), new ClientInteger(1)))));
+                        new ClientEquals().setOperands(Arrays.asList((ClientExpression) new ClientVariable("sales"),
+                                new ClientNumber(BigDecimal.valueOf(1))))));
 
         String json = "{\n" +
                 "  \"expression\" : {\n" +
@@ -89,7 +95,7 @@ public class AggregationExpressionDeserializationFromJSONTest extends FilterTest
                 "            \"name\" : \"sales\"\n" +
                 "          }\n" +
                 "        }, {\n" +
-                "          \"integer\" : {\n" +
+                "          \"number\" : {\n" +
                 "            \"value\" : \"1\"\n" +
                 "          }\n" +
                 "        } ]\n" +

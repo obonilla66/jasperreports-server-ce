@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.repository;
@@ -23,7 +26,6 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.api.search.BasicTransformer;
 import com.jaspersoft.jasperserver.api.search.BasicTransformerFactory;
 import com.jaspersoft.jasperserver.api.search.SearchCriteria;
 import com.jaspersoft.jasperserver.api.search.SearchFilter;
@@ -36,8 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider.getExecutionContext;
 import static com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource.TYPE_JRXML;
-import static com.jaspersoft.jasperserver.war.common.JasperServerUtil.getExecutionContext;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -59,7 +61,7 @@ public class JRXMLRepository {
      * @return
      */
     public List<String> listAll(RequestContext context) {
-        ResourceLookup[] lookups = repository.findResource(getExecutionContext(context), jrxmlFilesCriteria());
+        ResourceLookup[] lookups = repository.findResource(getExecutionContext(), jrxmlFilesCriteria());
 
         List<String> allJrxmls = null;
         if (isNotEmpty(lookups)) {
@@ -90,17 +92,16 @@ public class JRXMLRepository {
     /**
      * Count all jrxml files in the repo
      *
-     * @param context
      * @return
      */
-    public int count(RequestContext context) {
+    public int count() {
         List<Class> jrxmlTypeList = new ArrayList<Class>();
         jrxmlTypeList.add(FileResource.class);
 
         List<SearchFilter> jrxmlFilesFilters = new ArrayList<SearchFilter>();
         jrxmlFilesFilters.add(jrxmlFilesSearchFilter());
         Map<Class, Integer> resultMap =
-                repository.loadResourcesMapCount(getExecutionContext(context), EMPTY, jrxmlTypeList, jrxmlFilesFilters,
+                repository.loadResourcesMapCount(getExecutionContext(), EMPTY, jrxmlTypeList, jrxmlFilesFilters,
                         null, null, new BasicTransformerFactory());
 
         return resultMap.get(FileResource.class);
@@ -115,8 +116,8 @@ public class JRXMLRepository {
         };
     }
 
-    public boolean isAnyJrxmlExists(RequestContext context) {
-        return repository.resourceExists(getExecutionContext(context), jrxmlFilesCriteria());
+    public boolean isAnyJrxmlExists() {
+        return repository.resourceExists(getExecutionContext(), jrxmlFilesCriteria());
     }
 
     public void setRepository(RepositoryService repository) {

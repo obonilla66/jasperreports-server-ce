@@ -1,25 +1,28 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.metadata.common.util;
 
+import org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext;
 import org.hibernate.validator.internal.engine.ConstraintViolationImpl;
-import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
 
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintViolation;
@@ -35,18 +38,18 @@ import static java.util.Arrays.asList;
  * @version $Id: ConstraintValidatorContextDecorator.java 58781 2016-04-20 14:24:39Z vzavadsk $
  */
 public class ConstraintValidatorContextDecorator implements ConstraintValidatorContext {
-    private static final String ARGUMENTS = "message.arguments";
+    public static final String ARGUMENTS = "message.arguments";
 
-    private ConstraintValidatorContextImpl context;
+    private HibernateConstraintValidatorContext context;
 
     public ConstraintValidatorContextDecorator(ConstraintValidatorContext context) {
-        if (!(context instanceof ConstraintValidatorContextImpl)) {
+        if (!(context instanceof HibernateConstraintValidatorContext)) {
             throw new IllegalArgumentException("\"" + ConstraintValidatorContextDecorator.class.getName() +
-                    "\" currently supports only \"" + ConstraintValidatorContextImpl.class.getName() +
+                    "\" currently supports only \"" + HibernateConstraintValidatorContext.class.getName() +
                     "\" implementation");
         }
 
-        this.context = (ConstraintValidatorContextImpl) context;
+        this.context = (HibernateConstraintValidatorContext) context;
     }
 
     // unchecked cast to List<Object> is assured by "setArguments" method's signature
@@ -62,6 +65,16 @@ public class ConstraintValidatorContextDecorator implements ConstraintValidatorC
         }
 
         return arguments;
+    }
+
+    // unchecked cast to List<Object> is assured by "setArguments" method's signature
+    @SuppressWarnings("unchecked")
+    public static Object[] getArgumentsArray(ConstraintViolation violation) {
+        List<Object> arguments = getArguments(violation);
+        if (arguments != null) {
+            return arguments.toArray();
+        }
+        return null;
     }
 
     public ConstraintValidatorContextDecorator setArguments(Object... arguments) {

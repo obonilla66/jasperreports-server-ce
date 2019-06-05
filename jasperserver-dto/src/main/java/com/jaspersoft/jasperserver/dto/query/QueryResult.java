@@ -1,21 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.query;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -25,16 +30,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author Paul Lysak
- *         Date: 11.02.13
- *         Time: 17:35
+ * Date: 11.02.13
+ * Time: 17:35
  */
 @XmlRootElement(name = "queryResult")
 @XmlType(propOrder = {"names", "rows"})
-public class QueryResult {
-    private List<String> names = new ArrayList<String>();
+public class QueryResult implements DeepCloneable<QueryResult> {
 
+    private List<String> names = new ArrayList<String>();
     private List<QueryResultRow> rows = new ArrayList<QueryResultRow>();
 
     public QueryResult() {
@@ -45,6 +53,18 @@ public class QueryResult {
         this.rows.addAll(Arrays.asList(rows));
     }
 
+    public QueryResult(QueryResult other) {
+        checkNotNull(other);
+
+        this.names = copyOf(other.getNames());
+        this.rows = copyOf(other.getRows());
+    }
+
+    @Override
+    public QueryResult deepClone() {
+        return new QueryResult(this);
+    }
+
     @XmlElement(name = "name")
     @XmlElementWrapper(name = "names")
     public List<String> getNames() {
@@ -52,7 +72,7 @@ public class QueryResult {
     }
 
     public QueryResult setNames(List<String> names) {
-        this.names = names;
+        this.names = names == null ? new ArrayList<String>() : names;
         return this;
     }
 
@@ -63,7 +83,7 @@ public class QueryResult {
     }
 
     public QueryResult setRows(List<QueryResultRow> rows) {
-        this.rows = rows;
+        this.rows = rows == null ? new ArrayList<QueryResultRow>() : rows;
         return this;
     }
 
@@ -82,18 +102,14 @@ public class QueryResult {
 
         QueryResult that = (QueryResult) o;
 
-        if (names != null ? !names.equals(that.names) : that.names != null) return false;
-        if (rows != null ? !rows.equals(that.rows) : that.rows != null) return false;
-
-        return true;
+        if (!names.equals(that.names)) return false;
+        return rows.equals(that.rows);
     }
 
     @Override
     public int hashCode() {
-        int result = names != null ? names.hashCode() : 0;
-        result = 31 * result + (rows != null ? rows.hashCode() : 0);
+        int result = names.hashCode();
+        result = 31 * result + rows.hashCode();
         return result;
     }
-
-
 }

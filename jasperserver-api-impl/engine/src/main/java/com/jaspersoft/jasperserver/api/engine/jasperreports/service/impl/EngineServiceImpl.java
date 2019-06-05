@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
@@ -1013,6 +1016,8 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	protected class ReportFill extends ReportRunnable {
 		private final ExecutionContext context;
 		private final ReportUnit reportUnit;
+		private final ReportDataSource datasource;
+		private final Query query;
 		private final boolean inMemoryUnit;
 
 		public ReportFill(ExecutionContext context, 
@@ -1023,6 +1028,21 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 			this.context = context;
 			this.reportUnit = reportUnit;
 			this.inMemoryUnit = inMemoryUnit;
+
+			ExecutionContext runtimeContext = getRuntimeExecutionContext(context);
+			ReportDataSource datasource = null;
+			ResourceReference queryRef = reportUnit.getQuery();
+			Query query = queryRef == null ? null : getFinalResource(runtimeContext, queryRef, Query.class);
+			if (query != null && query.getDataSource() != null) {
+				datasource = (ReportDataSource) getFinalResource(runtimeContext, query.getDataSource(), Resource.class);
+			}
+
+			ResourceReference dsRef = reportUnit.getDataSource();
+			if (datasource == null && dsRef != null) {
+				datasource = (ReportDataSource) getFinalResource(runtimeContext, dsRef, Resource.class);
+			}
+			this.datasource = datasource;
+			this.query = query;
 		}
 
 		protected void runReport() {
@@ -1105,7 +1125,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 			try {
 				// run the report (note that it would run on the same thread even when async)
 				Map<String, Object> paramsCopy = new HashMap<String, Object>(reportParameters);
-				fillReport(runtimeContext, reportUnit, report, paramsCopy, null, null, filler);
+				fillReport(runtimeContext, reportUnit, report, paramsCopy, datasource, null, filler, true);
 				// success
 			} catch (RuntimeException e) {
 				// if a result has already been submitted, it's too late to do something
@@ -1134,18 +1154,6 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 				Map<String, Object> reportParameters) {
 			// setting the default data timestamp
 			filler.setDataTimestamp(new Date());
-
-			ReportDataSource datasource = null;
-			ResourceReference queryRef = reportUnit.getQuery();
-			Query query = queryRef == null ? null : getFinalResource(runtimeContext, queryRef, Query.class);
-			if (query != null && query.getDataSource() != null) {
-				datasource = (ReportDataSource) getFinalResource(runtimeContext, query.getDataSource(), Resource.class);
-			}
-
-			ResourceReference dsRef = reportUnit.getDataSource();
-			if (datasource == null && dsRef != null) {
-				datasource = (ReportDataSource) getFinalResource(runtimeContext, dsRef, Resource.class);
-			}
 			
 			if (request.getReportContext() != null) {
 				request.getReportContext().setParameterValue(
@@ -1156,7 +1164,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 				log.debug("running report with data source");
 			}
 
-			fillReport(runtimeContext, reportUnit, report, reportParameters, datasource, query, filler);
+			fillReport(runtimeContext, reportUnit, report, reportParameters, datasource, query, filler, false);
 		}
 	}
 
@@ -1420,8 +1428,6 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	protected Map getReportParameters(ExecutionContext context, JasperReport report, 
 			Map requestParameters) {
 		Map reportParameters = new HashMap();
-
-		reportParameters.put(JRParameter.REPORT_URL_HANDLER_FACTORY, RepositoryURLHandlerFactory.getInstance());
 
 		if (context != null && context.getLocale() != null
 				&& reportParameters.get(JRParameter.REPORT_LOCALE) == null) {
@@ -1808,7 +1814,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 
 	protected void fillReport(ExecutionContext context,
 			ReportUnit reportUnit, JasperReport report, Map reportParameters, 
-			ReportDataSource datasource, Query query, ReportFiller filler) {
+			ReportDataSource datasource, Query query, ReportFiller filler, boolean hasCachedData) {
 		ReportDataSourceService dataSourceService = null;
 		boolean dsClosing = false;
         addReportUnitToAuditEvent(reportUnit);
@@ -1819,8 +1825,8 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 		try {
 			if (datasource != null) {
 				try {
-					dataSourceService = createDataSourceService(datasource);
-					dataSourceService.setReportParameterValues(reportParameters);
+					dataSourceService = createDataSourceService(datasource, hasCachedData);
+					dataSourceService.setReportParameterValues(reportParameters, hasCachedData);
 				} catch (RuntimeException e) {
 					Optional<ErrorTemplateReportService> errorDSService = getErrorReportDataSourceService(e, reportParameters);
 
@@ -2015,6 +2021,11 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	public ReportDataSourceService createDataSourceService(ReportDataSource dataSource) {
 		ReportDataSourceServiceFactory factory = (ReportDataSourceServiceFactory) getDataSourceServiceFactories().getBean(dataSource.getClass());
 		return factory.createService(dataSource);
+	}
+
+	protected ReportDataSourceService createDataSourceService(ReportDataSource dataSource, boolean hasCachedData) {
+		ReportDataSourceServiceFactory factory = (ReportDataSourceServiceFactory) getDataSourceServiceFactories().getBean(dataSource.getClass());
+		return factory.createService(dataSource, hasCachedData);
 	}
 
 	/**

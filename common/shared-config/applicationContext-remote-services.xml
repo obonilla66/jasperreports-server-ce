@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -25,10 +28,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
-    <context:component-scan base-package="com.jaspersoft.jasperserver.remote">
-        <context:exclude-filter type="regex" expression=".*SqlExecutionStrategy"/>
-        <context:exclude-filter type="regex" expression=".*JdbcDataSourceMetadataBuilder"/>
-    </context:component-scan>
+    <context:component-scan base-package="com.jaspersoft.jasperserver.remote"/>
     <alias name="${bean.auditContext}" alias="concreteAuditContext"/>
     <alias name="${bean.repositoryService}" alias="concreteRepository"/>
     <alias name="${bean.userAuthorityService}" alias="concreteUserAuthorityService"/>
@@ -40,8 +40,6 @@
     <alias name="${bean.reportExecutor}" alias="reportExecutor"/>
     <alias name="${bean.filterResolver}" alias="filterResolver"/>
     <alias name="fullHtmlExportStrategy" alias="defaultHtmlExportStrategy"/>
-    <bean id="beanValidator"
-          class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
 
     <util:list id="defaultRoles">
         <bean class="com.jaspersoft.jasperserver.api.metadata.user.domain.client.RoleImpl">
@@ -65,7 +63,7 @@
         </entry>
     </util:map>
 
-    <bean id="connectionsCache" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+    <bean id="contextsCache" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
         <property name="cacheManager" ref="cacheManager"/>
         <property name="cacheName">
             <value>connection.descriptions</value>
@@ -162,6 +160,7 @@
             <props>
                 <prop key="com.jaspersoft.jasperreports.highcharts.generate.image">false</prop>
                 <!--<prop key="com.jaspersoft.jasperreports.highcharts.html.export.type">standalone</prop>-->
+                <prop key="com.jaspersoft.jasperreports.components.customvisualization.generate.image">false</prop>
             </props>
         </property>
     </bean>
@@ -400,11 +399,7 @@
     </bean>
 
     <util:list id="disabledResourceTypes" value-type="java.lang.Class">
-        <!--add client DTO class names to disable. E.g.:
-        <value>com.jaspersoft.jasperserver.dto.resources.domain.ClientDomainSchema</value>
-        -->
-        <value>com.jaspersoft.jasperserver.dto.resources.domain.ClientDomain</value>
-        <value>com.jaspersoft.jasperserver.dto.resources.domain.ClientDomainSchema</value>
+        <!-- add client DTO class names to disable -->
     </util:list>
 
 
@@ -427,6 +422,5 @@
     </bean>
 
     <alias name="${bean.exportPrivilegeOptions}" alias="exportPrivilegeOptions"/>
-
 
 </beans>

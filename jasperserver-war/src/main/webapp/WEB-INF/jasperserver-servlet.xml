@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ http://www.jaspersoft.com.
+  ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:webflow="http://www.springframework.org/schema/webflow-config"
@@ -7,12 +28,12 @@
        xmlns:mvc="http://www.springframework.org/schema/mvc"
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
            http://www.springframework.org/schema/webflow-config
            http://www.springframework.org/schema/webflow-config/spring-webflow-config-2.0.xsd
-           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
-           http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
-           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd
+           http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
     <bean id="servletPropertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
@@ -92,13 +113,6 @@
 				<prop key="/getRequirejsConfig.html">reportExecutionController</prop>
 				<prop key="/runReportAction.html">reportExecutionController</prop>
 
-                <!-- BIF -->
-                <prop key="/client.js">bifController</prop>
-                <prop key="/visualize.js">bifController</prop>
-                <prop key="/login.jsp">bifController</prop>
-                <prop key="/providers/**">bifController</prop>
-                <prop key="/mods/**">bifController</prop>
-
                 <!--scheduler-->
                 <prop key="/scheduler/main.html">schedulerController</prop>
 
@@ -134,6 +148,7 @@
     </bean>
 
     <util:map id="commonProperties" scope="prototype">
+        <entry key="userId" value="#{${bean.securityContextProvider}.contextUser.username}"/>
         <entry key="organizationId" value="#{${bean.securityContextProvider}.contextUser.tenantId}"/>
         <entry key="publicFolderUri" value="#{configurationBean.publicFolderUri}"/>
         <entry key="tempFolderUri" value="#{configurationBean.tempFolderUri}"/>
@@ -317,7 +332,7 @@
 	  <property name="interceptorNames">
 	    <list>
 	      <idref bean="flowExecuterSecurity"/>
-	      <idref local="flowExecutorTarget"/>
+	      <idref bean="flowExecutorTarget"/>
 	    </list>
 	  </property>
 	</bean>
@@ -462,9 +477,5 @@
 	</bean>
 
     <bean id="reportExecutionControllerReportContextFactory" class="com.jaspersoft.jasperserver.war.action.hyperlinks.DefaultReportContextFactory"/>
-
-    <bean id="bifController" class="com.jaspersoft.jasperserver.war.BIFController">
-        <property name="pagesLocation" value="modules/bif" />
-    </bean>
 
 </beans>

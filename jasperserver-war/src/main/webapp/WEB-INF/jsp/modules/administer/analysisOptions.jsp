@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
@@ -24,6 +28,11 @@
 <%@ page import="org.springframework.context.ApplicationContext" %>
 <%@ page import="org.springframework.web.servlet.support.RequestContextUtils" %>
 
+<%
+    String[] solvedModes = {"ABSOLUTE", "SCOPED"};
+    String[] options = {"OFF", "WARN", "ERROR"};
+    MondrianProperties mProperties = MondrianProperties.instance();
+%>
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/page.jsp">
     <t:putAttribute name="pageTitle"><spring:message code="menu.mondrian.properties"/></t:putAttribute>
@@ -45,228 +54,151 @@
 		    <t:putAttribute name="bodyClass" value=""/>
 		    <t:putAttribute name="bodyContent">
 
-                <%
-                  ApplicationContext context = RequestContextUtils.getWebApplicationContext(request);
-                  String oName;
-                  String oDesc;
-                  String oLabelCode;
-                  Object oValue;
-                  String[] oSelectOptions;
-                %>
-
 				<ol class="list settings">
 					<li class="node">
 						<div class="wrap">
 							<h2 class="title settingsGroup"><spring:message code="JAM_HEADER_GENERAL_BEHAVIOR"/></h2>
 						</div>
 						<ol class="list settings">
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().DisableCaching.getPath());
-                              request.setAttribute("oLabelCode", "JAM_005_DISABLE_MEMORY_CACHE");
-                              request.setAttribute("oValue", MondrianProperties.instance().DisableCaching.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.DisableCaching.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_005_DISABLE_MEMORY_CACHE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.DisableCaching.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableDrillThrough.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_070_ENABLE_DRILL_THROUGH"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableDrillThrough.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.GenerateFormattedSql.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_006_GENERATE_FORMATTED_SQL"/>
+                                <jsp:param name="oValue" value="<%=mProperties.GenerateFormattedSql.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.QueryLimit.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_009_QUERY_LIMIT"/>
+                                <jsp:param name="oValue" value="<%=mProperties.QueryLimit.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.ResultLimit.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_010_RESULT_LIMIT"/>
+                                <jsp:param name="oValue" value="<%=mProperties.ResultLimit.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.RolapConnectionShepherdNbThreads.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_066_MAX_QUERY_THREADS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.RolapConnectionShepherdNbThreads.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.RolapConnectionShepherdThreadPollingInterval.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_067_SHEPHERD_THREAD_POLLING_INTERVAL"/>
+                                <jsp:param name="oValue" value="<%=mProperties.RolapConnectionShepherdThreadPollingInterval.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.MaxEvalDepth.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_022_EVALUATE_MAX_EVAL_DEPTH"/>
+                                <jsp:param name="oValue" value="<%=mProperties.MaxEvalDepth.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.ExpCompilerClass.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_052_EXP_CALC_CLASS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.ExpCompilerClass.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.CaseSensitive.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_024_CASE_SENSITIVE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.CaseSensitive.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.CellBatchSize.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_063_CELL_BATCH_SIZE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.CellBatchSize.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.CompareSiblingsByOrderKey.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_023_COMPARE_SIBLINGS_BY_ORDER_KEY"/>
+                                <jsp:param name="oValue" value="<%=mProperties.CompareSiblingsByOrderKey.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.QueryTimeout.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_025_QUERY_TIMEOUT"/>
+                                <jsp:param name="oValue" value="<%=mProperties.QueryTimeout.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.HighCardChunkSize.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_055_HIGH_CARD_CHUNK_SIZE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.HighCardChunkSize.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.SparseSegmentDensityThreshold.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_012_SPARSE_DENSITY_THRESHOLD"/>
+                                <jsp:param name="oValue" value="<%=mProperties.SparseSegmentDensityThreshold.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.SparseSegmentCountThreshold.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_013_SPARSE_COUNT_THRESHOLD"/>
+                                <jsp:param name="oValue" value="<%=mProperties.SparseSegmentCountThreshold.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.IgnoreInvalidMembers.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_025_IGNORE_INVALID_MEMBERS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.IgnoreInvalidMembers.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.IgnoreInvalidMembersDuringQuery.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_026_IGNORE_INVALID_MEMBERS_DURING_QUERY"/>
+                                <jsp:param name="oValue" value="<%=mProperties.IgnoreInvalidMembersDuringQuery.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.NullMemberRepresentation.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_027_NULL_MEMBER_REPRESENTATION"/>
+                                <jsp:param name="oValue" value="<%=mProperties.NullMemberRepresentation.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.IterationLimit.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_028_ITERATION_LIMIT"/>
+                                <jsp:param name="oValue" value="<%=mProperties.IterationLimit.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.CrossJoinOptimizerSize.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_029_OPTIMIZER_SIZE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.CrossJoinOptimizerSize.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableInMemoryRollup.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_064_ENABLE_IN_MEMORY_ROLLUP"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableInMemoryRollup.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.IgnoreMeasureForNonJoiningDimension.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_033_IGNORE_MEASURE_FOR_NON_JOINING_PREFIX"/>
+                                <jsp:param name="oValue" value="<%=mProperties.IgnoreMeasureForNonJoiningDimension.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.NeedDimensionPrefix.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_032_NEED_DIMENSION_PREFIX"/>
+                                <jsp:param name="oValue" value="<%=mProperties.NeedDimensionPrefix.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.NullDenominatorProducesNull.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_031_NULL_OR_ZERO_DENOMINATOR_PRODUCES_NULL"/>
+                                <jsp:param name="oValue" value="<%=mProperties.NullDenominatorProducesNull.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.StatisticsProviders.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_069_STATISTICS_PROVIDER"/>
+                                <jsp:param name="oValue" value="<%=mProperties.StatisticsProviders.get()%>"/>
+                            </jsp:include>
 
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().EnableDrillThrough.getPath());
-                                request.setAttribute("oLabelCode", "JAM_070_ENABLE_DRILL_THROUGH");
-                                request.setAttribute("oValue", MondrianProperties.instance().EnableDrillThrough.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
+                            <jsp:include page="templateList.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.SolveOrderMode.getPath()%>"/>
+                                <jsp:param name="oDesc" value="<%=mProperties.SolveOrderMode.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_030_SOLVE_ORDER_MODE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.SolveOrderMode.get()%>"/>
+                                <jsp:param name="oSelectOptions" value="<%=solvedModes%>"/>
+                            </jsp:include>
 
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().GenerateFormattedSql.getPath());
-                              request.setAttribute("oLabelCode", "JAM_006_GENERATE_FORMATTED_SQL");
-                              request.setAttribute("oValue", MondrianProperties.instance().GenerateFormattedSql.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().QueryLimit.getPath());
-                              request.setAttribute("oLabelCode", "JAM_009_QUERY_LIMIT");
-                              request.setAttribute("oValue", MondrianProperties.instance().QueryLimit.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().ResultLimit.getPath());
-                              request.setAttribute("oLabelCode", "JAM_010_RESULT_LIMIT");
-                              request.setAttribute("oValue", MondrianProperties.instance().ResultLimit.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().RolapConnectionShepherdNbThreads.getPath());
-                                request.setAttribute("oLabelCode", "JAM_066_MAX_QUERY_THREADS");
-                                request.setAttribute("oValue", MondrianProperties.instance().RolapConnectionShepherdNbThreads.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().RolapConnectionShepherdThreadPollingInterval.getPath());
-                                request.setAttribute("oLabelCode", "JAM_067_SHEPHERD_THREAD_POLLING_INTERVAL");
-                                request.setAttribute("oValue", MondrianProperties.instance().RolapConnectionShepherdThreadPollingInterval.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().MaxEvalDepth.getPath());
-                                request.setAttribute("oLabelCode", "JAM_022_EVALUATE_MAX_EVAL_DEPTH");
-                                request.setAttribute("oValue", MondrianProperties.instance().MaxEvalDepth.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().ExpCompilerClass.getPath());
-                              request.setAttribute("oLabelCode", "JAM_052_EXP_CALC_CLASS");
-                              request.setAttribute("oValue", MondrianProperties.instance().ExpCompilerClass.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().CaseSensitive.getPath());
-                              request.setAttribute("oLabelCode", "JAM_024_CASE_SENSITIVE");
-                              request.setAttribute("oValue", MondrianProperties.instance().CaseSensitive.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().CellBatchSize.getPath());
-                                request.setAttribute("oLabelCode", "JAM_063_CELL_BATCH_SIZE");
-                                request.setAttribute("oValue", MondrianProperties.instance().CellBatchSize.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().CompareSiblingsByOrderKey.getPath());
-                              request.setAttribute("oLabelCode", "JAM_023_COMPARE_SIBLINGS_BY_ORDER_KEY");
-                              request.setAttribute("oValue", MondrianProperties.instance().CompareSiblingsByOrderKey.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().QueryTimeout.getPath());
-                              request.setAttribute("oLabelCode", "JAM_025_QUERY_TIMEOUT");
-                              request.setAttribute("oValue", MondrianProperties.instance().QueryTimeout.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().HighCardChunkSize.getPath());
-                              request.setAttribute("oLabelCode", "JAM_055_HIGH_CARD_CHUNK_SIZE");
-                              request.setAttribute("oValue", MondrianProperties.instance().HighCardChunkSize.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().SparseSegmentDensityThreshold.getPath());
-                              request.setAttribute("oLabelCode", "JAM_012_SPARSE_DENSITY_THRESHOLD");
-                              request.setAttribute("oValue", MondrianProperties.instance().SparseSegmentDensityThreshold.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().SparseSegmentCountThreshold.getPath());
-                              request.setAttribute("oLabelCode", "JAM_013_SPARSE_COUNT_THRESHOLD");
-                              request.setAttribute("oValue", MondrianProperties.instance().SparseSegmentCountThreshold.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().IgnoreInvalidMembers.getPath());
-                              request.setAttribute("oLabelCode", "JAM_025_IGNORE_INVALID_MEMBERS");
-                              request.setAttribute("oValue", MondrianProperties.instance().IgnoreInvalidMembers.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().IgnoreInvalidMembersDuringQuery.getPath());
-                              request.setAttribute("oLabelCode", "JAM_026_IGNORE_INVALID_MEMBERS_DURING_QUERY");
-                              request.setAttribute("oValue", MondrianProperties.instance().IgnoreInvalidMembersDuringQuery.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().NullMemberRepresentation.getPath());
-                                request.setAttribute("oLabelCode", "JAM_027_NULL_MEMBER_REPRESENTATION");
-                                request.setAttribute("oValue", MondrianProperties.instance().NullMemberRepresentation.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().IterationLimit.getPath());
-                              request.setAttribute("oLabelCode", "JAM_028_ITERATION_LIMIT");
-                              request.setAttribute("oValue", MondrianProperties.instance().IterationLimit.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().CrossJoinOptimizerSize.getPath());
-                              request.setAttribute("oLabelCode", "JAM_029_OPTIMIZER_SIZE");
-                              request.setAttribute("oValue", MondrianProperties.instance().CrossJoinOptimizerSize.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().EnableInMemoryRollup.getPath());
-                                request.setAttribute("oLabelCode", "JAM_064_ENABLE_IN_MEMORY_ROLLUP");
-                                request.setAttribute("oValue", MondrianProperties.instance().EnableInMemoryRollup.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().IgnoreMeasureForNonJoiningDimension.getPath());
-                              request.setAttribute("oLabelCode", "JAM_033_IGNORE_MEASURE_FOR_NON_JOINING_PREFIX");
-                              request.setAttribute("oValue", MondrianProperties.instance().IgnoreMeasureForNonJoiningDimension.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().NeedDimensionPrefix.getPath());
-                                request.setAttribute("oLabelCode", "JAM_032_NEED_DIMENSION_PREFIX");
-                                request.setAttribute("oValue", MondrianProperties.instance().NeedDimensionPrefix.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().NullDenominatorProducesNull.getPath());
-                              request.setAttribute("oLabelCode", "JAM_031_NULL_OR_ZERO_DENOMINATOR_PRODUCES_NULL");
-                              request.setAttribute("oValue", MondrianProperties.instance().NullDenominatorProducesNull.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().StatisticsProviders.getPath());
-                                request.setAttribute("oLabelCode", "JAM_069_STATISTICS_PROVIDER");
-                                request.setAttribute("oValue", MondrianProperties.instance().StatisticsProviders.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                              oName = MondrianProperties.instance().SolveOrderMode.getPath();
-                              oDesc = oName;
-                              oLabelCode = "JAM_030_SOLVE_ORDER_MODE";
-                              oValue = MondrianProperties.instance().SolveOrderMode.get();
-
-                              String[] solvedModes = {"ABSOLUTE", "SCOPED"};
-                              oSelectOptions = solvedModes;
-                            %>
-                            <%@ include file="templateList.jsp" %>
 
                         </ol>
                     </li>
@@ -278,67 +210,46 @@
 
 
                         <ol class="list settings">
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().UseAggregates.getPath());
-                              request.setAttribute("oLabelCode", "JAM_014_ENABLE_AGGREGATES");
-                              request.setAttribute("oValue", MondrianProperties.instance().UseAggregates.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().ReadAggregates.getPath());
-                                request.setAttribute("oLabelCode", "JAM_072_READ_AGGREGATE_TABLES");
-                                request.setAttribute("oValue", MondrianProperties.instance().ReadAggregates.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().ChooseAggregateByVolume.getPath());
-                              request.setAttribute("oLabelCode", "JAM_015_CHOOSE_AGGREGATES_BY_VOL");
-                              request.setAttribute("oValue", MondrianProperties.instance().ChooseAggregateByVolume.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().OptimizePredicates.getPath());
-                              request.setAttribute("oLabelCode", "JAM_016_AGGREGATES_OPTIMIZE_PREDICATES");
-                              request.setAttribute("oValue", MondrianProperties.instance().OptimizePredicates.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().AggregateRules.getPath());
-                              request.setAttribute("oLabelCode", "JAM_017_AGGREGATES_RULES");
-                              request.setAttribute("oValue", MondrianProperties.instance().AggregateRules.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().AggregateRuleTag.getPath());
-                              request.setAttribute("oLabelCode", "JAM_018_AGGREGATES_RULE_TAG");
-                              request.setAttribute("oValue", MondrianProperties.instance().AggregateRuleTag.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().GenerateAggregateSql.getPath());
-                              request.setAttribute("oLabelCode", "JAM_019_AGGREGATES_GENERATE_SQL");
-                              request.setAttribute("oValue", MondrianProperties.instance().GenerateAggregateSql.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().JdbcFactoryClass.getPath());
-                              request.setAttribute("oLabelCode", "JAM_020_AGGREGATES_JDBC_FACTORY_CLASS");
-                              request.setAttribute("oValue", MondrianProperties.instance().JdbcFactoryClass.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.UseAggregates.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_014_ENABLE_AGGREGATES"/>
+                                <jsp:param name="oValue" value="<%=mProperties.UseAggregates.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.ReadAggregates.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_072_READ_AGGREGATE_TABLES"/>
+                                <jsp:param name="oValue" value="<%=mProperties.ReadAggregates.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.ChooseAggregateByVolume.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_015_CHOOSE_AGGREGATES_BY_VOL"/>
+                                <jsp:param name="oValue" value="<%=mProperties.ChooseAggregateByVolume.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.OptimizePredicates.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_016_AGGREGATES_OPTIMIZE_PREDICATES"/>
+                                <jsp:param name="oValue" value="<%=mProperties.OptimizePredicates.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.AggregateRules.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_017_AGGREGATES_RULES"/>
+                                <jsp:param name="oValue" value="<%=mProperties.AggregateRules.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.AggregateRuleTag.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_018_AGGREGATES_RULE_TAG"/>
+                                <jsp:param name="oValue" value="<%=mProperties.AggregateRuleTag.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.GenerateAggregateSql.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_019_AGGREGATES_GENERATE_SQL"/>
+                                <jsp:param name="oValue" value="<%=mProperties.GenerateAggregateSql.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.JdbcFactoryClass.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_020_AGGREGATES_JDBC_FACTORY_CLASS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.JdbcFactoryClass.get()%>"/>
+                            </jsp:include>
 
                         </ol>
                     </li>
@@ -348,120 +259,86 @@
                             <h2 class="title settingsGroup"><spring:message code="JAM_034_CACHING_SECTION"/></h2>
                         </div>
                         <ol class="list settings">
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableExpCache.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_035_EXP_CACHE_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableExpCache.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableRolapCubeMemberCache.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_036_ENABLE_CUBE_MEMBER_CACHE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableRolapCubeMemberCache.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.SegmentCache.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_059_SEGMENT_CACHE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.SegmentCache.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.SegmentCacheManagerNumberCacheThreads.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_060_MAX_CACHE_THREADS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.SegmentCacheManagerNumberCacheThreads.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.SegmentCacheManagerNumberSqlThreads.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_061_MAX_SQL_THREADS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.SegmentCacheManagerNumberSqlThreads.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.DisableLocalSegmentCache.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_062_DISABLE_LOCAL_SEGMENT_CACHE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.DisableLocalSegmentCache.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.MaxConstraints.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_054_MAX_CONSTRAINTS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.MaxConstraints.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableNativeCrossJoin.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_037_NATIVE_CROSS_JOIN_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableNativeCrossJoin.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableNativeTopCount.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_038_NATIVE_TOP_COUNT_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableNativeTopCount.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableNativeFilter.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_039_NATIVE_FILTER_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableNativeFilter.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableNativeNonEmpty.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_040_NATIVE_NON_EMPTY_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableNativeNonEmpty.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.ExpandNonNative.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_053_EXPAND_NON_NATIVE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.ExpandNonNative.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.FilterChildlessSnowflakeMembers.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_065_FILTER_CHILD_LESS_SNOW_FLAKE_MEMBERS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.FilterChildlessSnowflakeMembers.get()%>"/>
+                            </jsp:include>
+                            <c:set var="oName" value="<%=mProperties.AlertNativeEvaluationUnsupported.getPath()%>"/>
 
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableExpCache.getPath());
-                              request.setAttribute("oLabelCode", "JAM_035_EXP_CACHE_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableExpCache.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
+                            <jsp:include page="templateList.jsp" flush="true">
+                                <jsp:param name="oName" value="${oName}"/>
+                                <jsp:param name="oDesc" value="<%=mProperties.SolveOrderMode.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_048_NATIVE_UNSUPPORTED_ALERT"/>
+                                <jsp:param name="oValue" value="<%=mProperties.AlertNativeEvaluationUnsupported.get()%>"/>
+                                <jsp:param name="oSelectOptions" value="<%=options%>"/>
+                            </jsp:include>
 
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().EnableRolapCubeMemberCache.getPath());
-                                request.setAttribute("oLabelCode", "JAM_036_ENABLE_CUBE_MEMBER_CACHE");
-                                request.setAttribute("oValue", MondrianProperties.instance().EnableRolapCubeMemberCache.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().SegmentCache.getPath());
-                              request.setAttribute("oLabelCode", "JAM_059_SEGMENT_CACHE");
-                              request.setAttribute("oValue", MondrianProperties.instance().SegmentCache.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().SegmentCacheManagerNumberCacheThreads.getPath());
-                                request.setAttribute("oLabelCode", "JAM_060_MAX_CACHE_THREADS");
-                                request.setAttribute("oValue", MondrianProperties.instance().SegmentCacheManagerNumberCacheThreads.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().SegmentCacheManagerNumberSqlThreads.getPath());
-                                request.setAttribute("oLabelCode", "JAM_061_MAX_SQL_THREADS");
-                                request.setAttribute("oValue", MondrianProperties.instance().SegmentCacheManagerNumberSqlThreads.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().DisableLocalSegmentCache.getPath());
-                                request.setAttribute("oLabelCode", "JAM_062_DISABLE_LOCAL_SEGMENT_CACHE");
-                                request.setAttribute("oValue", MondrianProperties.instance().DisableLocalSegmentCache.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().MaxConstraints.getPath());
-                              request.setAttribute("oLabelCode", "JAM_054_MAX_CONSTRAINTS");
-                              request.setAttribute("oValue", MondrianProperties.instance().MaxConstraints.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableNativeCrossJoin.getPath());
-                              request.setAttribute("oLabelCode", "JAM_037_NATIVE_CROSS_JOIN_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableNativeCrossJoin.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableNativeTopCount.getPath());
-                              request.setAttribute("oLabelCode", "JAM_038_NATIVE_TOP_COUNT_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableNativeTopCount.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableNativeFilter.getPath());
-                              request.setAttribute("oLabelCode", "JAM_039_NATIVE_FILTER_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableNativeFilter.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableNativeNonEmpty.getPath());
-                              request.setAttribute("oLabelCode", "JAM_040_NATIVE_NON_EMPTY_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableNativeNonEmpty.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().ExpandNonNative.getPath());
-                              request.setAttribute("oLabelCode", "JAM_053_EXPAND_NON_NATIVE");
-                              request.setAttribute("oValue", MondrianProperties.instance().ExpandNonNative.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().FilterChildlessSnowflakeMembers.getPath());
-                                request.setAttribute("oLabelCode", "JAM_065_FILTER_CHILD_LESS_SNOW_FLAKE_MEMBERS");
-                                request.setAttribute("oValue", MondrianProperties.instance().FilterChildlessSnowflakeMembers.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                              oName = MondrianProperties.instance().AlertNativeEvaluationUnsupported.getPath();
-                              oDesc = oName;
-                              oLabelCode = "JAM_048_NATIVE_UNSUPPORTED_ALERT";
-                              oValue = MondrianProperties.instance().AlertNativeEvaluationUnsupported.get();
-
-                              String[] options = {"OFF", "WARN", "ERROR"};
-                              oSelectOptions = options;
-                            %>
-                            <%@ include file="templateList.jsp" %>
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableGroupingSets.getPath());
-                              request.setAttribute("oLabelCode", "JAM_041_GROUPING_SETS_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableGroupingSets.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableGroupingSets.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_041_GROUPING_SETS_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableGroupingSets.get()%>"/>
+                            </jsp:include>
 
 
                         </ol>
@@ -472,29 +349,21 @@
                             <h2 class="title settingsGroup"><spring:message code="JAM_043_XMLA_SECTION"/></h2>
                         </div>
                         <ol class="list settings">
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().MaxRows.getPath());
-                              request.setAttribute("oLabelCode", "JAM_004_XMLA_MAX_DRILL_THROUGH");
-                              request.setAttribute("oValue", MondrianProperties.instance().MaxRows.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().EnableTotalCount.getPath());
-                              request.setAttribute("oLabelCode", "JAM_042_XMLA_DRILL_THROUGH_TOTAL_COUNT_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().EnableTotalCount.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-                            <%
-                                request.setAttribute("oName", MondrianProperties.instance().XmlaSchemaRefreshInterval.getPath());
-                                request.setAttribute("oLabelCode", "JAM_068_SCHEMA_REFRESH_INTERVAL");
-                                request.setAttribute("oValue", MondrianProperties.instance().XmlaSchemaRefreshInterval.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.MaxRows.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_004_XMLA_MAX_DRILL_THROUGH"/>
+                                <jsp:param name="oValue" value="<%=mProperties.MaxRows.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.EnableTotalCount.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_042_XMLA_DRILL_THROUGH_TOTAL_COUNT_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.EnableTotalCount.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.XmlaSchemaRefreshInterval.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_068_SCHEMA_REFRESH_INTERVAL"/>
+                                <jsp:param name="oValue" value="<%=mProperties.XmlaSchemaRefreshInterval.get()%>"/>
+                            </jsp:include>
 
                                         </ol>
                                               </li>
@@ -503,36 +372,26 @@
                                                       <h2 class="title settingsGroup"><spring:message code="JAM_044_MEMORY_MONITOR_SECTION"/></h2>
                                                   </div>
                                                   <ol class="list settings">
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().MemoryMonitor.getPath());
-                              request.setAttribute("oLabelCode", "JAM_045_MEMORY_MONITOR_ENABLE");
-                              request.setAttribute("oValue", MondrianProperties.instance().MemoryMonitor.get());
-                            %>
-                            <jsp:include page="templateCheckbox.jsp" flush="true" />
-
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().MemoryMonitorThreshold.getPath());
-                              request.setAttribute("oLabelCode", "JAM_046_MEMORY_MONITOR_THRESHOLD");
-                              request.setAttribute("oValue", MondrianProperties.instance().MemoryMonitorThreshold.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().ExecutionHistorySize.getPath());
-                              request.setAttribute("oLabelCode", "JAM_058_MONITOR_EXECUTION_HISTORY_SIZE");
-                              request.setAttribute("oValue", MondrianProperties.instance().ExecutionHistorySize.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
-
-                            <%
-                              request.setAttribute("oName", MondrianProperties.instance().MemoryMonitorClass.getPath());
-                              request.setAttribute("oLabelCode", "JAM_047_MEMORY_MONITOR_CLASS");
-                              request.setAttribute("oValue", MondrianProperties.instance().MemoryMonitorClass.get());
-                            %>
-                            <jsp:include page="templateInputText.jsp" flush="true" />
+                            <jsp:include page="templateCheckbox.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.MemoryMonitor.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_045_MEMORY_MONITOR_ENABLE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.MemoryMonitor.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.MemoryMonitorThreshold.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_046_MEMORY_MONITOR_THRESHOLD"/>
+                                <jsp:param name="oValue" value="<%=mProperties.MemoryMonitorThreshold.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.ExecutionHistorySize.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_058_MONITOR_EXECUTION_HISTORY_SIZE"/>
+                                <jsp:param name="oValue" value="<%=mProperties.ExecutionHistorySize.get()%>"/>
+                            </jsp:include>
+                            <jsp:include page="templateInputText.jsp" flush="true">
+                                <jsp:param name="oName" value="<%=mProperties.MemoryMonitorClass.getPath()%>"/>
+                                <jsp:param name="oLabelCode" value="JAM_047_MEMORY_MONITOR_CLASS"/>
+                                <jsp:param name="oValue" value="<%=mProperties.MemoryMonitorClass.get()%>"/>
+                            </jsp:include>
 
 
 						</ol>

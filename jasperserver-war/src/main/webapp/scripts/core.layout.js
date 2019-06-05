@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -145,6 +145,8 @@ var layoutModule = {
     MAIN_NAVIGATION_HOME_ITEM_ID: "main_home",
     MAIN_NAVIGATION_LIBRARY_ITEM_ID: "main_library",
     META_LINK_LOGOUT_ID : "main_logOut_link",
+    // ID of the global search input
+    MAIN_SEARCH_INPUT_ID: "searchInput",
 
 
     // DnD
@@ -152,7 +154,7 @@ var layoutModule = {
     DND_MOVABLE_ZINDEX: 2000,
 
 	//dimmer
-	DIMMER_Z_INDEX: 900,
+	DIMMER_Z_INDEX: 4000,
 
     //Resizable folders/filters/properties/fields panels
     FOLDERS_RESIZABLE_PANEL_ID: 'folders',
@@ -702,11 +704,8 @@ var layoutModule = {
                 } else {
                     vTitle.css('top',w+24+'px');
                 }
-                if(location.href.indexOf('nui=1') > 0) {
-                    vTitle.hide();
-                } else {
-                    vTitle.show();
-                }
+
+                vTitle.show();
 
                 jQuery('div.content',toMinimize).hide();
             } else {

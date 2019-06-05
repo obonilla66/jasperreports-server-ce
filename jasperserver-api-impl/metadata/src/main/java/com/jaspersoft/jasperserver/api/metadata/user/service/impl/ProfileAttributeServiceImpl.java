@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.user.service.impl;
 
@@ -45,13 +48,15 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.*;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.query.Query;
+import org.hibernate.type.ClassType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Propagation;
@@ -300,14 +305,26 @@ public class ProfileAttributeServiceImpl extends HibernateDaoImpl
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
-    public void deleteProfileAttributesForRecipient(ExecutionContext context, ObjectRecipientIdentity recipientIdentity) {
+    public void deleteProfileAttributesForRecipient(ExecutionContext context, final ObjectRecipientIdentity recipientIdentity) {
         if (log.isDebugEnabled()) {
             log.debug("Deleting object permissions for recipient " + recipientIdentity);
         }
 
-        List attributes = getRepoProfileAttributes(recipientIdentity.getRecipientClass(),
-                Collections.singleton(recipientIdentity.getId()), null);
-        getHibernateTemplate().deleteAll(attributes);
+        final String idKey = "principalId";
+        final String classKey = "principalClass";
+        final String queryName = "JIProfileAttributeDeleteByRecipient";
+
+        getHibernateTemplate().execute(new HibernateCallback<Void>() {
+            public Void doInHibernate(Session session) throws HibernateException {
+                @SuppressWarnings("rawtypes")
+				Query query = session.getNamedQuery(queryName);
+                query.setParameter(idKey, recipientIdentity.getId(), LongType.INSTANCE);
+                query.setParameter(classKey, getObjectClass(recipientIdentity.getRecipientClass()), ClassType.INSTANCE);
+                query.executeUpdate();
+                return null;
+            }
+        });
+
     }
 
     @Override
@@ -390,14 +407,14 @@ public class ProfileAttributeServiceImpl extends HibernateDaoImpl
 
 
 
-        List objList = getHibernateTemplate().executeFind(new HibernateCallback() {
+        List objList = (List)getHibernateTemplate().execute(new HibernateCallback() {
                 public Object doInHibernate(Session session) throws HibernateException {
                     Query query = session.getNamedQuery(queryName);
-                    query.setParameterList(idKey, principalIds, Hibernate.LONG);
-                    query.setParameter(classKey, getObjectClass(principalClass), Hibernate.CLASS);
+                    query.setParameterList(idKey, principalIds, LongType.INSTANCE);
+                    query.setParameter(classKey, getObjectClass(principalClass), ClassType.INSTANCE);
 
                     if (attrNames != null) {
-                        query.setParameterList(attrNameKey, attrNames, Hibernate.STRING);
+                        query.setParameterList(attrNameKey, attrNames, StringType.INSTANCE);
                     }
 
                     return query.list();
@@ -510,7 +527,7 @@ public class ProfileAttributeServiceImpl extends HibernateDaoImpl
         final boolean recursive = searchCriteria.isRecursive() && principalObject instanceof RepoTenant;
         final boolean useFilterByNames = searchCriteria.getNames() != null && !searchCriteria.getNames().isEmpty();
 
-        List<RepoProfileAttribute> result = getHibernateTemplate().executeFind(new HibernateCallback() {
+        List<RepoProfileAttribute> result = (List<RepoProfileAttribute>)getHibernateTemplate().execute(new HibernateCallback() {
             public Object doInHibernate(Session session) throws HibernateException {
                 // TODO optimize query: make joins instead of IN
                 StringBuilder qb = new StringBuilder(1000);
@@ -544,16 +561,16 @@ public class ProfileAttributeServiceImpl extends HibernateDaoImpl
                 }
 
                 Query query = session.createQuery(qb.toString());
-                query.setParameter("curClass", getObjectClass(principalObject.getClass()), Hibernate.CLASS);
-                query.setParameter("curId", Long.valueOf(principalObject.getId()), Hibernate.LONG);
+                query.setParameter("curClass", getObjectClass(principalObject.getClass()), ClassType.INSTANCE);
+                query.setParameter("curId", Long.valueOf(principalObject.getId()), LongType.INSTANCE);
                 if (recursive) {
-                    query.setParameter("userClass", RepoUser.class, Hibernate.CLASS);
-                    query.setParameter("tenantClass", RepoTenant.class, Hibernate.CLASS);
+                    query.setParameter("userClass", RepoUser.class, ClassType.INSTANCE);
+                    query.setParameter("tenantClass", RepoTenant.class, ClassType.INSTANCE);
                     query.setParameter("uriPref", tenantUri.concat("%"));
                 }
                 if (effective) {
-                    query.setParameterList("parentIds", parentsIds, Hibernate.LONG);
-                    query.setParameter("tenantClass", RepoTenant.class, Hibernate.CLASS);
+                    query.setParameterList("parentIds", parentsIds, LongType.INSTANCE);
+                    query.setParameter("tenantClass", RepoTenant.class, ClassType.INSTANCE);
                 }
                 if (useFilterByNames) {
                     query.setParameterList("names", searchCriteria.getNames());
@@ -992,15 +1009,10 @@ public class ProfileAttributeServiceImpl extends HibernateDaoImpl
         ProfileAttribute attr = newProfileAttribute(null);
         attr.setPrincipal(user);
         attr.setAttrName(attrName);
-        ProfileAttribute savedAttr = getProfileAttribute(null, attr);
-        if (savedAttr == null) {
-            savedAttr = attr;
-        }
-        if (!equalsWithNull(savedAttr.getAttrValue(), attrValue)) {
-            savedAttr.setAttrValue(attrValue);
-            putProfileAttribute(null, savedAttr);
-            updateUserAttribute(user, savedAttr);
-        }
+        attr.setAttrValue(attrValue);
+
+        putProfileAttribute(null, attr);
+        updateUserAttribute(user, attr);
     }
 
     private static void updateUserAttribute(User user, final ProfileAttribute attributeToUpdate) {

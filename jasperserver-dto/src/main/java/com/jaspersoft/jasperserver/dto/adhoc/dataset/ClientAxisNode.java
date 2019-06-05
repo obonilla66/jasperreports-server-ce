@@ -1,28 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.dataset;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * Date: 12/7/13
@@ -30,7 +37,7 @@ import java.util.List;
  * @author stas
  */
 @XmlRootElement(name = "axisNode")
-public class ClientAxisNode implements Serializable {
+public class ClientAxisNode implements Serializable, DeepCloneable<ClientAxisNode> {
     private Integer memberIdx;
     private Integer dataIdx;
     private List<ClientAxisNode> children;
@@ -40,15 +47,12 @@ public class ClientAxisNode implements Serializable {
     }
 
     public ClientAxisNode(final ClientAxisNode node) {
+        checkNotNull(node);
+
         memberIdx = node.getMemberIdx();
         dataIdx = node.getDataIdx();
-        if (node.getChildren() != null) {
-            this.children = new ArrayList<ClientAxisNode>(node.getChildren().size());
-            for (ClientAxisNode n : node.getChildren()) {
-                this.children.add(new ClientAxisNode(n));
-            }
-        }
-        this.isAll = node.isAll();
+        children = copyOf(node.getChildren());
+        isAll = node.isAll();
     }
 
     public ClientAxisNode setChildren(List<ClientAxisNode> children) {
@@ -93,10 +97,11 @@ public class ClientAxisNode implements Serializable {
 
     @Override
     public String toString() {
-        return "TreeNode{" +
+        return "ClientAxisNode{" +
                 "memberIdx=" + memberIdx +
                 ", dataIdx=" + dataIdx +
                 ", isAll=" + isAll +
+                ", children=" + children +
                 '}';
     }
 
@@ -121,5 +126,10 @@ public class ClientAxisNode implements Serializable {
         result = 31 * result + (children != null ? children.hashCode() : 0);
         result = 31 * result + (isAll ? 1 : 0);
         return result;
+    }
+
+    @Override
+    public ClientAxisNode deepClone() {
+        return new ClientAxisNode(this);
     }
 }

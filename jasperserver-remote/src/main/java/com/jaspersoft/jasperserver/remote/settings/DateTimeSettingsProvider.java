@@ -1,33 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.settings;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import com.jaspersoft.jasperserver.dto.common.JavaAliasConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -36,6 +32,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.io.IOUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * <p></p>
@@ -54,6 +57,7 @@ public class DateTimeSettingsProvider implements SettingsProvider {
     private String timePickerSettingsPathTemplate;
     private Map<String, String> datePickerPropertiesMapping;
     private Map<String, String> timePickerPropertiesMapping;
+    private Map<String, Boolean> applyClientTimezoneFormatting;
     private Boolean enableCache;
     private MessageSource messageSource;
 
@@ -103,6 +107,10 @@ public class DateTimeSettingsProvider implements SettingsProvider {
         this.timePickerPropertiesMapping = timePickerPropertiesMapping;
     }
 
+    public void setApplyClientTimezoneFormatting(Map<String, Boolean> applyClientTimezoneFormatting) {
+        this.applyClientTimezoneFormatting = applyClientTimezoneFormatting;
+    }
+
     @Override
     public Object getSettings() {
         String locale = getLocale();
@@ -112,6 +120,7 @@ public class DateTimeSettingsProvider implements SettingsProvider {
             result = new HashMap<String, Object>();
             result.put("datepicker", getDatePickerSettings(locale));
             result.put("timepicker", getTimePickerSettings(locale));
+            result.put("timezoneFormatting", this.getTimeZoneFormatting());
 
             if (enableCache) {
                 settingsCache.put(locale, result);
@@ -123,6 +132,21 @@ public class DateTimeSettingsProvider implements SettingsProvider {
 
     private String getLocale() {
         return LocaleContextHolder.getLocale().toString().replaceAll("_", "-");
+    }
+
+    private Map<String, Boolean> getTimeZoneFormatting() {
+        Map<String, Boolean> timeZoneFormatting = new HashMap<String, Boolean>();
+
+        for (Map.Entry<String, Boolean> entry: this.applyClientTimezoneFormatting.entrySet()) {
+            String key = entry.getKey();
+            Boolean value = entry.getValue();
+
+            String alias = JavaAliasConverter.toAlias(key);
+
+            timeZoneFormatting.put(alias, value);
+        }
+
+        return timeZoneFormatting;
     }
 
     /* DatePicker settings */

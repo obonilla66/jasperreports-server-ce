@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
-  ~ Unless you have purchased  a commercial license agreement from Jaspersoft,
-  ~ the following license terms  apply:
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
   ~
-  ~ This program is free software: you can redistribute it and/or  modify
-  ~ it under the terms of the GNU Affero General Public License  as
-  ~ published by the Free Software Foundation, either version 3 of  the
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
   ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ~ GNU Affero  General Public License for more details.
+  ~ GNU Affero General Public License for more details.
   ~
-  ~ You should have received a copy of the GNU Affero General Public  License
+  ~ You should have received a copy of the GNU Affero General Public License
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
        xmlns:util="http://www.springframework.org/schema/util"
        default-lazy-init="true">
@@ -135,7 +135,7 @@
         <property name="authorityService" ref="${bean.userAuthorityService}"/>
         <property name="permissionRecipientRole" value="role"/>
         <property name="permissionRecipientUser" value="user"/>
-        <property name="reportParametersTranslator"><ref local="defaultReportParametersTranslator"/></property>
+        <property name="reportParametersTranslator"><ref bean="defaultReportParametersTranslator"/></property>
         <property name="jdbcDriverService" ref="jdbcDriverService"/>
     </bean>
 
@@ -350,7 +350,7 @@
         <property name="reportJobsDir" value="reportJobs"/>
         <property name="indexReportUnitElement" value="report"/>
         <property name="reportUnitIndexFilename" value="index.xml"/>
-        <property name="reportParametersTranslator"><ref local="defaultReportParametersTranslator"/></property>
+        <property name="reportParametersTranslator"><ref bean="defaultReportParametersTranslator"/></property>
         <property name="allowReportsUnitsUrisOnly"><value type="boolean">false</value></property>
     </bean>
 
@@ -395,10 +395,10 @@
         <property name="defaultOutputProcessor" value="zip"/>
         <property name="processors">
             <map>
-                <entry key="none"><ref local="identityPathProcessor"/></entry>
-                <entry key="zip"><ref local="asciiEscapingPathProcessor"/></entry>
-                <entry key="basic"><ref local="identityPathProcessor"/></entry>
-                <entry key="file"><ref local="asciiEscapingPathProcessor"/></entry>
+                <entry key="none"><ref bean="identityPathProcessor"/></entry>
+                <entry key="zip"><ref bean="asciiEscapingPathProcessor"/></entry>
+                <entry key="basic"><ref bean="identityPathProcessor"/></entry>
+                <entry key="file"><ref bean="asciiEscapingPathProcessor"/></entry>
             </map>
         </property>
     </bean>
@@ -414,8 +414,8 @@
 	<bean id="filePathProcessor" class="com.jaspersoft.jasperserver.export.io.PathProcessorChain">
 		<property name="processors">
 			<list>
-				<ref local="asciiEscapingPathProcessor"/>
-				<ref local="fileSeparatorPathProcessor"/>
+				<ref bean="asciiEscapingPathProcessor"/>
+				<ref bean="fileSeparatorPathProcessor"/>
 			</list>
 		</property>
 	</bean>
@@ -465,7 +465,7 @@
     <alias name="${bean.exporterPrototype}" alias="concreteExporterPrototype"/>
     <alias name="${bean.importerPrototype}" alias="concreteImporterPrototype"/>
 
-    <bean id="basicTaskManager" class="com.jaspersoft.jasperserver.remote.services.async.BasicTasksManager"/>
+    <!--<bean id="basicTaskManager" class="com.jaspersoft.jasperserver.remote.services.async.BasicTasksManager"/>-->
 
     <bean id="jdbcDriverService" class="com.jaspersoft.jasperserver.api.common.service.impl.JdbcDriverServiceImpl">
         <!--<property name="repository" ref="${bean.internalRepositoryService}"/>-->

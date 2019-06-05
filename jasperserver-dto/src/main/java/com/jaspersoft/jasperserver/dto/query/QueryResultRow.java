@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.query;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.common.TimeString;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -25,13 +29,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author Paul Lysak
- *         Date: 11.02.13
- *         Time: 17:37
+ * Date: 11.02.13
+ * Time: 17:37
  */
 @XmlSeeAlso({TimeString.class})
-public class QueryResultRow {
+public class QueryResultRow implements DeepCloneable<QueryResultRow> {
     private List<Object> values = new ArrayList<Object>();
 
     public QueryResultRow() {
@@ -42,13 +49,24 @@ public class QueryResultRow {
         this.values.addAll(Arrays.asList(values));
     }
 
+    public QueryResultRow(QueryResultRow other) {
+        checkNotNull(other);
+
+        this.values = copyOf(other.getValues());
+    }
+
+    @Override
+    public QueryResultRow deepClone() {
+        return new QueryResultRow(this);
+    }
+
     @XmlElement(name = "value")
     public List<Object> getValues() {
         return values;
     }
 
     public QueryResultRow setValues(List<Object> values) {
-        this.values = values;
+        this.values = values == null ? new ArrayList<Object>() : values;
         return this;
     }
 
@@ -66,14 +84,11 @@ public class QueryResultRow {
 
         QueryResultRow that = (QueryResultRow) o;
 
-        if (values != null ? !values.equals(that.values) : that.values != null) return false;
-
-        return true;
+        return values.equals(that.values);
     }
 
     @Override
     public int hashCode() {
-        return values != null ? values.hashCode() : 0;
+        return values.hashCode();
     }
-
 }

@@ -1,21 +1,28 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * <p></p>
@@ -23,12 +30,24 @@ package com.jaspersoft.jasperserver.dto.resources;
  * @author Zakhar.Tomchenco
  * @version $Id$
  */
-public class ClientDashboardFoundation {
+public class ClientDashboardFoundation implements DeepCloneable<ClientDashboardFoundation> {
     private String id;
     private String description;
     private String layout;
     private String wiring;
     private String components;
+
+    public ClientDashboardFoundation() {}
+
+    public ClientDashboardFoundation(ClientDashboardFoundation other) {
+        checkNotNull(other);
+
+        id = other.id;
+        description = other.description;
+        layout = other.layout;
+        wiring = other.wiring;
+        components = other.components;
+    }
 
     public String getId() {
         return id;
@@ -110,5 +129,10 @@ public class ClientDashboardFoundation {
                 ", wiring='" + wiring + '\'' +
                 ", components='" + components + '\'' +
                 '}';
+    }
+
+    @Override
+    public ClientDashboardFoundation deepClone() {
+        return new ClientDashboardFoundation(this);
     }
 }

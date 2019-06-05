@@ -1,34 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.context.MessageSource;
-import org.springframework.webflow.action.FormAction;
-import org.springframework.webflow.execution.Event;
-import org.springframework.webflow.execution.RequestContext;
-
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
@@ -36,9 +29,17 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import com.jaspersoft.jasperserver.war.tags.PaginatorTag;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.webflow.action.FormAction;
+import org.springframework.webflow.execution.Event;
+import org.springframework.webflow.execution.RequestContext;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class RepositoryAction extends FormAction {
 
@@ -54,7 +55,6 @@ public class RepositoryAction extends FormAction {
 	private RepositoryService repository;
 	private String flowAttributeFolder;
 	private MessageSource messages;//FIXME not used
-	private ConfigurationBean configuration;
 
 	/*
 		 * method to get the reposervice object arguments: none returns:
@@ -80,16 +80,6 @@ public class RepositoryAction extends FormAction {
 	public void setMessages(MessageSource messages)
 	{
 		this.messages = messages;
-	}
-
-	public ConfigurationBean getConfiguration()
-	{
-		return configuration;
-	}
-
-	public void setConfiguration(ConfigurationBean configuration)
-	{
-		this.configuration = configuration;
 	}
 
 	public RepositoryAction()
@@ -121,7 +111,7 @@ public class RepositoryAction extends FormAction {
 		List pathFolders = getPathFolders(folderURI);
 		context.getRequestScope().put("pathFolders", pathFolders);
 
-		ExecutionContext executionContext = JasperServerUtil.getExecutionContext(context);
+		ExecutionContext executionContext = StaticExecutionContextProvider.getExecutionContext();
 
 		List folders = repository.getSubFolders(executionContext, folderURI);
 

@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -342,8 +342,8 @@ repositorySearch.bulkActionFactory = {
     "Delete": function(resources) {
         return new repositorySearch.Action(function() {
             actionModel.hideMenu();
-            resources.length == 1 
-                ? repositorySearch.showDeleteResourceConfirm(resources[0]) 
+            resources.length == 1
+                ? repositorySearch.showDeleteResourceConfirm(resources[0])
                 : repositorySearch.showBulkDeleteResourcesConfirm(resources);
         });
     },
@@ -402,7 +402,7 @@ repositorySearch.ServerAction.addMethod('initDownload', function() {
     var url = this.actionURL + '&' + this.data;
     ajaxIframeDownload(url, {
         onload: function() {
-            var str = $('ajax-download-iframe').contentDocument.body.innerHTML;
+            var str = jQuery($('ajax-download-iframe').contentDocument.body).html();
             try {
                 var json = str.evalJSON();
                 alert(json.data);
@@ -695,7 +695,7 @@ repositorySearch.ServerAction.createResourceAction = function(actionName, option
         }
 
         try {
-            dataObj = jQuery.parseJSON(data);
+            dataObj = JSON.parse(data);
         } catch (e) {
             return data;
         }
@@ -826,6 +826,7 @@ repositorySearch.ServerAction.createConvertAction = function(actionName, options
  * </ul>
  */
 repositorySearch.RedirectAction = function(type, options) {
+    this.DIMMER_TIMEOUT = 400;
     this.type = type;
     this.flowId = options.flowId;
     this.url = options.url ? options.url : (this.flowId ? this.FLOW_URL : undefined);
@@ -865,23 +866,33 @@ repositorySearch.RedirectAction.addMethod('invokeAction', function() {
         flowParams.setValue(this.flowId + '?' + this._serializeParams(this.paramsMap, this.encode));
 
         var action = new repositorySearch.ServerAction("isServerAvailable", { data: {} });
+        // // show loading popup. It will be shown till new page appears as a response for form submit below
+        var timeout = setTimeout(function () {
+            dialogs.popup.show(ajax.LOADING_ID, true);
+        }, this.DIMMER_TIMEOUT);
 
         action.onSuccess = function(data) {
             if (data.strip() == "Yes") {
                 // increment ajax request counter to avoid closing of a loading dialogue by common ajax response handler
                 ++ajax.ajaxRequestCount;
-                // show loading popup. It will be shown till new page appears as a response for form submit below
                 dialogs.popup.show(ajax.LOADING_ID, true);
                 form.submit();
                 repositorySearch.fire(repositorySearch.Event.FLOW_REDIRECT_RUNNING, data);
             } else {
+                hidePopup();
                 repositorySearch.fire(repositorySearch.Event.REDIRECT_ERROR, data);
             }
         };
 
         action.onError = function(data) {
+            hidePopup();
             repositorySearch.fire(repositorySearch.Event.REDIRECT_ERROR, data);
         };
+
+        var hidePopup = function (){
+            clearTimeout(timeout);
+            dialogs.popup.hide(ajax.LOADING_ID);
+        }
 
         action.invokeAction();
 
@@ -908,7 +919,7 @@ repositorySearch.runActionFactory = {
     "ReportUnit": function(resource, inNewTab) {
 
         var type = inNewTab ?
-                   repositorySearch.RedirectType.WINDOW_REDIRECT : repositorySearch.RedirectType.FLOW_REDIRECT;
+            repositorySearch.RedirectType.WINDOW_REDIRECT : repositorySearch.RedirectType.FLOW_REDIRECT;
 
         return new repositorySearch.RedirectAction(type, {
             url: "flow.html",
@@ -917,7 +928,7 @@ repositorySearch.runActionFactory = {
                 _flowId: 'viewReportFlow',
                 reportUnit: inNewTab ? encodeURIComponent(resource.URIString) : resource.URIString,
                 standAlone: true,
-                ParentFolderUri: resource.parentFolder
+                ParentFolderUri: inNewTab ? encodeURIComponent(resource.parentFolder) : resource.parentFolder
             }
         });
     },
@@ -933,7 +944,7 @@ repositorySearch.runActionFactory = {
             paramsMap: {
                 reportUnit: inNewTab ? encodeURIComponent(resource.URIString) : resource.URIString,
                 standAlone: true,
-                ParentFolderUri: resource.parentFolder
+                ParentFolderUri: inNewTab ? encodeURIComponent(resource.parentFolder) : resource.parentFolder
             }
         });
     },
@@ -949,7 +960,7 @@ repositorySearch.runActionFactory = {
                 name: inNewTab ? encodeURIComponent(resource.URIString) : resource.URIString,
                 'new': true,
                 parentFlow: 'searchFlow',
-                ParentFolderUri: resource.parentFolder
+                ParentFolderUri: inNewTab ? encodeURIComponent(resource.parentFolder) : resource.parentFolder
             }
         });
     },
@@ -980,7 +991,7 @@ repositorySearch.runActionFactory = {
         var params = {
             reportOptionsURI: inNewTab ? encodeURIComponent(resource.URIString) : resource.URIString,
             standAlone: true,
-            ParentFolderUri: resource.parentFolder
+            ParentFolderUri: inNewTab ? encodeURIComponent(resource.parentFolder) : resource.parentFolder
         };
 
         var flow;
@@ -1242,13 +1253,28 @@ repositorySearch.editActionFactory = {
 
     "SemanticLayerDataSource": function(resource, actionType) {
         return new repositorySearch.RedirectAction(actionType, {
-            flowId: "createSLDatasourceFlow",
+            url: "domaindesigner.html",
             paramsMap: {
                 uri: resource.URIString,
                 ParentFolderUri: resource.parentFolder
             }
         });
     }
+};
+
+repositorySearch.resourceTypeToDefaultRedirectTypeMap = {};
+
+repositorySearch.resourceTypeToDefaultRedirectTypeMap[
+    repositorySearch.ResourceType.SEMANTIC_LAYER_DATA_SOURCE] = repositorySearch.RedirectType.LOCATION_REDIRECT;
+
+repositorySearch.getDefaultRedirectTypeByResourceType = function(resourceType) {
+    var defaultRedirectType = repositorySearch.resourceTypeToDefaultRedirectTypeMap[resourceType];
+
+    if (!defaultRedirectType) {
+        defaultRedirectType = repositorySearch.RedirectType.FLOW_REDIRECT;
+    }
+
+    return defaultRedirectType;
 };
 
 /**
@@ -1261,8 +1287,13 @@ repositorySearch.RedirectAction.createEditResourceAction = function(resource, in
         resource = repositorySearch.model.getSelectedResources()[0];
     }
 
-    var type = inNewTab ?
-                   repositorySearch.RedirectType.WINDOW_REDIRECT : repositorySearch.RedirectType.FLOW_REDIRECT;
+    var type;
+
+    if (inNewTab) {
+        type = repositorySearch.RedirectType.WINDOW_REDIRECT;
+    } else {
+        type = repositorySearch.getDefaultRedirectTypeByResourceType(resource.resourceType);
+    }
 
     var factoryMethod = repositorySearch.editActionFactory[resource.typeSuffix()];
 
@@ -1456,8 +1487,8 @@ repositorySearch.createActionFactory = {
     },
 
     "SemanticLayerDataSource": function(folder) {
-        return new repositorySearch.RedirectAction(repositorySearch.RedirectType.FLOW_REDIRECT, {
-            flowId: 'createSLDatasourceFlow',
+        return new repositorySearch.RedirectAction(repositorySearch.RedirectType.LOCATION_REDIRECT, {
+            url: "domaindesigner.html",
             paramsMap: {
                 ParentFolderUri: folder.URI
             }

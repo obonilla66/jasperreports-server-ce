@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.test;
@@ -37,7 +40,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.LikeEscapeAwareExpression.escape;
 import static com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria.createFilter;
 import static com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria.createPropertyEqualsFilter;
 import static com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria.createPropertyInFilter;
@@ -195,7 +197,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with 'Arn_', escapeChar = '!'
         String label = "Arn_";
         FilterCriteria criteria = createCriteria(folder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), START, '!'));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), START, '!'));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(toLabelsList(result), asList("Arn_ld", "Arn_ldo", "Arn_lfo"));
@@ -207,7 +209,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with '藍光_', escapeChar = '!'
         String label = "\u85cd\u5149_";
         FilterCriteria criteria = createCriteria(i18nFolder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), START, '!'));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), START, '!'));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(
@@ -221,7 +223,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with 'Ar[', escapeChar = '!', ignoreCase = true
         String label = "Ar[";
         FilterCriteria criteria = createCriteria(folder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), START, '!', true));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), START, '!', true));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(toLabelsList(result), asList("ar[o]n", "Ar[o]n", "aR[o]N", "Ar[ro]n", "aR[ro]N"));
@@ -233,7 +235,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // contains '_的紅色光', escapeChar = '!', ignoreCase = true
         String label = "_\u7684\u7d05\u8272\u5149";
         FilterCriteria criteria = createCriteria(i18nFolder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), ANYWHERE, '!', true));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), ANYWHERE, '!', true));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(
@@ -247,7 +249,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with 'Ar[', escapeChar = '!', ignoreCase = false
         String label = "Ar[";
         FilterCriteria criteria = createCriteria(folder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), START, '!', false));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), START, '!', false));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(toLabelsList(result), asList("Ar[o]n", "Ar[ro]n"));
@@ -259,7 +261,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with '藍光_', escapeChar = '!', ignoreCase = false
         String label = "\u85cd\u5149_";
         FilterCriteria criteria = createCriteria(i18nFolder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), START, '!', false));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), START, '!', false));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(
@@ -273,7 +275,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with 'Ar!!', escapeChar = '!'
         String label = "Ar!!";
         FilterCriteria criteria = createCriteria(folder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!') + "%", '!'));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label) + "%", '!'));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(toLabelsList(result), asList("Ar!!e", "Ar!!n"));
@@ -285,7 +287,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with '龙虾尾!!', escapeChar = '!'
         String label = "\u9f99\u867e\u5c3e!!";
         FilterCriteria criteria = createCriteria(i18nFolder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!') + "%", '!'));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label) + "%", '!'));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(
@@ -299,7 +301,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // contains '%D', escapeChar = '!', ignoreCase = true
         String label = "%D";
         FilterCriteria criteria = createCriteria(folder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, "%" + escape(label, '!') + "%", '!', true));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, "%" + escape(label) + "%", '!', true));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(toLabelsList(result), asList("Ar%d", "aR%D", "Ar%do", "aR%Do"));
@@ -311,7 +313,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // contains '菇%', escapeChar = '!', ignoreCase = true
         String label = "\u83c7%";
         FilterCriteria criteria = createCriteria(i18nFolder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, "%" + escape(label, '!') + "%", '!', true));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, "%" + escape(label) + "%", '!', true));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(
@@ -325,7 +327,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with 'Ar%', escapeChar = '!', ignoreCase = false
         String label = "Ar%";
         FilterCriteria criteria = createCriteria(folder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!') + "%", '!', false));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label) + "%", '!', false));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(toLabelsList(result), asList("Ar%d", "Ar%do"));
@@ -337,7 +339,7 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         // starts with '蘑菇%', escapeChar = '!', ignoreCase = false
         String label = "\u8611\u83c7%";
         FilterCriteria criteria = createCriteria(i18nFolder);
-        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!') + "%", '!', false));
+        criteria.addFilterElement(createPropertyLikeFilter(LABEL, escape(label) + "%", '!', false));
         List<ResourceLookup> result = loadResourcesList(criteria);
 
         assertEqualCollections(
@@ -505,8 +507,8 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         FilterCriteria criteria = FilterCriteria.createFilter();
         criteria.addFilterElement(FilterCriteria.createParentFolderFilter(folder.getURIString()));
         FilterElementDisjunction disjunction = criteria.addDisjunction();
-        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), '!', true));
-        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label.concat("_"), '!'), START, '!', true));
+        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), '!', true));
+        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label.concat("_")), START, '!', true));
 
         List<ResourceLookup> result = loadResourcesList(criteria);
 
@@ -519,8 +521,8 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         FilterCriteria criteria = FilterCriteria.createFilter();
         criteria.addFilterElement(FilterCriteria.createParentFolderFilter(i18nFolder.getURIString()));
         FilterElementDisjunction disjunction = criteria.addDisjunction();
-        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label, '!'), '!', true));
-        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label.concat("_"), '!'), START, '!', true));
+        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label), '!', true));
+        disjunction.addFilterElement(createPropertyLikeFilter(LABEL, escape(label.concat("_")), START, '!', true));
 
         List<ResourceLookup> result = loadResourcesList(criteria);
 
@@ -549,10 +551,10 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         for (Resource resource : resources) {
             String pattern;
             disjunction.addFilterElement(createPropertyEqualsFilter("name", resource.getName()));
-            pattern = escape(resource.getName() + "_", '!');
+            pattern = escape(resource.getName() + "_");
             disjunction.addFilterElement(createPropertyLikeFilter("name", pattern, START, '!'));
             disjunction.addFilterElement(createPropertyEqualsFilter("label", resource.getLabel()));
-            pattern = escape(resource.getLabel() + " (", '!');
+            pattern = escape(resource.getLabel() + " (");
             disjunction.addFilterElement(createPropertyLikeFilter("label", pattern, START, '!'));
         }
 
@@ -574,10 +576,10 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         for (Resource resource : resources) {
             String pattern;
             disjunction.addFilterElement(createPropertyEqualsFilter("name", resource.getName()));
-            pattern = escape(resource.getName() + "_", '!');
+            pattern = escape(resource.getName() + "_");
             disjunction.addFilterElement(createPropertyLikeFilter("name", pattern, START, '!'));
             disjunction.addFilterElement(createPropertyEqualsFilter("label", resource.getLabel()));
-            pattern = escape(resource.getLabel() + " (", '!');
+            pattern = escape(resource.getLabel() + " (");
             disjunction.addFilterElement(createPropertyLikeFilter("label", pattern, START, '!'));
         }
 
@@ -753,5 +755,9 @@ public class RepositoryFilterCriteriaTestsTestNG extends BaseRepositoryTestTestN
         resource.setName(name);
         resource.setLabel(label);
         return resource;
+    }
+
+    private String escape(String expr) {
+        return expr.replaceAll("[\\\\!_%]", "!$0");
     }
 }

@@ -1,24 +1,28 @@
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
-
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
 
     <!-- ############ SSO auth ############
       - Sample configuration of SSO via JasperServer API
@@ -34,21 +38,22 @@
     <bean id="externalAuthSuccessHandler"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.JrsExternalAuthenticationSuccessHandler" parent="successHandler">
         <property name="externalDataSynchronizer">
-            <ref local="externalDataSynchronizer"/>
+            <ref bean="externalDataSynchronizer"/>
         </property>
     </bean>
 
     <bean id="proxyExceptionTranslationFilter" class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSExceptionTranslationFilter">
-        <property name="authenticationEntryPoint">
+        <constructor-arg index="0">
             <bean class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSLoginUrlAuthenticationEntryPoint">
-                <property name="loginFormUrl">
+                <constructor-arg index="0">
                     <value>/externallogin.html</value>
-                </property>
+                </constructor-arg>
                 <property name="forceHttps">
                     <value>false</value>
                 </property>
             </bean>
-        </property>
+        </constructor-arg>
+
         <property name="accessDeniedHandler">
             <bean class="com.jaspersoft.jasperserver.war.JRSAccessDeniedHandlerImpl">
                 <property name="errorPage" value="/WEB-INF/jsp/modules/system/AccessDeniedPage.jsp"/>
@@ -60,25 +65,25 @@
     </bean>
 
     <bean id="ssoAuthenticationManager" class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSProviderManager">
-        <property name="providers">
+        <constructor-arg index="0">
             <list>
-                <ref local="ssoAuthenticationProvider"/>
+                <ref bean="ssoAuthenticationProvider"/>
                 <ref bean="${bean.daoAuthenticationProvider}"/>
                 <!-- anonymousAuthenticationProvider only needed if filterInvocationInterceptor.alwaysReauthenticate is set to true
                     <ref bean="anonymousAuthenticationProvider"/>-->
             </list>
-        </property>
+        </constructor-arg>
     </bean>
 
     <bean id="ssoSoapAuthenticationManager" class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSProviderManager">
-        <property name="providers">
+        <constructor-arg index="0">
             <list>
-                <ref local="ssoSoapAuthenticationProvider"/>
+                <ref bean="ssoSoapAuthenticationProvider"/>
                 <ref bean="${bean.daoAuthenticationProvider}"/>
                 <!-- anonymousAuthenticationProvider only needed if filterInvocationInterceptor.alwaysReauthenticate is set to true
                     <ref bean="anonymousAuthenticationProvider"/>-->
             </list>
-        </property>
+        </constructor-arg>
     </bean>
 
     <bean id="ssoAuthenticationProvider"
@@ -123,13 +128,13 @@
     <bean id="externalDataSynchronizer"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.ExternalDataSynchronizerImpl">
         <property name="externalUserDetailsService">
-            <ref local="externalJDBCUserDetailsService"/>
+            <ref bean="externalJDBCUserDetailsService"/>
         </property>
         <property name="externalUserProcessors">
             <list>
-                <ref local="externalUserSetupProcessor"/>
+                <ref bean="externalUserSetupProcessor"/>
                 <!-- Example processor for creating user folder-->
-                <!--<ref local="externalUserFolderProcessor"/>-->
+                <!--<ref bean="externalUserFolderProcessor"/>-->
             </list>
         </property>
     </bean>
@@ -144,36 +149,41 @@
         <property name="objectPermissionService" ref="objectPermissionService"/>
     </bean>
 
+    <aop:config proxy-target-class="true" >
+        <aop:aspect ref="externalUserSetupProcessor"/>
+    </aop:config>
+
     <bean id="externalUserSetupProcessor"
-          class="com.jaspersoft.jasperserver.api.security.externalAuth.processors.ExternalUserSetupProcessor"
-          parent="abstractExternalProcessor">
-        <!--Default permitted role characters; others are removed. Change regular expression to allow other chars.
-                    <property name="permittedExternalRoleNameRegex" value="[A-Za-z0-9_]+"/>-->
+              class="com.jaspersoft.jasperserver.api.security.externalAuth.processors.ExternalUserSetupProcessor"
+              parent="abstractExternalProcessor" >
+            <!--Default permitted role characters; others are removed. Change regular expression to allow other chars.
+                        <property name="permittedExternalRoleNameRegex" value="[A-Za-z0-9_]+"/>-->
 
-        <property name="userAuthorityService">
-            <ref bean="${bean.internalUserAuthorityService}"/>
-        </property>
-        <property name="defaultInternalRoles">
-            <list>
-                <value>ROLE_USER</value>
-            </list>
-        </property>
+            <property name="userAuthorityService">
+                <ref bean="${bean.internalUserAuthorityService}"/>
+            </property>
+            <property name="defaultInternalRoles">
+                <list>
+                    <value>ROLE_USER</value>
+                </list>
+            </property>
 
-        <property name="externalAuthProperties" ><ref local="externalAuthProperties"/></property>
+            <property name="externalAuthProperties" ><ref bean="externalAuthProperties"/></property>
 
-        <property name="organizationRoleMap">
-            <map>
-                <!-- Example of mapping customer roles to JRS roles -->
-                <entry>
-                    <key>
-                        <value>ROLE_ADMIN_EXTERNAL_ORGANIZATION</value>
-                    </key>
-                    <!-- JRS role that the <key> external role is mapped to-->
-                    <value>ROLE_ADMINISTRATOR</value>
-                </entry>
-            </map>
-        </property>
-    </bean>
+            <property name="organizationRoleMap">
+                <map>
+                    <!-- Example of mapping customer roles to JRS roles -->
+                    <entry>
+                        <key>
+                            <value>ROLE_ADMIN_EXTERNAL_ORGANIZATION</value>
+                        </key>
+                        <!-- JRS role that the <key> external role is mapped to-->
+                        <value>ROLE_ADMINISTRATOR</value>
+                    </entry>
+                </map>
+            </property>
+
+        </bean>
 
     <bean id="externalUserFolderProcessor"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.processors.ExternalUserFolderProcessor"

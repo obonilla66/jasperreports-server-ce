@@ -1,24 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -34,11 +36,14 @@ import java.beans.PropertyDescriptor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * <p></p>
@@ -131,18 +136,24 @@ public class InputControlResourceValidatorTest {
         validator.validate(control);
     }
 
-    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"}, expectedExceptions = {JSValidationException.class})
+    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
     public void testValidate_unknownType() throws Exception {
         reset(inputControlTypeConfiguration);
 
-        validator.validate(control);
+        final List<Exception> exceptions = validator.validate(control);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
-    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"}, expectedExceptions = {JSValidationException.class})
+    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
     public void testValidate_simpleType_nothingShouldBeSet() throws Exception {
         control.setDataTypeReference("/a");
 
-        validator.validate(control);
+        final List<Exception> exceptions = validator.validate(control);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
     @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
@@ -155,7 +166,7 @@ public class InputControlResourceValidatorTest {
         validator.validate(control);
     }
 
-    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"}, expectedExceptions = {JSValidationException.class})
+    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
     public void testValidate_customType_dataTypeShouldBeSet_extraField() throws Exception {
         control.setDataTypeReference("/a");
         control.setListOfValuesReference("/b");
@@ -163,7 +174,10 @@ public class InputControlResourceValidatorTest {
         when(configuration.get(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn("dataType");
         when(configuration.containsKey(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn(true);
 
-        validator.validate(control);
+        final List<Exception> exceptions = validator.validate(control);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
     @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
@@ -177,13 +191,16 @@ public class InputControlResourceValidatorTest {
         validator.validate(control);
     }
 
-    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"}, expectedExceptions = {JSValidationException.class})
+    @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
     public void testValidate_customType_dataTypeSetButLoVShouldBeSet() throws Exception {
         control.setDataTypeReference("/a");
 
         when(configuration.get(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn("listOfValues");
         when(configuration.containsKey(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn(true);
 
-        validator.validate(control);
+        final List<Exception> exceptions = validator.validate(control);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 }

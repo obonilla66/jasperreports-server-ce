@@ -1,32 +1,39 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup;
 import com.jaspersoft.jasperserver.dto.adhoc.query.group.ClientQueryGroupBy;
 import com.jaspersoft.jasperserver.dto.adhoc.query.order.ClientGenericOrder;
-import com.jaspersoft.jasperserver.dto.adhoc.query.order.ClientOrder;
 import com.jaspersoft.jasperserver.dto.adhoc.query.select.ClientSelect;
 
 import javax.validation.Valid;
-import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
@@ -47,22 +54,8 @@ public class ClientMultiLevelQuery extends ClientQuery {
 
     public ClientMultiLevelQuery(ClientMultiLevelQuery query) {
         super(query);
-        if (query != null) {
-            if (query.getGroupBy() != null) {
-                setGroupBy(new ClientQueryGroupBy(query.getGroupBy()));
-            }
-
-            if(query.getOrderBy() != null) {
-                this.orderBy = new ArrayList<ClientGenericOrder>();
-                for (ClientOrder clientOrder : query.getOrderBy()) {
-                    if(clientOrder instanceof ClientGenericOrder) {
-                        this.orderBy.add(new ClientGenericOrder((ClientGenericOrder) clientOrder));
-                    } else {
-                        throw new IllegalArgumentException("Unsupported order type: " + clientOrder);
-                    }
-                }
-            }
-        }
+        groupBy = copyOf(query.getGroupBy());
+        orderBy = copyOf(query.getOrderBy());
     }
 
     public ClientMultiLevelQuery setSelect(ClientSelect select) {
@@ -110,7 +103,39 @@ public class ClientMultiLevelQuery extends ClientQuery {
 
     @XmlTransient
     public List<ClientField> getSelectedFields() {
-       return super.getSelectedFields();
+        return super.getSelectedFields();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        ClientMultiLevelQuery that = (ClientMultiLevelQuery) o;
+
+        if (groupBy != null ? !groupBy.equals(that.groupBy) : that.groupBy != null) return false;
+        return orderBy != null ? orderBy.equals(that.orderBy) : that.orderBy == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (groupBy != null ? groupBy.hashCode() : 0);
+        result = 31 * result + (orderBy != null ? orderBy.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ClientMultiLevelQuery{" +
+                "groupBy=" + groupBy +
+                ", orderBy=" + orderBy +
+                "} " + super.toString();
+    }
+
+    @Override
+    public ClientMultiLevelQuery deepClone() {
+        return new ClientMultiLevelQuery(this);
+    }
 }

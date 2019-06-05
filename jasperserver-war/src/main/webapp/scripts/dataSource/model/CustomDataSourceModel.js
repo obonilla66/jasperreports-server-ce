@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -35,7 +35,8 @@ define(function(require) {
         repositoryResourceTypes = require("bi/repository/enum/repositoryResourceTypes"),
         dialogs = require("components.dialogs"),
 		i18n = require("bundle!all"),
-        jasperserverConfig = require("bundle!jasperserver_config");
+        jasperserverConfig = require("bundle!jasperserver_config"),
+        dialogErrorMessageTemplate = require("text!common/templates/dialogErrorPopupTemplate.htm");
 
     var CustomDataSourceModel = BaseDataSourceModel.extend({
         type: repositoryResourceTypes.CUSTOM_DATA_SOURCE,
@@ -129,20 +130,21 @@ define(function(require) {
         },
 
         getCustomFieldsDefinitionFail: function(xhr) {
-            var response = false, msg = "Failed to load custom data source definition. ";
+            var response = false;
             try {
                 response = JSON.parse(xhr.responseText);
             } catch (e) {
             }
-            if (response) {
-                if (response[0] && response[0].errorCode) {
-                    msg += "<br/>The reason is: " + response[0].errorCode;
-                } else if (response.message) {
-                    msg += "<br/>The reason is: " + response.message;
-                }
-                msg += "<br/><br/>The full response from the server is: " + xhr.responseText;
-            }
-            dialogs.errorPopup.show(msg);
+
+            var errTempl = _.template(dialogErrorMessageTemplate, {
+                message: "Failed to load custom data source definition. ",
+                errorCode: response && response[0] ? response[0].errorCode : null,
+                errorMsg: response && response.message,
+                respText: xhr.responseText
+            });
+
+
+            dialogs.errorPopup.show(errTempl);
         },
 
         parse: function(response) {
@@ -178,11 +180,14 @@ define(function(require) {
                 data.properties = [];
 
                 _.each(customFields, function(field){
-                    var value = data[field.name];
-                    var isPassword = "password" === field.name;
-                    if(!isPassword || (isPassword && value !== jasperserverConfig["input.password.substitution"])){
-                        data.properties.push({key: field.name, value: value});
-                        delete data[field.name];
+                    var value = data[field.name],
+                        isPassword = "password" === field.name;
+
+                    if (!_.isUndefined(value)) {
+                        if(!isPassword || (isPassword && value !== jasperserverConfig["input.password.substitution"])){
+                            data.properties.push({key: field.name, value: value});
+                            delete data[field.name];
+                        }
                     }
                 });
             }

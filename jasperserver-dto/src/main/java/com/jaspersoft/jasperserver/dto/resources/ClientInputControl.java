@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources;
@@ -22,8 +25,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  *
@@ -44,39 +48,16 @@ public class ClientInputControl extends ClientResource<ClientInputControl> imple
     private ClientReferenceableListOfValues listOfValues;
 
     public ClientInputControl(ClientInputControl other) {
+        super(other);
         this.mandatory = other.isMandatory();
         this.readOnly = other.isReadOnly();
         this.visible = other.isVisible();
         this.type = other.getType();
-        this.visibleColumns = new ArrayList<String>(other.getVisibleColumns());
+        this.visibleColumns = copyOf(other.getVisibleColumns());
         this.valueColumn = other.getValueColumn();
-
-        ClientReferenceableDataType srcClientReferenceableDataType = other.getDataType();
-        if (srcClientReferenceableDataType != null){
-            if (srcClientReferenceableDataType instanceof ClientDataType){
-                dataType = new ClientDataType((ClientDataType) srcClientReferenceableDataType);
-            } else if (srcClientReferenceableDataType instanceof ClientReference){
-                dataType = new ClientReference((ClientReference) srcClientReferenceableDataType);
-            }
-        }
-
-        ClientReferenceableQuery srcClientReferenceableQuery = other.getQuery();
-        if (srcClientReferenceableQuery != null){
-            if (srcClientReferenceableQuery instanceof ClientQuery){
-                query = new ClientQuery((ClientQuery) srcClientReferenceableQuery);
-            } else if (srcClientReferenceableQuery instanceof ClientReference){
-                query = new ClientReference((ClientReference) srcClientReferenceableQuery);
-            }
-        }
-
-        ClientReferenceableListOfValues srcListOfValues = other.getListOfValues();
-        if (srcListOfValues != null){
-            if (srcListOfValues instanceof ClientListOfValues){
-                listOfValues = new ClientListOfValues((ClientListOfValues) srcClientReferenceableQuery);
-            } else if (srcListOfValues instanceof ClientReference){
-                listOfValues = new ClientReference((ClientReference) srcClientReferenceableQuery);
-            }
-        }
+        this.dataType = copyOf(other.getDataType());
+        this.query = copyOf(other.getQuery());
+        this.listOfValues = copyOf(other.getListOfValues());
     }
 
     public ClientInputControl() {
@@ -231,5 +212,10 @@ public class ClientInputControl extends ClientResource<ClientInputControl> imple
                 ", uri='" + getUri() + '\'' +
                 ", label='" + getLabel() + '\'' +
                 '}';
+    }
+
+    @Override
+    public ClientInputControl deepClone() {
+        return new ClientInputControl(this);
     }
 }

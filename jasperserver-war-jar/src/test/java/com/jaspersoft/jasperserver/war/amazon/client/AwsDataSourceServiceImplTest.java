@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.amazon.client;
 
@@ -21,10 +24,10 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.rds.AmazonRDSClient;
+import com.amazonaws.services.rds.AmazonRDS;
 import com.amazonaws.services.rds.model.DBInstance;
 import com.amazonaws.services.rds.model.Endpoint;
-import com.amazonaws.services.redshift.AmazonRedshiftClient;
+import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
 import com.jaspersoft.jasperserver.war.dto.AwsDBInstanceDTO;
@@ -90,7 +93,7 @@ public class AwsDataSourceServiceImplTest {
 
     @Test
     public void getAwsDBInstances_noRdsInstances_returnEmptyStatus() {
-        doReturn(new ArrayList<DBInstance>()).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doReturn(new ArrayList<DBInstance>()).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         doReturn(DATA_SOURCE_AWS_EMPTY).when(messageSource).getMessage(Matchers.eq(DATA_SOURCE_AWS_EMPTY),
                 Matchers.any(String[].class), Matchers.any(Locale.class));
         List<AwsDBInstanceDTO> rdsInstances = awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.RDS, AWS_REGION);
@@ -102,7 +105,7 @@ public class AwsDataSourceServiceImplTest {
 
     @Test
     public void getAwsDBInstances_noRedshiftInstances_returnEmptyStatus() {
-        doReturn(new ArrayList<Cluster>()).when(awsDataSourceService).getRedshiftInstances(any(AmazonRedshiftClient.class));
+        doReturn(new ArrayList<Cluster>()).when(awsDataSourceService).getRedshiftInstances(any(AmazonRedshift.class));
         doReturn(DATA_SOURCE_AWS_EMPTY).when(messageSource).getMessage(Matchers.eq(DATA_SOURCE_AWS_EMPTY),
                 Matchers.any(String[].class), Matchers.any(Locale.class));
         List<AwsDBInstanceDTO> redshiftInstances = awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.Redshift, AWS_REGION);
@@ -114,7 +117,7 @@ public class AwsDataSourceServiceImplTest {
 
     @Test
     public void getAwsDBInstances_3ActiveRds_return3RdsInstances() {
-        doReturn(generateRdsInstances(AWS_DB_ACTIVE_STATUS)).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doReturn(generateRdsInstances(AWS_DB_ACTIVE_STATUS)).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         List<AwsDBInstanceDTO> rdsInstances = awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.RDS, AWS_REGION);
         Assert.assertEquals(3, rdsInstances.size());
 
@@ -126,7 +129,7 @@ public class AwsDataSourceServiceImplTest {
 
     @Test
     public void getAwsDBInstances_3ActiveRedshift_return3RedshiftInstances() {
-        doReturn(generateRedshiftInstances(AWS_DB_ACTIVE_STATUS)).when(awsDataSourceService).getRedshiftInstances(any(AmazonRedshiftClient.class));
+        doReturn(generateRedshiftInstances(AWS_DB_ACTIVE_STATUS)).when(awsDataSourceService).getRedshiftInstances(any(AmazonRedshift.class));
         List<AwsDBInstanceDTO> redshiftList = awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.Redshift, AWS_REGION);
         assertEquals(3, redshiftList.size());
         int index = 0;
@@ -138,14 +141,14 @@ public class AwsDataSourceServiceImplTest {
 
     @Test
     public void getAwsDBInstances_3InactiveRds_returnEmptyList() {
-        doReturn(generateRdsInstances(AWS_DB_INACTIVE_STATUS)).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doReturn(generateRdsInstances(AWS_DB_INACTIVE_STATUS)).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         List<AwsDBInstanceDTO> rdsInstances = awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.RDS, AWS_REGION);
         Assert.assertEquals(0, rdsInstances.size());
     }
 
     @Test
     public void getAwsDBInstances_3InactiveRedshift_returnEmptyList() {
-        doReturn(generateRedshiftInstances(AWS_DB_INACTIVE_STATUS)).when(awsDataSourceService).getRedshiftInstances(any(AmazonRedshiftClient.class));
+        doReturn(generateRedshiftInstances(AWS_DB_INACTIVE_STATUS)).when(awsDataSourceService).getRedshiftInstances(any(AmazonRedshift.class));
         List<AwsDBInstanceDTO> redshiftInstances = awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.Redshift, AWS_REGION);
         assertEquals(0, redshiftInstances.size());
     }
@@ -156,7 +159,7 @@ public class AwsDataSourceServiceImplTest {
         accessDeniedException.setStatusCode(403);
         accessDeniedException.setErrorCode(AwsDataSourceServiceImpl.ACCESS_DENIED);
 
-        doThrow(accessDeniedException).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doThrow(accessDeniedException).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         doReturn("resource.dataSource.aws.access.denied").when(messageSource).getMessage(Matchers.eq("resource.dataSource.aws.access.denied"),
                 Matchers.any(String[].class), Matchers.any(Locale.class));
 
@@ -173,7 +176,7 @@ public class AwsDataSourceServiceImplTest {
         invalidClientTokenIdException.setStatusCode(403);
         invalidClientTokenIdException.setErrorCode(AwsDataSourceServiceImpl.INVALID_CLIENT_TOKEN_ID);
 
-        doThrow(invalidClientTokenIdException).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doThrow(invalidClientTokenIdException).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
 
         awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.RDS, AWS_REGION);
     }
@@ -184,7 +187,7 @@ public class AwsDataSourceServiceImplTest {
         signatureDoesNotMatchException.setStatusCode(403);
         signatureDoesNotMatchException.setErrorCode(AwsDataSourceServiceImpl.SIGNATURE_DOES_NOT_MATCH);
 
-        doThrow(signatureDoesNotMatchException).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doThrow(signatureDoesNotMatchException).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
 
         awsDataSourceService.getAwsDBInstances(awsCredentials, AwsDataSourceServiceImpl.RDS, AWS_REGION);
     }
@@ -194,7 +197,7 @@ public class AwsDataSourceServiceImplTest {
         AmazonClientException unknownHostException = new AmazonClientException("Amazon client exception");
         unknownHostException.initCause(new UnknownHostException());
 
-        doThrow(unknownHostException).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doThrow(unknownHostException).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         doReturn("resource.dataSource.aws.unknown.host").when(messageSource).getMessage(Matchers.eq("resource.dataSource.aws.unknown.host"),
                 Matchers.any(String[].class), Matchers.any(Locale.class));
 
@@ -217,7 +220,7 @@ public class AwsDataSourceServiceImplTest {
         String exceptionMessage = "AmazonServiceException";
 
         AmazonServiceException amazonServiceException = new AmazonServiceException(exceptionMessage);
-        doThrow(amazonServiceException).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doThrow(amazonServiceException).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         doReturn("[" + amazonServiceException.getMessage() + "]").when(messageSource).getMessage(Matchers.eq("[" + amazonServiceException.getMessage() + "]"),
                 Matchers.any(String[].class), Matchers.any(Locale.class));
 
@@ -233,7 +236,7 @@ public class AwsDataSourceServiceImplTest {
         String exceptionMessage = "AmazonClientException";
 
         AmazonClientException amazonServiceException = new AmazonClientException(exceptionMessage);
-        doThrow(amazonServiceException).when(awsDataSourceService).getRdsInstances(any(AmazonRDSClient.class));
+        doThrow(amazonServiceException).when(awsDataSourceService).getRdsInstances(any(AmazonRDS.class));
         doReturn("[" + exceptionMessage + "]").when(messageSource).getMessage(Matchers.eq("[" + exceptionMessage + "]"),
                 Matchers.any(String[].class), Matchers.any(Locale.class));
 

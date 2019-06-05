@@ -1,28 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.amazon.client;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.*;
-import com.amazonaws.services.rds.AmazonRDSClient;
+import com.amazonaws.services.rds.AmazonRDS;
+import com.amazonaws.services.rds.AmazonRDSClientBuilder;
 import com.amazonaws.services.rds.model.DBInstance;
-import com.amazonaws.services.redshift.AmazonRedshiftClient;
+import com.amazonaws.services.redshift.AmazonRedshift;
+import com.amazonaws.services.redshift.AmazonRedshiftClientBuilder;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
 import com.jaspersoft.jasperserver.war.dto.AwsDBInstanceDTO;
@@ -60,21 +65,34 @@ public class AwsDataSourceServiceImpl implements AwsDataSourceService {
     private static final Log log = LogFactory.getLog(AwsDataSourceServiceImpl.class);
 
     public List<AwsDBInstanceDTO> getAwsDBInstances(AWSCredentials awsCredentials, String amazonDBService,
-            String endpoint) {
+            String region) {
         try {
+//            if region is presended as endpoint - strip domain name
+            if (region!=null && region.contains(".")) {
+                region=region.split("\\.")[0];
+            }
             if (amazonDBService.toLowerCase().equals(RDS)) {
                 //Make RDS service calls to read all available RDS instances
-                AmazonRDSClient rdsClient = new AmazonRDSClient(awsCredentials);
-                if (endpoint != null) {
-                    rdsClient.setEndpoint(RDS + "." + endpoint);
-                }
+                AmazonRDS rdsClient = AmazonRDSClientBuilder.
+                        standard().
+                        withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).
+                        withRegion(region).
+                        build();
+//                AmazonRDSClient rdsClient = new AmazonRDSClient(awsCredentials);
+//                if (region != null) {
+//                    rdsClient.setEndpoint(RDS + "." + region);
+//                }
                 return toRDSInstancesDTOs(getRdsInstances(rdsClient), amazonDBService);
             } else if (amazonDBService.toLowerCase().equals(Redshift)) {
                 //Make RedShift service calls to read all available RedShift instances
-                AmazonRedshiftClient redshiftClient = new AmazonRedshiftClient(awsCredentials);
-                if (endpoint != null) {
-                    redshiftClient.setEndpoint(Redshift + "." + endpoint);
-                }
+                AmazonRedshift redshiftClient = AmazonRedshiftClientBuilder.
+                        standard().
+                        withRegion(region).
+                        withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).
+                        build();
+//                if (region != null) {
+//                    redshiftClient.setEndpoint(Redshift + "." + region);
+//                }
                 return toRedshiftInstancesDTOs(getRedshiftInstances(redshiftClient), amazonDBService);
             } else {
                 return new ArrayList<AwsDBInstanceDTO>();
@@ -99,18 +117,18 @@ public class AwsDataSourceServiceImpl implements AwsDataSourceService {
             return generateDBServiceInfoStatus(amazonDBService, "[" + ex.getMessage() + "]");
         } catch (AmazonClientException ex) {
             if (ex.getCause() instanceof UnknownHostException) {
-                return generateDBServiceInfoStatus(endpoint, "resource.dataSource.aws.unknown.host");
+                return generateDBServiceInfoStatus(region, "resource.dataSource.aws.unknown.host");
             }
 
             return generateDBServiceInfoStatus(amazonDBService, "[" + ex.getMessage() + "]");
         }
     }
 
-    protected List<DBInstance> getRdsInstances(AmazonRDSClient rdsClient) {
+    protected List<DBInstance> getRdsInstances(AmazonRDS rdsClient) {
         return rdsClient.describeDBInstances().getDBInstances();
     }
 
-    protected List<Cluster> getRedshiftInstances(AmazonRedshiftClient redshiftClient) {
+    protected List<Cluster> getRedshiftInstances(AmazonRedshift redshiftClient) {
         return redshiftClient.describeClusters().getClusters();
     }
 

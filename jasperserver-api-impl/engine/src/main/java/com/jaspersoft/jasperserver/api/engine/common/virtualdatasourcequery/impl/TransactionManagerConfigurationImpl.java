@@ -1,35 +1,50 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.impl;
 
+import bitronix.tm.Configuration;
+import bitronix.tm.TransactionManagerServices;
 import com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.teiid.TransactionManagerConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.InitializingBean;
+
+import java.io.File;
+import java.util.Enumeration;
 
 /**
  * User: ichan
  * To change this template use File | Settings | File Templates.
  */
-public class TransactionManagerConfigurationImpl implements TransactionManagerConfiguration {
+public class TransactionManagerConfigurationImpl implements TransactionManagerConfiguration, InitializingBean {
+
+    private static final Log log = LogFactory.getLog(TransactionManagerConfigurationImpl.class);
 
     private volatile String serverId = "TeiidEmbeddedServer-TransactionManager";
-    private volatile String logPart1Filename = "transactionBtm1.log";
-    private volatile String logPart2Filename = "transactionBtm2.log";
-    private volatile boolean saveLogFilesToLogDirectory = true;
+    private volatile String logPart1Filename = "transactionBtm1.tlog";
+    private volatile String logPart2Filename = "transactionBtm2.tlog";
+    private volatile boolean saveLogFilesToLogDirectory = false;
     private volatile boolean forcedWriteEnabled = true;
     private volatile boolean forceBatchingEnabled = true;
     private volatile int maxLogSizeInMb = 2;
@@ -50,6 +65,12 @@ public class TransactionManagerConfigurationImpl implements TransactionManagerCo
     private volatile boolean allowMultipleLrc = false;
     private volatile String resourceConfigurationFilename = null;
 
+    private File logDirectory = null;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        setUpConfig();
+    }
 
     /**
      * ASCII ID that must uniquely identify this TM instance. It must not exceed 51 characters or it will be truncated.
@@ -491,5 +512,77 @@ public class TransactionManagerConfigurationImpl implements TransactionManagerCo
         this.resourceConfigurationFilename = resourceConfigurationFilename;
     }
 
+    @Override
+    public void setUpConfig() {
+        if (getLogDirectory() == null) {
+            if ("disk".equals(getJournal())) {
+                log.warn("BTM transaction logs are disabled!");
+            }
+            setJournal("null");
+        }
 
+        Configuration tmConfig = TransactionManagerServices.getConfiguration();
+        if (getServerId() != null) tmConfig.setServerId(getServerId());
+
+
+        if (getLogPart1Filename () != null) tmConfig.setLogPart1Filename(getLogPart1Filename());
+        if (getLogPart2Filename () != null) tmConfig.setLogPart2Filename(getLogPart2Filename());
+
+        tmConfig.setLogPart1Filename(getTransactionLogFileName(isSaveLogFilesToLogDirectory(), tmConfig.getLogPart1Filename()));
+        tmConfig.setLogPart2Filename(getTransactionLogFileName(isSaveLogFilesToLogDirectory(), tmConfig.getLogPart2Filename()));
+        log.debug("Transaction Manager Log Part 1 - " + tmConfig.getLogPart1Filename());
+        log.debug("Transaction Manager Log Part 2 - " + tmConfig.getLogPart2Filename());
+
+        tmConfig.setForcedWriteEnabled(isForcedWriteEnabled());
+        tmConfig.setForceBatchingEnabled(isForceBatchingEnabled());
+        tmConfig.setMaxLogSizeInMb(getMaxLogSizeInMb());
+        tmConfig.setFilterLogStatus(isFilterLogStatus());
+        tmConfig.setSkipCorruptedLogs(isSkipCorruptedLogs());
+        tmConfig.setAsynchronous2Pc(isAsynchronous2Pc());
+        tmConfig.setWarnAboutZeroResourceTransaction(isWarnAboutZeroResourceTransaction());
+        tmConfig.setDebugZeroResourceTransaction(isDebugZeroResourceTransaction());
+        tmConfig.setDefaultTransactionTimeout(getDefaultTransactionTimeout());
+        tmConfig.setGracefulShutdownInterval(getGracefulShutdownInterval());
+        tmConfig.setBackgroundRecoveryIntervalSeconds(getBackgroundRecoveryIntervalSeconds());
+        tmConfig.setDisableJmx(isDisableJmx());
+        if (getJndiUserTransactionName() != null)
+            tmConfig.setJndiUserTransactionName(getJndiUserTransactionName());
+        if (getJndiTransactionSynchronizationRegistryName() != null)
+            tmConfig.setJndiTransactionSynchronizationRegistryName(getJndiTransactionSynchronizationRegistryName());
+        if (getJournal() != null) tmConfig.setJournal(getJournal());
+        if (getExceptionAnalyzer() != null) tmConfig.setExceptionAnalyzer(getExceptionAnalyzer());
+        tmConfig.setCurrentNodeOnlyRecovery(isCurrentNodeOnlyRecovery());
+        tmConfig.setAllowMultipleLrc(isAllowMultipleLrc());
+        if (getResourceConfigurationFilename() != null) tmConfig.setResourceConfigurationFilename(getResourceConfigurationFilename());
+    }
+
+    private String getTransactionLogFileName(boolean isSaveToLogDirectory, String logFileName) {
+        File logDirectory = null;
+        if (isSaveToLogDirectory) logDirectory = getLogDirectory();
+        if (logDirectory != null) {
+            File logFile = new File(logDirectory, logFileName);
+            return logFile.getPath();
+        }
+        return logFileName;
+    }
+
+    private File getLogDirectory() {
+        if (logDirectory != null) {
+            return logDirectory;
+        }
+        try {
+            Logger logger = Logger.getRootLogger();
+            Enumeration e = logger.getAllAppenders();
+            while(e.hasMoreElements()){
+                Object elt= e.nextElement();
+                if (elt instanceof FileAppender) {
+                    logDirectory = new File(((FileAppender)elt).getFile()).getParentFile();
+                    return logDirectory;
+                }
+            }
+        } catch (Exception ex) {
+            log.debug("Fail to detect log directory!");
+        }
+        return null;
+    }
 }

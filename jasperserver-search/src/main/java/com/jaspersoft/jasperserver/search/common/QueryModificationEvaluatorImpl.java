@@ -1,23 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.search.common;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.search.QueryModificationEvaluator;
 import com.jaspersoft.jasperserver.api.search.SearchFilter;
 import com.jaspersoft.jasperserver.search.filter.AccessTypeFilter;
@@ -69,8 +73,6 @@ public class QueryModificationEvaluatorImpl implements QueryModificationEvaluato
             if(searchCriteria != null){
                 final List<SearchFilter> customFilters = searchCriteria.getCustomFilters();
                 use = customFilters != null && (!customFilters.isEmpty()
-                        // this code is a trick, done on order to not refactor search itself to give it ability to work both on UI and Web services properly
-                        // but this should be done in future  ... I hope
                         && !(customFilters.size() == 1 && customFilters.contains(folderFilter)));
                 if(!use){
                     use = RepositorySearchService.PARAM_SORT_BY_POPULARITY.equals(searchCriteria.getSortBy());
@@ -79,7 +81,15 @@ public class QueryModificationEvaluatorImpl implements QueryModificationEvaluato
         }
 
         if (!use){
-            use = searchCriteria != null && (searchCriteria.getFileResourceTypes() != null && !searchCriteria.getFileResourceTypes().isEmpty());
+            use = searchCriteria != null
+                    && (searchCriteria.getFileResourceTypes() != null && !searchCriteria.getFileResourceTypes().isEmpty());
+            if (use && searchCriteria.getResourceTypes() != null) {
+                use = !searchCriteria.getResourceTypes().contains(Folder.class.getName());
+            }
+            if(!use){
+                use = searchCriteria != null && searchCriteria.getCustomDataSourceTypes() != null
+                        && !searchCriteria.getCustomDataSourceTypes().isEmpty();
+            }
         }
         return use;
     }

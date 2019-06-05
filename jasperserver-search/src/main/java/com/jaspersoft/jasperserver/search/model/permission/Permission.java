@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.search.model.permission;
@@ -32,6 +35,11 @@ public enum Permission {
     READ_WRITE(6, "permissionsDialog.permission.readWrite"),
     READ_DELETE(18, "permissionsDialog.permission.delete"),
     READ_WRITE_DELETE(30, "permissionsDialog.permission.readWriteDelete"),
+//  READ+WRITE+DELETE give mask 22, READ+WRITE+DELETE+CREATE give mask 30
+//  by default JRS cheking only WRITE permissions for creating resources and folders.
+//  we are introducing new mask 22 which will be mapped to same label in UI
+//  Bug JS-33752
+    REAL_READ_WRITE_DELETE(22, "permissionsDialog.permission.readWriteDelete"),
     EXECUTE(32, "permissionsDialog.permission.execute");
 
     private int mask;

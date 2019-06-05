@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.action.repositoryExplorer;
@@ -21,9 +24,11 @@ package com.jaspersoft.jasperserver.war.action.repositoryExplorer;
 import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportSchedulingService;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceLookupImpl;
@@ -34,8 +39,6 @@ import com.jaspersoft.jasperserver.api.metadata.common.util.RepositoryLabelIDHel
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import com.jaspersoft.jasperserver.war.action.reportManager.ResourceListModel;
 import com.jaspersoft.jasperserver.war.action.reportManager.ResourceRowModel;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.exception.ConstraintViolationException;
@@ -70,7 +73,7 @@ public class ResourceAction extends FormAction {
     private int pagination;
     private String showMoveCopyConfirmation;
     private SecurityContextProvider securityContextProvider;
-    private ConfigurationBean configuration;
+    private RepositoryConfiguration configuration;
 
     protected final Log log = LogFactory.getLog(this.getClass());
 
@@ -82,11 +85,11 @@ public class ResourceAction extends FormAction {
         this.securityContextProvider = securityContextProvider;
     }
 
-    public ConfigurationBean getConfiguration() {
+    public RepositoryConfiguration getConfiguration() {
         return configuration;
     }
 
-    public void setConfiguration(ConfigurationBean configuration) {
+    public void setConfiguration(RepositoryConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -144,7 +147,7 @@ public class ResourceAction extends FormAction {
                 FilterCriteria criteria = FilterCriteria.createFilter();
                 criteria.addFilterElement(FilterCriteria.createParentFolderFilter(parentFolderUri));
 
-                List resources = repositoryService.loadResourcesList(exContext(context), criteria);
+                List resources = repositoryService.loadResourcesList(exContext(), criteria);
                 repoFolderList.addAll(resources);
 
                 for (int i = 0; i < repoFolderList.size(); i++) {
@@ -258,7 +261,7 @@ public class ResourceAction extends FormAction {
             FilterCriteria criteria = FilterCriteria.createFilter();
             criteria.addFilterElement(FilterCriteria.createParentFolderFilter(folderUri));
 
-            List resources = repositoryService.loadResourcesList(exContext(context), criteria);
+            List resources = repositoryService.loadResourcesList(exContext(), criteria);
             ResourceListModel model = returnModel(resources, context, pageNumber);
             model.setParentUri(folderUri);
             context.getRequestScope().put(AJAX_REPORT_MODEL, model);
@@ -298,7 +301,7 @@ public class ResourceAction extends FormAction {
             row.setWritable(repositoryServiceSecurityChecker.isEditable(res));
             row.setDeletable(repositoryServiceSecurityChecker.isRemovable(res));
             row.setAdministrable(repositoryServiceSecurityChecker.isAdministrable(res));
-            List jobs = schedulingService.getScheduledJobSummaries(exContext(context), res.getURIString());
+            List jobs = schedulingService.getScheduledJobSummaries(exContext(), res.getURIString());
             if (jobs.size() > 0) {
                 row.setScheduled(true);
             } else {
@@ -314,8 +317,6 @@ public class ResourceAction extends FormAction {
             } else if (resourceType.endsWith("ContentResource")) {
                 row.setResourceUrl("fileview/fileview" + res.getURIString());
                 row.setContentType(true);
-            } else if (resourceType.endsWith("DashboardResource")) {
-                row.setResourceUrl("flow.html?_flowId=dashboardRuntimeFlow&dashboardResource=" + res.getURIString());
             } else if (resourceType.endsWith("ReportOptions")) {
                 row.setResourceUrl("flow.html?_flowId=viewReportFlow&reportOptionsURI=" + res.getURIString() + "&standAlone=true&ParentFolderUri=" + res.getParentURI().substring(5));
             }
@@ -347,7 +348,7 @@ public class ResourceAction extends FormAction {
             //criteria.addFilterElement(FilterCriteria.createPropertyEqualsFilter("label", labelProperty));
             criteria.addFilterElement(FilterCriteria.createParentFolderFilter(folderUri));
             List resources = repositoryService.loadClientResources(criteria);
-            List folders = repositoryService.getSubFolders(exContext(context), folderUri);
+            List folders = repositoryService.getSubFolders(exContext(), folderUri);
             // join the lists
             resources.addAll(folders);
             Resource matchingResource = null;
@@ -383,9 +384,9 @@ public class ResourceAction extends FormAction {
                 matchingResource.setDescription(descProperty);
 
                 if (matchingResource.getResourceType().toLowerCase().contains("folder")) {
-                    repositoryService.saveFolder(exContext(context), (Folder) matchingResource);
+                    repositoryService.saveFolder(exContext(), (Folder) matchingResource);
                 } else {
-                    repositoryService.saveResource(exContext(context), matchingResource);
+                    repositoryService.saveResource(exContext(), matchingResource);
                 }
             }
             context.getRequestScope().put(AJAX_REPORT_MODEL, returnStatus);
@@ -402,14 +403,14 @@ public class ResourceAction extends FormAction {
 
             Resource resource = null;
             try {
-                resource = repositoryService.getResource(exContext(context), resourceUri);
+                resource = repositoryService.getResource(exContext(), resourceUri);
             } catch (JSException e) {
                 context.getRequestScope().put(AJAX_REPORT_MODEL, "ERROR:PATH_NOT_VISIBLE_IN_ORGANIZATION_CONTEXT");
                 return success();
             }
             // if it's null, then a folder
             if (resource == null) {
-                resource = repositoryService.getFolder(exContext(context), resourceUri);
+                resource = repositoryService.getFolder(exContext(), resourceUri);
                 isFolder = true;
             }
 
@@ -469,7 +470,7 @@ public class ResourceAction extends FormAction {
             if (folderUri.length() > 1) {
                 while ((fromIndex = folderUri.indexOf('/', fromIndex)) != -1) {
                     String currentUri = folderUri.substring(0, folderUri.indexOf('/', fromIndex));
-                    Folder folder = repositoryService.getFolder(exContext(context), currentUri);
+                    Folder folder = repositoryService.getFolder(exContext(), currentUri);
 
                     if (folder == null) {
                         break;
@@ -482,7 +483,7 @@ public class ResourceAction extends FormAction {
             }
             Resource res = null;
             try {
-                res = repositoryService.getFolder(exContext(context), folderUri);
+                res = repositoryService.getFolder(exContext(), folderUri);
             } catch (Exception e) {
             }
             String displayLabel = res != null ? res.getLabel() : "";
@@ -527,10 +528,10 @@ public class ResourceAction extends FormAction {
 
                         try {
                             currentDisplayLabel.append("/").append(repositoryService.getFolder(
-                                    exContext(context), currentUri).getLabel().replaceAll("<", "&lt;"));
+                                    exContext(), currentUri).getLabel().replaceAll("<", "&lt;"));
                         } catch (Exception e) {
                             currentDisplayLabel.append("/").append(repositoryService.getResource(
-                                    exContext(context), currentUri).getLabel().replaceAll("<", "&lt;"));
+                                    exContext(), currentUri).getLabel().replaceAll("<", "&lt;"));
                         }
 
                         if (lastIndex == fromIndex) {
@@ -539,10 +540,10 @@ public class ResourceAction extends FormAction {
                         fromIndex++;
                     }
                     if ((type.equals("resource")) && (counter > 0)) {
-                        currentDisplayLabel.append("/").append(repositoryService.getResource(exContext(context), currentString).getLabel().replaceAll("<", "&lt;"));
+                        currentDisplayLabel.append("/").append(repositoryService.getResource(exContext(), currentString).getLabel().replaceAll("<", "&lt;"));
                     } else if (type.equals("folder") || ((type.equals("resource")) && (counter == 0))) {
                         currentDisplayLabel.append("/").append(repositoryService.getFolder(
-                                exContext(context), currentString).getLabel().replaceAll("<", "&lt;"));
+                                exContext(), currentString).getLabel().replaceAll("<", "&lt;"));
                     }
                     // put each full display label into json
                     if (counter == 0) {
@@ -831,8 +832,8 @@ public class ResourceAction extends FormAction {
     // Getters and Setters
 
 
-    public ExecutionContext exContext(RequestContext rContext) {
-        return JasperServerUtil.getExecutionContext(rContext);
+    public ExecutionContext exContext() {
+        return StaticExecutionContextProvider.getExecutionContext();
     }
 
 

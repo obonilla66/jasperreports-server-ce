@@ -1,5 +1,7 @@
 <div class="outputTab">
 
+    <js-templateNonce></js-templateNonce>
+
 	<div class="outputFileOptions section">
 
 		<h4 class="title">
@@ -77,8 +79,8 @@
 				{{ for (var index = 0; index < availableFormats.length; index++) { }}
 				<li class="leaf">
 					<div class="control checkBox">
-						<label class="wrap" for="scheduler_box_{{- index}}" title="{{- i18n["report.output." + availableFormats[index].replace('_','.').toLowerCase() + ".label.tooltip"] }}">
-						{{- i18n["report.output." +  availableFormats[index].replace('_','.').toLowerCase() + ".label"] }}
+						<label class="wrap" for="scheduler_box_{{- index}}" title="{{- i18n["report.output." + availableFormats[index].replace("_",".").toLowerCase() + ".label.tooltip"] }}">
+						{{- i18n["report.output." +  availableFormats[index].replace("_",".").toLowerCase() + ".label"] }}
 						</label>
 						<input id="scheduler_box_{{- index}}" name="outputFormats" value="{{- availableFormats[index].toUpperCase() }}" type="checkbox">
 					</div>

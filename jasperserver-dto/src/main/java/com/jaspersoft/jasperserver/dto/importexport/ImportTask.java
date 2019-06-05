@@ -1,27 +1,34 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.importexport;
 
-import java.util.ArrayList;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * Import Task Dto
@@ -29,27 +36,24 @@ import java.util.List;
  * @version $Id: ImportTaskDto.java 58382 2015-10-07 11:36:07Z vzavadsk $
  */
 @XmlRootElement(name = "import")
-public class ImportTask {
-    @XmlElement(name = "organization")
+public class ImportTask implements DeepCloneable<ImportTask> {
+
     private String organization;
-
-    @XmlElement(name = "brokenDependencies")
     private String brokenDependencies;
-
-    @XmlElementWrapper(name = "parameters")
-    @XmlElement(name = "parameter")
     private List<String> parameters;
 
     public ImportTask() {
     }
 
-
     public ImportTask(ImportTask other) {
+        checkNotNull(other);
+
         this.organization = other.getOrganization();
         this.brokenDependencies = other.getBrokenDependencies();
-        this.parameters = (other.getParameters() != null) ? new ArrayList<String>(other.getParameters()) : null;
+        this.parameters = copyOf(other.getParameters());
     }
 
+    @XmlElement(name = "organization")
     public String getOrganization() {
         return organization;
     }
@@ -59,6 +63,7 @@ public class ImportTask {
         return this;
     }
 
+    @XmlElement(name = "brokenDependencies")
     public String getBrokenDependencies() {
         return brokenDependencies;
     }
@@ -68,6 +73,8 @@ public class ImportTask {
         return this;
     }
 
+    @XmlElementWrapper(name = "parameters")
+    @XmlElement(name = "parameter")
     public List<String> getParameters() {
         return parameters;
     }
@@ -107,5 +114,14 @@ public class ImportTask {
                 ", brokenDependencies='" + brokenDependencies + '\'' +
                 ", parameters=" + parameters +
                 '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public ImportTask deepClone() {
+        return new ImportTask(this);
     }
 }

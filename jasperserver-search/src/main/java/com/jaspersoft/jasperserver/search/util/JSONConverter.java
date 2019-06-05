@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.search.util;
@@ -21,14 +24,12 @@ package com.jaspersoft.jasperserver.search.util;
 import com.jaspersoft.jasperserver.api.common.util.DateUtils;
 import com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
-import com.jaspersoft.jasperserver.search.action.RepositorySearchAction;
 import com.jaspersoft.jasperserver.search.common.*;
 import com.jaspersoft.jasperserver.search.model.FilterPath;
 import com.jaspersoft.jasperserver.search.model.PathItem;
 import com.jaspersoft.jasperserver.search.model.permission.Permission;
 import com.jaspersoft.jasperserver.search.state.State;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
+import com.jaspersoft.jasperserver.api.common.util.DateTimeConfiguration;
 import com.jaspersoft.jasperserver.war.util.JSONConverterBase;
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -113,7 +114,7 @@ public class JSONConverter extends JSONConverterBase implements Serializable {
     @Qualifier("messageSource")
     protected MessageSource messages;
     private RepositorySearchConfiguration repositorySearchConfiguration;
-    protected ConfigurationBean configurationBean;
+    protected DateTimeConfiguration configuration;
 
     @Autowired(required = false)
     private List<CustomDataSourceDefinition> definitions;
@@ -127,8 +128,8 @@ public class JSONConverter extends JSONConverterBase implements Serializable {
         this.repositorySearchConfiguration = repositorySearchConfiguration;
     }
 
-    public void setConfigurationBean(ConfigurationBean configurationBean) {
-        this.configurationBean = configurationBean;
+    public void setConfiguration(DateTimeConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public JSONObject resourceToJson(ResourceDetails resource) throws JSONException {
@@ -152,14 +153,14 @@ public class JSONConverter extends JSONConverterBase implements Serializable {
 
         jsonObject.put(RESOURCE_DATE, getFormattedDate(resource.getCreationDate()));
         jsonObject.put(RESOURCE_DATE_TIMESTAMP,
-                getDateFormat(configurationBean.getTimestampFormat()).format(resource.getCreationDate()));
+                getDateFormat(configuration.getTimestampFormat()).format(resource.getCreationDate()));
         jsonObject.put(RESOURCE_DATE_TIME,
-                getDateFormat(configurationBean.getTimeFormat()).format(resource.getCreationDate()));
+                getDateFormat(configuration.getTimeFormat()).format(resource.getCreationDate()));
         jsonObject.put(RESOURCE_UPDATE_DATE, getFormattedDate(resource.getUpdateDate()));
         jsonObject.put(RESOURCE_UPDATE_DATE_TIMESTAMP,
-                getDateFormat(configurationBean.getTimestampFormat()).format(resource.getUpdateDate()));
+                getDateFormat(configuration.getTimestampFormat()).format(resource.getUpdateDate()));
         jsonObject.put(RESOURCE_UPDATE_DATE_TIME,
-                getDateFormat(configurationBean.getTimeFormat()).format(resource.getUpdateDate()));
+                getDateFormat(configuration.getTimeFormat()).format(resource.getUpdateDate()));
         jsonObject.put(RESOURCE_NUMBER, resource.getResourceNumber());
 
         return jsonObject;
@@ -173,7 +174,7 @@ public class JSONConverter extends JSONConverterBase implements Serializable {
     }
 
     private String getFormattedDate(Date date) {
-        String formattedDate = getDateFormat(configurationBean.getDateFormat()).format(date);
+        String formattedDate = getDateFormat(configuration.getDateFormat()).format(date);
 
         if (DateUtils.isToday(date)) {
             formattedDate = messages.getMessage("SEARCH_DATE_TODAY", null, formattedDate,
@@ -182,7 +183,7 @@ public class JSONConverter extends JSONConverterBase implements Serializable {
             formattedDate = messages.getMessage("SEARCH_DATE_YESTERDAY", null, formattedDate,
                     LocaleContextHolder.getLocale());
         } else if (DateUtils.isThisYear(date)) {
-            formattedDate = new SimpleDateFormat(configurationBean.getCurrentYearDateFormat(),
+            formattedDate = new SimpleDateFormat(configuration.getCurrentYearDateFormat(),
                     LocaleContextHolder.getLocale()).format(date);
         }
 

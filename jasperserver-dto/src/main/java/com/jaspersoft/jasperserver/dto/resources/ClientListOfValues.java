@@ -1,27 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -30,17 +34,12 @@ import java.util.List;
  * @version $Id$
  */
 @XmlRootElement(name = ResourceMediaType.LIST_OF_VALUES_CLIENT_TYPE)
-public class ClientListOfValues extends ClientResource<ClientListOfValues> implements ClientReferenceableListOfValues{
+public class ClientListOfValues extends ClientResource<ClientListOfValues> implements ClientReferenceableListOfValues {
     private List<ClientListOfValuesItem> items;
 
     public ClientListOfValues(ClientListOfValues other) {
-        final List<ClientListOfValuesItem> srcItems = other.getItems();
-        if(srcItems != null){
-            items = new ArrayList<ClientListOfValuesItem>(other.items.size());
-            for(ClientListOfValuesItem item : srcItems){
-                items.add(new ClientListOfValuesItem(item));
-            }
-        }
+        super(other);
+        this.items = copyOf(other.getItems());
     }
 
     public ClientListOfValues() {
@@ -86,5 +85,14 @@ public class ClientListOfValues extends ClientResource<ClientListOfValues> imple
                 ", uri='" + getUri() + '\'' +
                 ", label='" + getLabel() + '\'' +
                 '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public ClientListOfValues deepClone() {
+        return new ClientListOfValues(this);
     }
 }

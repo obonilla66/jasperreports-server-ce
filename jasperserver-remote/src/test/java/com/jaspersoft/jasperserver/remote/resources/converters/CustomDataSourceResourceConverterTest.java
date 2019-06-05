@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -23,12 +26,12 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.CustomReportDataSourceImpl;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientCustomDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
 import com.jaspersoft.jasperserver.dto.resources.ClientReference;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceable;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableFile;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -38,17 +41,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -110,7 +109,8 @@ public class CustomDataSourceResourceConverterTest {
         propertiesToIgnore.clear();
         reset(customDataSourceFactory, converter);
         when(converter.resourceSpecificFieldsToClient(any(ClientCustomDataSource.class), any(CustomReportDataSource.class), any(ToClientConversionOptions.class))).thenCallRealMethod();
-        when(converter.resourceSpecificFieldsToServer(any(ClientCustomDataSource.class), any(CustomReportDataSource.class), any(ToServerConversionOptions.class))).thenCallRealMethod();
+        when(converter.resourceSpecificFieldsToServer(any(ClientCustomDataSource.class), any(CustomReportDataSource.class), any(List.class), any(ToServerConversionOptions.class))).thenCallRealMethod();
+        doCallRealMethod().when(converter).resourceSecureFieldsToClient(any(ClientCustomDataSource.class), any(CustomReportDataSource.class), any(ToClientConversionOptions.class));
         when(converter.convertResourcesToServer(any(Map.class), any(ToServerConversionOptions.class))).thenCallRealMethod();
         when(converter.convertResourcesToClient(any(Map.class), any(ToClientConversionOptions.class))).thenCallRealMethod();
     }
@@ -118,7 +118,7 @@ public class CustomDataSourceResourceConverterTest {
     @Test
     public void correctClientServerResourceType(){
         final CustomDataSourceResourceConverter resourceConverter = new CustomDataSourceResourceConverter();
-        assertEquals(resourceConverter.getClientResourceType(), ClientTypeHelper.extractClientType(ClientCustomDataSource.class));
+        assertEquals(resourceConverter.getClientResourceType(), ClientTypeUtility.extractClientType(ClientCustomDataSource.class));
         assertEquals(resourceConverter.getServerResourceType(), CustomReportDataSource.class.getName());
     }
     @Test
@@ -148,7 +148,7 @@ public class CustomDataSourceResourceConverterTest {
             put(expectedPropertyKey2, "valueToReplace");
             put(expectedPropertyKey3, "valueToStay");
         }});
-        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         // incoming serviceClass should be ignored. Value should be taken from corresponding custom data source definition.
         assertEquals(result.getServiceClass(), definedServiceClassName);
@@ -240,7 +240,7 @@ public class CustomDataSourceResourceConverterTest {
         final ToServerConversionOptions options = ToServerConversionOptions.getDefault();
         final HashMap<String, ResourceReference> serverResources = new HashMap<String, ResourceReference>();
         when(converter.convertResourcesToServer(clientResourcesMap, options)).thenReturn(serverResources);
-        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, options);
+        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), options);
         assertSame(result, serverObject);
         assertSame(result.getResources(), serverResources);
     }
@@ -300,4 +300,53 @@ public class CustomDataSourceResourceConverterTest {
             assertEquals(key, result.get(key).getUri());
         }
     }
+
+    @Test
+    public void resourceSecureFieldsToClient_clientPropsIsNull_resultContainsOneIgnoredProps() {
+        final String expectedPropertyKey = "testPropertyKey1";
+        final String expectedPropertyValue = "testPropertyValue1";
+        final ClientCustomDataSource clientObject = new ClientCustomDataSource();
+        final CustomReportDataSource serverObject = new CustomReportDataSourceImpl();
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put(expectedPropertyKey, expectedPropertyValue);
+        serverObject.setPropertyMap(properties);
+
+        propertiesToIgnore.add(expectedPropertyKey);
+
+        converter.resourceSecureFieldsToClient(clientObject, serverObject, null);
+
+        final List<ClientProperty> resultProperties = clientObject.getProperties();
+        assertNotNull(resultProperties);
+        assertEquals(resultProperties.size(), 1);
+        assertEquals(resultProperties.get(0).getKey(), expectedPropertyKey);
+        assertEquals(resultProperties.get(0).getValue(), expectedPropertyValue);
+    }
+
+    @Test
+    public void resourceSecureFieldsToClient_clientPropsContainsOneElement_resultContainsTwoProps() {
+        final String expectedPropertyKey = "testPropertyKey1";
+        final String expectedPropertyValue = "testPropertyValue1";
+        final String existingPropertyKey = "testPropertyKey2";
+        final String existingPropertyValue = "testPropertyValue2";
+
+        List<ClientProperty> existingProps = Arrays.asList(new ClientProperty(existingPropertyKey, existingPropertyValue));
+        final ClientCustomDataSource clientObject = new ClientCustomDataSource().setProperties(existingProps);
+        final CustomReportDataSource serverObject = new CustomReportDataSourceImpl();
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put(expectedPropertyKey, expectedPropertyValue);
+        serverObject.setPropertyMap(properties);
+
+        propertiesToIgnore.add(expectedPropertyKey);
+
+        converter.resourceSecureFieldsToClient(clientObject, serverObject, null);
+
+        final List<ClientProperty> resultProperties = clientObject.getProperties();
+        assertNotNull(resultProperties);
+        assertEquals(resultProperties.size(), 2);
+        assertEquals(resultProperties.get(0).getKey(), existingPropertyKey);
+        assertEquals(resultProperties.get(0).getValue(), existingPropertyValue);
+        assertEquals(resultProperties.get(1).getKey(), expectedPropertyKey);
+        assertEquals(resultProperties.get(1).getValue(), expectedPropertyValue);
+    }
+
 }

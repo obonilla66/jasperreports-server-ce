@@ -1,30 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
-
-import com.jaspersoft.jasperserver.dto.authority.ClientRole;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -38,17 +40,15 @@ public class ClientVirtualDataSource extends ClientResource<ClientVirtualDataSou
 
     public ClientVirtualDataSource(ClientVirtualDataSource other) {
         super(other);
-
-        final List<ClientSubDataSourceReference> subDataSourceList = other.getSubDataSources();
-        if(subDataSourceList != null){
-            subDataSources = new ArrayList<ClientSubDataSourceReference>(other.getSubDataSources().size());
-            for(ClientSubDataSourceReference subDataSource : subDataSourceList){
-                subDataSources.add(new ClientSubDataSourceReference(subDataSource));
-            }
-        }
+        subDataSources = copyOf(other.getSubDataSources());
     }
 
     public ClientVirtualDataSource() {
+    }
+
+    @Override
+    public ClientVirtualDataSource deepClone() {
+        return new ClientVirtualDataSource(this);
     }
 
     @XmlElementWrapper(name = "subDataSources")
@@ -65,10 +65,11 @@ public class ClientVirtualDataSource extends ClientResource<ClientVirtualDataSou
 
         ClientVirtualDataSource that = (ClientVirtualDataSource) o;
 
-        if (subDataSources != null ? !new HashSet(subDataSources).equals(new HashSet(that.subDataSources)) : that.subDataSources != null)
-            return false;
-
-        return true;
+        if (subDataSources != null) {
+            if (that.subDataSources != null) {
+                return new HashSet(subDataSources).equals(new HashSet(that.subDataSources));
+            } else return false;
+        } else return that.subDataSources == null;
     }
 
     @Override

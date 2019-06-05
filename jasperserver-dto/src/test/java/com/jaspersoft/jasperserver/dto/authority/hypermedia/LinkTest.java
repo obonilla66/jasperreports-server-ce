@@ -1,117 +1,63 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.authority.hypermedia;
 
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.List;
+
 /**
- * @author askorodumov
+ * @author Alexei Skorodumov <askorodumov@tibco.com>
+ * @author Andriy Tivodar <ativodar@tibco>
  * @version $Id$
  */
-public class LinkTest {
-    @Test
-    public void equals_emptyIdentical_success() {
-        Link attributeLinks1 = new Link();
-        Link attributeLinks2 = new Link();
+public class LinkTest extends BaseDTOTest<Link> {
 
-        assertTrue(attributeLinks1.equals(attributeLinks2));
-        assertTrue(attributeLinks2.equals(attributeLinks1));
+    @Override
+    protected List<Link> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setHref("href2"),
+                // with null values
+                createFullyConfiguredInstance().setHref(null)
+        );
     }
 
-    @Test
-    public void hashCode_emptyIdentical_success() {
-        Link attributeLinks1 = new Link();
-        Link attributeLinks2 = new Link();
+    @Override
+    protected Link createFullyConfiguredInstance() {
+        Link attribute = new Link();
+        attribute.setHref("href");
 
-        assertEquals(attributeLinks1.hashCode(), attributeLinks2.hashCode());
+        return attribute;
     }
 
-    @Test
-    public void toString_emptyIdentical_success() {
-        Link attributeLinks1 = new Link();
-        Link attributeLinks2 = new Link();
-
-        assertEquals(attributeLinks1.toString(), attributeLinks2.toString());
+    @Override
+    protected Link createInstanceWithDefaultParameters() {
+        return new Link();
     }
 
-    @Test
-    public void equals_identical_success() {
-        Link attributeLinks1 = createLink("href1");
-        Link attributeLinks2 = new Link(attributeLinks1);
-
-        assertTrue(attributeLinks1.equals(attributeLinks2));
-        assertTrue(attributeLinks2.equals(attributeLinks1));
+    @Override
+    protected Link createInstanceFromOther(Link other) {
+        return new Link(other);
     }
 
-    @Test
-    public void hashCode_identical_success() {
-        Link attributeLinks1 = createLink("href1");
-        Link attributeLinks2 = new Link(attributeLinks1);
-
-        assertEquals(attributeLinks1.hashCode(), attributeLinks2.hashCode());
-    }
-
-    @Test
-    public void toString_identical_success() {
-        Link attributeLinks1 = createLink("href1");
-        Link attributeLinks2 = new Link(attributeLinks1);
-
-        assertEquals(attributeLinks1.toString(), attributeLinks2.toString());
-    }
-
-    @Test
-    public void equals_notIdentical_success() {
-        Link attributeLinks1 = createLink("href1");
-        Link attributeLinks2 = createLink("href2");
-        Link attributeLinks3 = createLink(null);
-
-        assertFalse(attributeLinks1.equals(attributeLinks2));
-        assertFalse(attributeLinks2.equals(attributeLinks1));
-
-        assertFalse(attributeLinks1.equals(attributeLinks3));
-        assertFalse(attributeLinks3.equals(attributeLinks1));
-    }
-
-    @Test
-    public void hashCode_notIdentical_success() {
-        Link attributeLinks1 = createLink("href1");
-        Link attributeLinks2 = createLink("href2");
-        Link attributeLinks3 = createLink(null);
-
-        assertNotEquals(attributeLinks1.hashCode(), attributeLinks2.hashCode());
-        assertNotEquals(attributeLinks1.hashCode(), attributeLinks3.hashCode());
-    }
-
-    @Test
-    public void toString_notIdentical_success() {
-        Link attributeLinks1 = createLink("href1");
-        Link attributeLinks2 = createLink("href2");
-        Link attributeLinks3 = createLink(null);
-
-        assertNotEquals(attributeLinks1.toString(), attributeLinks2.toString());
-        assertNotEquals(attributeLinks1.toString(), attributeLinks3.toString());
-    }
-
-    private Link createLink(String href) {
-        Link link = new Link();
-        link.setHref(href);
-        return link;
-    }
 }

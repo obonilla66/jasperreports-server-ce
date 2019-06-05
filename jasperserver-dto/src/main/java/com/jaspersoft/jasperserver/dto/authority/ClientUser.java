@@ -1,36 +1,42 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.authority;
 
-import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import java.util.*;
+import java.util.Date;
+import java.util.Set;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author: Zakhar.Tomchenco
  */
 
 @XmlRootElement(name = "user")
-public class ClientUser {
+public class ClientUser implements DeepCloneable<ClientUser> {
     private Set<ClientRole> roleSet;
     private String fullName;
     private String password;
@@ -45,23 +51,23 @@ public class ClientUser {
     }
 
     public ClientUser(ClientUser other) {
-        final Set<ClientRole> clientRoleSet = other.getRoleSet();
-        if(clientRoleSet != null){
-            roleSet = new HashSet<ClientRole>(other.getRoleSet().size());
-            for(ClientRole role : clientRoleSet){
-                roleSet.add(new ClientRole(role));
-            }
-        }
+        checkNotNull(other);
+
+        this.roleSet = copyOf(other.getRoleSet());
         this.fullName = other.getFullName();
         this.password = other.getPassword();
         this.emailAddress = other.getEmailAddress();
         this.externallyDefined = other.isExternallyDefined();
         this.enabled = other.isEnabled();
-        this.previousPasswordChangeTime = other.getPreviousPasswordChangeTime();
+        this.previousPasswordChangeTime = copyOf(other.getPreviousPasswordChangeTime());
         this.tenantId = other.getTenantId();
         this.username = other.getUsername();
     }
 
+    @Override
+    public ClientUser deepClone() {
+        return new ClientUser(this);
+    }
 
     @XmlElementWrapper(name = "roles")
     @XmlElement(name = "role")
@@ -161,19 +167,17 @@ public class ClientUser {
 
         ClientUser that = (ClientUser) o;
 
-        if (emailAddress != null ? !emailAddress.equals(that.emailAddress) : that.emailAddress != null) return false;
-        if (enabled != null ? !enabled.equals(that.enabled) : that.enabled != null) return false;
-        if (externallyDefined != null ? !externallyDefined.equals(that.externallyDefined) : that.externallyDefined != null)
-            return false;
+        if (roleSet != null ? !roleSet.equals(that.roleSet) : that.roleSet != null) return false;
         if (fullName != null ? !fullName.equals(that.fullName) : that.fullName != null) return false;
         if (password != null ? !password.equals(that.password) : that.password != null) return false;
+        if (emailAddress != null ? !emailAddress.equals(that.emailAddress) : that.emailAddress != null) return false;
+        if (externallyDefined != null ? !externallyDefined.equals(that.externallyDefined) : that.externallyDefined != null)
+            return false;
+        if (enabled != null ? !enabled.equals(that.enabled) : that.enabled != null) return false;
         if (previousPasswordChangeTime != null ? !previousPasswordChangeTime.equals(that.previousPasswordChangeTime) : that.previousPasswordChangeTime != null)
             return false;
-        if (roleSet != null ? !roleSet.equals(that.roleSet) : that.roleSet != null) return false;
         if (tenantId != null ? !tenantId.equals(that.tenantId) : that.tenantId != null) return false;
-        if (username != null ? !username.equals(that.username) : that.username != null) return false;
-
-        return true;
+        return username != null ? username.equals(that.username) : that.username == null;
     }
 
     @Override

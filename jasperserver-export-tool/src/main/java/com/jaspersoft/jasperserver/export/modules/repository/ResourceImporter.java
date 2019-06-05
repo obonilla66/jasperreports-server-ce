@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.export.modules.repository;
@@ -507,10 +510,19 @@ public class ResourceImporter extends BaseImporterModule implements ResourceImpo
 						executionContext.getAttributes().add(RepositoryService.IS_IMPORTING);
 					}
 
+					ResourceBean bean = null;
+					if (resource == null || update) {
+						bean = readResourceBean(uri);
+						if (!bean.isSupported()) {
+							String message = "Resource \"" + importUri + "\" is deprecated, not importing.";
+							logWarning(ExportImportWarningCode.IMPORT_SKIP_RESOURCE, new String[]{importUri}, message);
+							return importUri;
+						}
+					}
+
 					if (resource == null) {
 						ensureParent(uri);
 
-						ResourceBean bean = readResourceBean(uri);
 						resource = createResource(bean);
 
 						commandOut.debug("About to save resource " + importUri);
@@ -522,7 +534,6 @@ public class ResourceImporter extends BaseImporterModule implements ResourceImpo
 					} else if (update) {
 						registerUpdateResource(importUri);
 
-						ResourceBean bean = readResourceBean(uri);
 						Resource updated = createResource(bean);
 
 						if (resource.isSameType(updated)) {

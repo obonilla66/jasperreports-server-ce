@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.common.util.spring;
@@ -72,7 +75,11 @@ public class GenericBeanUpdater extends AbstractBeanPropertyProcessor {
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
         this.beanFactory = beanFactory;
-        super.postProcessBeanFactory(beanFactory);
+        if (getDefinition().isUseConstructor()){
+            super.postProcessConstructorBeanFactory(beanFactory);
+        } else {
+            super.postProcessBeanFactory(beanFactory);
+        }
     }
 
     public String getSecurityMetadataSourceDefinition() {
@@ -309,7 +316,50 @@ public class GenericBeanUpdater extends AbstractBeanPropertyProcessor {
 		}
 	}
 
-	/**
+    protected void handleFilterChainsToInsertValue(Object filterList, String patternUri) {
+        ManagedList filters = (ManagedList) filterList;
+        if (hasBefore()) {
+            for (int i = 0; i < filters.size(); i++) {
+                String beanName = ((RuntimeBeanReference) filters.get(i)).getBeanName();
+                if (!before.equals(beanName)) continue;
+
+                final String[] namesToInsert = preparedNamesToInsert();
+                for (int j = namesToInsert.length - 1; j >= 0; j--) {
+                    filters.add(i, new RuntimeBeanReference(namesToInsert[j]));
+                }
+                break;
+            }
+        }
+
+        if (!hasAfter() || !after.equals(patternUri))  return;
+
+        final String[] namesToInsert = preparedNamesToInsert();
+        for (int j = namesToInsert.length - 1; j >= 0; j--) {
+            filters.add(0, new RuntimeBeanReference(namesToInsert[j]));
+        }
+    }
+
+    private boolean hasBefore(){
+        return  before != null && !before.isEmpty();
+    }
+
+    private boolean hasAfter(){
+        return  after != null && !after.isEmpty();
+    }
+
+    private String[] preparedNamesToInsert() {
+        final String comma = ",";
+        final String[] namesToInsert = ((String) value).split(comma);
+        String clear = "";
+        for (int i = 0; i < namesToInsert.length; i++) {
+            if (namesToInsert[i] == null || namesToInsert[i].isEmpty()) continue;
+            clear = clear+comma+namesToInsert[i];
+        }
+        clear = clear.substring(1); // no comma
+
+        return clear.split(comma);
+    }
+    /**
 	 * @param originalValue
 	 * @return
 	 */
@@ -349,7 +399,7 @@ public class GenericBeanUpdater extends AbstractBeanPropertyProcessor {
 		return definition.getPropertyName();
 	}
 
-	public GenericBeanUpdaterDefinition getDefinition() {
+    public GenericBeanUpdaterDefinition getDefinition() {
 		return definition;
 	}
 
@@ -394,7 +444,12 @@ public class GenericBeanUpdater extends AbstractBeanPropertyProcessor {
     }
 
     public void setAfter(String after) {
-        this.after = after;
+        // special case because @see org.springframework.security.config.http.MatcherType createMatcher()
+        if ("/**".equals(after) || "**".equals(after))  {
+            this.after="";
+        } else {
+            this.after = after;
+        }
     }
 
     /**

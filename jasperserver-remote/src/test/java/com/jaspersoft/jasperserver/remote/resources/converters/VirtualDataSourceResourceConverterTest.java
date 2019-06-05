@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -21,9 +24,9 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.VirtualReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.VirtualReportDataSourceImpl;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientSubDataSourceReference;
 import com.jaspersoft.jasperserver.dto.resources.ClientVirtualDataSource;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -35,7 +38,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertTrue;
 
 /**
  * <p></p>
@@ -57,7 +63,7 @@ public class VirtualDataSourceResourceConverterTest {
 
     @Test
     public void correctClientServerResourceType(){
-        assertEquals(converter.getClientResourceType(), ClientTypeHelper.extractClientType(ClientVirtualDataSource.class));
+        assertEquals(converter.getClientResourceType(), ClientTypeUtility.extractClientType(ClientVirtualDataSource.class));
         assertEquals(converter.getServerResourceType(), VirtualReportDataSource.class.getName());
     }
 
@@ -79,7 +85,7 @@ public class VirtualDataSourceResourceConverterTest {
         reference.setUri(expectedUri2);
         subDataSourceReferences.add(reference);
         clientObject.setSubDataSources(subDataSourceReferences);
-        final VirtualReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final VirtualReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         final Map<String,ResourceReference> dataSourceUriMap = result.getDataSourceUriMap();
         assertNotNull(dataSourceUriMap);

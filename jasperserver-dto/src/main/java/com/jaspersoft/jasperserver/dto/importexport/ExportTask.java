@@ -1,73 +1,69 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.importexport;
 
-import java.util.ArrayList;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author: Zakhar.Tomchenco
  */
 @XmlRootElement(name = "export")
-public class ExportTask {
-    @XmlElementWrapper(name = "parameters")
-    @XmlElement(name = "parameter")
-    private List<String> exportParams;
+public class ExportTask implements DeepCloneable<ExportTask> {
 
-    @XmlElementWrapper(name = "uris")
-    @XmlElement(name = "uri")
+    private List<String> exportParams;
     private List<String> urisOfResources;
+    private List<String> rolesToExport;
+    private List<String> usersToExport;
+    private List<String> resourceTypes;
+    private String organization;
 
     @XmlTransient
     private List<String> urisOfScheduledJobs;
-
-    @XmlElementWrapper(name = "roles")
-    @XmlElement(name = "role")
-    private List<String> rolesToExport;
-
-    @XmlElementWrapper(name = "users")
-    @XmlElement(name = "user")
-    private List<String> usersToExport;
-
-    @XmlElementWrapper(name = "resourceTypes")
-    @XmlElement(name = "resourceType")
-    private List<String> resourceTypes;
-
-    @XmlElement(name = "organization")
-    private String organization;
 
     public ExportTask() {
     }
 
     public ExportTask(ExportTask other) {
-        this.exportParams = (other.exportParams != null) ? new ArrayList<String>(other.exportParams) : null;
-        this.urisOfResources = (other.urisOfResources != null) ? new ArrayList<String>(other.urisOfResources) : null;
-        this.urisOfScheduledJobs = (other.urisOfScheduledJobs != null) ? new ArrayList<String>(other.urisOfScheduledJobs) : null;
-        this.rolesToExport = (other.rolesToExport != null) ? new ArrayList<String>(other.rolesToExport) : null;
-        this.usersToExport = (other.usersToExport != null) ? new ArrayList<String>(other.usersToExport) : null;
-        this.resourceTypes = (other.resourceTypes != null) ? new ArrayList<String>(other.resourceTypes) : null;
+        checkNotNull(other);
+
+        this.exportParams = copyOf(other.getParameters());
+        this.urisOfResources = copyOf(other.getUris());
+        this.urisOfScheduledJobs = copyOf(other.getScheduledJobs());
+        this.rolesToExport = copyOf(other.getRoles());
+        this.usersToExport = copyOf(other.getUsers());
+        this.resourceTypes = copyOf(other.getResourceTypes());
         this.organization = other.getOrganization();
     }
 
+    @XmlElementWrapper(name = "parameters")
+    @XmlElement(name = "parameter")
     public List<String> getParameters() {
         return exportParams;
     }
@@ -77,6 +73,8 @@ public class ExportTask {
         return this;
     }
 
+    @XmlElementWrapper(name = "uris")
+    @XmlElement(name = "uri")
     public List<String> getUris() {
         return urisOfResources;
     }
@@ -95,6 +93,8 @@ public class ExportTask {
         return this;
     }
 
+    @XmlElementWrapper(name = "roles")
+    @XmlElement(name = "role")
     public List<String> getRoles() {
         return rolesToExport;
     }
@@ -104,6 +104,8 @@ public class ExportTask {
         return this;
     }
 
+    @XmlElementWrapper(name = "users")
+    @XmlElement(name = "user")
     public List<String> getUsers() {
         return usersToExport;
     }
@@ -113,6 +115,7 @@ public class ExportTask {
         return this;
     }
 
+    @XmlElement(name = "organization")
     public String getOrganization() {
         return organization;
     }
@@ -122,6 +125,8 @@ public class ExportTask {
         return this;
     }
 
+    @XmlElementWrapper(name = "resourceTypes")
+    @XmlElement(name = "resourceType")
     public List<String> getResourceTypes() {
         return resourceTypes;
     }
@@ -176,5 +181,14 @@ public class ExportTask {
                 ", resourceTypes=" + resourceTypes +
                 ", organization='" + organization + '\'' +
                 '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public ExportTask deepClone() {
+        return new ExportTask(this);
     }
 }

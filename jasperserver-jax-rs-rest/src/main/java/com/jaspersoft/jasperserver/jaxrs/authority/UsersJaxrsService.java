@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.authority;
 
@@ -27,7 +30,7 @@ import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.common.RoleSearchCriteria;
 import com.jaspersoft.jasperserver.remote.common.UserSearchCriteria;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.resources.converters.UserConverter;
@@ -58,7 +61,7 @@ public class UsersJaxrsService {
                              Boolean includeSubOrgs,
                              Boolean hasAllRequiredRoles,
                              String search,
-                             List<String> requredRoleNames) throws RemoteException {
+                             List<String> requredRoleNames) throws ErrorDescriptorException {
 
         UserSearchCriteria criteria = new UserSearchCriteria();
         criteria.setIncludeSubOrgs(includeSubOrgs);
@@ -123,7 +126,7 @@ public class UsersJaxrsService {
         return Response.status(Response.Status.FORBIDDEN).build();
     }
 
-    public Response createUser(ClientUser clientUser) throws RemoteException {
+    public Response createUser(ClientUser clientUser) throws ErrorDescriptorException {
         if (findUser(clientUser.getUsername(), clientUser.getTenantId()) != null){
             throw new ResourceAlreadyExistsException(clientUser.getUsername());
         }
@@ -138,7 +141,7 @@ public class UsersJaxrsService {
     }
 
     public Response getPropertiesOfUser(String name,
-                                        String tenantId) throws RemoteException {
+                                        String tenantId) throws ErrorDescriptorException {
 
         User user = findUser(name, tenantId);
 
@@ -149,7 +152,7 @@ public class UsersJaxrsService {
         throw new ResourceNotFoundException(name);
     }
 
-    public Response putUser(ClientUser clientUser, String name, String tenantId) throws RemoteException {
+    public Response putUser(ClientUser clientUser, String name, String tenantId) throws ErrorDescriptorException {
         validateRoles(clientUser);
 
         User user = findUser(name, tenantId);
@@ -198,7 +201,7 @@ public class UsersJaxrsService {
     }
 
     public Response deleteUser(String name,
-                               String tenantId) throws RemoteException {
+                               String tenantId) throws ErrorDescriptorException {
 
         User user = findUser(name, tenantId);
 
@@ -211,7 +214,7 @@ public class UsersJaxrsService {
         return Response.noContent().build();
     }
 
-    private User findUser(String name, String tenantId) throws RemoteException {
+    private User findUser(String name, String tenantId) throws ErrorDescriptorException {
         UserSearchCriteria criteria = new UserSearchCriteria();
         criteria.setName(name);
         criteria.setTenantId("".equals(tenantId) ? null : tenantId);
@@ -240,7 +243,7 @@ public class UsersJaxrsService {
                 (userTenantId != null && userTenantId.equals(tenantId)));
     }
 
-    private Role findRole(String name) throws RemoteException{
+    private Role findRole(String name) throws ErrorDescriptorException {
        return ((UserAndRoleServiceImpl)service).getUserAuthorityService().getRole(null,name);
     }
 

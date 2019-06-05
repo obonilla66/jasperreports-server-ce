@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
@@ -23,47 +26,46 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientList;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ParameterExpressionsMapXmlAdapter;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeTimestampRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeDateRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBoolean;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientFloat;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDouble;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLong;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientShort;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientByte;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigDecimal;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeDateRange;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeTimestampRange;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTimestamp;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientFunction;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.*;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreater;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreaterOrEqual;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLess;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLessOrEqual;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientNotEqual;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientAnd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientNot;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientOr;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
-import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionContainer;
+import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionType;
 import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckParametersExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.validation.ParameterMap;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.util.HashMap;
 import java.util.Map;
 
-import static com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckExpressionContainerValidator.WHERE_EXPRESSION_NOT_VALID;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * Created by stas on 4/8/15.
  */
 @XmlRootElement(name = "where")
-public class ClientWhere implements ClientQueryClause {
+public class ClientWhere implements ClientQueryClause, DeepCloneable<ClientWhere> {
 
-    @CheckExpressionContainer(message = WHERE_EXPRESSION_NOT_VALID,
+    @CheckExpressionType(
             value = {
                     ClientNot.class,
                     ClientAnd.class,
@@ -86,14 +88,7 @@ public class ClientWhere implements ClientQueryClause {
             value = {
                     ClientNull.class,
                     ClientBoolean.class,
-                    ClientByte.class,
-                    ClientShort.class,
-                    ClientInteger.class,
-                    ClientLong.class,
-                    ClientBigInteger.class,
-                    ClientFloat.class,
-                    ClientDouble.class,
-                    ClientBigDecimal.class,
+                    ClientNumber.class,
                     ClientString.class,
                     ClientDate.class,
                     ClientTime.class,
@@ -109,11 +104,10 @@ public class ClientWhere implements ClientQueryClause {
     }
 
     public ClientWhere(ClientWhere where) {
-        if (where != null) {
-            this.setFilterExpression(where.getFilterExpression())
-                    .setParameters(
-                            where.getParameters() != null ? new HashMap<String, ClientExpressionContainer>(where.getParameters()) : null);
-        }
+        checkNotNull(where);
+
+        filterExpression = copyOf(where.getFilterExpression());
+        parameters = copyOf(where.getParameters());
     }
 
     public ClientWhere(ClientExpressionContainer container) {
@@ -197,5 +191,10 @@ public class ClientWhere implements ClientQueryClause {
                 "filterExpression=" + filterExpression +
                 ", parameters=" + parameters +
                 '}';
+    }
+
+    @Override
+    public ClientWhere deepClone() {
+        return new ClientWhere(this);
     }
 }

@@ -1,28 +1,40 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.logcapture;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import java.io.File;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * DTO for Diagnostic Collector's settings.
@@ -34,7 +46,7 @@ import java.io.File;
 @XmlRootElement
 @XmlType(propOrder = {"id", "name", "verbosity", "logFilterParameters", "status"})
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class CollectorSettings {
+public class CollectorSettings implements DeepCloneable<CollectorSettings> {
 
     public static void marshall(CollectorSettings collectorSettings, String filePath) throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(CollectorSettings.class);
@@ -60,13 +72,19 @@ public class CollectorSettings {
     }
 
     // Cloning constructor required by Jaspersoft REST DTo convention.
-    @SuppressWarnings("unused")
     public CollectorSettings(CollectorSettings other) {
+        checkNotNull(other);
+
         this.id = other.getId();
         this.name = other.getName();
         this.verbosity = other.getVerbosity();
         this.status = other.getStatus();
-        this.logFilterParameters = new LogFilterParameters(other.getLogFilterParameters());
+        this.logFilterParameters = copyOf(other.getLogFilterParameters());
+    }
+
+    @Override
+    public CollectorSettings deepClone() {
+        return new CollectorSettings(this);
     }
 
     /*
@@ -82,29 +100,26 @@ public class CollectorSettings {
     }
 
     @Override
-    @SuppressWarnings("all")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof CollectorSettings)) return false;
 
         CollectorSettings that = (CollectorSettings) o;
 
-        if (!id.equals(that.id)) return false;
-        if (!name.equals(that.name)) return false;
         if (logFilterParameters != null ? !logFilterParameters.equals(that.logFilterParameters) : that.logFilterParameters != null)
             return false;
-        if (status != null ? !status.equals(that.status) : that.status != null) return false;
-        if (!verbosity.equals(that.verbosity)) return false;
-
-        return true;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (verbosity != null ? !verbosity.equals(that.verbosity) : that.verbosity != null) return false;
+        return status != null ? status.equals(that.status) : that.status == null;
     }
 
     @Override
     public int hashCode() {
         int result = logFilterParameters != null ? logFilterParameters.hashCode() : 0;
-        result = 31 * result + id.hashCode();
-        result = 31 * result + name.hashCode();
-        result = 31 * result + verbosity.hashCode();
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (verbosity != null ? verbosity.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
@@ -118,7 +133,18 @@ public class CollectorSettings {
     @SuppressWarnings("unused")
     public CollectorSettings setLogFilterParameters(LogFilterParameters logFilterParameters) {
         this.logFilterParameters = logFilterParameters;
-        return  this;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "CollectorSettings{" +
+                "logFilterParameters=" + logFilterParameters +
+                ", id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", verbosity='" + verbosity + '\'' +
+                ", status='" + status + '\'' +
+                '}';
     }
 
     public String getId() {
@@ -127,7 +153,7 @@ public class CollectorSettings {
 
     public CollectorSettings setId(String id) {
         this.id = id;
-        return  this;
+        return this;
     }
 
     public String getName() {
@@ -158,6 +184,4 @@ public class CollectorSettings {
         this.status = status;
         return this;
     }
-
-
 }

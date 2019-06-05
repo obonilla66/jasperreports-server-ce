@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
@@ -23,8 +26,9 @@ import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -34,7 +38,10 @@ import java.util.List;
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public abstract class AbstractResourceGroupElement<T extends AbstractResourceGroupElement<T>> extends ResourceElement<T> {
+
+
+public abstract class AbstractResourceGroupElement<T extends AbstractResourceGroupElement<T>> extends ResourceElement<T>
+        implements GroupElement<SchemaElement, T>  {
     @Valid
     private List<SchemaElement> elements;
     @Valid
@@ -43,19 +50,10 @@ public abstract class AbstractResourceGroupElement<T extends AbstractResourceGro
     public AbstractResourceGroupElement(){}
     public AbstractResourceGroupElement(AbstractResourceGroupElement<T> source) {
         super(source);
-        final ClientExpressionContainer sourceFilterExpression = source.getFilterExpression();
-        if(sourceFilterExpression != null){
-            filterExpression = new ClientExpressionContainer(sourceFilterExpression);
-        }
-        final List<SchemaElement> sourceElements = source.getElements();
-        if(sourceElements != null){
-            List<SchemaElement> clonedElements = new ArrayList<SchemaElement>(sourceElements.size());
-            for (SchemaElement sourceElement : sourceElements) {
-                clonedElements.add(sourceElement.deepClone());
-            }
-            elements = clonedElements;
-        }
+        elements = copyOf(source.getElements());
+        filterExpression = copyOf(source.getFilterExpression());
     }
+
     @XmlElementWrapper(name = "elements")
     @XmlElements({
             @XmlElement(name = "reference", type = ReferenceElement.class),
@@ -63,8 +61,8 @@ public abstract class AbstractResourceGroupElement<T extends AbstractResourceGro
             @XmlElement(name = "queryGroup", type = QueryResourceGroupElement.class),
             // here different types of resources are marked as 'element'. It's not by mistake.
             // ResourceMetadataSingleElement is used in metadata service only. It doesn't come from the client. So, no conflict here.
-            @XmlElement(name = "element", type = ResourceSingleElement.class),
-            @XmlElement(name = "element", type = ResourceMetadataSingleElement.class)
+            @XmlElement(name = "element", type = ResourceMetadataSingleElement.class),
+            @XmlElement(name = "element", type = ResourceSingleElement.class)
     })
 
     public List<SchemaElement> getElements() {

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.report;
 
@@ -21,10 +24,11 @@ import com.jaspersoft.jasperserver.api.engine.common.service.ReportExecutionStat
 import com.jaspersoft.jasperserver.api.engine.common.service.SchedulerReportExecutionStatusSearchCriteria;
 import com.jaspersoft.jasperserver.dto.reports.ReportParameter;
 import com.jaspersoft.jasperserver.dto.reports.ReportParameters;
+import com.jaspersoft.jasperserver.dto.executions.ExecutionStatusObject;
 import com.jaspersoft.jasperserver.remote.common.CallTemplate;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceWrapper;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.services.ExportExecution;
 import com.jaspersoft.jasperserver.remote.services.ExportExecutionOptions;
 import com.jaspersoft.jasperserver.remote.services.ReportExecution;
@@ -79,7 +83,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
     public Response getReportExecution(@PathParam("executionId") final String executionId) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 return Response.ok(remoteService.getReportExecution(executionId)).build();
             }
         });
@@ -91,7 +95,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
     public Response deleteReportExecution(@PathParam("executionId") final String executionId) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 remoteService.deleteReportExecution(executionId);
                 return Response.status(Response.Status.NO_CONTENT).build();
             }
@@ -105,7 +109,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             @QueryParam("suppressContentDisposition") @DefaultValue("false") final Boolean suppressContentDisposition) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 ReportOutputResource reportOutputResource = remoteService.getOutputResource(executionId, exportId);
                 return ReportExecutionHelper.buildResponseFromOutputResource(reportOutputResource, suppressContentDisposition);
             }
@@ -137,7 +141,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             final ExportExecutionOptions exportOptions) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 return Response.ok(remoteService.executeExport(executionId, exportOptions)).build();
             }
         });
@@ -149,7 +153,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             @PathParam("exportId") final String exportId, final @PathParam("attachment") String attachmentName) {
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final ReportOutputResource attachment = remoteService.getAttachment(executionId, exportId, attachmentName);
                 return ReportExecutionHelper.buildResponseFromOutputResource(attachment);
             }
@@ -166,7 +170,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             @QueryParam("fireTimeFrom") final String fireTimeFrom,
             @QueryParam("fireTimeTo") final String fireTimeTo) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 SchedulerReportExecutionStatusSearchCriteria criteria = null;
                 if (StringUtils.isNotEmpty(reportURI)
                         || StringUtils.isNotEmpty(jobID)
@@ -207,7 +211,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             @PathParam("exportId") final String exportId){
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final String status = remoteService.getExportExecution(executionId, exportId).getStatus().toString();
                 ReportExecutionStatusEntity statusEntity = new ReportExecutionStatusEntity();
                 statusEntity.setValue(status);
@@ -223,9 +227,9 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             @PathParam("exportId") final String exportId){
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final ExportExecution exportExecution = remoteService.getExportExecution(executionId, exportId);
-                return Response.ok( new ReportExecutionStatusObject()
+                return Response.ok( new ExecutionStatusObject()
                                 .setValue(exportExecution.getStatus())
                                 .setErrorDescriptor(exportExecution.getErrorDescriptor())
                 ).build();
@@ -239,7 +243,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
     public Response getReportExecutionStatus(@PathParam("executionId") final String executionId){
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final String status = remoteService.getReportExecution(executionId).getStatus().toString();
                 ReportExecutionStatusEntity statusEntity = new ReportExecutionStatusEntity();
                 statusEntity.setValue(status);
@@ -254,9 +258,9 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
     public Response getReportExecutionStatusObject(@PathParam("executionId") final String executionId){
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final ReportExecution reportExecution = remoteService.getReportExecution(executionId);
-                return Response.ok( new ReportExecutionStatusObject()
+                return Response.ok( new ExecutionStatusObject()
                                 .setValue(reportExecution.getStatus())
                                 .setErrorDescriptor(reportExecution.getErrorDescriptor())
                 ).build();
@@ -272,7 +276,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
         Response response;
         if (statusEntity != null && ReportExecutionStatusEntity.VALUE_CANCELLED.equals(statusEntity.getValue()))
             response = callRemoteService(new ConcreteCaller<Response>() {
-                public Response call(RunReportService remoteService) throws RemoteException {
+                public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                     final Boolean cancellationResult = remoteService.cancelReportExecution(executionId);
                     return cancellationResult ? Response.ok(new ReportExecutionStatusEntity()).build()
                             : Response.status(Response.Status.NO_CONTENT).build();
@@ -288,7 +292,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
     public Response getReportOutputMetadata(final ReportExecutionRequest reportExecutionRequest,
             @Context final HttpServletRequest request) {
         return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(RunReportService remoteService) throws RemoteException {
+            public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final ReportExecutionOptions reportExecutionOptions = new ReportExecutionOptions()
                         .setIgnorePagination(reportExecutionRequest.getIgnorePagination())
                         .setTransformerKey(reportExecutionRequest.getTransformerKey())

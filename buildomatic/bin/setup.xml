@@ -1,19 +1,22 @@
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <project name="setup">
@@ -620,6 +623,33 @@
             </if>
 
             <if>
+                <isset property="buildArtifactVersionName"/>
+                <then>
+                </then>
+                <else>
+                    <exec executable="git" outputproperty="git.currentBranchName" failifexecutionfails="false">
+                        <arg value="rev-parse"/>
+                        <arg value="--abbrev-ref"/>
+                        <arg value="HEAD"/>
+                    </exec>
+                    <property name="buildArtifactVersionName" value="${git.currentBranchName}-SNAPSHOT"/>
+                </else>
+            </if>
+
+            <echo level="info">using artifact version name: ${buildArtifactVersionName}</echo>
+
+            <if>
+                <isset property="fafBuildArtifactVersionName"/>
+                <then>
+                </then>
+                <else>
+                    <property name="fafBuildArtifactVersionName" value="${buildArtifactVersionName}"/>
+                </else>
+            </if>
+
+            <echo level="info">using FAF version name: ${fafBuildArtifactVersionName}</echo>
+
+            <if>
                 <!-- test if masterPropsSource or any of the template files have changed -->
                 <uptodate targetfile="${masterProps}">
                     <srcresources>
@@ -1057,4 +1087,52 @@
       <validatePropsNotBlank properties="${listOfPropsPro}" />
     </target>    
   
+	<!-- 
+		Add "setup-groovy" to "depends" on your target if you are going to use the <groovy> tag.
+		It will take care of finding a Groovy JAR and doing the taskdef for groovy.
+		
+		Notes on running Groovy scripts from buildomatic:
+		- Groovy isn't in the ant lib directory, so if we don't find it, we use Maven to download it.
+		- We are using a convention of putting scripts under bin/groovy.
+		- Here we are running Groovy script files with the <groovy> task and a "src" attribute for the file name;
+		  no compilation necessary! It's also possible to have inline Groovy tasks.
+		- When running Groovy scripts this way, the script directory is used like a classpath for resolving imports,
+		  except that you don't have to compile the source.
+		  For example, if I run "bin/groovy/foo.groovy" and that script has "import biz.com.Util", the script loader
+		  will look for the file "bin/groovy/biz/com/Util.groovy".
+	-->
+    <target name="setup-groovy"
+           description="download groovy jar into buildomatic/lib if not present, then define groovy task">
+        <if>
+            <available classname="org.codehaus.groovy.ant.Groovy"/>
+        	<then>
+                <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy"/>
+           	</then>
+            <elseif>
+        		<!-- look for it in the export lib dir -->
+                <isset property="ieLib" />
+                <then>
+                	<echo>Found Groovy in import lib directory</echo>
+                    <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy">
+                        <classpath>
+                            <fileset dir="${ieLib}" includes="groovy-all-*.jar" />
+                        </classpath>
+                    </taskdef>
+                </then>
+			</elseif>
+        	<else>
+            	<echo>Didn't find groovy JAR, downloading it</echo>
+                <runmaven dir="${basedir}">
+                    <arg value="dependency:copy"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy-all:2.4.5:jar"/>
+                    <arg value="-DoutputDirectory=${ant.home}/lib"/>
+                </runmaven>
+                <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy">
+                    <classpath>
+                        <fileset dir="${ant.home}/lib" includes="groovy-all-*.jar" />
+                    </classpath>
+                </taskdef>
+        	</else>
+        </if>
+    </target>
 </project>

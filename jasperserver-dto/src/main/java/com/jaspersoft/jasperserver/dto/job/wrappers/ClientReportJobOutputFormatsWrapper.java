@@ -1,28 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job.wrappers;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
-import java.util.LinkedHashSet;
-import java.util.Set;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * This class is used for serialization because of no ability inFolder use @XmlElementWrapper together with @XmlJavaTypeAdapter.
@@ -34,22 +41,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "outputFormats")
 public class ClientReportJobOutputFormatsWrapper implements DeepCloneable<ClientReportJobOutputFormatsWrapper> {
 
+    private Set<String> formats;
+
     public ClientReportJobOutputFormatsWrapper() {
     }
 
     public ClientReportJobOutputFormatsWrapper(Set<String> formats) {
-        this.formats = new LinkedHashSet<String>();
-        for (String format : formats) {
-            this.formats.add(format);
+        if (formats == null) {
+            return;
         }
+        this.formats = new LinkedHashSet<String>(formats);
     }
 
     public ClientReportJobOutputFormatsWrapper(ClientReportJobOutputFormatsWrapper other) {
-        this(other.getFormats());
+        checkNotNull(other);
+
+        formats = copyOf(other.getFormats());
     }
 
-
-    private Set<String> formats;
 
     @XmlElement(name = "outputFormat")
     public Set<String> getFormats() {

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.common.service.impl;
 
@@ -28,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.orm.hibernate5.support.HibernateDaoSupport;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.LogEvent;
@@ -146,7 +149,7 @@ public class HibernateLoggingService extends HibernateDaoSupport implements Logg
             criteria.addOrder(Order.desc("occurrenceDate"));
 
             //noinspection unchecked
-            events = getHibernateTemplate().findByCriteria(criteria);
+            events = (List<RepoLogEvent>)getHibernateTemplate().findByCriteria(criteria);
         } else {
             events = Collections.emptyList();
         }
@@ -174,7 +177,7 @@ public class HibernateLoggingService extends HibernateDaoSupport implements Logg
             criteria.addOrder(Order.desc("occurrenceDate"));
 
             //noinspection unchecked
-            events = getHibernateTemplate().findByCriteria(criteria);
+            events = (List<RepoLogEvent>) getHibernateTemplate().findByCriteria(criteria);
         } else {
             events = Collections.emptyList();
         }

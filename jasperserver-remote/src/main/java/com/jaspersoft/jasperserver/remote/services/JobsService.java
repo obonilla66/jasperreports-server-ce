@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services;
 
@@ -24,7 +27,7 @@ import com.jaspersoft.jasperserver.api.engine.scheduling.domain.reportjobmodel.R
 import com.jaspersoft.jasperserver.dto.job.ClientJobCalendar;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 
@@ -40,47 +43,47 @@ public interface JobsService {
     /**
      * Delete report job with given ID
      * @param id - report job ID to delete
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public void deleteJob(long id) throws RemoteException;
+    public void deleteJob(long id) throws ErrorDescriptorException;
 
     /**
      * Delete set of report jobs with given IDs
      * @param ids - array of report job IDs to delete
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public void deleteJobs(long[] ids) throws RemoteException;
+    public void deleteJobs(long[] ids) throws ErrorDescriptorException;
 
     /**
      * Read report job with given ID
      * @param id - report job ID to read
      * @return - report job
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public ReportJob getJob(long id) throws RemoteException;
+    public ReportJob getJob(long id) throws ErrorDescriptorException;
 
     /**
      * Schedule (create) report job
      * @param reportJob - report job to schedule
      * @return created report job
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public ReportJob scheduleJob(ReportJob reportJob) throws RemoteException;
+    public ReportJob scheduleJob(ReportJob reportJob) throws ErrorDescriptorException;
 
     /**
      * Update report job
      * @param reportJob - report job to update
      * @return updated report job
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public ReportJob updateJob(ReportJob reportJob) throws RemoteException;
+    public ReportJob updateJob(ReportJob reportJob) throws ErrorDescriptorException;
 
     /**
      * Read summaries of all existing report jobs
      * @return List of report job summaries
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public List<ReportJobSummary> getAllJobs() throws RemoteException;
+    public List<ReportJobSummary> getAllJobs() throws ErrorDescriptorException;
 
     /**
      * Read summaries of report jobs matching to given search criteria. Paging functionality is included.
@@ -91,27 +94,27 @@ public interface JobsService {
      * @param sortType          - column for sorting
      * @param isAscending       - sorting direction, if true - ascending
      * @return List of report job summaries
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
     public List<ReportJobSummary> getJobSummariesByExample(ReportJobModel reportJobCriteria, Integer startIndex, Integer numberOfRows,
-                                                           ReportJobModel.ReportJobSortType sortType, Boolean isAscending) throws RemoteException;
+                                                           ReportJobModel.ReportJobSortType sortType, Boolean isAscending) throws ErrorDescriptorException;
 
     /**
      * Read summaries of report jobs for report with given URI
      *
      * @param reportURI - report URI to search
      * @return List of report job summaries for report with given URI
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public List<ReportJobSummary> getReportJobs(String reportURI) throws RemoteException;
+    public List<ReportJobSummary> getReportJobs(String reportURI) throws ErrorDescriptorException;
 
     /**
      * Read current state of report job with given ID
      * @param jobId - report job ID to read
      * @return report job state (runtime information)
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public ReportJobRuntimeInformation getReportJobState(long jobId) throws RemoteException;
+    public ReportJobRuntimeInformation getReportJobState(long jobId) throws ErrorDescriptorException;
 
     /**
      * Updates collection of report job objects in one call.
@@ -119,10 +122,10 @@ public interface JobsService {
      * @param jobIds                   - list of report job ID to update
      * @param jobModel                 - contain fields, which should be updated.
      * @param replaceTriggerIgnoreType - if true, then trigger need to be replaced (trigger type is ignored), else - trigger is updated.
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      * @deprecated  Replaced by {@link JobsService#updateJobs(List, ReportJobModel, Boolean)}.
         */
-    public void updateReportJobs(List<Long> jobIds, ReportJobModel jobModel, Boolean replaceTriggerIgnoreType) throws RemoteException;
+    public void updateReportJobs(List<Long> jobIds, ReportJobModel jobModel, Boolean replaceTriggerIgnoreType) throws ErrorDescriptorException;
 
     /**
      * Updates collection of report job objects in one call.
@@ -130,9 +133,9 @@ public interface JobsService {
      * @param jobIds                   - list of report job ID to update
      * @param jobModel                 - contain fields, which should be updated.
      * @param replaceTriggerIgnoreType - if true, then trigger need to be replaced (trigger type is ignored), else - trigger is updated.
-     * @throws RemoteException - thrown if any internal error occurs (validation errors are included)
+     * @throws ErrorDescriptorException - thrown if any internal error occurs (validation errors are included)
      */
-    public List<Long> updateJobs(List<Long> jobIds, ReportJobModel jobModel, Boolean replaceTriggerIgnoreType) throws RemoteException;
+    public List<Long> updateJobs(List<Long> jobIds, ReportJobModel jobModel, Boolean replaceTriggerIgnoreType) throws ErrorDescriptorException;
 
     /**
      * Pause jobs.
@@ -181,17 +184,17 @@ public interface JobsService {
     /**
      * Get the names of all registered Calendars.
      * @return names of all registered Calendars
-     * @throws RemoteException if any error occurs
+     * @throws ErrorDescriptorException if any error occurs
      */
-    public List<String> getCalendarNames() throws RemoteException;
+    public List<String> getCalendarNames() throws ErrorDescriptorException;
 
     /**
      * Get the names of registered Calendars of specific type.
      * @param type - the calendar type to filter
      * @return the list of calendar names
-     * @throws RemoteException in case if not able to get calendar names.
+     * @throws ErrorDescriptorException in case if not able to get calendar names.
      */
-    List<String> getCalendarNames(ClientJobCalendar.Type type) throws RemoteException;
+    List<String> getCalendarNames(ClientJobCalendar.Type type) throws ErrorDescriptorException;
 
     /**
      * Delete the identified Calendar from the Scheduler.

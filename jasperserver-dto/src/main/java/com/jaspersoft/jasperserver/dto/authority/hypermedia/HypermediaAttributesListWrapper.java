@@ -1,28 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.authority.hypermedia;
 
 import com.jaspersoft.jasperserver.dto.authority.ClientAttribute;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -31,13 +38,14 @@ import java.util.List;
  * @version $Id$
  */
 @XmlRootElement(name = "attributes")
-public class HypermediaAttributesListWrapper {
+public class HypermediaAttributesListWrapper implements DeepCloneable<HypermediaAttributesListWrapper> {
     private List<HypermediaAttribute> profileAttributes;
 
-    public HypermediaAttributesListWrapper(){}
+    public HypermediaAttributesListWrapper() {
+    }
 
-    public HypermediaAttributesListWrapper(List<? extends ClientAttribute> attributes){
-        profileAttributes = new ArrayList<HypermediaAttribute>(attributes.size());
+    public HypermediaAttributesListWrapper(List<? extends ClientAttribute> attributes) {
+        this.profileAttributes = new ArrayList<HypermediaAttribute>(attributes.size());
         for (ClientAttribute client : attributes) {
             if (client instanceof HypermediaAttribute) {
                 profileAttributes.add((HypermediaAttribute) client);
@@ -48,23 +56,24 @@ public class HypermediaAttributesListWrapper {
     }
 
     public HypermediaAttributesListWrapper(HypermediaAttributesListWrapper other) {
-        final List<HypermediaAttribute> clientAttributes = other.getProfileAttributes();
-        if(clientAttributes != null){
-            profileAttributes = new ArrayList<HypermediaAttribute>(other.getProfileAttributes().size());
-            for(ClientAttribute attribute : clientAttributes){
-                profileAttributes.add(new HypermediaAttribute(attribute));
-            }
-        }
+        checkNotNull(other);
+
+        this.profileAttributes = copyOf(other.getProfileAttributes());
     }
 
+    @Override
+    public HypermediaAttributesListWrapper deepClone() {
+        return new HypermediaAttributesListWrapper(this);
+    }
 
     @XmlElement(name = "attribute")
     public List<HypermediaAttribute> getProfileAttributes() {
         return profileAttributes;
     }
 
-    public void setProfileAttributes(List<HypermediaAttribute> profileAttributes) {
+    public HypermediaAttributesListWrapper setProfileAttributes(List<HypermediaAttribute> profileAttributes) {
         this.profileAttributes = profileAttributes;
+        return this;
     }
 
     @Override
@@ -74,10 +83,7 @@ public class HypermediaAttributesListWrapper {
 
         HypermediaAttributesListWrapper that = (HypermediaAttributesListWrapper) o;
 
-        if (profileAttributes != null ? !profileAttributes.equals(that.profileAttributes) : that.profileAttributes != null)
-            return false;
-
-        return true;
+        return profileAttributes != null ? profileAttributes.equals(that.profileAttributes) : that.profileAttributes == null;
     }
 
     @Override
@@ -87,7 +93,7 @@ public class HypermediaAttributesListWrapper {
 
     @Override
     public String toString() {
-        return "HypermediaAttributeListWrapper{" +
+        return "HypermediaAttributesListWrapper{" +
                 "profileAttributes=" + profileAttributes +
                 '}';
     }

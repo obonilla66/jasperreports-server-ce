@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
@@ -33,7 +36,7 @@ import com.jaspersoft.jasperserver.dto.job.ClientJobCalendar;
 import com.jaspersoft.jasperserver.dto.job.ClientJobCalendar.Type;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.services.JobsService;
@@ -81,18 +84,18 @@ public class JobsServiceImpl implements JobsService {
         this.reportScheduler = reportScheduler;
     }
 
-    public void deleteJob(long id) throws RemoteException {
+    public void deleteJob(long id) throws ErrorDescriptorException {
         auditHelper.createAuditEvent("deleteReportScheduling");
         scheduler.removeScheduledJob(makeExecutionContext(), id);
         auditHelper.closeAuditEvent("deleteReportScheduling");
     }
 
-    public void deleteJobs(long[] ids) throws RemoteException {
+    public void deleteJobs(long[] ids) throws ErrorDescriptorException {
         scheduler.removeScheduledJobs(makeExecutionContext(), ids);
     }
 
 
-    public ReportJob getJob(long id) throws RemoteException {
+    public ReportJob getJob(long id) throws ErrorDescriptorException {
         ReportJob job = scheduler.getScheduledJob(makeExecutionContext(), id);
 
         // Drop secure fields values and replace them with substitution for sending to client
@@ -104,7 +107,7 @@ public class JobsServiceImpl implements JobsService {
         return job;
     }
 
-    public ReportJob scheduleJob(ReportJob reportJob) throws RemoteException {
+    public ReportJob scheduleJob(ReportJob reportJob) throws ErrorDescriptorException {
         reportJob.setVersion(ReportJob.VERSION_NEW);
         reportJob.setCreationDate(new Timestamp(GregorianCalendar.getInstance().getTimeInMillis()));
         if (reportJob.getAlert() != null)
@@ -115,7 +118,7 @@ public class JobsServiceImpl implements JobsService {
         return savedJob;
     }
 
-    public ReportJob updateJob(ReportJob reportJob) throws RemoteException {
+    public ReportJob updateJob(ReportJob reportJob) throws ErrorDescriptorException {
         ExecutionContext executionContext = makeExecutionContext();
         auditHelper.createAuditEvent("updateReportScheduling");
 
@@ -153,7 +156,7 @@ public class JobsServiceImpl implements JobsService {
     }
 
     @Override
-    public List<Long> updateJobs(List<Long> jobIds, ReportJobModel jobModel, Boolean replaceTriggerIgnoreType) throws RemoteException {
+    public List<Long> updateJobs(List<Long> jobIds, ReportJobModel jobModel, Boolean replaceTriggerIgnoreType) throws ErrorDescriptorException {
         auditHelper.createAuditEvent("updateReportScheduling");
         List<ReportJobIdHolder> reportJobIdHolders = scheduler.updateScheduledJobsByID(makeExecutionContext(), getHolders(jobIds), jobModel, replaceTriggerIgnoreType);
         List<Long> updatedJobIds = new ArrayList<Long>(reportJobIdHolders.size());
@@ -164,21 +167,21 @@ public class JobsServiceImpl implements JobsService {
         return updatedJobIds;
     }
 
-    public List<ReportJobSummary> getAllJobs() throws RemoteException {
+    public List<ReportJobSummary> getAllJobs() throws ErrorDescriptorException {
         return scheduler.getScheduledJobSummaries(makeExecutionContext());
     }
 
     public List<ReportJobSummary> getJobSummariesByExample(ReportJobModel reportJobCriteria, Integer startIndex, Integer numberOfRows,
-                                                           ReportJobModel.ReportJobSortType sortType, Boolean isAscending) throws RemoteException {
+                                                           ReportJobModel.ReportJobSortType sortType, Boolean isAscending) throws ErrorDescriptorException {
         return scheduler.getScheduledJobSummaries(makeExecutionContext(), reportJobCriteria, startIndex != null ? startIndex : 0, numberOfRows != null ? numberOfRows : -1,
                 sortType != null ? sortType : ReportJobModel.ReportJobSortType.NONE, isAscending != null ? isAscending : true);
     }
 
-    public List<ReportJobSummary> getReportJobs(String reportURI) throws RemoteException {
+    public List<ReportJobSummary> getReportJobs(String reportURI) throws ErrorDescriptorException {
         return scheduler.getScheduledJobSummaries(makeExecutionContext(), reportURI);
     }
 
-    public ReportJobRuntimeInformation getReportJobState(long jobId) throws RemoteException {
+    public ReportJobRuntimeInformation getReportJobState(long jobId) throws ErrorDescriptorException {
         return getJob(jobId) != null ? scheduler.getJobRuntimeInformation(makeExecutionContext(), jobId) : null;
     }
 
@@ -228,11 +231,11 @@ public class JobsServiceImpl implements JobsService {
         }
     }
 
-    public List<String> getCalendarNames() throws RemoteException {
+    public List<String> getCalendarNames() throws ErrorDescriptorException {
         return reportScheduler.getCalendarNames();
     }
 
-    public List<String> getCalendarNames(ClientJobCalendar.Type type) throws RemoteException {
+    public List<String> getCalendarNames(ClientJobCalendar.Type type) throws ErrorDescriptorException {
         // quarz doesn't provide API to get calendar of specific type,
         // therefore we need to get calendar by name and check it's type
         final List<String> calendarNames = reportScheduler.getCalendarNames();

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
@@ -136,9 +139,6 @@ public interface ResourceMediaType {
     public static final String DASHBOARD_JSON = RESOURCE_MEDIA_TYPE_PREFIX + DASHBOARD_CLIENT_TYPE + RESOURCE_JSON_TYPE;
     public static final String DASHBOARD_XML = RESOURCE_MEDIA_TYPE_PREFIX + DASHBOARD_CLIENT_TYPE + RESOURCE_XML_TYPE;
 
-    public static final String LEGACY_DASHBOARD_CLIENT_TYPE = "legacyDashboard";
-    public static final String LEGACY_DASHBOARD_JSON = RESOURCE_MEDIA_TYPE_PREFIX + LEGACY_DASHBOARD_CLIENT_TYPE + RESOURCE_JSON_TYPE;
-    public static final String LEGACY_DASHBOARD_XML = RESOURCE_MEDIA_TYPE_PREFIX + LEGACY_DASHBOARD_CLIENT_TYPE + RESOURCE_XML_TYPE;
     // reportOptions
     public static final String REPORT_OPTIONS_CLIENT_TYPE = "reportOptions";
     public static final String REPORT_OPTIONS_JSON = RESOURCE_MEDIA_TYPE_PREFIX + REPORT_OPTIONS_CLIENT_TYPE + RESOURCE_JSON_TYPE;
@@ -167,6 +167,9 @@ public interface ResourceMediaType {
     //not exist as string representation of resource type
     //used as defenition of topic type
     public static final String TOPIC_TYPE = "topic";
+
+    // This client type references any JasperServer resource
+    public static final String REFERENCE_CLIENT_TYPE = "reference";
 
     public static final String ADHOC_VIEW_MEDIA_TYPE_PREFIX = "application/" + ADHOC_DATA_VIEW_CLIENT_TYPE + ".";
 

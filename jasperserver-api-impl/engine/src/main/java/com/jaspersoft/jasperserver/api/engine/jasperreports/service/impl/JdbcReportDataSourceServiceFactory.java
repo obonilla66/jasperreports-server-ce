@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
@@ -24,6 +27,7 @@ import javax.sql.DataSource;
 import com.jaspersoft.jasperserver.api.common.util.TibcoDriverManager;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectCache;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectEntry;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import com.jaspersoft.jasperserver.api.JSException;
@@ -102,6 +106,7 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 
 	private PooledJdbcDataSourceFactory pooledJdbcDataSourceFactory;
 	private PooledDataSourcesCache poolDataSources;
+	private ProfileAttributesResolver profileAttributesResolver;
 	private int poolTimeout;
     private Set<String> autoCommitUnsupportedDrivers = new HashSet<String>(); // protect from NPE
     private Map<String, String> driverAuthMethMap = new HashMap<String, String>(); // protect from NPE
@@ -122,31 +127,47 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 		if (!(reportDataSource instanceof JdbcReportDataSource)) {
 			throw new JSException("jsexception.invalid.jdbc.datasource", new Object[] {reportDataSource.getClass()});
 		}
-        JdbcReportDataSource jdbcDataSource = (JdbcReportDataSource) reportDataSource;
-        String driverClass = jdbcDataSource.getDriverClass();
-        String userName = jdbcDataSource.getUsername();
-        String password = jdbcDataSource.getPassword();
-        String connectionUrl = jdbcDataSource.getConnectionUrl();
-        if (driverClass.startsWith("tibcosoftware.jdbc")) {
-            userName = (( (userName != null) && (!userName.isEmpty())) ? userName : "dummy");
-            password = (( (password != null) && (!password.isEmpty())) ? password : "dummy");
-        } else if (driverAuthMethMap.get(driverClass) != null) {
-            if (connectionUrl.toLowerCase().indexOf("authmech") < 0) {
-                String authMech = "";
-                if (( userName != null) && (!userName.isEmpty())) {
-                    authMech = driverAuthMethMap.get(driverClass);
-                } else {
-                    authMech = driverNoAuthMethMap.get(driverClass);
-                    if (!authMech.equals("0")) userName = "anonymous";
-                }
-
-                connectionUrl = connectionUrl + (connectionUrl.endsWith(";") ? "authmech=" : ";authmech=") + authMech;
-            }
-        }
-        connectionUrl = getRuntimeConnectionURL(connectionUrl);
-        DataSource dataSource = getPoolDataSource(driverClass, connectionUrl, userName, password);
-		return new JdbcDataSourceService(dataSource, getTimeZoneByDataSourceTimeZone(jdbcDataSource.getTimezone()));
+        JdbcReportDataSource jdbcDataSource = updateJdbcReportDataSource((JdbcReportDataSource) reportDataSource);
+        DataSource dataSource = getPoolDataSource(jdbcDataSource.getDriverClass(), jdbcDataSource.getConnectionUrl(),
+				jdbcDataSource.getUsername(), jdbcDataSource.getPassword());
+        return getDataDataServiceInstance(dataSource, getTimeZoneByDataSourceTimeZone(jdbcDataSource.getTimezone()));
 	}
+
+	protected JdbcReportDataSource updateJdbcReportDataSource(JdbcReportDataSource jdbcDataSource) {
+		if (getProfileAttributesResolver() != null) {
+			JdbcReportDataSource tmpJdbcDataSource = getProfileAttributesResolver().mergeResource(jdbcDataSource);
+			if (tmpJdbcDataSource != null) jdbcDataSource = tmpJdbcDataSource;
+		}
+		String driverClass = jdbcDataSource.getDriverClass();
+		String userName = jdbcDataSource.getUsername();
+		String password = jdbcDataSource.getPassword();
+		String connectionUrl = jdbcDataSource.getConnectionUrl();
+		if (driverClass.startsWith("tibcosoftware.jdbc")) {
+			userName = (( (userName != null) && (!userName.isEmpty())) ? userName : "dummy");
+			password = (( (password != null) && (!password.isEmpty())) ? password : "dummy");
+		} else if (driverAuthMethMap.get(driverClass) != null) {
+			if (connectionUrl.toLowerCase().indexOf("authmech") < 0) {
+				String authMech = "";
+				if (( userName != null) && (!userName.isEmpty())) {
+					authMech = driverAuthMethMap.get(driverClass);
+				} else {
+					authMech = driverNoAuthMethMap.get(driverClass);
+					if (!authMech.equals("0")) userName = "anonymous";
+				}
+
+				connectionUrl = connectionUrl + (connectionUrl.endsWith(";") ? "authmech=" : ";authmech=") + authMech;
+			}
+		}
+		connectionUrl = getRuntimeConnectionURL(connectionUrl);
+		jdbcDataSource.setConnectionUrl(connectionUrl);
+		jdbcDataSource.setUsername(userName);
+		jdbcDataSource.setPassword(password);
+		return jdbcDataSource;
+	}
+
+    protected JdbcDataSourceService getDataDataServiceInstance(DataSource dataSource, TimeZone timezone) {
+        return new JdbcDataSourceService(dataSource, timezone);
+    }
 
 	protected DataSource getPoolDataSource(String driverClass, String url, String username, String password) {
 		long now = System.currentTimeMillis();
@@ -326,4 +347,12 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
         }
         return connectionUrl;
     }
+
+	public ProfileAttributesResolver getProfileAttributesResolver() {
+		return profileAttributesResolver;
+	}
+
+	public void setProfileAttributesResolver(ProfileAttributesResolver profileAttributesResolver) {
+		this.profileAttributesResolver = profileAttributesResolver;
+	}
 }

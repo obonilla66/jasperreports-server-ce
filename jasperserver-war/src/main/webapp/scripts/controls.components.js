@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -23,6 +23,8 @@
 /**
  * @author: afomin, inesterenko
  * @version: $Id$
+ *
+ * TODO: Not_Used_Anywhere
  */
 
 /* global JRS, require, updateYearMonth, ControlsBase, _ */
@@ -57,6 +59,7 @@ JRS.Controls = (function (jQuery, _, Controls) {
 
     var SingleSelect,
         MultiSelect,
+        selectedItemsDataProviderSorterFactory,
         CacheableDataProvider,
         DataProviderWithLabelHash,
         SearcheableDataProvider,
@@ -70,15 +73,16 @@ JRS.Controls = (function (jQuery, _, Controls) {
         "components/multiSelect/dataprovider/DataProviderWithLabelHash",
         "components/singleSelect/dataprovider/SearcheableDataProvider",
         "components/multiSelect/mixin/resizableMultiSelectTrait",
-        "components/dateAndTime/DateAndTimePicker"
-
+        "components/dateAndTime/DateAndTimePicker",
+        "components/multiSelect/dataprovider/selectedItemsDataProviderSorterFactory"
     ], function (SingleSelectModule,
                  MultiSelectModule,
                  CacheableDataProviderModule,
                  DataProviderWithLabelHashModule,
                  SearcheableDataProviderModule,
                  resizableMultiSelectMixinModule,
-                 DateAndTimePickerModule
+                 DateAndTimePickerModule,
+                 selectedItemsDataProviderSorterFactoryModule
 
     ) {
         SingleSelect = SingleSelectModule;
@@ -88,6 +92,7 @@ JRS.Controls = (function (jQuery, _, Controls) {
         SearcheableDataProvider = SearcheableDataProviderModule;
         resizableMultiSelectTrait = resizableMultiSelectMixinModule;
         DateAndTimePicker = DateAndTimePickerModule;
+        selectedItemsDataProviderSorterFactory = selectedItemsDataProviderSorterFactoryModule;
     });
 
     function changeDateFunc(dateText) {
@@ -139,7 +144,7 @@ JRS.Controls = (function (jQuery, _, Controls) {
                 if (controlData == "true") {
                     input.prop('checked', true);
                 } else {
-                    input.removeAttr('checked');
+                    input.prop('checked', false);
                 }
             },
 
@@ -442,7 +447,8 @@ JRS.Controls = (function (jQuery, _, Controls) {
                         selectedListOptions: {
                             formatLabel: function(value) {
                                 return self.dataProvider.getDataLabelHash()[value];
-                            }
+                            },
+                            sortFunc: selectedItemsDataProviderSorterFactory.create(ControlsBase.NULL_SUBSTITUTION_LABEL)
                         },
                         resizable : true
                     });
@@ -523,10 +529,11 @@ JRS.Controls = (function (jQuery, _, Controls) {
                 var template = this.getTemplateSection('data');
 
                 Controls.Utils.setInnerHtml(list, template, {data:data});
-                list.innerHTML += "&nbsp;"; //workaround for IE scrollbar
+                list = jQuery(list);
+                list.html(list.html() + "&nbsp;"); //workaround for IE scrollbar
 
                 //TODO move to decorator
-                if (jQuery(list).find('li').length < 5 && this.getElem()[0].clientHeight < 125) {
+                if (list.find('li').length < 5 && this.getElem()[0].clientHeight < 125) {
                     this.getElem().find('.jr-mSizer').addClass('hidden');
                     this.getElem().find('.inputSet').removeClass('sizable').attr('style', false);
                 } else {

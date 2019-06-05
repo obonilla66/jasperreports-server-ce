@@ -1,26 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.authority;
 
 import com.jaspersoft.jasperserver.dto.authority.ClientRole;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +61,7 @@ public class RolesJaxrsServiceWrapper {
                              @QueryParam("search") String search,
                              @QueryParam(RestConstants.QUERY_PARAM_SEARCH_QUERY) String q,
                              @QueryParam("hasAllUsers")Boolean hasAllUsers,
-                             @QueryParam("user")List<String> userNames) throws RemoteException {
+                             @QueryParam("user")List<String> userNames) throws ErrorDescriptorException {
         if (limit != null){
             maxRecords = limit;
         }
@@ -71,13 +74,13 @@ public class RolesJaxrsServiceWrapper {
     @GET
     @Path("/{name}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getRoles(@PathParam("name") String name) throws RemoteException {
+    public Response getRoles(@PathParam("name") String name) throws ErrorDescriptorException {
         return service.getRoles(name, null);
     }
 
     @DELETE
     @Path("/{name}")
-    public Response deleteRole(@PathParam("name") String name) throws RemoteException {
+    public Response deleteRole(@PathParam("name") String name) throws ErrorDescriptorException {
         return service.deleteRole(name, null);
     }
 
@@ -86,7 +89,7 @@ public class RolesJaxrsServiceWrapper {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateRole(ClientRole newRole,
-                               @PathParam("name") String name) throws RemoteException{
+                               @PathParam("name") String name) throws ErrorDescriptorException {
 
         if (newRole.getTenantId() != null){
             throw new IllegalParameterValueException("tenantId", newRole.getTenantId());

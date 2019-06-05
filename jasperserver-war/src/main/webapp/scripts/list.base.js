@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -64,7 +64,7 @@ var baseList = {
     },
 
     isItemDisabled: function (item) {
-        buttonManager.isDisabled(item);
+        return buttonManager.isDisabled(item);
     },
 
     openItem: function (item) {
@@ -404,7 +404,7 @@ dynamicList.ListItem.addMethod('processTemplate', function (element) {
 
     var elementsCount = wrapper.childElements().length;
     if (elementsCount == wrapper.childNodes.length) {
-        wrapper.insert(xssUtil.escape(this.getLabel()));
+        wrapper.insert(xssUtil.hardEscape(this.getLabel()));
     } else {
         wrapper.childNodes[elementsCount].data = this.getLabel();
     }
@@ -703,11 +703,11 @@ dynamicList.TemplatedListItem.prototype = new tempFunc();
 dynamicList.TemplatedListItem.prototype.constructor = dynamicList.TemplatedListItem;
 
 dynamicList.TemplatedListItem.prototype.processTemplate = function (element) {
-    var filled = Mustache.to_html(element.innerHTML, this.getValue());
-    element.innerHTML = xssUtil.escape(filled);
+    var filled = Mustache.to_html(jQuery(element).html(), this.getValue());
+    jQuery(element).html(xssUtil.hardEscape(filled));
     if (this.tooltipText != null) {
         new JSTooltip(element, {
-            text: xssUtil.escape(this.tooltipText)
+            text: xssUtil.hardEscape(this.tooltipText)
         });
     }
     return element;
@@ -731,13 +731,13 @@ dynamicList.UnderscoreTemplatedListItem.prototype._getTemplate = function () {
 };
 
 dynamicList.UnderscoreTemplatedListItem.prototype.processTemplate = function () {
-    var element = jQuery(_.template(this._template, xssUtil.escape(this.getValue())))[0];
+    var element = jQuery(_.template(this._template, xssUtil.hardEscape(this.getValue())))[0];
 
     element.templateClassName = element.className;
 
     if (this.tooltipText != null) {
         new JSTooltip(element, {
-            text: xssUtil.escape(this.tooltipText)
+            text: xssUtil.hardEscape(this.tooltipText)
         });
     }
 
@@ -900,6 +900,8 @@ dynamicList.List.addMethod('addItems', function (items) {
         return;
     }
 
+    items = _.isArray(items) ? items : [items];
+
     items.compact().each(function (item) {
         this._prepareListItem(item);
         this._items.push(item);
@@ -922,6 +924,9 @@ dynamicList.List.addMethod('insertItems', function (pos, items) {
     if (!items) {
         return;
     }
+
+    items = _.isArray(items) ? items : [items];
+
     items = items.compact();
     items.each(function (item) {
         this._prepareListItem(item);
@@ -1912,7 +1917,7 @@ dynamicList.List.addMethod('_buildDnDOverlay', function (element) {
             count: element.items.length
         }));
     } else if (element.items.length == 1) {
-        element.update(xssUtil.escape(element.items[0].getLabel()));
+        element.update(xssUtil.hardEscape(element.items[0].getLabel()));
     }
 });
 

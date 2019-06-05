@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.user.service.impl;
 
@@ -45,25 +48,28 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionSer
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
 import com.jaspersoft.jasperserver.api.security.JasperServerAclHelper;
 import com.jaspersoft.jasperserver.api.security.NonMutableAclCache;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.type.ClassType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.orm.hibernate3.HibernateCallback;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.dao.DataAccessException;
+import org.springframework.orm.hibernate5.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.util.*;
@@ -246,7 +252,8 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 		deleteObjectPermissions(context, permissions);
 	}
 
-	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
 	public void deleteObjectCachePermissionsForRecipient(ExecutionContext context, ObjectRecipientIdentity recipientIdentity) {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting object permissions for recipient " + recipientIdentity);
@@ -390,6 +397,7 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 	 * @see com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService#putObjectPermission(com.jaspersoft.jasperserver.api.common.domain.ExecutionContext, com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission)
 	 */
 	@SuppressWarnings("rawtypes")
+	@Transactional
 	public void putObjectPermission(ExecutionContext context, ObjectPermission objPermission) throws IllegalArgumentException{
         if(objPermission == null){
             throw new IllegalArgumentException("Permission can't be null");
@@ -483,12 +491,12 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 			return (ObjectPermission) existingPerm.toClient(getObjectMappingFactory());
 		}
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List parseList(final List objList){
 		// list of object permissions
 		List<ObjectPermission> result = new ArrayList(objList.size());
-		
+
 		for(Object obj: objList){
 			if(obj instanceof ObjectPermission){
 				ObjectPermission op = (ObjectPermission) obj;
@@ -500,7 +508,7 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 			}
 		}
 		Collections.sort(result, new Comparator<ObjectPermission>() {
-			
+
 			@Override
 			public int compare(ObjectPermission o1, ObjectPermission o2) {
 				return o1.getURI().compareTo(o2.getURI());
@@ -508,13 +516,13 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 		});
 		return result;
 	}
-	
+
 	@SuppressWarnings({ "rawtypes" })
 	private List getRepoObjectPermissions(ExecutionContext context, final String uri, Object recipient) {
 		return getRepoObjectPermissions(context, uri, recipient, null);
 	}
-	
-	@SuppressWarnings({ "rawtypes" })
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List getRepoObjectPermissions(ExecutionContext context, final String uri,  final Object recipient, final Object[] existingAcl) {
 		// Given the object and the recipient, find the permission
 		final IdedObject recipientObject = (IdedObject) getPersistentObject(recipient);
@@ -529,8 +537,8 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 			// this is to get all permissions
 			final String queryString = "from " + objPermissionClassName;
 
-			objList = getHibernateTemplate().execute(new HibernateCallback<List>() {
-	            public List doInHibernate(Session session) throws HibernateException {
+			objList = (List)getHibernateTemplate().execute(new HibernateCallback() {
+	            public Object doInHibernate(Session session) throws HibernateException {
 	                return session.createQuery(queryString)
 	                	.setCacheable(true)
 	                	.list();
@@ -538,11 +546,15 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 	        });
 		}
 
-		
+
 		final boolean useBulk = uri!=null && uri.startsWith("repo:") && (existingAcl!=null);
 
+		// save existingAcl
+		Object savedAcl0=existingAcl!=null?existingAcl[0]:null;
+		Object savedAcl1=existingAcl!=null?existingAcl[1]:null;
+
 		// split uri into uncached acls and existing acl.
-		// we'll search only for uncached acl and return both parts to combine later 
+		// we'll search only for uncached acl and return both parts to combine later
 		// in the final acl
 		final List<String> path = new ArrayList<String>();
 		if(uri!=null){
@@ -552,7 +564,7 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 					Acl acl = getCached(parentURI);
 					if(acl==null){
 						path.add(parentURI);
-					} else { 
+					} else {
 						// ok we've found existing path, all parents should be already in the cache too
 						// or there is a problem with cache integrity (not our problem)
 						existingAcl[0]=parentURI;
@@ -566,18 +578,19 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 
 		if (uri != null && recipientObject != null) {
 			// split uri and get all permissions in 1 scoop
-						
+
 			// Select on both identity and recipient
 			final String queryString = "from " + objPermissionClassName + " as objPermission " +
 			"where objPermission.URI in (:path) and " +
-			"      objPermission.permissionRecipient.id = :id and objPermission.permissionRecipient.class = :class ";
-			objList = getHibernateTemplate().execute(new HibernateCallback<List>() {
-	            public List doInHibernate(Session session) throws HibernateException {
-	                List result = session
+         "      objPermission.permissionRecipient.id = :id and objPermission.permissionRecipient.class = :class ";
+
+			objList = (List)getHibernateTemplate().execute(new HibernateCallback() {
+	            public Object doInHibernate(Session session) throws HibernateException {
+                    List result = session
 	                	.createQuery(queryString)
-	                	.setParameterList("path", path)
-	                	.setParameter("id", new Long(recipientObject.getId()), Hibernate.LONG)
-	                	.setParameter("class", recipientObjectClassName, Hibernate.CLASS)
+	                	.setParameter("path", uri, StringType.INSTANCE)
+	                	.setParameter("id", new Long(recipientObject.getId()), LongType.INSTANCE)
+	                	.setParameter("class", recipientObjectClassName, ClassType.INSTANCE)
 	                	.setCacheable(true)
 	                	.list();
 	                return result;
@@ -585,14 +598,21 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 	        });
 			return useBulk ?parseList(objList):objList; //objList;
 		} else if (uri != null) {
-			// Select on identity
-			final String queryString = "from " + objPermissionClassName + " as objPermission " +
-			"where objPermission.URI in (:path)";
-			HibernateTemplate template = getHibernateTemplate();
-			template.setCacheQueries(true);
-			objList = template.findByNamedParam(queryString,"path",path);
-			return useBulk ?parseList(objList):objList; //objList;
-			
+		    try{
+		            final String queryString = "from " + objPermissionClassName + " as objPermission " +
+		            "where objPermission.URI in (:path)";
+		            HibernateTemplate template = getHibernateTemplate();
+		            objList = template.findByNamedParam(queryString,"path",path);
+		            return useBulk ?parseList(objList):objList; //objList;
+		    } catch(DataAccessException e){
+		            log.error("Exception getting permission for uri ("+uri+") and path ("+path+"). returning empty list");
+		            // clean up all the parts we have changed and return empty collection
+		            if(existingAcl!=null){
+		                existingAcl[0]=savedAcl0;
+		                existingAcl[1]=savedAcl1;
+		            }
+		            return Collections.EMPTY_LIST;
+		    }
 		} else if (recipientObject != null) {
 			// Select on recipient
 			ObjectRecipientIdentity recipientIdentity = new ObjectRecipientIdentity(recipientObject);
@@ -602,18 +622,18 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 		return objList;
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected List getRepoObjectPermissions(final ObjectRecipientIdentity recipientIdentity) {
 		final String objPermissionClassName = getPersistentClassFactory().getImplementationClassName(ObjectPermission.class);
 
 		final String queryString = "from " + objPermissionClassName + " as objPermission " +
 			"where objPermission.permissionRecipient.id = ? and objPermission.permissionRecipient.class = ?";
 
-		List objList = getHibernateTemplate().execute(new HibernateCallback<List>() {
-		    public List doInHibernate(Session session) throws HibernateException {
+		List objList = (List)getHibernateTemplate().execute(new HibernateCallback() {
+		    public Object doInHibernate(Session session) throws HibernateException {
 		        return session.createQuery(queryString)
-		        	.setParameter(0, new Long(recipientIdentity.getId()), Hibernate.LONG)
-		        	.setParameter(1, recipientIdentity.getRecipientClass(), Hibernate.CLASS)
+		        	.setParameter(0, new Long(recipientIdentity.getId()), LongType.INSTANCE)
+		        	.setParameter(1, recipientIdentity.getRecipientClass(), ClassType.INSTANCE)
 		        	.setCacheable(true)
 		        	.list();
 		    }
@@ -665,8 +685,8 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 		return getObjectPermissionsForObject(context, targetObject, null);
 
 	}
-	
-	
+
+
     @SuppressWarnings("unchecked")
 	@Override
     public List<ObjectPermission> getEffectivePermissionsForObject(ExecutionContext context, Object targetObject) {
@@ -870,7 +890,7 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 			nonMutableAclCache.evictFromCache(objId);
 		}
 	}
-	
+
 	private Acl getCached(String uri){
 		ObjectPermissionServiceImpl.URIObjectIdentity objId = new URIObjectIdentity(uri);
 		Acl existingAcl = null;
@@ -878,7 +898,7 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 			existingAcl = nonMutableAclCache.getFromCache(objId);
 		}
 		return existingAcl;
-	
+
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -961,11 +981,12 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
 		final String queryString = "from " + objPermissionClassName + " as objPermission " +
 		"where objPermission.URI like ?";
 
-		List<ObjectPermission>objList = getHibernateTemplate()
-			.execute(new HibernateCallback<List<ObjectPermission>>() {
-				public List<ObjectPermission> doInHibernate(Session session) throws HibernateException {
+		@SuppressWarnings("deprecation")
+		List<ObjectPermission>objList = (List<ObjectPermission>) getHibernateTemplate()
+			.execute(new HibernateCallback() {
+				public Object doInHibernate(Session session) throws HibernateException {
 					return session.createQuery(queryString)
-						.setParameter(0, uri+'%', Hibernate.STRING)
+						.setParameter(0, uri+'%', StringType.INSTANCE)
 						.setCacheable(true)
 						.list();
 				}

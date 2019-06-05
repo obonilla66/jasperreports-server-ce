@@ -1,375 +1,291 @@
 
-    DROP INDEX JIQuery_dataSource_index ON JIQuery;
-
-    DROP INDEX idx23_olapClientConnection_idx ON JIOlapUnit;
-
-    DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
-
-    DROP INDEX idx17_reportDataSource_idx ON JIMondrianConnection;
-
-    DROP INDEX idx16_mondrianSchema_idx ON JIMondrianConnection;
-
-    DROP INDEX idx33_resource_id_idx ON JIReportUnitResource;
-
-    DROP INDEX idx32_report_unit_id_idx ON JIReportUnitResource;
-
-    DROP INDEX idx31_report_unit_id_idx ON JIReportUnitInputControl;
-
-    DROP INDEX idx30_input_ctrl_id_idx ON JIReportUnitInputControl;
-
-    DROP INDEX idx29_reportDataSource_idx ON JIReportUnit;
-
-    DROP INDEX JIReportUnit_query_index ON JIReportUnit;
-
-    DROP INDEX JIReportUnit_mainReport_index ON JIReportUnit;
-
-    DROP INDEX idx15_input_ctrl_id_idx ON JIInputControlQueryColumn;
-
-    DROP INDEX JIInputControl_list_query_idx ON JIInputControl;
-
-    DROP INDEX JIInputCtrl_list_of_values_idx ON JIInputControl;
-
-    DROP INDEX JIInputControl_data_type_index ON JIInputControl;
-
-    DROP INDEX JIFileResource_reference_index ON JIFileResource;
-
-    DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
-
-    DROP INDEX JIUser_tenantId_index ON JIUser;
-
-    DROP INDEX JITenant_parentId_index ON JITenant;
-
-    DROP INDEX JIUserRole_userId_index ON JIUserRole;
-
-    DROP INDEX JIUserRole_roleId_index ON JIUserRole;
-
-    DROP INDEX JIRole_tenantId_index ON JIRole;
-
-    DROP INDEX idx22_recipientobjid_idx ON JIObjectPermission;
-
-    DROP INDEX idx21_recipientobjclass_idx ON JIObjectPermission;
-
-    DROP INDEX uri_index ON JIObjectPermission;
-
-    DROP INDEX idx36_resource_id_idx ON JIVirtualDataSourceUriMap;
-
-    DROP INDEX JIResource_parent_folder_index ON JIResource;
-
-    DROP INDEX JIResource_childrenFolder_idx ON JIResource;
-
-    DROP INDEX idx28_resource_id_idx ON JIReportThumbnail;
-
-    DROP INDEX JIResourceFolder_version_index ON JIResourceFolder;
-
-    DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
-
-    DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
-
-    DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
-
-    DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
-
-    DROP INDEX idx24_alert_id_idx ON JIReportAlertToAddress;
-
-    DROP INDEX JIReportJob_owner_index ON JIReportJob;
-
-    DROP INDEX idx26_mail_notification_idx ON JIReportJob;
-
-    DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
-
-    DROP INDEX idx25_content_destination_idx ON JIReportJob;
-
-    DROP INDEX JIReportJob_alert_index ON JIReportJob;
-
-    DROP INDEX JILogEvent_userId_index ON JILogEvent;
+    alter table JIAccessEvent 
+       drop 
+       foreign key FK7caj87u72rymu6805gtek03y8;
 
     alter table JIAccessEvent 
-        drop 
-        foreign key FK47FB3CD732282198;
-
-    alter table JIAccessEvent 
-        drop 
-        foreign key FK47FB3CD7F254B53E;
+       drop 
+       foreign key FK8lqavxfshc29dnw97io0t6wbf;
 
     alter table JIAwsDatasource 
-        drop 
-        foreign key FK6085542387E4472B;
+       drop 
+       foreign key FKa2q6ho769d4h6k1inqfw0avbi;
 
     alter table JIAzureSqlDatasource 
-        drop 
-        foreign key FKAFE22203C001BAEA;
+       drop 
+       foreign key FKq54ak99008wuueewun6lw3x8p;
 
     alter table JIAzureSqlDatasource 
-        drop 
-        foreign key FKAFE2220387E4472B;
+       drop 
+       foreign key FK88n34smbe9i5eiqyvts12427n;
 
     alter table JIBeanDatasource 
-        drop 
-        foreign key FK674BF34A8BF376D;
+       drop 
+       foreign key FKcq7pt3wmr5oua2omyaynj18wm;
 
     alter table JIContentResource 
-        drop 
-        foreign key FKE466FC68A8BF376D;
+       drop 
+       foreign key FKc903d1j62d6q2alfowyml1qyc;
 
     alter table JICustomDatasource 
-        drop 
-        foreign key FK2BBCEDF5A8BF376D;
+       drop 
+       foreign key FK698qlo478w8q00ratagvxjigg;
 
     alter table JICustomDatasourceProperty 
-        drop 
-        foreign key FKB8A66AEA858A89D1;
+       drop 
+       foreign key FKlmhvtq6f4aj7nbgpkop6pvwaj;
 
     alter table JICustomDatasourceResource 
-        drop 
-        foreign key FKDF845123858A89D1;
+       drop 
+       foreign key FKdqu6gyndmi8barxd4e4mwgiu1;
 
     alter table JICustomDatasourceResource 
-        drop 
-        foreign key FKDF845123F254B53E;
+       drop 
+       foreign key FK2b8of47ft9ucqg6wxq51d94f6;
 
     alter table JIDataSnapshotParameter 
-        drop 
-        foreign key id_fk_idx;
+       drop 
+       foreign key id_fk_idx;
 
     alter table JIDataType 
-        drop 
-        foreign key FK533BCC63A8BF376D;
+       drop 
+       foreign key FKfowvvrdpyr4fsfdt0qekb6b31;
+
+    alter table JIFileResource 
+       drop 
+       foreign key FK9cks6rnum2e1nwpltygmric0a;
+
+    alter table JIFileResource 
+       drop 
+       foreign key FK7lou06p9h4uewmjilbvtiyfti;
 
     alter table JIFTPInfoProperties 
-        drop 
-        foreign key FK6BD68B04D5FA3F0A;
-
-    alter table JIFileResource 
-        drop 
-        foreign key FKF75B5889A8BF376D;
-
-    alter table JIFileResource 
-        drop 
-        foreign key FKF75B58895A0C539;
+       drop 
+       foreign key FKs9ui25pnlkwvymdhafps0eqox;
 
     alter table JIInputControl 
-        drop 
-        foreign key FKCAC6A512120E06F7;
+       drop 
+       foreign key FK7gw3h08vhv4ehuscnk22lweb0;
 
     alter table JIInputControl 
-        drop 
-        foreign key FKCAC6A512A8BF376D;
+       drop 
+       foreign key FKidpnbmursposu1b72a37j99dg;
 
     alter table JIInputControl 
-        drop 
-        foreign key FKCAC6A51262A86F04;
+       drop 
+       foreign key FK8igl58hkwa8csd2pptsj6sl48;
 
     alter table JIInputControl 
-        drop 
-        foreign key FKCAC6A512B37DB6EB;
+       drop 
+       foreign key FKeji041b95gimh1lii27d3j66f;
 
     alter table JIInputControlQueryColumn 
-        drop 
-        foreign key FKE436A5CCE7922149;
-
-    alter table JIJNDIJdbcDatasource 
-        drop 
-        foreign key FK7F9DA248A8BF376D;
+       drop 
+       foreign key FKawiyltd98xvdsp3syt7fllehw;
 
     alter table JIJdbcDatasource 
-        drop 
-        foreign key FKC8BDFCBFA8BF376D;
+       drop 
+       foreign key FKkjuw9e7bu5n4k5nm3osifg5gc;
+
+    alter table JIJNDIJdbcDatasource 
+       drop 
+       foreign key FK2gd8opslbt6erc8yx74s6j0nw;
 
     alter table JIListOfValues 
-        drop 
-        foreign key FK4E86A776A8BF376D;
+       drop 
+       foreign key FKaoih4o3b0gmj4vgvocwb2m9qp;
 
     alter table JIListOfValuesItem 
-        drop 
-        foreign key FKD37CEBA993F0E1F6;
+       drop 
+       foreign key FK2eq5m33wjtmf3d61gp38aqq77;
 
     alter table JILogEvent 
-        drop 
-        foreign key FK5F32081591865AF;
+       drop 
+       foreign key FK7636lhqn8drpalfckmb5wlljb;
 
     alter table JIMondrianConnection 
-        drop 
-        foreign key FK4FF53B191D51BFAD;
+       drop 
+       foreign key FKm9glomusslw0ouy1xev0kafql;
 
     alter table JIMondrianConnection 
-        drop 
-        foreign key FK4FF53B19324CFECB;
+       drop 
+       foreign key FK8yiwytorg3lwqq1gag9fng7rf;
 
     alter table JIMondrianConnection 
-        drop 
-        foreign key FK4FF53B19C495A60B;
+       drop 
+       foreign key FKamcjhut3kc0ko4rypemusdn7d;
 
     alter table JIMondrianXMLADefinition 
-        drop 
-        foreign key FK313B2AB8A8BF376D;
+       drop 
+       foreign key FKclv0lm19k3nvkmbv41epbfs34;
 
     alter table JIMondrianXMLADefinition 
-        drop 
-        foreign key FK313B2AB8DC098B1;
+       drop 
+       foreign key FKnmn2j9pevf2slm0i314ghs1sq;
 
     alter table JIOlapClientConnection 
-        drop 
-        foreign key FK3CA3B7D4A8BF376D;
+       drop 
+       foreign key FKqtji02a7ga296baj2y3avol24;
 
     alter table JIOlapUnit 
-        drop 
-        foreign key FKF034DCCFA8BF376D;
+       drop 
+       foreign key FKtj0u3bnnfbe2h6w5v9jue5xr1;
 
     alter table JIOlapUnit 
-        drop 
-        foreign key FKF034DCCF8F542247;
+       drop 
+       foreign key FKakvumwho658vijmoaaxddp4xo;
 
     alter table JIQuery 
-        drop 
-        foreign key FKCBCB0EC9A8BF376D;
+       drop 
+       foreign key FK1ql6x3q59eti9h2r042ogoj3i;
 
     alter table JIQuery 
-        drop 
-        foreign key FKCBCB0EC92B329A97;
+       drop 
+       foreign key FK6ff8ikqrr2celf9wvfbrcycpx;
 
     alter table JIReportAlertToAddress 
-        drop 
-        foreign key FKC4E3713022FA4CBA;
+       drop 
+       foreign key FKhaqpdt65o66idbve7gs97ye8p;
 
     alter table JIReportJob 
-        drop 
-        foreign key FK156F5F6AE4D73E35;
+       drop 
+       foreign key FKntl9s5ul4oy4k9ws8u5wer55w;
 
     alter table JIReportJob 
-        drop 
-        foreign key FK156F5F6AC83ABB38;
+       drop 
+       foreign key FKkclub0l9io38j4su6crr9amd8;
 
     alter table JIReportJob 
-        drop 
-        foreign key FK156F5F6A9EEC902C;
+       drop 
+       foreign key FK8ymdkrb9uvvyi3xw9padxdxdv;
 
     alter table JIReportJob 
-        drop 
-        foreign key FK156F5F6A74D2696E;
+       drop 
+       foreign key FKrbhjr4v64eym1mg2du3fs9i95;
 
     alter table JIReportJob 
-        drop 
-        foreign key FK156F5F6AFF0F459F;
+       drop 
+       foreign key FKo8dw7hsyef0xa1vg9feiu1mea;
 
     alter table JIReportJob 
-        drop 
-        foreign key FK156F5F6A4141263C;
+       drop 
+       foreign key FKgg6i9vqj6rx0kgqxmoqigm3gr;
 
     alter table JIReportJobCalendarTrigger 
-        drop 
-        foreign key FKC374C7D0D2B2EB53;
+       drop 
+       foreign key FK89c4gqc5f5myrmfrc9a5gw7vb;
 
     alter table JIReportJobMailRecipient 
-        drop 
-        foreign key FKBB6DB6D880001AAE;
+       drop 
+       foreign key FKoe0v23mvul37f23piq39ks6fh;
 
     alter table JIReportJobOutputFormat 
-        drop 
-        foreign key FKB42A5CE2C3389A8;
+       drop 
+       foreign key FKi5f8ideliwcf9juic989pn2lj;
 
     alter table JIReportJobParameter 
-        drop 
-        foreign key FKEAC52B5F2EC643D;
+       drop 
+       foreign key FKh72kmrkm333g8ldlu7kybkrcd;
 
     alter table JIReportJobRepoDest 
-        drop 
-        foreign key FKEA477EBE3C5B87D0;
+       drop 
+       foreign key FKba2wg3iix8mr5wcjq6004ekvw;
 
     alter table JIReportJobSimpleTrigger 
-        drop 
-        foreign key FKB9337C5CD2B2EB53;
+       drop 
+       foreign key FK7gwgexkgjb6h4hn0166h2ttyk;
 
     alter table JIReportThumbnail 
-        drop 
-        foreign key FKFDB3DED932282198;
+       drop 
+       foreign key FKhcdwx2qpiib9xtract2ecv31;
 
     alter table JIReportThumbnail 
-        drop 
-        foreign key FKFDB3DED9F254B53E;
+       drop 
+       foreign key FK8msuqfe2w3o9qjo81g8i6mgpi;
 
     alter table JIReportUnit 
-        drop 
-        foreign key FK98818B77A8BF376D;
+       drop 
+       foreign key FK6cl7eluds59jg1emjofa30i23;
 
     alter table JIReportUnit 
-        drop 
-        foreign key FK98818B778FDA11CC;
+       drop 
+       foreign key FK88u05b8n58ciemd3qcrd1jxn;
 
     alter table JIReportUnit 
-        drop 
-        foreign key FK98818B77324CFECB;
+       drop 
+       foreign key FKcenakwnolc02r8xbdio30du9h;
 
     alter table JIReportUnit 
-        drop 
-        foreign key FK98818B778C8DF21B;
+       drop 
+       foreign key FKi2qw1u7yutrxh03xkrgx9o37d;
 
     alter table JIReportUnitInputControl 
-        drop 
-        foreign key FK5FBE934AE7922149;
+       drop 
+       foreign key FK8i0f45gnyhwcfrgueufsrvaw1;
 
     alter table JIReportUnitInputControl 
-        drop 
-        foreign key FK5FBE934AA6A48880;
+       drop 
+       foreign key FKkvxewxu2tyomdsg1kioplnfq;
 
     alter table JIReportUnitResource 
-        drop 
-        foreign key FK8B1C4CA5A6A48880;
+       drop 
+       foreign key FK18lcqhapddcvgcl52yqhil0a4;
 
     alter table JIReportUnitResource 
-        drop 
-        foreign key FK8B1C4CA5865B10DA;
+       drop 
+       foreign key FK2fjktehjwog75dmp2rrfgm958;
 
     alter table JIRepositoryCache 
-        drop 
-        foreign key FKE7338B19E7C5A6;
+       drop 
+       foreign key FKah8ma0bnkbirohud6lvenjt0k;
 
     alter table JIResource 
-        drop 
-        foreign key FKD444826DA58002DF;
+       drop 
+       foreign key FKtnvtjq7s7hviyarfmomkokjm4;
 
     alter table JIResource 
-        drop 
-        foreign key FKD444826DA08E2155;
+       drop 
+       foreign key FKc2qblpikow4ay35q0xgf9rjub;
 
     alter table JIResourceFolder 
-        drop 
-        foreign key FK7F24453BA08E2155;
+       drop 
+       foreign key FKduwulvl4qwqkqpxonyuer65fi;
 
     alter table JIRole 
-        drop 
-        foreign key FK82724655E415AC2D;
+       drop 
+       foreign key FKmrf25easnd1emk6juaeot4dkn;
 
     alter table JITenant 
-        drop 
-        foreign key FKB1D7B2C97803CC2D;
+       drop 
+       foreign key FKqupdx83verq7860nxsd6l24y1;
 
     alter table JIUser 
-        drop 
-        foreign key FK8273B1AAE415AC2D;
+       drop 
+       foreign key FKdnd0cy83h5cc2ex1375wek3wf;
 
     alter table JIUserRole 
-        drop 
-        foreign key FKD8B5C1403C31045;
+       drop 
+       foreign key FKrnaojg2v9yc6u72wrl6pmmi60;
 
     alter table JIUserRole 
-        drop 
-        foreign key FKD8B5C14091865AF;
-
-    alter table JIVirtualDataSourceUriMap 
-        drop 
-        foreign key FK4A6CCE019E600E20;
-
-    alter table JIVirtualDataSourceUriMap 
-        drop 
-        foreign key FK4A6CCE01F254B53E;
+       drop 
+       foreign key FKska4g96yuc7dsyrskhot6nccp;
 
     alter table JIVirtualDatasource 
-        drop 
-        foreign key FK30E55631A8BF376D;
+       drop 
+       foreign key FK8jua4kahyslb99ni7bbyjxdf6;
+
+    alter table JIVirtualDataSourceUriMap 
+       drop 
+       foreign key FKbpwmqrxy4onvvbsnole8icjic;
+
+    alter table JIVirtualDataSourceUriMap 
+       drop 
+       foreign key FK94bfn67jetx6l0ykl2g9n37w1;
 
     alter table JIXMLAConnection 
-        drop 
-        foreign key FK94C688A71D51BFAD;
+       drop 
+       foreign key FK27s5ja8sxgrylp7cf0wyscl79;
 
     drop table if exists JIAccessEvent;
 
@@ -395,17 +311,17 @@
 
     drop table if exists JIDataType;
 
-    drop table if exists JIFTPInfoProperties;
-
     drop table if exists JIFileResource;
+
+    drop table if exists JIFTPInfoProperties;
 
     drop table if exists JIInputControl;
 
     drop table if exists JIInputControlQueryColumn;
 
-    drop table if exists JIJNDIJdbcDatasource;
-
     drop table if exists JIJdbcDatasource;
+
+    drop table if exists JIJNDIJdbcDatasource;
 
     drop table if exists JIListOfValues;
 
@@ -471,8 +387,94 @@
 
     drop table if exists JIUserRole;
 
-    drop table if exists JIVirtualDataSourceUriMap;
-
     drop table if exists JIVirtualDatasource;
 
+    drop table if exists JIVirtualDataSourceUriMap;
+
     drop table if exists JIXMLAConnection;
+
+    DROP INDEX idx25_content_destination_idx ON JIReportJob;
+
+    DROP INDEX idx28_resource_id_idx ON JIReportThumbnail;
+
+    DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
+
+    DROP INDEX JIReportUnit_mainReport_index ON JIReportUnit;
+
+    DROP INDEX idx26_mail_notification_idx ON JIReportJob;
+
+    DROP INDEX JIReportUnit_query_index ON JIReportUnit;
+
+    DROP INDEX JIReportJob_owner_index ON JIReportJob;
+
+    DROP INDEX idx24_alert_id_idx ON JIReportAlertToAddress;
+
+    DROP INDEX JIRole_tenantId_index ON JIRole;
+
+    DROP INDEX JIInputControl_list_query_idx ON JIInputControl;
+
+    DROP INDEX JIUserRole_roleId_index ON JIUserRole;
+
+    DROP INDEX idx15_input_ctrl_id_idx ON JIInputControlQueryColumn;
+
+    DROP INDEX JIUserRole_userId_index ON JIUserRole;
+
+    DROP INDEX idx16_mondrianSchema_idx ON JIMondrianConnection;
+
+    DROP INDEX JITenant_parentId_index ON JITenant;
+
+    DROP INDEX idx17_reportDataSource_idx ON JIMondrianConnection;
+
+    DROP INDEX JIUser_tenantId_index ON JIUser;
+
+    DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
+
+    DROP INDEX JILogEvent_userId_index ON JILogEvent;
+
+    DROP INDEX idx23_olapClientConnection_idx ON JIOlapUnit;
+
+    DROP INDEX JIReportJob_alert_index ON JIReportJob;
+
+    DROP INDEX JIQuery_dataSource_index ON JIQuery;
+
+    DROP INDEX idx22_recipientobjid_idx ON JIObjectPermission;
+
+    DROP INDEX JIResourceFolder_version_index ON JIResourceFolder;
+
+    DROP INDEX uri_index ON JIObjectPermission;
+
+    DROP INDEX JIResourceFolder_hidden_index ON JIResourceFolder;
+
+    DROP INDEX idx21_recipientobjclass_idx ON JIObjectPermission;
+
+    DROP INDEX JIInputControl_data_type_index ON JIInputControl;
+
+    DROP INDEX JIInputCtrl_list_of_values_idx ON JIInputControl;
+
+    DROP INDEX idx29_reportDataSource_idx ON JIReportUnit;
+
+    DROP INDEX idx30_input_ctrl_id_idx ON JIReportUnitInputControl;
+
+    DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
+
+    DROP INDEX idx31_report_unit_id_idx ON JIReportUnitInputControl;
+
+    DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
+
+    DROP INDEX idx32_report_unit_id_idx ON JIReportUnitResource;
+
+    DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
+
+    DROP INDEX idx33_resource_id_idx ON JIReportUnitResource;
+
+    DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
+
+    DROP INDEX JIResource_childrenFolder_idx ON JIResource;
+
+    DROP INDEX JIFileResource_reference_index ON JIFileResource;
+
+    DROP INDEX JIResource_parent_folder_index ON JIResource;
+
+    DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
+
+    DROP INDEX idx36_resource_id_idx ON JIVirtualDataSourceUriMap;

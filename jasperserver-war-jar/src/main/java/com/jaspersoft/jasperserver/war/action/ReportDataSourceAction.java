@@ -1,40 +1,47 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
-import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
-
+import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
+import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.TibcoDriverManagerImpl;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.VirtualReportDataSource;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
+import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
+import com.jaspersoft.jasperserver.war.common.DataSourceConfiguration;
+import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
+import com.jaspersoft.jasperserver.war.common.JdkTimeZonesList;
+import com.jaspersoft.jasperserver.war.dto.BaseDTO;
+import com.jaspersoft.jasperserver.war.dto.ReportDataSourceWrapper;
+import com.jaspersoft.jasperserver.war.dto.StringOption;
 import com.jaspersoft.jasperserver.war.model.TreeDataProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,31 +59,13 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.execution.ScopeType;
 
-import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
-import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
-import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
-import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-import com.jaspersoft.jasperserver.war.common.JdkTimeZonesList;
-import com.jaspersoft.jasperserver.war.dto.BaseDTO;
-import com.jaspersoft.jasperserver.war.dto.ReportDataSourceWrapper;
-import com.jaspersoft.jasperserver.war.dto.StringOption;
-import java.util.Collections;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.*;
 
 public class ReportDataSourceAction extends FormAction implements ApplicationContextAware {
     private static final String ATTRIBUTE_RESOURCE_ID_NOT_SUPPORTED_SYMBOLS = "resourceIdNotSupportedSymbols";
@@ -91,7 +80,8 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 	private RepositoryService repository;
 	private ResourceFactory dataSourceMappings;
 	private JdkTimeZonesList timezones;
-	private ConfigurationBean configuration;
+	private RepositoryConfiguration repositoryConfiguration;
+	private DataSourceConfiguration dataSourceConfiguration;
 
 	private JasperServerConstImpl constants = new JasperServerConstImpl();
 	
@@ -136,10 +126,10 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 
                 // get a list of all JDBC and JNDI datasources in repo and set in the formObject
                 FilterCriteria criteria = FilterCriteria.createFilter(JdbcReportDataSource.class);
-                ResourceLookup[] jdbcLookups = repository.findResource(JasperServerUtil.getExecutionContext(context), criteria);
+                ResourceLookup[] jdbcLookups = repository.findResource(StaticExecutionContextProvider.getExecutionContext(), criteria);
 
                 criteria = FilterCriteria.createFilter(JndiJdbcReportDataSource.class);
-                ResourceLookup[] jndiLookups = repository.findResource(JasperServerUtil.getExecutionContext(context), criteria);
+                ResourceLookup[] jndiLookups = repository.findResource(StaticExecutionContextProvider.getExecutionContext(), criteria);
 
                 if (jdbcLookups != null && jdbcLookups.length != 0) {
                     log("Found Jdbc DataSource lookups size= " + jdbcLookups.length);
@@ -164,7 +154,7 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 
             } else {
                 // get a list of all datasources in repo and set in the formObject
-                ResourceLookup[] lookups = engine.getDataSources(JasperServerUtil.getExecutionContext(context), dataSourceType);
+                ResourceLookup[] lookups = engine.getDataSources(StaticExecutionContextProvider.getExecutionContext(), dataSourceType);
 
                 if (lookups != null && lookups.length != 0) {
                     allDataSources = new ArrayList(lookups.length);
@@ -199,7 +189,7 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 		context.getFlowScope().put("constants", constants);
         context.getExternalContext().getSessionMap().put(DATASOURCE_TREE_DATA_PROVIDER, typedTreeDataProvider);
         context.getFlowScope().put(ATTRIBUTE_RESOURCE_ID_NOT_SUPPORTED_SYMBOLS,
-                configuration.getResourceIdNotSupportedSymbols());
+				repositoryConfiguration.getResourceIdNotSupportedSymbols());
 
 		return success();
 	}
@@ -266,12 +256,12 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 
 	public Event prepareChooseType(RequestContext context) throws Exception
 	{
-		List dataSourceTypes = configuration.getDataSourceTypes();
+		List dataSourceTypes = dataSourceConfiguration.getDataSourceTypes();
 		String queryLanguage = getQueryLanguage(context);
 		if (queryLanguage != null) {
-			Set supportedTypes = engine.getDataSourceTypes(JasperServerUtil.getExecutionContext(context), queryLanguage);
+			Set supportedTypes = engine.getDataSourceTypes(StaticExecutionContextProvider.getExecutionContext(), queryLanguage);
 			for (Iterator iter = dataSourceTypes.iterator(); iter.hasNext();) {
-				ConfigurationBean.DataSourceType type = (ConfigurationBean.DataSourceType) iter.next();
+				DataSourceConfiguration.DataSourceType type = (DataSourceConfiguration.DataSourceType) iter.next();
 				if (!supportedTypes.contains(type.getType())) {
 					iter.remove();
 				}
@@ -280,7 +270,7 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 		
 		Map typeMap = new HashMap();
 		for (Iterator it = dataSourceTypes.iterator(); it.hasNext();) {
-			ConfigurationBean.DataSourceType type = (ConfigurationBean.DataSourceType) it.next();
+			DataSourceConfiguration.DataSourceType type = (DataSourceConfiguration.DataSourceType) it.next();
 			typeMap.put(type.getTypeValue(),
 					messageSource.getMessage(type.getLabelMessage(), null, type.getTypeValue(), LocaleContextHolder.getLocale()));
 		}
@@ -659,14 +649,20 @@ public class ReportDataSourceAction extends FormAction implements ApplicationCon
 		this.repository = repository;
 	}
 
-	public ConfigurationBean getConfiguration()
-	{
-		return configuration;
+	public void setRepositoryConfiguration(RepositoryConfiguration repositoryConfiguration) {
+		this.repositoryConfiguration = repositoryConfiguration;
 	}
 
-	public void setConfiguration(ConfigurationBean configuration)
-	{
-		this.configuration = configuration;
+	public RepositoryConfiguration getRepositoryConfiguration() {
+		return repositoryConfiguration;
+	}
+
+	public void setDataSourceConfiguration(DataSourceConfiguration dataSourceConfiguration) {
+		this.dataSourceConfiguration = dataSourceConfiguration;
+	}
+
+	public DataSourceConfiguration getDataSourceConfiguration() {
+		return dataSourceConfiguration;
 	}
 
 	/**

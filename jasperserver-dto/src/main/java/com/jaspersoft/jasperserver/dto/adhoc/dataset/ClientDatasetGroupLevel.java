@@ -1,26 +1,30 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.dataset;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Volodya Sabadosh
@@ -35,10 +39,9 @@ public class ClientDatasetGroupLevel extends AbstractClientDatasetLevel {
 
     public ClientDatasetGroupLevel(ClientDatasetGroupLevel level) {
         super(level);
-        this.fieldRef = level.getFieldRef();
-        if (level.getMembers() != null) {
-            this.members = new ArrayList<String>(level.getMembers());
-        }
+        fieldRef = level.getFieldRef();
+        type = level.getType();
+        members = copyOf(level.getMembers());
     }
 
     @XmlElement(name="reference")
@@ -46,8 +49,9 @@ public class ClientDatasetGroupLevel extends AbstractClientDatasetLevel {
         return fieldRef;
     }
 
-    public void setFieldRef(String name) {
+    public ClientDatasetGroupLevel setFieldRef(String name) {
         this.fieldRef = name;
+        return this;
     }
 
     @XmlElementWrapper(name="members")
@@ -56,8 +60,9 @@ public class ClientDatasetGroupLevel extends AbstractClientDatasetLevel {
         return members;
     }
 
-    public void setMembers(List<String> members) {
+    public ClientDatasetGroupLevel setMembers(List<String> members) {
         this.members = members;
+        return this;
     }
 
     @Override
@@ -72,8 +77,9 @@ public class ClientDatasetGroupLevel extends AbstractClientDatasetLevel {
         return type;
     }
 
-    public void setType(String type) {
+    public ClientDatasetGroupLevel setType(String type) {
         this.type = type;
+        return this;
     }
 
     @Override
@@ -106,5 +112,10 @@ public class ClientDatasetGroupLevel extends AbstractClientDatasetLevel {
                 ", type='" + type + '\'' +
                 ", members=" + members +
                 '}';
+    }
+
+    @Override
+    public ClientDatasetGroupLevel deepClone() {
+        return new ClientDatasetGroupLevel(this);
     }
 }

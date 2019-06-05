@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.common.service;
 
@@ -231,7 +234,19 @@ public interface RepositoryService
 	 */
 	public boolean folderExists(ExecutionContext context, String uri);
 
-	/**
+    /**
+     * Determines if a specific path in the repository represents local folder of some complex resource, that own this folder.
+     * Complex resources, like Report, Ad Hoc View, e.t.c can have local folder, that's keeps local resources(like
+     * data source, JRXML, e.t.c).
+     *
+     * @param context the caller execution context
+     * @param uri the path to look for in the repository
+     *
+     * @return <code>true</code> if a folder with the specified path is local folder.
+     */
+	boolean isLocalFolder(ExecutionContext context, String uri);
+
+    /**
 	 * Checks whether a resource follows the rules imposed by the validator
 	 * configured for the specific resource type.
 	 * 

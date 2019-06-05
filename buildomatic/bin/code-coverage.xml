@@ -1,19 +1,22 @@
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <project xmlns:jacoco="antlib:org.jacoco.ant" name="code-coverage">
@@ -194,6 +197,32 @@
                     </classfiles>
                     <sourcefiles encoding="UTF-8">
                         <fileset dir="${js-path}/jasperserver-api-impl/metadata">
+                            <include name="src/main/java/com/jaspersoft/**/*.java"/>
+                        </fileset>
+                    </sourcefiles>
+                </group>
+
+                <group name="ce:jasperserver-input-controls">
+                    <classfiles>
+                        <fileset dir="${js-path}/jasperserver-input-controls">
+                            <include name="target/classes/com/jaspersoft/**/*.class"/>
+                        </fileset>
+                    </classfiles>
+                    <sourcefiles encoding="UTF-8">
+                        <fileset dir="${js-path}/jasperserver-input-controls">
+                            <include name="src/main/java/com/jaspersoft/**/*.java"/>
+                        </fileset>
+                    </sourcefiles>
+                </group>
+
+                <group name="ce:jasperserver-web-common-api">
+                    <classfiles>
+                        <fileset dir="${js-path}/jasperserver-web-common-api">
+                            <include name="target/classes/com/jaspersoft/**/*.class"/>
+                        </fileset>
+                    </classfiles>
+                    <sourcefiles encoding="UTF-8">
+                        <fileset dir="${js-path}/jasperserver-web-common-api">
                             <include name="src/main/java/com/jaspersoft/**/*.java"/>
                         </fileset>
                     </sourcefiles>
@@ -395,6 +424,19 @@
                     </sourcefiles>
                 </group>
 
+                <group name="ce:jasperserver-action-model">
+                    <classfiles>
+                        <fileset dir="${js-path}/jasperserver-action-model">
+                            <include name="target/classes/com/jaspersoft/**/*.class"/>
+                        </fileset>
+                    </classfiles>
+                    <sourcefiles encoding="UTF-8">
+                        <fileset dir="${js-path}/jasperserver-action-model">
+                            <include name="src/main/java/com/jaspersoft/**/*.java"/>
+                        </fileset>
+                    </sourcefiles>
+                </group>
+
                 <group name="ce:jasperserver-ftp">
                     <classfiles>
                         <fileset dir="${js-path}/jasperserver-ftp">
@@ -409,6 +451,19 @@
                 </group>
 
                 <!-- Pro -->
+
+                <group name="pro:easy-xml">
+                    <classfiles>
+                        <fileset dir="${js-pro-path}/easy-xml">
+                            <include name="target/classes/com/jaspersoft/**/*.class"/>
+                        </fileset>
+                    </classfiles>
+                    <sourcefiles encoding="UTF-8">
+                        <fileset dir="${js-pro-path}/easy-xml">
+                            <include name="src/main/java/com/jaspersoft/**/*.java"/>
+                        </fileset>
+                    </sourcefiles>
+                </group>
 
                 <group name="pro:common">
                     <classfiles>
@@ -605,6 +660,19 @@
                     </sourcefiles>
                 </group>
 
+                <group name="pro:gyroscope-web">
+                    <classfiles>
+                        <fileset dir="${js-pro-path}/gyroscope-web">
+                            <include name="target/classes/com/jaspersoft/**/*.class"/>
+                        </fileset>
+                    </classfiles>
+                    <sourcefiles encoding="UTF-8">
+                        <fileset dir="${js-pro-path}/gyroscope-web">
+                            <include name="src/main/java/com/jaspersoft/**/*.java"/>
+                        </fileset>
+                    </sourcefiles>
+                </group>
+
                 <group name="pro:gyroscope-export">
                     <classfiles>
                         <fileset dir="${js-pro-path}/gyroscope-export">
@@ -678,6 +746,19 @@
                     </classfiles>
                     <sourcefiles encoding="UTF-8">
                         <fileset dir="${js-pro-path}/gyroscope-ireport-plugin">
+                            <include name="src/main/java/com/jaspersoft/**/*.java"/>
+                        </fileset>
+                    </sourcefiles>
+                </group>
+
+                <group name="pro:teiid-integration">
+                    <classfiles>
+                        <fileset dir="${js-pro-path}/teiid-integration">
+                            <include name="target/classes/com/jaspersoft/**/*.class"/>
+                        </fileset>
+                    </classfiles>
+                    <sourcefiles encoding="UTF-8">
+                        <fileset dir="${js-pro-path}/teiid-integration">
                             <include name="src/main/java/com/jaspersoft/**/*.java"/>
                         </fileset>
                     </sourcefiles>

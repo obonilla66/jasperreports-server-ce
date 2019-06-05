@@ -1,28 +1,37 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.dataset;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.hashCodeOfListOfArrays;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.isListsOfArraysEquals;
 
 /**
 * @author Vasyl Spachynskyi
@@ -30,17 +39,16 @@ import java.util.List;
 * @since 05.04.2016
 */
 @XmlRootElement
-public class ClientGroupAxis {
+public class ClientGroupAxis implements DeepCloneable<ClientGroupAxis> {
     private List<String[]> level = new ArrayList<String[]>();
 
     public ClientGroupAxis() {}
 
     public ClientGroupAxis(ClientGroupAxis groupAxis) {
-        for (String[] groupLevel : groupAxis.getLevel()) {
-            level.add(Arrays.copyOf(groupLevel, groupLevel.length));
-        }
-    }
+        checkNotNull(groupAxis);
 
+        level = copyOf(groupAxis.getLevel());
+    }
 
     @XmlElement(name = "level")
     public List<String[]> getLevel() {
@@ -48,7 +56,11 @@ public class ClientGroupAxis {
     }
 
     public ClientGroupAxis setLevel(List<String[]> columns) {
-        this.level = columns;
+        if (columns == null) {
+            this.level = new ArrayList<String[]>();
+        } else {
+            this.level = columns;
+        }
         return this;
     }
 
@@ -59,18 +71,12 @@ public class ClientGroupAxis {
 
         ClientGroupAxis that = (ClientGroupAxis) o;
 
-        if (level == that.level) return true;
-        for (int i = 0; i < level.size(); i++) {
-            if (!Arrays.equals(level.get(i), that.getLevel().get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return isListsOfArraysEquals(level, that.level);
     }
 
     @Override
     public int hashCode() {
-        return level != null ? level.hashCode() : 0;
+        return hashCodeOfListOfArrays(level);
     }
 
     @Override
@@ -80,4 +86,8 @@ public class ClientGroupAxis {
                 '}';
     }
 
+    @Override
+    public ClientGroupAxis deepClone() {
+        return new ClientGroupAxis(this);
+    }
 }

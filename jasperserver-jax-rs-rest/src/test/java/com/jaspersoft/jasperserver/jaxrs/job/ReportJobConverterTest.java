@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.job;
@@ -48,22 +51,28 @@ import com.jaspersoft.jasperserver.dto.job.ClientJobTrigger;
 import com.jaspersoft.jasperserver.dto.job.ClientMailNotificationSendType;
 import com.jaspersoft.jasperserver.dto.job.ClientReportJob;
 import com.jaspersoft.jasperserver.dto.job.ProtCommand;
-import com.jaspersoft.jasperserver.war.cascade.CascadeResourceNotFoundException;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsLogicService;
-import com.jaspersoft.jasperserver.war.cascade.InputControlsValidationException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.types.date.FixedDate;
+import net.sf.jasperreports.types.date.FixedTimestamp;
+import net.sf.jasperreports.types.date.RelativeTimestampRange;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -88,6 +97,8 @@ import static org.testng.Assert.assertTrue;
  * @see
  */
 public class ReportJobConverterTest {
+    private static final String AMERICA_NEW_YORK = "America/New_York";
+    private static final String AMERICA_LOS_ANGELES = "America/Los_Angeles";
     @Mock
     private InputControlsLogicService inputControlsLogicService;
     @Mock
@@ -107,6 +118,8 @@ public class ReportJobConverterTest {
     private LinkedHashMap<String, String[]> clientSourceParameters;
     LinkedHashMap<String, Object> serverSourceParameters;
 
+    private TimeZone losAngelesTimezone = TimeZone.getTimeZone(AMERICA_LOS_ANGELES);
+    private TimeZone newYorkTimezone = TimeZone.getTimeZone(AMERICA_NEW_YORK);
 
     @BeforeMethod
     public void setUp() throws InputControlsValidationException, CascadeResourceNotFoundException {
@@ -745,6 +758,132 @@ public class ReportJobConverterTest {
     public void testConvertClientObjectWithDefaultValuesToServer() {
         ReportJob resultReportJob = converter.toServer(new ClientReportJob(), null);
         assertNotNull(resultReportJob);
+    }
+
+    @Test
+    public void toServer_withRelativeTimestampRange_returnServerJob() throws InputControlsValidationException, CascadeResourceNotFoundException {
+        final String expression = "DAY-7";
+
+        LinkedHashMap<String, Object> serverParams = new LinkedHashMap<String, Object>();
+        serverParams.put("relativeTS", new RelativeTimestampRange(expression, losAngelesTimezone, 0));
+
+        Mockito.doReturn(serverParams).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
+
+        Map<String, String[]> parameters = new HashMap<String, String[]>(){{
+            put("relativeTS", new String[]{expression});
+        }};
+
+        ClientJobSource source = new ClientJobSource()
+                .setParameters(parameters)
+                .setReportUnitURI("/test");
+
+        ClientReportJob job = new ClientReportJob()
+                .setSource(source)
+                .setOutputTimeZone(AMERICA_NEW_YORK);
+
+        ReportJob resultReportJob = converter.toServer(job, null);
+
+        RelativeTimestampRange actual = (RelativeTimestampRange) resultReportJob.getSource().getParameters().get("relativeTS");
+        RelativeTimestampRange expected = new RelativeTimestampRange(expression, newYorkTimezone, 0);
+
+        assertEquals(actual.getStart(), expected.getStart());
+    }
+
+
+    @Test
+    public void toServer_withFixedTimestamp_returnServerJob() throws InputControlsValidationException, CascadeResourceNotFoundException {
+        final String expression = "2018-08-09 10:10:10";
+
+        FixedTimestamp expected = new FixedTimestamp(expression, losAngelesTimezone, FixedTimestamp.TIMESTAMP_PATTERN);
+
+        LinkedHashMap<String, Object> serverParams = new LinkedHashMap<String, Object>();
+        serverParams.put("fixedTS", expected);
+
+        Mockito.doReturn(serverParams).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
+
+        Map<String, String[]> parameters = new HashMap<String, String[]>(){{
+            put("fixedTS", new String[]{expression});
+        }};
+
+        ClientJobSource source = new ClientJobSource()
+                .setParameters(parameters)
+                .setReportUnitURI("/test");
+
+        ClientReportJob job = new ClientReportJob()
+                .setSource(source)
+                .setOutputTimeZone(AMERICA_NEW_YORK);
+
+        ReportJob resultReportJob = converter.toServer(job, null);
+
+        FixedTimestamp actual = (FixedTimestamp) resultReportJob.getSource().getParameters().get("fixedTS");
+
+        assertEquals(actual.getStart(), expected.getStart());
+    }
+
+    @Test
+    public void toServer_withFixedDate_returnServerJob() throws InputControlsValidationException, CascadeResourceNotFoundException {
+        final String expression = "2018-08-09";
+
+        FixedDate expected = new FixedDate(expression, losAngelesTimezone, FixedTimestamp.DATE_PATTERN);
+        LinkedHashMap<String, Object> serverParams = new LinkedHashMap<String, Object>();
+        serverParams.put("fixedDate", expected);
+
+        Mockito.doReturn(serverParams).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
+
+        Map<String, String[]> parameters = new HashMap<String, String[]>(){{
+            put("fixedDate", new String[]{expression});
+        }};
+
+        ClientJobSource source = new ClientJobSource()
+                .setParameters(parameters)
+                .setReportUnitURI("/test");
+
+        ClientReportJob job = new ClientReportJob()
+                .setSource(source)
+                .setOutputTimeZone(AMERICA_NEW_YORK);
+
+        ReportJob resultReportJob = converter.toServer(job, null);
+
+        FixedDate actual = (FixedDate) resultReportJob.getSource().getParameters().get("fixedDate");
+
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    public void toServer_withFixedTimestampAndWithoutOutputTimezone_returnServerJob() throws InputControlsValidationException, CascadeResourceNotFoundException {
+        final String expression = "DAY-7";
+
+        LinkedHashMap<String, Object> serverParams = new LinkedHashMap<String, Object>();
+        serverParams.put("relativeTS", new RelativeTimestampRange(expression, losAngelesTimezone, 0));
+
+        Mockito.doReturn(serverParams).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
+
+        Map<String, String[]> parameters = new HashMap<String, String[]>(){{
+            put("relativeTS", new String[]{expression});
+        }};
+
+        ClientJobSource source = new ClientJobSource()
+                .setParameters(parameters)
+                .setReportUnitURI("/test");
+
+        ClientReportJob job = new ClientReportJob()
+                .setSource(source);
+
+        ReportJob resultReportJob = converter.toServer(job, null);
+
+        RelativeTimestampRange actual = (RelativeTimestampRange) resultReportJob.getSource().getParameters().get("relativeTS");
+        RelativeTimestampRange expected = new RelativeTimestampRange(expression, null, 0);
+
+        assertEquals(actual.getStart(), expected.getStart());
+    }
+
+    @Test
+    public void toServer_defaultLocale_null() {
+        ClientReportJob job = new ClientReportJob();
+
+        ReportJob resultReportJob = converter.toServer(job, null);
+
+        assertEquals(resultReportJob.getOutputLocale(), LocaleContextHolder.getLocale().toString());
     }
 
 }

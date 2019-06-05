@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -31,11 +31,12 @@ define(function(require) {
         i18n = require("bundle!AttributeBundle"),
         i18nMessage = require("common/util/i18nMessage").extend({bundle: i18n}),
         Epoxy = require("backbone.epoxy"),
-        permissionMasksEnum = require("attributes/enum/permissionMasksEnum");
+        permissionMasksEnum = require("attributes/enum/permissionMasksEnum"),
+        validationRulesEnum = require("attributes/enum/validationRulesEnum"),
+        baseProfileAttributeValidation = require("./validation/baseProfileAttributeValidation");
 
-
-    var MAX_LENGTH = 255,
-        MAX_VALUE_LENGTH = 2000;
+    var MAX_LENGTH = validationRulesEnum.MAX_ATTRIBUTE_NAME_LENGTH,
+        MAX_VALUE_LENGTH = validationRulesEnum.MAX_ATTRIBUTE_VALUE_LENGTH;
 
     /**
      * Construtor. Same parameters as Backbone.Model
@@ -86,19 +87,7 @@ define(function(require) {
         },
 
         validation: {
-            name: [
-                {
-                    required: true,
-                    msg: new i18nMessage("attributes.error.attribute.name.empty")
-                },
-                {
-                    maxLength: MAX_LENGTH,
-                    msg: new i18nMessage("attributes.error.attribute.name.too.long", MAX_LENGTH)
-                },
-                {
-                    doesNotContainSymbols: "\\\\/",
-                    msg: new i18nMessage("attributes.error.attribute.name.invalid")
-                },
+            name: baseProfileAttributeValidation.concat([
                 {
                     fn: function() {
                         if (this.attr) {
@@ -142,7 +131,7 @@ define(function(require) {
                         }
                     }
                 }
-            ],
+            ]),
             value: [
                 {
                     maxLength: MAX_VALUE_LENGTH,

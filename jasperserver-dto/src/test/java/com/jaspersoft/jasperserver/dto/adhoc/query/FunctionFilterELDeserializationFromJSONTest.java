@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.query;
@@ -41,6 +44,38 @@ public class FunctionFilterELDeserializationFromJSONTest extends QueryTest {
 
     @Test
     public void ensureDateEquals_timestamp() throws Exception {
+        String jsonString = "{\n" +
+                "  \"where\" : {\n" +
+                "    \"filterExpression\" : {\n" +
+                "      \"object\" : {\n" +
+                "        \"function\" : {\n" +
+                "          \"operands\" : [ {\n" +
+                "            \"variable\" : {\n" +
+                "              \"name\" : \"hire_date\"\n" +
+                "            }\n" +
+                "          }, {\n" +
+                "            \"timestamp\" : {\n" +
+                "              \"value\" : \"2009-12-01T00:00:00\"\n" +
+                "            }\n" +
+                "          } ],\n" +
+                "          \"functionName\" : \"equalsDate\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        ClientQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+
+        assertThat(cq, is(instanceOf(ClientQuery.class)));
+        assertThat(cq.getWhere().getFilterExpression().getObject(), is(instanceOf(ClientFunction.class)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getFunctionName(), is((ClientExpressions.EQUALS_DATE_FUN)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(0), is((instanceOf(ClientVariable.class))));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(1), is((instanceOf(ClientTimestamp.class))));
+    }
+
+    @Test
+    public void ensureDateEquals_nonIsoTimestamp() throws Exception {
         String jsonString = "{\n" +
                 "  \"where\" : {\n" +
                 "    \"filterExpression\" : {\n" +
@@ -88,6 +123,38 @@ public class FunctionFilterELDeserializationFromJSONTest extends QueryTest {
 
     @Test
     public void ensureDateAfter_timestamp() throws Exception {
+        String jsonString = "{\n" +
+                "  \"where\" : {\n" +
+                "    \"filterExpression\" : {\n" +
+                "      \"object\" : {\n" +
+                "        \"function\" : {\n" +
+                "          \"operands\" : [ {\n" +
+                "            \"variable\" : {\n" +
+                "              \"name\" : \"hire_date\"\n" +
+                "            }\n" +
+                "          }, {\n" +
+                "            \"timestamp\" : {\n" +
+                "              \"value\" : \"2009-12-01T00:00:00\"\n" +
+                "            }\n" +
+                "          } ],\n" +
+                "          \"functionName\" : \"afterDate\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        ClientQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+
+        assertThat(cq, is(instanceOf(ClientQuery.class)));
+        assertThat(cq.getWhere().getFilterExpression().getObject(), is(instanceOf(ClientFunction.class)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getFunctionName(), is((ClientExpressions.AFTER_DATE_FUN)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(0), is((instanceOf(ClientVariable.class))));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(1), is((instanceOf(ClientTimestamp.class))));
+    }
+
+    @Test
+    public void ensureDateAfter_nonIsoTimestamp() throws Exception {
         String jsonString = "{\n" +
                 "  \"where\" : {\n" +
                 "    \"filterExpression\" : {\n" +
@@ -269,6 +336,38 @@ public class FunctionFilterELDeserializationFromJSONTest extends QueryTest {
                 "            }\n" +
                 "          }, {\n" +
                 "            \"timestamp\" : {\n" +
+                "              \"value\" : \"2009-12-01T00:00:00\"\n" +
+                "            }\n" +
+                "          } ],\n" +
+                "          \"functionName\" : \"equalsDate\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        ClientQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+
+        assertThat(cq, is(instanceOf(ClientQuery.class)));
+        assertThat(cq.getWhere().getFilterExpression().getObject(), is(instanceOf(ClientFunction.class)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getFunctionName(), is((ClientExpressions.EQUALS_DATE_FUN)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(0), is((instanceOf(ClientVariable.class))));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(1), is((instanceOf(ClientTimestamp.class))));
+    }
+
+    @Test
+    public void ensureDateEquals_nonIsoTimestamp_date() throws Exception {
+        String jsonString = "{\n" +
+                "  \"where\" : {\n" +
+                "    \"filterExpression\" : {\n" +
+                "      \"object\" : {\n" +
+                "        \"function\" : {\n" +
+                "          \"operands\" : [ {\n" +
+                "            \"variable\" : {\n" +
+                "              \"name\" : \"hire_date\"\n" +
+                "            }\n" +
+                "          }, {\n" +
+                "            \"timestamp\" : {\n" +
                 "              \"value\" : \"2009-12-01 00:00:00\"\n" +
                 "            }\n" +
                 "          } ],\n" +
@@ -290,6 +389,38 @@ public class FunctionFilterELDeserializationFromJSONTest extends QueryTest {
 
     @Test
     public void ensureDateAfter_date() throws Exception {
+        String jsonString = "{\n" +
+                "  \"where\" : {\n" +
+                "    \"filterExpression\" : {\n" +
+                "      \"object\" : {\n" +
+                "        \"function\" : {\n" +
+                "          \"operands\" : [ {\n" +
+                "            \"variable\" : {\n" +
+                "              \"name\" : \"hire_date\"\n" +
+                "            }\n" +
+                "          }, {\n" +
+                "            \"timestamp\" : {\n" +
+                "              \"value\" : \"2009-12-01T00:00:00\"\n" +
+                "            }\n" +
+                "          } ],\n" +
+                "          \"functionName\" : \"afterDate\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        ClientQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+
+        assertThat(cq, is(instanceOf(ClientQuery.class)));
+        assertThat(cq.getWhere().getFilterExpression().getObject(), is(instanceOf(ClientFunction.class)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getFunctionName(), is((ClientExpressions.AFTER_DATE_FUN)));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(0), is((instanceOf(ClientVariable.class))));
+        assertThat(((ClientFunction) cq.getWhere().getFilterExpression().getObject()).getOperands().get(1), is((instanceOf(ClientTimestamp.class))));
+    }
+
+    @Test
+    public void ensureDateAfter_nonIsoTimestamp_date() throws Exception {
         String jsonString = "{\n" +
                 "  \"where\" : {\n" +
                 "    \"filterExpression\" : {\n" +

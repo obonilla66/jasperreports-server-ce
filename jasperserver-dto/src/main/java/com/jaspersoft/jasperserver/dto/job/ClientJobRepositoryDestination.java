@@ -1,25 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * <p/>
  * <p/>
@@ -48,18 +56,20 @@ public class ClientJobRepositoryDestination implements DeepCloneable<ClientJobRe
     }
 
     public ClientJobRepositoryDestination(ClientJobRepositoryDestination other) {
-        this.defaultReportOutputFolderURI = other.defaultReportOutputFolderURI;
-        this.folderURI = other.folderURI;
-        this.id = other.id;
-        this.outputDescription = other.outputDescription;
-        this.outputFTPInfo = (other.outputFTPInfo != null) ? new ClientJobFtpInfo(other.outputFTPInfo) : null;
-        this.outputLocalFolder = other.outputLocalFolder;
-        this.overwriteFiles = other.overwriteFiles;
-        this.saveToRepository = other.saveToRepository;
-        this.sequentialFilenames = other.sequentialFilenames;
-        this.timestampPattern = other.timestampPattern;
-        this.usingDefaultReportOutputFolderURI = other.usingDefaultReportOutputFolderURI;
-        this.version = other.version;
+        checkNotNull(other);
+
+        this.defaultReportOutputFolderURI = other.getDefaultReportOutputFolderURI();
+        this.folderURI = other.getFolderURI();
+        this.id = other.getId();
+        this.outputDescription = other.getOutputDescription();
+        this.outputFTPInfo = copyOf(other.getOutputFTPInfo());
+        this.outputLocalFolder = other.getOutputLocalFolder();
+        this.overwriteFiles = other.isOverwriteFiles();
+        this.saveToRepository = other.isSaveToRepository();
+        this.sequentialFilenames = other.isSequentialFilenames();
+        this.timestampPattern = other.getTimestampPattern();
+        this.usingDefaultReportOutputFolderURI = other.isUsingDefaultReportOutputFolderURI();
+        this.version = other.getVersion();
     }
 
     public String getFolderURI() {
@@ -221,7 +231,7 @@ public class ClientJobRepositoryDestination implements DeepCloneable<ClientJobRe
 
     @Override
     public String toString() {
-        return "RepositoryDestination{" +
+        return "ClientJobRepositoryDestination{" +
                 "folderURI='" + folderURI + '\'' +
                 ", id=" + id +
                 ", outputDescription='" + outputDescription + '\'' +

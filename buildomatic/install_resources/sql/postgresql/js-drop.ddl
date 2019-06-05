@@ -1,408 +1,410 @@
 
-    DROP INDEX idx33_resource_id_idx ON JIReportUnitResource;
+    alter table JIAccessEvent 
+       drop constraint FK7caj87u72rymu6805gtek03y8;
 
-    DROP INDEX idx32_report_unit_id_idx ON JIReportUnitResource;
+    alter table JIAccessEvent 
+       drop constraint FK8lqavxfshc29dnw97io0t6wbf;
 
-    DROP INDEX idx31_report_unit_id_idx ON JIReportUnitInputControl;
+    alter table JIAwsDatasource 
+       drop constraint FKa2q6ho769d4h6k1inqfw0avbi;
 
-    DROP INDEX idx30_input_ctrl_id_idx ON JIReportUnitInputControl;
+    alter table JIAzureSqlDatasource 
+       drop constraint FKq54ak99008wuueewun6lw3x8p;
 
-    DROP INDEX idx29_reportDataSource_idx ON JIReportUnit;
+    alter table JIAzureSqlDatasource 
+       drop constraint FK88n34smbe9i5eiqyvts12427n;
 
-    DROP INDEX JIReportUnit_query_index ON JIReportUnit;
+    alter table JIBeanDatasource 
+       drop constraint FKcq7pt3wmr5oua2omyaynj18wm;
 
-    DROP INDEX JIReportUnit_mainReport_index ON JIReportUnit;
+    alter table JIContentResource 
+       drop constraint FKc903d1j62d6q2alfowyml1qyc;
 
-    DROP INDEX JIFileResource_reference_index ON JIFileResource;
+    alter table JICustomDatasource 
+       drop constraint FK698qlo478w8q00ratagvxjigg;
 
-    DROP INDEX JIQuery_dataSource_index ON JIQuery;
+    alter table JICustomDatasourceProperty 
+       drop constraint FKlmhvtq6f4aj7nbgpkop6pvwaj;
 
-    DROP INDEX idx23_olapClientConnection_idx ON JIOlapUnit;
+    alter table JICustomDatasourceResource 
+       drop constraint FKdqu6gyndmi8barxd4e4mwgiu1;
 
-    DROP INDEX idx17_reportDataSource_idx ON JIMondrianConnection;
+    alter table JICustomDatasourceResource 
+       drop constraint FK2b8of47ft9ucqg6wxq51d94f6;
 
-    DROP INDEX idx16_mondrianSchema_idx ON JIMondrianConnection;
+    alter table JIDataSnapshotParameter 
+       drop constraint id_fk_idx;
 
-    DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
+    alter table JIDataType 
+       drop constraint FKfowvvrdpyr4fsfdt0qekb6b31;
 
-    DROP INDEX idx15_input_ctrl_id_idx ON JIInputControlQueryColumn;
+    alter table JIFileResource 
+       drop constraint FK9cks6rnum2e1nwpltygmric0a;
 
-    DROP INDEX JIInputControl_list_query_idx ON JIInputControl;
+    alter table JIFileResource 
+       drop constraint FK7lou06p9h4uewmjilbvtiyfti;
 
-    DROP INDEX JIInputCtrl_list_of_values_idx ON JIInputControl;
+    alter table JIFTPInfoProperties 
+       drop constraint FKs9ui25pnlkwvymdhafps0eqox;
 
-    DROP INDEX JIInputControl_data_type_index ON JIInputControl;
+    alter table JIInputControl 
+       drop constraint FK7gw3h08vhv4ehuscnk22lweb0;
 
-    DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
+    alter table JIInputControl 
+       drop constraint FKidpnbmursposu1b72a37j99dg;
 
-    DROP INDEX JIUser_tenantId_index ON JIUser;
+    alter table JIInputControl 
+       drop constraint FK8igl58hkwa8csd2pptsj6sl48;
 
-    DROP INDEX JITenant_parentId_index ON JITenant;
+    alter table JIInputControl 
+       drop constraint FKeji041b95gimh1lii27d3j66f;
 
-    DROP INDEX JIUserRole_userId_index ON JIUserRole;
+    alter table JIInputControlQueryColumn 
+       drop constraint FKawiyltd98xvdsp3syt7fllehw;
 
-    DROP INDEX JIUserRole_roleId_index ON JIUserRole;
+    alter table JIJdbcDatasource 
+       drop constraint FKkjuw9e7bu5n4k5nm3osifg5gc;
 
-    DROP INDEX JIRole_tenantId_index ON JIRole;
+    alter table JIJNDIJdbcDatasource 
+       drop constraint FK2gd8opslbt6erc8yx74s6j0nw;
 
-    DROP INDEX idx22_recipientobjid_idx ON JIObjectPermission;
+    alter table JIListOfValues 
+       drop constraint FKaoih4o3b0gmj4vgvocwb2m9qp;
 
-    DROP INDEX idx21_recipientobjclass_idx ON JIObjectPermission;
+    alter table JIListOfValuesItem 
+       drop constraint FK2eq5m33wjtmf3d61gp38aqq77;
 
-    DROP INDEX uri_index ON JIObjectPermission;
+    alter table JILogEvent 
+       drop constraint FK7636lhqn8drpalfckmb5wlljb;
 
-    DROP INDEX idx36_resource_id_idx ON JIVirtualDataSourceUriMap;
+    alter table JIMondrianConnection 
+       drop constraint FKm9glomusslw0ouy1xev0kafql;
 
-    DROP INDEX JIResource_parent_folder_index ON JIResource;
+    alter table JIMondrianConnection 
+       drop constraint FK8yiwytorg3lwqq1gag9fng7rf;
 
-    DROP INDEX JIResource_childrenFolder_idx ON JIResource;
+    alter table JIMondrianConnection 
+       drop constraint FKamcjhut3kc0ko4rypemusdn7d;
 
-    DROP INDEX idx28_resource_id_idx ON JIReportThumbnail;
+    alter table JIMondrianXMLADefinition 
+       drop constraint FKclv0lm19k3nvkmbv41epbfs34;
 
-    DROP INDEX JIResourceFolder_version_index ON JIResourceFolder;
+    alter table JIMondrianXMLADefinition 
+       drop constraint FKnmn2j9pevf2slm0i314ghs1sq;
 
-    DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
+    alter table JIOlapClientConnection 
+       drop constraint FKqtji02a7ga296baj2y3avol24;
 
-    DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
+    alter table JIOlapUnit 
+       drop constraint FKtj0u3bnnfbe2h6w5v9jue5xr1;
 
-    DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
+    alter table JIOlapUnit 
+       drop constraint FKakvumwho658vijmoaaxddp4xo;
 
-    DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
+    alter table JIQuery 
+       drop constraint FK1ql6x3q59eti9h2r042ogoj3i;
 
-    DROP INDEX idx24_alert_id_idx ON JIReportAlertToAddress;
+    alter table JIQuery 
+       drop constraint FK6ff8ikqrr2celf9wvfbrcycpx;
 
-    DROP INDEX JIReportJob_owner_index ON JIReportJob;
+    alter table JIReportAlertToAddress 
+       drop constraint FKhaqpdt65o66idbve7gs97ye8p;
 
-    DROP INDEX idx26_mail_notification_idx ON JIReportJob;
+    alter table JIReportJob 
+       drop constraint FKntl9s5ul4oy4k9ws8u5wer55w;
 
-    DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
+    alter table JIReportJob 
+       drop constraint FKkclub0l9io38j4su6crr9amd8;
+
+    alter table JIReportJob 
+       drop constraint FK8ymdkrb9uvvyi3xw9padxdxdv;
+
+    alter table JIReportJob 
+       drop constraint FKrbhjr4v64eym1mg2du3fs9i95;
+
+    alter table JIReportJob 
+       drop constraint FKo8dw7hsyef0xa1vg9feiu1mea;
+
+    alter table JIReportJob 
+       drop constraint FKgg6i9vqj6rx0kgqxmoqigm3gr;
+
+    alter table JIReportJobCalendarTrigger 
+       drop constraint FK89c4gqc5f5myrmfrc9a5gw7vb;
+
+    alter table JIReportJobMailRecipient 
+       drop constraint FKoe0v23mvul37f23piq39ks6fh;
+
+    alter table JIReportJobOutputFormat 
+       drop constraint FKi5f8ideliwcf9juic989pn2lj;
+
+    alter table JIReportJobParameter 
+       drop constraint FKh72kmrkm333g8ldlu7kybkrcd;
+
+    alter table JIReportJobRepoDest 
+       drop constraint FKba2wg3iix8mr5wcjq6004ekvw;
+
+    alter table JIReportJobSimpleTrigger 
+       drop constraint FK7gwgexkgjb6h4hn0166h2ttyk;
+
+    alter table JIReportThumbnail 
+       drop constraint FKhcdwx2qpiib9xtract2ecv31;
+
+    alter table JIReportThumbnail 
+       drop constraint FK8msuqfe2w3o9qjo81g8i6mgpi;
+
+    alter table JIReportUnit 
+       drop constraint FK6cl7eluds59jg1emjofa30i23;
+
+    alter table JIReportUnit 
+       drop constraint FK88u05b8n58ciemd3qcrd1jxn;
+
+    alter table JIReportUnit 
+       drop constraint FKcenakwnolc02r8xbdio30du9h;
+
+    alter table JIReportUnit 
+       drop constraint FKi2qw1u7yutrxh03xkrgx9o37d;
+
+    alter table JIReportUnitInputControl 
+       drop constraint FK8i0f45gnyhwcfrgueufsrvaw1;
+
+    alter table JIReportUnitInputControl 
+       drop constraint FKkvxewxu2tyomdsg1kioplnfq;
+
+    alter table JIReportUnitResource 
+       drop constraint FK18lcqhapddcvgcl52yqhil0a4;
+
+    alter table JIReportUnitResource 
+       drop constraint FK2fjktehjwog75dmp2rrfgm958;
+
+    alter table JIRepositoryCache 
+       drop constraint FKah8ma0bnkbirohud6lvenjt0k;
+
+    alter table JIResource 
+       drop constraint FKtnvtjq7s7hviyarfmomkokjm4;
+
+    alter table JIResource 
+       drop constraint FKc2qblpikow4ay35q0xgf9rjub;
+
+    alter table JIResourceFolder 
+       drop constraint FKduwulvl4qwqkqpxonyuer65fi;
+
+    alter table JIRole 
+       drop constraint FKmrf25easnd1emk6juaeot4dkn;
+
+    alter table JITenant 
+       drop constraint FKqupdx83verq7860nxsd6l24y1;
+
+    alter table JIUser 
+       drop constraint FKdnd0cy83h5cc2ex1375wek3wf;
+
+    alter table JIUserRole 
+       drop constraint FKrnaojg2v9yc6u72wrl6pmmi60;
+
+    alter table JIUserRole 
+       drop constraint FKska4g96yuc7dsyrskhot6nccp;
+
+    alter table JIVirtualDatasource 
+       drop constraint FK8jua4kahyslb99ni7bbyjxdf6;
+
+    alter table JIVirtualDataSourceUriMap 
+       drop constraint FKbpwmqrxy4onvvbsnole8icjic;
+
+    alter table JIVirtualDataSourceUriMap 
+       drop constraint FK94bfn67jetx6l0ykl2g9n37w1;
+
+    alter table JIXMLAConnection 
+       drop constraint FK27s5ja8sxgrylp7cf0wyscl79;
+
+    drop table if exists JIAccessEvent cascade;
+
+    drop table if exists JIAwsDatasource cascade;
+
+    drop table if exists JIAzureSqlDatasource cascade;
+
+    drop table if exists JIBeanDatasource cascade;
+
+    drop table if exists JIContentResource cascade;
+
+    drop table if exists JICustomDatasource cascade;
+
+    drop table if exists JICustomDatasourceProperty cascade;
+
+    drop table if exists JICustomDatasourceResource cascade;
+
+    drop table if exists JIDataSnapshot cascade;
+
+    drop table if exists JIDataSnapshotContents cascade;
+
+    drop table if exists JIDataSnapshotParameter cascade;
+
+    drop table if exists JIDataType cascade;
+
+    drop table if exists JIFileResource cascade;
+
+    drop table if exists JIFTPInfoProperties cascade;
+
+    drop table if exists JIInputControl cascade;
+
+    drop table if exists JIInputControlQueryColumn cascade;
+
+    drop table if exists JIJdbcDatasource cascade;
+
+    drop table if exists JIJNDIJdbcDatasource cascade;
+
+    drop table if exists JIListOfValues cascade;
+
+    drop table if exists JIListOfValuesItem cascade;
+
+    drop table if exists JILogEvent cascade;
+
+    drop table if exists JIMondrianConnection cascade;
+
+    drop table if exists JIMondrianXMLADefinition cascade;
+
+    drop table if exists JIObjectPermission cascade;
+
+    drop table if exists JIOlapClientConnection cascade;
+
+    drop table if exists JIOlapUnit cascade;
+
+    drop table if exists JIProfileAttribute cascade;
+
+    drop table if exists JIQuery cascade;
+
+    drop table if exists JIReportAlertToAddress cascade;
+
+    drop table if exists JIReportJob cascade;
+
+    drop table if exists JIReportJobAlert cascade;
+
+    drop table if exists JIReportJobCalendarTrigger cascade;
+
+    drop table if exists JIReportJobMail cascade;
+
+    drop table if exists JIReportJobMailRecipient cascade;
+
+    drop table if exists JIReportJobOutputFormat cascade;
+
+    drop table if exists JIReportJobParameter cascade;
+
+    drop table if exists JIReportJobRepoDest cascade;
+
+    drop table if exists JIReportJobSimpleTrigger cascade;
+
+    drop table if exists JIReportJobTrigger cascade;
+
+    drop table if exists JIReportThumbnail cascade;
+
+    drop table if exists JIReportUnit cascade;
+
+    drop table if exists JIReportUnitInputControl cascade;
+
+    drop table if exists JIReportUnitResource cascade;
+
+    drop table if exists JIRepositoryCache cascade;
+
+    drop table if exists JIResource cascade;
+
+    drop table if exists JIResourceFolder cascade;
+
+    drop table if exists JIRole cascade;
+
+    drop table if exists JITenant cascade;
+
+    drop table if exists JIUser cascade;
+
+    drop table if exists JIUserRole cascade;
+
+    drop table if exists JIVirtualDatasource cascade;
+
+    drop table if exists JIVirtualDataSourceUriMap cascade;
+
+    drop table if exists JIXMLAConnection cascade;
+
+    drop sequence if exists hibernate_sequence;
 
     DROP INDEX idx25_content_destination_idx ON JIReportJob;
 
-    DROP INDEX JIReportJob_alert_index ON JIReportJob;
+    DROP INDEX idx28_resource_id_idx ON JIReportThumbnail;
+
+    DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
+
+    DROP INDEX JIReportUnit_mainReport_index ON JIReportUnit;
+
+    DROP INDEX idx26_mail_notification_idx ON JIReportJob;
+
+    DROP INDEX JIReportUnit_query_index ON JIReportUnit;
+
+    DROP INDEX JIReportJob_owner_index ON JIReportJob;
+
+    DROP INDEX idx24_alert_id_idx ON JIReportAlertToAddress;
+
+    DROP INDEX JIRole_tenantId_index ON JIRole;
+
+    DROP INDEX JIInputControl_list_query_idx ON JIInputControl;
+
+    DROP INDEX JIUserRole_roleId_index ON JIUserRole;
+
+    DROP INDEX idx15_input_ctrl_id_idx ON JIInputControlQueryColumn;
+
+    DROP INDEX JIUserRole_userId_index ON JIUserRole;
+
+    DROP INDEX idx16_mondrianSchema_idx ON JIMondrianConnection;
+
+    DROP INDEX JITenant_parentId_index ON JITenant;
+
+    DROP INDEX idx17_reportDataSource_idx ON JIMondrianConnection;
+
+    DROP INDEX JIUser_tenantId_index ON JIUser;
+
+    DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
 
     DROP INDEX JILogEvent_userId_index ON JILogEvent;
 
-    alter table JIAccessEvent 
-        drop constraint FK47FB3CD732282198;
+    DROP INDEX idx23_olapClientConnection_idx ON JIOlapUnit;
 
-    alter table JIAccessEvent 
-        drop constraint FK47FB3CD7F254B53E;
+    DROP INDEX JIReportJob_alert_index ON JIReportJob;
 
-    alter table JIAwsDatasource 
-        drop constraint FK6085542387E4472B;
+    DROP INDEX JIQuery_dataSource_index ON JIQuery;
 
-    alter table JIAzureSqlDatasource 
-        drop constraint FKAFE22203C001BAEA;
+    DROP INDEX idx22_recipientobjid_idx ON JIObjectPermission;
 
-    alter table JIAzureSqlDatasource 
-        drop constraint FKAFE2220387E4472B;
+    DROP INDEX JIResourceFolder_version_index ON JIResourceFolder;
 
-    alter table JIBeanDatasource 
-        drop constraint FK674BF34A8BF376D;
+    DROP INDEX uri_index ON JIObjectPermission;
 
-    alter table JIContentResource 
-        drop constraint FKE466FC68A8BF376D;
+    DROP INDEX JIResourceFolder_hidden_index ON JIResourceFolder;
 
-    alter table JICustomDatasource 
-        drop constraint FK2BBCEDF5A8BF376D;
+    DROP INDEX idx21_recipientobjclass_idx ON JIObjectPermission;
 
-    alter table JICustomDatasourceProperty 
-        drop constraint FKB8A66AEA858A89D1;
+    DROP INDEX JIInputControl_data_type_index ON JIInputControl;
 
-    alter table JICustomDatasourceResource 
-        drop constraint FKDF845123F254B53E;
+    DROP INDEX JIInputCtrl_list_of_values_idx ON JIInputControl;
 
-    alter table JICustomDatasourceResource 
-        drop constraint FKDF845123858A89D1;
+    DROP INDEX idx29_reportDataSource_idx ON JIReportUnit;
 
-    alter table JIDataSnapshotParameter 
-        drop constraint id_fk_idx;
+    DROP INDEX idx30_input_ctrl_id_idx ON JIReportUnitInputControl;
 
-    alter table JIDataType 
-        drop constraint FK533BCC63A8BF376D;
+    DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
 
-    alter table JIFTPInfoProperties 
-        drop constraint FK6BD68B04D5FA3F0A;
+    DROP INDEX idx31_report_unit_id_idx ON JIReportUnitInputControl;
 
-    alter table JIFileResource 
-        drop constraint FKF75B58895A0C539;
+    DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
 
-    alter table JIFileResource 
-        drop constraint FKF75B5889A8BF376D;
+    DROP INDEX idx32_report_unit_id_idx ON JIReportUnitResource;
 
-    alter table JIInputControl 
-        drop constraint FKCAC6A512B37DB6EB;
+    DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
 
-    alter table JIInputControl 
-        drop constraint FKCAC6A512120E06F7;
+    DROP INDEX idx33_resource_id_idx ON JIReportUnitResource;
 
-    alter table JIInputControl 
-        drop constraint FKCAC6A512A8BF376D;
+    DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
 
-    alter table JIInputControl 
-        drop constraint FKCAC6A51262A86F04;
+    DROP INDEX JIResource_childrenFolder_idx ON JIResource;
 
-    alter table JIInputControlQueryColumn 
-        drop constraint FKE436A5CCE7922149;
+    DROP INDEX JIFileResource_reference_index ON JIFileResource;
 
-    alter table JIJNDIJdbcDatasource 
-        drop constraint FK7F9DA248A8BF376D;
+    DROP INDEX JIResource_parent_folder_index ON JIResource;
 
-    alter table JIJdbcDatasource 
-        drop constraint FKC8BDFCBFA8BF376D;
+    DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
 
-    alter table JIListOfValues 
-        drop constraint FK4E86A776A8BF376D;
-
-    alter table JIListOfValuesItem 
-        drop constraint FKD37CEBA993F0E1F6;
-
-    alter table JILogEvent 
-        drop constraint FK5F32081591865AF;
-
-    alter table JIMondrianConnection 
-        drop constraint FK4FF53B19324CFECB;
-
-    alter table JIMondrianConnection 
-        drop constraint FK4FF53B191D51BFAD;
-
-    alter table JIMondrianConnection 
-        drop constraint FK4FF53B19C495A60B;
-
-    alter table JIMondrianXMLADefinition 
-        drop constraint FK313B2AB8A8BF376D;
-
-    alter table JIMondrianXMLADefinition 
-        drop constraint FK313B2AB8DC098B1;
-
-    alter table JIOlapClientConnection 
-        drop constraint FK3CA3B7D4A8BF376D;
-
-    alter table JIOlapUnit 
-        drop constraint FKF034DCCF8F542247;
-
-    alter table JIOlapUnit 
-        drop constraint FKF034DCCFA8BF376D;
-
-    alter table JIQuery 
-        drop constraint FKCBCB0EC92B329A97;
-
-    alter table JIQuery 
-        drop constraint FKCBCB0EC9A8BF376D;
-
-    alter table JIReportAlertToAddress 
-        drop constraint FKC4E3713022FA4CBA;
-
-    alter table JIReportJob 
-        drop constraint FK156F5F6A4141263C;
-
-    alter table JIReportJob 
-        drop constraint FK156F5F6A9EEC902C;
-
-    alter table JIReportJob 
-        drop constraint FK156F5F6AE4D73E35;
-
-    alter table JIReportJob 
-        drop constraint FK156F5F6AC83ABB38;
-
-    alter table JIReportJob 
-        drop constraint FK156F5F6A74D2696E;
-
-    alter table JIReportJob 
-        drop constraint FK156F5F6AFF0F459F;
-
-    alter table JIReportJobCalendarTrigger 
-        drop constraint FKC374C7D0D2B2EB53;
-
-    alter table JIReportJobMailRecipient 
-        drop constraint FKBB6DB6D880001AAE;
-
-    alter table JIReportJobOutputFormat 
-        drop constraint FKB42A5CE2C3389A8;
-
-    alter table JIReportJobParameter 
-        drop constraint FKEAC52B5F2EC643D;
-
-    alter table JIReportJobRepoDest 
-        drop constraint FKEA477EBE3C5B87D0;
-
-    alter table JIReportJobSimpleTrigger 
-        drop constraint FKB9337C5CD2B2EB53;
-
-    alter table JIReportThumbnail 
-        drop constraint FKFDB3DED932282198;
-
-    alter table JIReportThumbnail 
-        drop constraint FKFDB3DED9F254B53E;
-
-    alter table JIReportUnit 
-        drop constraint FK98818B77324CFECB;
-
-    alter table JIReportUnit 
-        drop constraint FK98818B778C8DF21B;
-
-    alter table JIReportUnit 
-        drop constraint FK98818B778FDA11CC;
-
-    alter table JIReportUnit 
-        drop constraint FK98818B77A8BF376D;
-
-    alter table JIReportUnitInputControl 
-        drop constraint FK5FBE934AA6A48880;
-
-    alter table JIReportUnitInputControl 
-        drop constraint FK5FBE934AE7922149;
-
-    alter table JIReportUnitResource 
-        drop constraint FK8B1C4CA5A6A48880;
-
-    alter table JIReportUnitResource 
-        drop constraint FK8B1C4CA5865B10DA;
-
-    alter table JIRepositoryCache 
-        drop constraint FKE7338B19E7C5A6;
-
-    alter table JIResource 
-        drop constraint FKD444826DA08E2155;
-
-    alter table JIResource 
-        drop constraint FKD444826DA58002DF;
-
-    alter table JIResourceFolder 
-        drop constraint FK7F24453BA08E2155;
-
-    alter table JIRole 
-        drop constraint FK82724655E415AC2D;
-
-    alter table JITenant 
-        drop constraint FKB1D7B2C97803CC2D;
-
-    alter table JIUser 
-        drop constraint FK8273B1AAE415AC2D;
-
-    alter table JIUserRole 
-        drop constraint FKD8B5C1403C31045;
-
-    alter table JIUserRole 
-        drop constraint FKD8B5C14091865AF;
-
-    alter table JIVirtualDataSourceUriMap 
-        drop constraint FK4A6CCE01F254B53E;
-
-    alter table JIVirtualDataSourceUriMap 
-        drop constraint FK4A6CCE019E600E20;
-
-    alter table JIVirtualDatasource 
-        drop constraint FK30E55631A8BF376D;
-
-    alter table JIXMLAConnection 
-        drop constraint FK94C688A71D51BFAD;
-
-    drop table JIAccessEvent;
-
-    drop table JIAwsDatasource;
-
-    drop table JIAzureSqlDatasource;
-
-    drop table JIBeanDatasource;
-
-    drop table JIContentResource;
-
-    drop table JICustomDatasource;
-
-    drop table JICustomDatasourceProperty;
-
-    drop table JICustomDatasourceResource;
-
-    drop table JIDataSnapshot;
-
-    drop table JIDataSnapshotContents;
-
-    drop table JIDataSnapshotParameter;
-
-    drop table JIDataType;
-
-    drop table JIFTPInfoProperties;
-
-    drop table JIFileResource;
-
-    drop table JIInputControl;
-
-    drop table JIInputControlQueryColumn;
-
-    drop table JIJNDIJdbcDatasource;
-
-    drop table JIJdbcDatasource;
-
-    drop table JIListOfValues;
-
-    drop table JIListOfValuesItem;
-
-    drop table JILogEvent;
-
-    drop table JIMondrianConnection;
-
-    drop table JIMondrianXMLADefinition;
-
-    drop table JIObjectPermission;
-
-    drop table JIOlapClientConnection;
-
-    drop table JIOlapUnit;
-
-    drop table JIProfileAttribute;
-
-    drop table JIQuery;
-
-    drop table JIReportAlertToAddress;
-
-    drop table JIReportJob;
-
-    drop table JIReportJobAlert;
-
-    drop table JIReportJobCalendarTrigger;
-
-    drop table JIReportJobMail;
-
-    drop table JIReportJobMailRecipient;
-
-    drop table JIReportJobOutputFormat;
-
-    drop table JIReportJobParameter;
-
-    drop table JIReportJobRepoDest;
-
-    drop table JIReportJobSimpleTrigger;
-
-    drop table JIReportJobTrigger;
-
-    drop table JIReportThumbnail;
-
-    drop table JIReportUnit;
-
-    drop table JIReportUnitInputControl;
-
-    drop table JIReportUnitResource;
-
-    drop table JIRepositoryCache;
-
-    drop table JIResource;
-
-    drop table JIResourceFolder;
-
-    drop table JIRole;
-
-    drop table JITenant;
-
-    drop table JIUser;
-
-    drop table JIUserRole;
-
-    drop table JIVirtualDataSourceUriMap;
-
-    drop table JIVirtualDatasource;
-
-    drop table JIXMLAConnection;
-
-    drop sequence hibernate_sequence;
+    DROP INDEX idx36_resource_id_idx ON JIVirtualDataSourceUriMap;

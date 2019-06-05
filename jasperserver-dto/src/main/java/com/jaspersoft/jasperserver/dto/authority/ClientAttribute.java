@@ -1,27 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.authority;
 
 import com.jaspersoft.jasperserver.dto.authority.hypermedia.HypermediaAttribute;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * <p></p>
@@ -33,7 +39,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
  */
 @XmlRootElement(name = "attribute")
 @XmlSeeAlso({HypermediaAttribute.class})
-public class ClientAttribute {
+public class ClientAttribute<BuilderType extends ClientAttribute<BuilderType>> implements DeepCloneable<BuilderType> {
     private String name;
     private String value;
     private Boolean secure = false;
@@ -43,6 +49,8 @@ public class ClientAttribute {
     private String holder;
 
     public ClientAttribute(ClientAttribute other) {
+        checkNotNull(other);
+
         this.name = other.getName();
         this.value = other.getValue();
         this.secure = other.isSecure();
@@ -55,36 +63,44 @@ public class ClientAttribute {
     public ClientAttribute() {
     }
 
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    @Override
+    public BuilderType deepClone() {
+        return (BuilderType) new ClientAttribute(this);
+    }
+
     public String getName() {
         return name;
     }
 
-    public ClientAttribute setName(String name) {
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setName(String name) {
         this.name = name;
-        return this;
+        return (BuilderType) this;
     }
 
     public String getHolder() {
         return holder;
     }
 
-    public ClientAttribute setHolder(String holder) {
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setHolder(String holder) {
         this.holder = holder;
-        return this;
+        return (BuilderType) this;
     }
 
     public String getValue() {
         return value;
     }
 
-    public ClientAttribute setValue(String value) {
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setValue(String value) {
         this.value = value;
-        return this;
-    }
-
-    public ClientAttribute setSecure(boolean secure) {
-        this.secure = secure;
-        return this;
+        return (BuilderType) this;
     }
 
     @XmlElement(name = "secure")
@@ -92,32 +108,45 @@ public class ClientAttribute {
         return secure;
     }
 
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setSecure(Boolean secure) {
+        this.secure = secure;
+        return (BuilderType) this;
+    }
+
     @XmlElement(name = "inherited")
     public Boolean isInherited() {
         return inherited;
     }
 
-    public ClientAttribute setInherited(Boolean inherited) {
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setInherited(Boolean inherited) {
         this.inherited = inherited;
-        return this;
+        return (BuilderType) this;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public ClientAttribute setDescription(String description) {
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setDescription(String description) {
         this.description = description;
-        return this;
+        return (BuilderType) this;
     }
 
     public Integer getPermissionMask() {
         return permissionMask;
     }
 
-    public ClientAttribute setPermissionMask(Integer permissionMask) {
+    // definition of subclasses assures cast safety.
+    @SuppressWarnings("unchecked")
+    public BuilderType setPermissionMask(Integer permissionMask) {
         this.permissionMask = permissionMask;
-        return this;
+        return (BuilderType) this;
     }
 
     @Override
@@ -134,8 +163,7 @@ public class ClientAttribute {
         if (description != null ? !description.equals(that.description) : that.description != null) return false;
         if (permissionMask != null ? !permissionMask.equals(that.permissionMask) : that.permissionMask != null)
             return false;
-        return !(holder != null ? !holder.equals(that.holder) : that.holder != null);
-
+        return holder != null ? holder.equals(that.holder) : that.holder == null;
     }
 
     @Override

@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -50,7 +50,7 @@ JRS.Controls = (function (JSON, jQuery, _, Controls) {
         var errorObject;
         try {
             try {
-                errorObject = jQuery.parseJSON(err.responseText);
+                errorObject = JSON.parse(err.responseText);
             } catch (e) {}
 
             if (errorObject && errorObject.error) {
@@ -73,7 +73,7 @@ JRS.Controls = (function (JSON, jQuery, _, Controls) {
 
                     var message = "";
                     if (errorObject) {
-                        message = Mustache.to_html("<div><b>{{message}}</b></div><p>{{#parameters}}<div>{{.}}</div>{{/parameters}}</p>", errorObject);
+                        message = _.template("<div><b>{{-message}}</b></div><p>{{ if (parameters) for (var i = 0; i < parameters.length; i++) { }}<div>{{-parameters[i]}}</div>{{ } }}</p>")(errorObject);
                     } else {
                         message = statusText;
                     }
@@ -92,11 +92,11 @@ JRS.Controls = (function (JSON, jQuery, _, Controls) {
 
         //REST wrapper, returns normalized data
         DataTransfer:Controls.Base.extend({
-            CONTROLS_STRUCTURE_TEMPLATE_URI:__jrsConfigs__.contextPath + "/rest_v2/reports{{reportUri}}/inputControls/{{controlIds}}",
+            CONTROLS_STRUCTURE_TEMPLATE_URI:__jrsConfigs__.contextPath + "/rest_v2/reports{{=reportUri}}/inputControls/{{=controlIds}}",
 
-            INITIAL_CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{reportUri}}/inputControls/values",
+            INITIAL_CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{=reportUri}}/inputControls/values",
 
-            CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{reportUri}}/inputControls/{{controlIds}}/values",
+            CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{=reportUri}}/inputControls/{{=controlIds}}/values",
 
             constructor : function(options) {
                 this.dataConverter = options.dataConverter;
@@ -225,11 +225,11 @@ JRS.Controls = (function (JSON, jQuery, _, Controls) {
 
             //Static props
 
-            CONTROLS_STRUCTURE_TEMPLATE_URI:__jrsConfigs__.contextPath + "/rest_v2/reports{{reportUri}}/inputControls/{{controlIds}}",
+            CONTROLS_STRUCTURE_TEMPLATE_URI:__jrsConfigs__.contextPath + "/rest_v2/reports{{=reportUri}}/inputControls/{{=controlIds}}",
 
-            INITIAL_CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{reportUri}}/inputControls/values",
+            INITIAL_CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{=reportUri}}/inputControls/values",
 
-            CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{reportUri}}/inputControls/{{controlIds}}/values",
+            CONTROLS_VALUES_TEMPLATE_URL:__jrsConfigs__.contextPath + "/rest_v2/reports{{=reportUri}}/inputControls/{{=controlIds}}/values",
 
             FREQUENT_CHANGES_MIN_DELAY : 400
         })

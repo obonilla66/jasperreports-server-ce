@@ -1,25 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -28,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @version $Id$
  */
 @XmlRootElement(name = "reportUnitFile")
-public class ClientReportUnitResource {
+public class ClientReportUnitResource implements DeepCloneable<ClientReportUnitResource> {
     private String name;
     private ClientReferenceableFile file;
 
@@ -41,16 +49,15 @@ public class ClientReportUnitResource {
     }
 
     public ClientReportUnitResource(ClientReportUnitResource other) {
-        this.name = other.getName();
+        checkNotNull(other);
 
-        ClientReferenceableFile srcFile = other.getFile();
-        if (srcFile != null) {
-            if (srcFile instanceof ClientReference){
-                file = new ClientReference((ClientReference) srcFile);
-            } else if (srcFile instanceof ClientFile){
-                file = new ClientFile((ClientFile) srcFile);
-            }
-        }
+        this.name = other.getName();
+        this.file = copyOf(other.getFile());
+    }
+
+    @Override
+    public ClientReportUnitResource deepClone() {
+        return new ClientReportUnitResource(this);
     }
 
     public String getName() {

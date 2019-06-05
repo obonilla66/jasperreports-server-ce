@@ -1,37 +1,41 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.themes;
 
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ComparableBlob;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.HibernateSaveUpdateDeleteListener;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFolder;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate5.HibernateTemplate;
 
+import javax.sql.rowset.serial.SerialBlob;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -149,14 +153,16 @@ public class ThemeHibernateListener implements HibernateSaveUpdateDeleteListener
     private void unreferenceFileResource(RepoFileResource resource, HibernateTemplate hibernateTemplate) {
         DetachedCriteria criteria = DetachedCriteria.forClass(RepoFileResource.class);
         criteria.add(Restrictions.eq("reference", resource));
-        List<RepoFileResource> referencedResources = hibernateTemplate.findByCriteria(criteria);
-        for(RepoFileResource fileResource: referencedResources) {
+        List referencedResources = hibernateTemplate.findByCriteria(criteria);
+        for(RepoFileResource fileResource: (List<RepoFileResource>)referencedResources) {
             // if current resource is reference then just change reference in dependant resource
             // if not - then set data in dependant resource and remove reference
             if (resource.isFileReference()) {
                 fileResource.setReference(resource.getReference());
             } else {
-                fileResource.setData((ComparableBlob) resource.getData());
+                // Initialize lazy loaded Data because Hibernate have bugs with LazyInitialized properties in cascades
+                Hibernate.initialize(fileResource.getData());
+                fileResource.setData(resource.getData());
                 fileResource.setReference(null);
             }
         }

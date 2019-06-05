@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.search;
@@ -21,8 +24,10 @@ package com.jaspersoft.jasperserver.api.search;
 import org.hibernate.*;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.criterion.*;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.impl.CriteriaImpl;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl.Subcriteria;
+import org.hibernate.sql.JoinType;
 
 import java.util.Iterator;
 
@@ -33,7 +38,11 @@ import java.util.Iterator;
  */
 public class SearchCriteria extends DetachedCriteria {
 
-    private final CriteriaImpl impl;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final CriteriaImpl impl;
     private final Criteria criteria;
 
     protected SearchCriteria(String entityName) {
@@ -71,11 +80,13 @@ public class SearchCriteria extends DetachedCriteria {
         return new SearchCriteria(entityName, alias);
     }
 
-    public static SearchCriteria forClass(Class clazz) {
+    @SuppressWarnings("rawtypes")
+	public static SearchCriteria forClass(Class clazz) {
         return new SearchCriteria(clazz.getName());
     }
 
-    public static SearchCriteria forClass(Class clazz, String alias) {
+    @SuppressWarnings("rawtypes")
+	public static SearchCriteria forClass(Class clazz, String alias) {
         return new SearchCriteria(clazz.getName(), alias);
     }
 
@@ -188,16 +199,16 @@ public class SearchCriteria extends DetachedCriteria {
         return impl;
     }
 
-    public SearchCriteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+    public SearchCriteria createAlias(String associationPath, String alias, JoinType joinType) throws HibernateException {
         criteria.createAlias(associationPath, alias, joinType);
         return this;
     }
 
-    public SearchCriteria createCriteria(String associationPath, int joinType) throws HibernateException {
+    public SearchCriteria createCriteria(String associationPath, JoinType joinType) throws HibernateException {
         return new SearchCriteria(impl, criteria.createCriteria(associationPath, joinType));
     }
 
-    public SearchCriteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+    public SearchCriteria createCriteria(String associationPath, String alias, JoinType joinType) throws HibernateException {
         return new SearchCriteria(impl, criteria.createCriteria(associationPath, alias, joinType));
     }
 
@@ -218,10 +229,8 @@ public class SearchCriteria extends DetachedCriteria {
 
     public String getAlias(String associationPath, String aliasIfNotExist) {
 
-        Iterator i = impl.iterateSubcriteria();
-        while (i.hasNext()) {
-            CriteriaImpl.Subcriteria subcriteria = (CriteriaImpl.Subcriteria) i.next();
-
+        for(Iterator<Subcriteria> i = impl.iterateSubcriteria(); i.hasNext(); ){
+            Subcriteria subcriteria = i.next();
             if (subcriteria.getPath().equals(associationPath)) {
                 return subcriteria.getAlias();
             }

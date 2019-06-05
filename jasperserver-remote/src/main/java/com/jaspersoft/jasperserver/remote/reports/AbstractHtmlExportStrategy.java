@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.reports;
 
@@ -38,7 +41,7 @@ import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHand
 import com.jaspersoft.jasperserver.api.common.util.CharacterEncodingProvider;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.ExportUtil;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.services.ExportExecution;
 import com.jaspersoft.jasperserver.remote.services.ExportExecutionOptions;
 import com.jaspersoft.jasperserver.remote.services.ReportExecution;
@@ -47,7 +50,6 @@ import com.jaspersoft.jasperserver.remote.services.ReportOutputPages;
 import com.jaspersoft.jasperserver.remote.services.ReportOutputResource;
 import com.jaspersoft.jasperserver.remote.services.RunReportService;
 import com.jaspersoft.jasperserver.remote.utils.AuditHelper;
-import com.jaspersoft.jasperserver.war.util.JRHtmlExportUtils;
 
 import net.sf.jasperreports.engine.JRAbstractExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -129,7 +131,7 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
         final ReportOutputPages pages = exportExecutionOptions.getPages();
         try {
             exporter.exportReport();
-        } catch (RemoteException e) {
+        } catch (ErrorDescriptorException e) {
             auditHelper.addExceptionToAllAuditEvents(e);
             throw e;
         } catch (JRRuntimeException e) {
@@ -137,18 +139,18 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
             		|| JRAbstractExporter.EXCEPTION_MESSAGE_KEY_START_PAGE_INDEX_OUT_OF_RANGE.equals(e.getMessageKey())
             		|| JRAbstractExporter.EXCEPTION_MESSAGE_KEY_END_PAGE_INDEX_OUT_OF_RANGE.equals(e.getMessageKey())) {
                 final String pagesString = pages.toString();
-                throw new RemoteException(new ErrorDescriptor().setMessage(
+                throw new ErrorDescriptorException(new ErrorDescriptor().setMessage(
                         "Page number out of range : " + pagesString + " of "
                         + (reportExecution.getTotalPages() != null ? " Total pages: " + reportExecution.getTotalPages() : "")
                         + " (while exporting the report)").setErrorCode("page.number.out.of.range")
                         .addParameters(pages, "" + reportExecution.getTotalPages()));
             } else {
-                throw new RemoteException(e, secureExceptionHandler);
+                throw new ErrorDescriptorException(e, secureExceptionHandler);
             }
         } catch (Exception e) {
             log.debug("Error exporting report", e);
             auditHelper.addExceptionToAllAuditEvents(e);
-            throw new RemoteException(
+            throw new ErrorDescriptorException(
                     new ErrorDescriptor()
                             .setErrorCode("webservices.error.errorExportingReportUnit").setParameters(e.getMessage()), e
             );
@@ -195,7 +197,7 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
                         return result;
                     }
                 });
-        exporter.setParameter(JRHtmlExportUtils.PARAMETER_HTTP_REQUEST, proxy);
+        exporter.setParameter(ExportUtil.PARAMETER_HTTP_REQUEST, proxy);
         exporter.setFontHandler(new WebHtmlResourceHandler(contextPath + "/reportresource?&font={0}"));// html exporter font handler no longer used in JR; consider removing
 
         ReportContext reportContext = reportExecution.getFinalReportUnitResult().getReportContext();
@@ -213,9 +215,9 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
      *
      * @param exportParameters - export result, contains images
      * @param outputContainer  - output container to fill with images
-     * @throws com.jaspersoft.jasperserver.remote.exception.RemoteException if any error occurs
+     * @throws ErrorDescriptorException if any error occurs
      */
-    protected void putImages(Map<JRExporterParameter, Object> exportParameters, Map<String, ReportOutputResource> outputContainer) throws RemoteException {
+    protected void putImages(Map<JRExporterParameter, Object> exportParameters, Map<String, ReportOutputResource> outputContainer) throws ErrorDescriptorException {
         try {
             // cast is safe because of known parameter key
             @SuppressWarnings("unchecked")
@@ -237,7 +239,7 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
 			ErrorDescriptor ed = secureExceptionHandler.handleException(e, new ErrorDescriptor().setErrorCode("webservices.error.errorAddingImage"));
 
 			log.error(ed.getMessage(), e);
-            throw new RemoteException(ed, e);
+            throw new ErrorDescriptorException(ed, e);
         }
     }
 

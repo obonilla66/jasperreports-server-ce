@@ -1,38 +1,44 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.filters;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientWhere;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientList;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientOperation;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
 import org.hamcrest.core.Is;
 import org.junit.Test;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 import static com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressions.literal;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -70,10 +76,11 @@ public class InOperatorELDeserializationFromXMLTest extends FilterTest {
         ClientIn in = (ClientIn) w.getFilterExpression().getObject();
 
         assertThat(in, Is.is(instanceOf(ClientIn.class)));
-        assertThat(in.getOperator(), Is.is(ClientIn.OPERATOR_ID));
+        assertEquals(ClientOperation.IN, in.getOperator());
         assertThat(in.getOperands().get(1), Is.is(instanceOf(ClientRange.class)));
-        assertThat(((ClientString)in.getRhsRange().getStart().getBoundary()).getValue(), is("a"));
-        assertThat(((ClientString)in.getRhsRange().getEnd().getBoundary()).getValue(), is("m"));
+        final ClientRange rhs = (ClientRange) in.getOperands().get(1);
+        assertThat(((ClientString)rhs.getStart().getBoundary()).getValue(), is("a"));
+        assertThat(((ClientString)rhs.getEnd().getBoundary()).getValue(), is("m"));
     }
 
     @Test
@@ -100,7 +107,7 @@ public class InOperatorELDeserializationFromXMLTest extends FilterTest {
         ClientIn in = (ClientIn) w.getFilterExpression().getObject();
 
         assertThat(in, Is.is(instanceOf(ClientIn.class)));
-        assertThat(in.getOperator(), Is.is(ClientIn.OPERATOR_ID));
+        assertEquals(ClientOperation.IN, in.getOperator());
         assertThat(in.getOperands().get(1), Is.is(instanceOf(ClientRange.class)));
         assertThat(((ClientRange)in.getOperands().get(1)).getEnd().getBoundary(), is(instanceOf(ClientVariable.class)));
         assertThat(((ClientVariable)((ClientRange)in.getOperands().get(1)).getEnd().getBoundary()).getName(), is("b"));
@@ -115,14 +122,14 @@ public class InOperatorELDeserializationFromXMLTest extends FilterTest {
                "                 <variable name=\"city\"/>\n" +
                "                 <range>\n" +
                "                     <start>\n" +
-               "                         <integer>\n" +
+               "                         <number>\n" +
                "                             <value>1</value>\n" +
-               "                         </integer>\n" +
+               "                         </number>\n" +
                "                     </start>\n" +
                "                     <end>\n" +
-               "                         <integer>\n" +
+               "                         <number>\n" +
                "                             <value>20</value>\n" +
-               "                         </integer>\n" +
+               "                         </number>\n" +
                "                     </end>\n" +
                "                 </range>\n" +
                "             </operands>\n" +
@@ -134,10 +141,11 @@ public class InOperatorELDeserializationFromXMLTest extends FilterTest {
         ClientIn in = (ClientIn) w.getFilterExpression().getObject();
 
         assertThat(in, Is.is(instanceOf(ClientIn.class)));
-        assertThat(in.getOperator(), Is.is(ClientIn.OPERATOR_ID));
+        assertEquals(ClientOperation.IN, in.getOperator());
         assertThat(in.getOperands().get(1), Is.is(instanceOf(ClientRange.class)));
-        assertThat(((ClientInteger) in.getRhsRange().getStart().getBoundary()).getValue().intValue(), is(1));
-        assertThat(((ClientInteger) in.getRhsRange().getEnd().getBoundary()).getValue().intValue(), is(20));
+        ClientRange rhs = (ClientRange) in.getOperands().get(1);
+        assertThat(((ClientNumber) rhs.getStart().getBoundary()).getValue().intValue(), is(1));
+        assertThat(((ClientNumber) rhs.getEnd().getBoundary()).getValue().intValue(), is(20));
     }
 
 
@@ -150,15 +158,15 @@ public class InOperatorELDeserializationFromXMLTest extends FilterTest {
                 "                <variable name=\"sales\"/>\n" +
                 "                <list>\n" +
                 "                    <items>\n" +
-                "                        <integer>\n" +
+                "                        <number>\n" +
                 "                            <value>1</value>\n" +
-                "                        </integer>\n" +
-                "                        <integer>\n" +
+                "                        </number>\n" +
+                "                        <number>\n" +
                 "                            <value>2</value>\n" +
-                "                        </integer>\n" +
-                "                        <integer>\n" +
+                "                        </number>\n" +
+                "                        <number>\n" +
                 "                            <value>3</value>\n" +
-                "                        </integer>\n" +
+                "                        </number>\n" +
                 "                    </items>\n" +
                 "                </list>\n" +
                 "            </operands>\n" +
@@ -171,11 +179,12 @@ public class InOperatorELDeserializationFromXMLTest extends FilterTest {
         ClientIn in = (ClientIn) w.getFilterExpression().getObject();
 
         assertThat(in, Is.is(instanceOf(ClientIn.class)));
-        assertThat(in.getOperator(), Is.is(ClientIn.OPERATOR_ID));
-        assertThat(in.getOperands(), Is.is(instanceOf(List.class)));
-        assertTrue(in.getRhsList().getItems().contains(literal(1)));
-        assertTrue(in.getRhsList().getItems().contains(literal(2)));
-        assertTrue(in.getRhsList().getItems().contains(literal(3)));
+        assertEquals(ClientOperation.IN, in.getOperator());
+        assertThat(in.getRhs(), Is.is(instanceOf(ClientList.class)));
+        ClientList clientList = (ClientList) in.getRhs();
+        assertTrue(clientList.getItems().contains(literal(BigDecimal.valueOf(1))));
+        assertTrue(clientList.getItems().contains(literal(BigDecimal.valueOf(2))));
+        assertTrue(clientList.getItems().contains(literal(BigDecimal.valueOf(3))));
     }
 
 }

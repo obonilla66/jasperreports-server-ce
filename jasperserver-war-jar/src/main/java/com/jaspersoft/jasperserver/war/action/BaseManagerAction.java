@@ -1,46 +1,53 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.action;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.common.util.spring.StaticApplicationContext;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.TenantConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.TenantQualified;
-import com.jaspersoft.jasperserver.api.metadata.user.service.RoleManagerService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
+import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
+import com.jaspersoft.jasperserver.war.common.WebConfiguration;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.context.ContextLoader;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base manager action class.
@@ -140,11 +147,16 @@ abstract public class BaseManagerAction extends BaseFormAction {
     protected static final String ROLE_SUPERUSER = "ROLE_SUPERUSER";
     protected static final String ROLE_ADMINISTRATOR = "ROLE_ADMINISTRATOR";
 
-    protected ConfigurationBean configuration;
+    protected WebConfiguration webConfiguration;
+    protected TenantConfiguration tenantConfiguration;
     protected UserAuthorityService userService;
 
-    public void setConfiguration(ConfigurationBean configurationBean) {
-        this.configuration = configurationBean;
+    public void setWebConfiguration(WebConfiguration webConfiguration) {
+        this.webConfiguration = webConfiguration;
+    }
+
+    public void setTenantConfiguration(TenantConfiguration tenantConfiguration) {
+        this.tenantConfiguration = tenantConfiguration;
     }
 
     public Map getSession(RequestContext context) {
@@ -271,7 +283,7 @@ abstract public class BaseManagerAction extends BaseFormAction {
         }
 
         if (tId != null) {
-            qName.append(configuration.getUserNameSeparator());
+            qName.append(tenantConfiguration.getUserNameSeparator());
             qName.append(tId);
         }
 
@@ -286,17 +298,26 @@ abstract public class BaseManagerAction extends BaseFormAction {
         TenantQualified tenantQualified = (TenantQualified) authenticationToken.getPrincipal();
         if (authenticationToken.getPrincipal() instanceof TenantQualified) {
             String tenantId = tenantQualified.getTenantId();
-            return (tenantId != null) ? name + configuration.getUserNameSeparator() + tenantId : name;
+            return (tenantId != null) ? name + tenantConfiguration.getUserNameSeparator() + tenantId : name;
         }
 
         return name;
     }
 
-    protected String createUnexpectedExceptionResponseModel(Exception unexpectedException) throws JSONException {
-        return this.createUnexpectedExceptionResponseModel(unexpectedException.getMessage());
+    protected String createUnexpectedExceptionResponseModel(Exception unexpectedException) throws Exception {
+        try {
+            SecureExceptionHandler secureExceptionHandler = (SecureExceptionHandler) StaticApplicationContext.getApplicationContext().getBean("secureExceptionHandlerImpl");
+            ErrorDescriptor ed = secureExceptionHandler.handleException(unexpectedException);
+
+            return this.createUnexpectedExceptionResponseModel(ed.getMessage());
+        }
+        catch (Exception e) {
+            // secureExceptionHandler was not set up in app context
+            throw unexpectedException;
+        }
     }
 
-    protected String createUnexpectedExceptionResponseModel(String description) throws JSONException {
+    private String createUnexpectedExceptionResponseModel(String description) throws JSONException {
         String message = messages.getMessage("jsp.userManager.unexpectedException", new Object[0],
                 LocaleContextHolder.getLocale());
 
@@ -307,6 +328,6 @@ abstract public class BaseManagerAction extends BaseFormAction {
     }
 
     protected ExecutionContext exContext(RequestContext context) {
-        return JasperServerUtil.getExecutionContext(context);
+        return StaticExecutionContextProvider.getExecutionContext();
     }
 }

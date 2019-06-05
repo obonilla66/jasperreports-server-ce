@@ -1,21 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.connection.query;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -23,7 +31,7 @@ package com.jaspersoft.jasperserver.dto.connection.query;
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public class TextFileQuery {
+public class TextFileQuery implements DeepCloneable<TextFileQuery> {
     private Integer offset;
     private Integer limit;
     private TextFileSelect select;
@@ -32,13 +40,12 @@ public class TextFileQuery {
     public TextFileQuery(){}
 
     public TextFileQuery(TextFileQuery source){
-        final TextFileSelect sourceSelect = source.getSelect();
-        if(sourceSelect != null){
-            select = new TextFileSelect(sourceSelect);
-        }
+        checkNotNull(source);
+
         offset = source.getOffset();
         limit = source.getLimit();
-        convert = source.getConvert();
+        select = copyOf(source.getSelect());
+        convert = copyOf(source.getConvert());
     }
 
     public TextFileConvert getConvert() {
@@ -109,5 +116,14 @@ public class TextFileQuery {
                 ", select=" + select +
                 ", convert=" + convert +
                 '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public TextFileQuery deepClone() {
+        return new TextFileQuery(this);
     }
 }

@@ -1,30 +1,37 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.connection.datadiscovery;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.resources.domain.ResourceGroupElement;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.hashCodeOfListOfArrays;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.isListsOfArraysEquals;
 
 /**
  * <p></p>
@@ -33,22 +40,17 @@ import java.util.List;
  * @version $Id$
  */
 @XmlRootElement(name = "flatDataSet")
-public class FlatDataSet {
+public class FlatDataSet implements DeepCloneable<FlatDataSet> {
     private List<String[]> data;
     private ResourceGroupElement metadata;
+
     public FlatDataSet(){}
+
     public FlatDataSet(FlatDataSet source){
-        final ResourceGroupElement metadata = source.getMetadata();
-        if(metadata != null){
-            setMetadata(metadata.deepClone());
-        }
-        final List<String[]> sourceData = source.getData();
-        if (data != null) {
-            this.data = new ArrayList<String[]>();
-            for (String[] row : sourceData) {
-                this.data.add(Arrays.copyOf(row, row.length));
-            }
-        }
+        checkNotNull(source);
+
+        data = copyOf(source.getData());
+        metadata = copyOf(source.getMetadata());
     }
 
     @XmlElementWrapper(name = "rows")
@@ -78,14 +80,14 @@ public class FlatDataSet {
 
         FlatDataSet that = (FlatDataSet) o;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
+        if (data != null ? !isListsOfArraysEquals(data, that.data) : that.data != null) return false;
         return metadata != null ? metadata.equals(that.metadata) : that.metadata == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = data != null ? data.hashCode() : 0;
+        int result = hashCodeOfListOfArrays(data);
         result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
         return result;
     }
@@ -96,5 +98,14 @@ public class FlatDataSet {
                 "data=" + data +
                 ", metadata=" + metadata +
                 '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public FlatDataSet deepClone() {
+        return new FlatDataSet(this);
     }
 }

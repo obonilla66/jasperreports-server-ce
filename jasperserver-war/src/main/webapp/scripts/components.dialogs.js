@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -42,40 +42,33 @@ dialogs.systemConfirm = {
     container: null,
     message: null,
     show: function(message, duration, isWarning) {
+        var dialog = this;
 
-        if(window.isEmbeddedDesigner){
-            if (isWarning) {
-                message = '<span class="warning">' + message + '</span>';
+        require(['underscore', 'jquery', 'text!common/templates/dialogSystemConfirmTemplate.htm'], function (_, jQuery, dialogTemplate) {
+            if(window.isEmbeddedDesigner){
+                jQuery(document).trigger("adhocDesigner:notification", [_.template(dialogTemplate, {messages: message, isWarning: isWarning}), duration]);
+            }else{
+                dialog.container = dialog.container || jQuery('#systemMessageConsole').on('mouseup touchend', function() {
+                    dialogs.systemConfirm.container.slideUp();
+                });
+
+                dialog.message = dialog.message || document.getElementById('systemMessage');
+                if (!dialog.message) {//unable to find DOM elem to output the system message
+                    console.warn(message);
+                    return;
+                }
+
+                if (!dialog.closeText){
+                    dialog.closeText = jQuery(dialog.message).html().toLowerCase();
+                }
+
+                jQuery(dialog.message).html(_.template(dialogTemplate, {messages: message, isWarning: isWarning, closeText: dialog.closeText}));
+
+                dialogs.systemConfirm.container.slideDown();
+                setTimeout('dialogs.systemConfirm.hide()', duration ? duration : 2000);
             }
 
-            jQuery(document).trigger("adhocDesigner:notification", [message, duration]);
-        }else{
-            this.container = this.container || jQuery('#systemMessageConsole').on('mouseup touchend', function() {
-                dialogs.systemConfirm.container.slideUp();
-            });
-
-            this.message = this.message || document.getElementById('systemMessage');
-            if (!this.message) {//unable to find DOM elem to output the system message
-                console.warn(message);
-                return;
-            }
-
-            if (!this.closeText){
-                this.closeText = this.message.innerHTML.toLowerCase();
-            }
-
-            message = xssUtil.escape(message) + ' <span>| <a href="#">'+ xssUtil.escape(this.closeText) +'</a></span>';
-            if (isWarning) {
-                this.message.innerHTML = '<span class="warning">' + message + '</span>';
-            }
-            else {
-                this.message.innerHTML = message;
-            }
-
-            dialogs.systemConfirm.container.slideDown();
-            setTimeout('dialogs.systemConfirm.hide()', duration ? duration : 2000);
-        }
-
+        });
 
     },
 
@@ -90,7 +83,10 @@ dialogs.systemConfirm = {
     }
 };
 
-jQuery(document).on('systemDialogWarn', function(event, message, duration) {
+jQuery(document).on('systemDialogWarn', function(event) {
+    var message = event.detail.message,
+        duration = event.detail.duration;
+
     dialogs.systemConfirm.showWarning(message, duration);
 });
 
@@ -127,6 +123,17 @@ dialogs.errorPopup = {
     _DIALOG_HEIGHT: "350px",
 
     clickHandler: null,
+    onClose: null,
+
+    getZIndex: function() {
+        var zIndex = 0;
+
+        if (this._dom) {
+            zIndex = parseInt(this._dom.getStyle('zIndex'), 10);
+        }
+
+        return zIndex;
+    },
 
     /**
      * Shows popup dialog.
@@ -137,11 +144,12 @@ dialogs.errorPopup = {
         options || (options = {});
 
         var fromSource = Builder.node('DIV', {style:'display:none'});
-        fromSource.innerHTML = xssUtil.escape(errorContent, {softHTMLEscape: true});
+        jQuery(fromSource).html(errorContent);
+
         document.body.insertBefore(fromSource, document.body.firstChild);
         var content = $$(this._PAGE_CONTENT_PATTERN)[0];
-        var contentText = content ? content.innerHTML : errorContent;
-        var isStackTrace = (content && content.innerHTML);
+        var contentText = content ? jQuery(content).html() : errorContent;
+        var isStackTrace = (content && jQuery(content).html());
 
         fromSource.remove();
 
@@ -158,10 +166,10 @@ dialogs.errorPopup = {
                 //If error is a plain text - wrap it into <p> element
                 if (!isStackTrace) {
                     finalContent = Builder.node('P', {'class':'message'});
-                    finalContent.update(xssUtil.escape(contentText, {softHTMLEscape: true}));
+                    finalContent.update(contentText);
                 }
 
-                this._content.update(xssUtil.escape(finalContent, {softHTMLEscape: true}));
+                this._content.update(finalContent);
                 this._dom.observe('click', this.clickHandler);
 
                 this._dom.setStyle({height: options.height || this._DIALOG_HEIGHT, width: options.width || this._DIALOG_WIDTH});
@@ -182,6 +190,12 @@ dialogs.errorPopup = {
     _hide: function() {
         if (this._dom) {
             this._dom.stopObserving('click', this.clickHandler);
+
+            if (this.onClose) {
+                this.onClose();
+                this.onClose = null;
+            }
+
             dialogs.popup.hide(this._dom);
         }
     },
@@ -303,13 +317,14 @@ dialogs.popup = {
             // Ensure the TAB key can move focus to all the places it was able to
             // before the dialog was shown.
             // NOTE: This must be done BEFORE moving focus out of the dialog.
+
             stdnav.endModalFocus(elem);
 
             // Restore keyboard focus to the element that had it prior to the
             // dialog.
             var jqPreDialogFocus=jQuery('.preDialogFocus');
-            if (jqPreDialogFocus.length && jqPreDialogFocus.is(":visible")){
-                jqPreDialogFocus[0].focus();
+            if (jqPreDialogFocus.length && jQuery(elem).is(":visible")){
+                stdnav.forceFocus(jqPreDialogFocus.first());
                 jqPreDialogFocus.removeClass('preDialogFocus');
             }
 
@@ -317,7 +332,7 @@ dialogs.popup = {
                 return;
             }
 
-            $elem = $(elem);
+            var $elem = $(elem);
             //hide dialog and dimmer
             if (!$elem.hasClassName(layoutModule.HIDDEN_CLASS)) {
                 $elem.addClassName(layoutModule.HIDDEN_CLASS);

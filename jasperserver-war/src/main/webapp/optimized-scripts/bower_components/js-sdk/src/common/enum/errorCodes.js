@@ -1,1 +1,0 @@
-define(["require"],function(e){"use strict";return{UNEXPECTED_ERROR:"unexpected.error",INVALID_RESOURCE_TYPE:"invalid.resource.type"}});

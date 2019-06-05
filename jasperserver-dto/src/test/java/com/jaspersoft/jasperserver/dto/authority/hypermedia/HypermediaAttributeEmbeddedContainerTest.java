@@ -1,172 +1,69 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.authority.hypermedia;
 
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOPresentableTest;
 import com.jaspersoft.jasperserver.dto.permissions.RepositoryPermission;
 
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.jaspersoft.jasperserver.dto.utils.CustomAssertions.assertNotSameCollection;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
 /**
- * @author askorodumov
+ * @author Alexei Skorodumov <askorodumov@tibco.com>
  * @version $Id$
  */
-public class HypermediaAttributeEmbeddedContainerTest {
+public class HypermediaAttributeEmbeddedContainerTest extends BaseDTOPresentableTest<HypermediaAttributeEmbeddedContainer> {
 
-    @Before
-    public void init() {
-        createDifferentEmbeddedContainers();
+    @Override
+    protected List<HypermediaAttributeEmbeddedContainer> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setRepositoryPermissions(Arrays.asList(new RepositoryPermission().setUri("uri"), new RepositoryPermission().setMask(24))),
+                // with null values
+                createFullyConfiguredInstance().setRepositoryPermissions(null)
+        );
     }
 
-    @Test
-    public void equals_emptyIdentical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = new HypermediaAttributeEmbeddedContainer();
-        HypermediaAttributeEmbeddedContainer embeddedContainer2 = new HypermediaAttributeEmbeddedContainer();
+    @Override
+    protected HypermediaAttributeEmbeddedContainer createFullyConfiguredInstance() {
+        HypermediaAttributeEmbeddedContainer attribute = new HypermediaAttributeEmbeddedContainer();
+        attribute.setRepositoryPermissions(Arrays.asList(new RepositoryPermission(), new RepositoryPermission().setMask(23)));
 
-        assertTrue(embeddedContainer1.equals(embeddedContainer2));
-        assertTrue(embeddedContainer2.equals(embeddedContainer1));
+        return attribute;
     }
 
-    @Test
-    public void hashCode_emptyIdentical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = new HypermediaAttributeEmbeddedContainer();
-        HypermediaAttributeEmbeddedContainer embeddedContainer2 = new HypermediaAttributeEmbeddedContainer();
-
-        assertEquals(embeddedContainer1.hashCode(), embeddedContainer2.hashCode());
+    @Override
+    protected HypermediaAttributeEmbeddedContainer createInstanceWithDefaultParameters() {
+        return new HypermediaAttributeEmbeddedContainer();
     }
 
-    @Test
-    public void toString_emptyIdentical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = new HypermediaAttributeEmbeddedContainer();
-        HypermediaAttributeEmbeddedContainer embeddedContainer2 = new HypermediaAttributeEmbeddedContainer();
-
-        assertEquals(embeddedContainer1.toString(), embeddedContainer2.toString());
+    @Override
+    protected HypermediaAttributeEmbeddedContainer createInstanceFromOther(HypermediaAttributeEmbeddedContainer other) {
+        return new HypermediaAttributeEmbeddedContainer(other);
     }
 
-    @Test
-    public void equals_identical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = createEmbeddedContainer("uri1", "recipient1", 1);
-        HypermediaAttributeEmbeddedContainer embeddedContainer2 = new HypermediaAttributeEmbeddedContainer(embeddedContainer1);
-
-        assertTrue(embeddedContainer1.equals(embeddedContainer2));
-        assertTrue(embeddedContainer2.equals(embeddedContainer1));
-    }
-
-    @Test
-    public void hashCode_identical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = createEmbeddedContainer("uri1", "recipient1", 1);
-        HypermediaAttributeEmbeddedContainer embeddedContainer2 = new HypermediaAttributeEmbeddedContainer(embeddedContainer1);
-
-        assertEquals(embeddedContainer1.hashCode(), embeddedContainer2.hashCode());
-    }
-
-    @Test
-    public void toString_identical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = createEmbeddedContainer("uri1", "recipient1", 1);
-        HypermediaAttributeEmbeddedContainer embeddedContainer2 = new HypermediaAttributeEmbeddedContainer(embeddedContainer1);
-
-        assertEquals(embeddedContainer1.toString(), embeddedContainer2.toString());
-    }
-
-    @Test
-    public void equals_notIdentical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = createEmbeddedContainer("uri1", "recipient1", 1);
-
-        for (HypermediaAttributeEmbeddedContainer embeddedContainer2 : differentEmbeddedContainers) {
-            assertFalse(embeddedContainer1.equals(embeddedContainer2));
-            assertFalse(embeddedContainer2.equals(embeddedContainer1));
-        }
-    }
-
-    @Test
-    public void hashCode_notIdentical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = createEmbeddedContainer("uri1", "recipient1", 1);
-
-        for (HypermediaAttributeEmbeddedContainer embeddedContainer2 : differentEmbeddedContainers) {
-            assertNotEquals(embeddedContainer1.hashCode(), embeddedContainer2.hashCode());
-        }
-    }
-
-    @Test
-    public void toString_notIdentical_success() {
-        HypermediaAttributeEmbeddedContainer embeddedContainer1 = createEmbeddedContainer("uri1", "recipient1", 1);
-
-        for (HypermediaAttributeEmbeddedContainer embeddedContainer2 : differentEmbeddedContainers) {
-            assertNotEquals(embeddedContainer1.toString(), embeddedContainer2.toString());
-        }
-    }
-
-    private static AtomicInteger counter = new AtomicInteger(0);
-
-    public static HypermediaAttributeEmbeddedContainer createEmbeddedContainer(String uri, String recipient, int mask) {
-        HypermediaAttributeEmbeddedContainer embedded = new HypermediaAttributeEmbeddedContainer();
-
-        List<RepositoryPermission> permissionList;
-        int listType = HypermediaAttributeEmbeddedContainerTest.counter.incrementAndGet() % 5;
-
-        // try different types of the java.util.List interface
-        switch (listType) {
-            case 0:
-                permissionList = new ArrayList<RepositoryPermission>();
-                permissionList.add(new RepositoryPermission(uri, recipient, mask));
-                break;
-            case 1:
-                permissionList = new LinkedList<RepositoryPermission>();
-                permissionList.add(new RepositoryPermission(uri, recipient, mask));
-                break;
-            case 2:
-                permissionList = new CopyOnWriteArrayList<RepositoryPermission>();
-                permissionList.add(new RepositoryPermission(uri, recipient, mask));
-                break;
-            case 3:
-                permissionList = Arrays.asList(new RepositoryPermission(uri, recipient, mask));
-                break;
-            default:
-                permissionList = Collections.singletonList(new RepositoryPermission(uri, recipient, mask));
-                break;
-        }
-
-        embedded.setRepositoryPermissions(permissionList);
-        return embedded;
-    }
-
-    private List<HypermediaAttributeEmbeddedContainer>
-            differentEmbeddedContainers = new ArrayList<HypermediaAttributeEmbeddedContainer>();
-
-    private void createDifferentEmbeddedContainers() {
-        differentEmbeddedContainers.add(createEmbeddedContainer("uri2", "recipient1", 1));
-        differentEmbeddedContainers.add(createEmbeddedContainer("uri1", "recipient2", 1));
-        differentEmbeddedContainers.add(createEmbeddedContainer("uri1", "recipient1", 2));
-        differentEmbeddedContainers.add(createEmbeddedContainer(null, "recipient1", 1));
-        differentEmbeddedContainers.add(createEmbeddedContainer("uri1", null, 1));
-        differentEmbeddedContainers.add(createEmbeddedContainer(null, null, 1));
+    @Override
+    protected void assertFieldsHaveUniqueReferences(HypermediaAttributeEmbeddedContainer expected, HypermediaAttributeEmbeddedContainer actual) {
+        assertNotSameCollection(expected.getRepositoryPermissions(), actual.getRepositoryPermissions());
     }
 }

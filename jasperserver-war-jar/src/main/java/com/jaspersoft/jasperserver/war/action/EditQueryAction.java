@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action;
 
@@ -23,15 +26,11 @@ import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.VirtualReportDataSource;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.helper.DataSourceJsonHelper;
 import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
 import com.jaspersoft.jasperserver.war.dto.BaseDTO;
 import com.jaspersoft.jasperserver.war.dto.QueryWrapper;
@@ -77,7 +76,7 @@ public class EditQueryAction extends FormAction {
 	private String[] queryLanguages;
 
     protected MessageSource messages;
-    private ConfigurationBean configuration;
+    private RepositoryConfiguration configuration;
 
     @Autowired
     private DataSourceJsonHelper dataSourceJsonHelper;
@@ -364,7 +363,7 @@ public class EditQueryAction extends FormAction {
 		this.queryLanguagesRequestAttrName = queryLanguagesRequestAttrName;
 	}
 
-    public void setConfiguration(ConfigurationBean configuration) {
+    public void setConfiguration(RepositoryConfiguration configuration) {
         this.configuration = configuration;
     }
 }

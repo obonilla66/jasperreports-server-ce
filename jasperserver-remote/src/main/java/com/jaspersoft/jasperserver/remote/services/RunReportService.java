@@ -1,26 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services;
 
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportExecutionStatusInformation;
 import com.jaspersoft.jasperserver.api.engine.common.service.SchedulerReportExecutionStatusSearchCriteria;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 
 import java.util.Map;
@@ -45,9 +48,9 @@ public interface RunReportService {
      * @param rawParameters - map with parameters in raw state(raw mean, that all parameters are strings or arrays of strings)
      * @param options - report execution options
      * @return report output resource
-     * @throws RemoteException is thrown in case if error occurs during report execution or export
+     * @throws ErrorDescriptorException is thrown in case if error occurs during report execution or export
      */
-    ReportOutputResource getReportOutputFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters, ReportExecutionOptions options, ExportExecutionOptions exportExecutionOptions) throws RemoteException;
+    ReportOutputResource getReportOutputFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters, ReportExecutionOptions options, ExportExecutionOptions exportExecutionOptions) throws ErrorDescriptorException;
 
     /**
      * Run report and generate report execution metadata.
@@ -57,10 +60,10 @@ public interface RunReportService {
      * @param executionOptions - options for a report execution procedure
      * @param exportOptions - options for a report export
      * @return report execution metadata
-     * @throws RemoteException in case if report execution metadata generation fails.
+     * @throws ErrorDescriptorException in case if report execution metadata generation fails.
      *                          See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
      */
-    ReportExecution getReportExecutionFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters, ReportExecutionOptions executionOptions, ExportExecutionOptions exportOptions) throws RemoteException, JSValidationException;
+    ReportExecution getReportExecutionFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters, ReportExecutionOptions executionOptions, ExportExecutionOptions exportOptions) throws ErrorDescriptorException, JSValidationException;
 
     /**
      * Starting of report execution according to given ReportExecution object.
@@ -93,9 +96,9 @@ public interface RunReportService {
      * @param executionId - report execution ID
      * @param exportId - export execution ID
      * @return export output resource.
-     * @throws RemoteException in case if report export fails. See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
+     * @throws ErrorDescriptorException in case if report export fails. See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
      */
-    ReportOutputResource getOutputResource(String executionId, String exportId) throws RemoteException;
+    ReportOutputResource getOutputResource(String executionId, String exportId) throws ErrorDescriptorException;
 
     /**
      * Get report output resource. Synchronous export.
@@ -103,9 +106,9 @@ public interface RunReportService {
      * @param executionId - report execution ID
      * @param exportOptions - options for export
      * @return export output resource.
-     * @throws RemoteException in case if report export fails. See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
+     * @throws ErrorDescriptorException in case if report export fails. See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
      */
-    ReportOutputResource getOutputResource(String executionId, ExportExecutionOptions exportOptions) throws RemoteException;
+    ReportOutputResource getOutputResource(String executionId, ExportExecutionOptions exportOptions) throws ErrorDescriptorException;
 
     /**
      * Get report output attachment.
@@ -125,9 +128,9 @@ public interface RunReportService {
      * @param executionId - report execution ID
      * @param exportOptions - options for export
      * @return export metadata
-     * @throws RemoteException in case if report export fails. See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
+     * @throws ErrorDescriptorException in case if report export fails. See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
      */
-    ExportExecution executeExport(String executionId, ExportExecutionOptions exportOptions) throws RemoteException;
+    ExportExecution executeExport(String executionId, ExportExecutionOptions exportOptions) throws ErrorDescriptorException;
 
     /**
      *
@@ -143,25 +146,25 @@ public interface RunReportService {
      *
      * @param searchCriteria - search criteria
      * @return set of currently running report's information
-     * @throws RemoteException if any error occurs
+     * @throws ErrorDescriptorException if any error occurs
      */
     Set<ReportExecutionStatusInformation> getCurrentlyRunningReports(SchedulerReportExecutionStatusSearchCriteria searchCriteria)
-            throws RemoteException;
+            throws ErrorDescriptorException;
 
     /**
      * Report execution cancellation.
      *
      * @param executionId - report execution ID
-     * @throws RemoteException if any error occurs
+     * @throws ErrorDescriptorException if any error occurs
      */
-    Boolean cancelReportExecution(String executionId) throws RemoteException;
+    Boolean cancelReportExecution(String executionId) throws ErrorDescriptorException;
 
     /**
      * Remove report execution from session.
      *
      * @param executionId - report execution ID
-     * @throws RemoteException if any error occurs
+     * @throws ErrorDescriptorException if any error occurs
      */
-    Boolean deleteReportExecution(String executionId) throws RemoteException;
+    Boolean deleteReportExecution(String executionId) throws ErrorDescriptorException;
 
 }

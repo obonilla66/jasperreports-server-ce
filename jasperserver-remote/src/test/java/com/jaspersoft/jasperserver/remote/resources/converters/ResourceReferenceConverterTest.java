@@ -1,24 +1,28 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.DataTypeImpl;
@@ -35,16 +39,22 @@ import com.jaspersoft.jasperserver.dto.resources.ClientJdbcDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientReference;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceable;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableDataType;
+import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientUriHolder;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.ReferencedResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.services.PermissionsService;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.Collections;
+
+import static com.jaspersoft.jasperserver.dto.resources.ResourceMediaType.DATA_TYPE_CLIENT_TYPE;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
@@ -56,20 +66,36 @@ import static org.testng.Assert.*;
  * @version $Id$
  */
 public class ResourceReferenceConverterTest {
+    private String testUri = "/test/resource/uri";
     private ResourceReferenceConverter converter;
     private ResourceConverterProvider resourceConverterProvider;
     private RepositoryService repositoryService;
     private PermissionsService permissionsService;
-    private ConfigurationBean configurationBean = new ConfigurationBean();
+    private RepositoryConfiguration configurationBean;
     private ToServerConversionOptions options = ToServerConversionOptions.getDefault();
+    private Resource localResource;
+    private final ClientDataType expectedClientObject = new ClientDataType().setUri(testUri);
+    private final ClientReference expectedClientReference = new ClientReference().setUri(testUri);
+    private ResourceReference resourceReferenceWithLocalResource;
+    private ResourceReference resourceReference;
+
 
     @BeforeMethod
     public void initMocks() {
-        configurationBean.setResourceIdNotSupportedSymbols("@#$%");
+        if (resourceConverterProvider != null) {
+            reset(resourceConverterProvider);
+        }
+        configurationBean = mock(RepositoryConfiguration.class);
+        when(configurationBean.getResourceIdNotSupportedSymbols()).thenReturn("@#$%");
         resourceConverterProvider = mock(ResourceConverterProvider.class);
         repositoryService = mock(RepositoryService.class);
         converter = new ResourceReferenceConverter(resourceConverterProvider, repositoryService, permissionsService, configurationBean);
-    }
+        localResource = new DataTypeImpl();
+        localResource.setURIString(testUri);
+
+        resourceReferenceWithLocalResource = new ResourceReference(localResource);
+        resourceReference = new ResourceReference(testUri);
+   }
 
     @Test
     public void toClient_nullProducesNull(){
@@ -84,19 +110,123 @@ public class ResourceReferenceConverterTest {
         final ResourceReference serverObject = new ResourceReference(localResource);
         final ClientDataType expectedClientObject = new ClientDataType();
         expectedClientObject.setUri(testUri);
-        when(resourceConverterProvider.getToClientConverter(localResource)).thenReturn(new ToClientConverter() {
-            @Override
-            public Object toClient(Object serverObject, Object options) {
-                assertSame(serverObject, localResource);
-                return expectedClientObject;
-            }
 
-            @Override
-            public String getClientResourceType() {
-                return null;
-            }
-        });
+        ToClientConverter defaultToClientConverter = mockClientConverter(localResource, expectedClientObject);
+        mockClientConverterForPairServerResourceAndClientType(localResource, defaultToClientConverter.getClientResourceType(), expectedClientObject);
+
         final ClientUriHolder result = converter.toClient(serverObject, new ToClientConversionOptions().setExpanded(true));
+        assertSame(result, expectedClientObject);
+        assertEquals(result.getUri(), testUri);
+    }
+
+    @Test
+    public void toClient_nonLocalResource_expanded() {
+        final Resource localResource = new DataTypeImpl();
+        final String testUri = "/test/resource/uri";
+        localResource.setURIString(testUri);
+        final ResourceReference serverObject = new ResourceReference(testUri);
+        final ClientDataType expectedClientObject = new ClientDataType();
+        expectedClientObject.setUri(testUri);
+
+        ToClientConverter defaultToClientConverter = mockClientConverter(localResource, expectedClientObject);
+        mockClientConverterForPairServerResourceAndClientType(localResource, defaultToClientConverter.getClientResourceType(), expectedClientObject);
+
+        when(repositoryService.getResource(any(ExecutionContext.class), eq(testUri))).thenReturn(localResource);
+        final ClientUriHolder result = converter.toClient(serverObject, new ToClientConversionOptions().setExpanded(true));
+        assertSame(result, expectedClientObject);
+        assertEquals(result.getUri(), testUri);
+    }
+
+    @Test
+    public void toClient_nonLocalResource_inMemoryServerObject() {
+        final String testUri = "/test/resource/uri";
+        final ResourceReference serverObject = spy(new ResourceReference(testUri));
+
+        ToClientConversionOptions options = new ToClientConversionOptions()
+                .setExpanded(false)
+                .setInMemoryResource(true);
+        final ClientUriHolder result = converter.toClient(serverObject, options);
+
+        verifyZeroInteractions(repositoryService);
+        verifyZeroInteractions(resourceConverterProvider);
+        assertEquals(result.getUri(), testUri);
+    }
+
+    @Test
+    public void toClient_localResource_notInMemoryServerObject() {
+        final Resource localResource = new DataTypeImpl();
+        final String testUri = "/test/resource/uri";
+        localResource.setURIString(testUri);
+        final ResourceReference serverObject = spy(new ResourceReference(testUri));
+
+        ToClientConversionOptions options = new ToClientConversionOptions()
+                .setExpanded(false)
+                .setInMemoryResource(true);
+        final ClientUriHolder result = converter.toClient(serverObject, options);
+
+        verifyZeroInteractions(repositoryService);
+        verifyZeroInteractions(resourceConverterProvider);
+        assertEquals(result.getUri(), testUri);
+    }
+
+    @Test
+    public void toClient_localResource_inMemoryServerObject() {
+        final Resource localResource = new DataTypeImpl();
+        final String testUri = "/test/resource/uri";
+        localResource.setURIString(testUri);
+        final ResourceReference serverObject = new ResourceReference(localResource);
+        final ClientDataType expectedClientObject = new ClientDataType();
+        expectedClientObject.setUri(testUri);
+
+        ToClientConverter defaultToClientConverter = mockClientConverter(localResource, expectedClientObject);
+        mockClientConverterForPairServerResourceAndClientType(localResource,
+                defaultToClientConverter.getClientResourceType(), expectedClientObject);
+
+        ToClientConversionOptions options = new ToClientConversionOptions()
+                .setExpanded(false)
+                .setInMemoryResource(true);
+        final ClientUriHolder result = converter.toClient(serverObject, options);
+
+        assertSame(result, expectedClientObject);
+        assertEquals(result.getUri(), testUri);
+        verifyZeroInteractions(repositoryService);
+    }
+
+    @Test
+    public void toClient_expandTargetType_expanded() {
+        final Resource localResource = new DataTypeImpl();
+        final String testUri = "/test/resource/uri";
+        localResource.setURIString(testUri);
+        final ResourceReference serverObject = new ResourceReference(testUri);
+        final ClientDataType expectedClientObject = new ClientDataType();
+        expectedClientObject.setUri(testUri);
+
+        mockClientConverter(localResource, null);
+        mockClientConverterForPairServerResourceAndClientType(localResource, "targetClientType", expectedClientObject);
+
+        when(repositoryService.getResource(any(ExecutionContext.class), eq(testUri))).thenReturn(localResource);
+        final ClientUriHolder result = converter.toClient(serverObject,
+                new ToClientConversionOptions().setExpanded(false).setExpandTypes(Collections.singleton("targetClientType")));
+        assertSame(result, expectedClientObject);
+        assertEquals(result.getUri(), testUri);
+    }
+
+    @Test
+    public void toClient_expandTwoTargetClientTypesThatMapsToOneServerType_resourceExpandedWithFirstClientType() {
+        final Resource localResource = new DataTypeImpl();
+        final String testUri = "/test/resource/uri";
+        localResource.setURIString(testUri);
+        final ResourceReference serverObject = new ResourceReference(testUri);
+        final ClientDataType expectedClientObject = new ClientDataType();
+        expectedClientObject.setUri(testUri);
+
+        mockClientConverter(localResource, null);
+        mockClientConverterForPairServerResourceAndClientType(localResource, "targetClientType1", expectedClientObject);
+        mockClientConverterForPairServerResourceAndClientType(localResource, "targetClientType2", null);
+
+        when(repositoryService.getResource(any(ExecutionContext.class), eq(testUri))).thenReturn(localResource);
+        final ClientUriHolder result = converter.toClient(serverObject,
+                new ToClientConversionOptions().setExpanded(false).setExpandTypes(Collections.singleton("targetClientType1")));
         assertSame(result, expectedClientObject);
         assertEquals(result.getUri(), testUri);
     }
@@ -137,6 +267,69 @@ public class ResourceReferenceConverterTest {
     }
 
     @Test
+    public void toClient_expansionIsNotEnabled_returnClientReference() {
+        ToClientConversionOptions options = mock(ToClientConversionOptions.class);
+        when(options.isExpansionEnabled(resourceReference.isLocal())).thenReturn(false);
+
+        final ClientUriHolder result = converter.toClient(resourceReference, options);
+        assertEquals(result, expectedClientReference);
+    }
+
+    @Test
+    public void toClient_localResourceAndIsExpansionEnabledIsTrueAndIsExpandedIsTrue_returnFullResource() {
+        ToClientConverter defaultToClientConverter = mockClientConverter(resourceReferenceWithLocalResource.getLocalResource(), null);
+        mockClientConverterForPairServerResourceAndClientType(resourceReferenceWithLocalResource.getLocalResource(),
+                defaultToClientConverter.getClientResourceType(), expectedClientObject);
+
+        ToClientConversionOptions options = mock(ToClientConversionOptions.class);
+        when(options.isExpansionEnabled(true)).thenReturn(true);
+        when(options.isExpanded(DATA_TYPE_CLIENT_TYPE, true)).thenReturn(true);
+
+        final ClientReferenceable result = converter.toClient(resourceReferenceWithLocalResource, options);
+        assertEquals(result, expectedClientObject);
+    }
+
+    @Test
+    public void toClient_localResourceAndIsExpansionEnabledIsTrueAndIsExpandedIsFalse_returnReferenceResource() {
+        mockClientConverter(resourceReferenceWithLocalResource.getLocalResource(), expectedClientObject);
+
+        ToClientConversionOptions options = mock(ToClientConversionOptions.class);
+        when(options.isExpansionEnabled(true)).thenReturn(true);
+        when(options.isExpanded(DATA_TYPE_CLIENT_TYPE, true)).thenReturn(false);
+
+        final ClientReferenceable result = converter.toClient(resourceReferenceWithLocalResource, options);
+        assertEquals(result, expectedClientReference);
+    }
+
+    @Test
+    public void toClient_externalResourceAndIsExpansionEnabledIsTrueAndIsExpandedIsFalse_returnReferenceResource() {
+        when(repositoryService.getResource(any(ExecutionContext.class), eq(testUri))).thenReturn(localResource);
+        mockClientConverter(localResource, expectedClientObject);
+
+        ToClientConversionOptions options = mock(ToClientConversionOptions.class);
+        when(options.isExpansionEnabled(true)).thenReturn(true);
+        when(options.isExpanded(DATA_TYPE_CLIENT_TYPE, true)).thenReturn(false);
+
+        final ClientReferenceable result = converter.toClient(resourceReference, options);
+        assertEquals(result, expectedClientReference);
+    }
+
+    @Test
+    public void toClient_externalResourceAndIsExpansionEnabledAreTrueAndIsExpandedIsTrue_returnFullResource() {
+        when(repositoryService.getResource(any(ExecutionContext.class), eq(testUri))).thenReturn(localResource);
+        ToClientConverter defaultToClientConverter = mockClientConverter(localResource, null);
+         mockClientConverterForPairServerResourceAndClientType(localResource,
+                 defaultToClientConverter.getClientResourceType(), expectedClientObject);
+
+        ToClientConversionOptions options = mock(ToClientConversionOptions.class);
+        when(options.isExpansionEnabled(false)).thenReturn(true);
+        when(options.isExpanded(DATA_TYPE_CLIENT_TYPE, false)).thenReturn(true);
+
+        final ClientReferenceable result = converter.toClient(resourceReference, options);
+        assertEquals(result, expectedClientObject);
+    }
+
+    @Test
     public void toServer_create_noInitialReference() throws Exception {
         final ClientJdbcDataSource clientObject = new ClientJdbcDataSource();
         final ResourceReferenceConverter referenceConverter = mock(ResourceReferenceConverter.class);
@@ -160,12 +353,12 @@ public class ResourceReferenceConverterTest {
         assertNull(result);
     }
 
-    @Test(expectedExceptions = IllegalParameterValueException.class)
+    @Test(expectedExceptions = MandatoryParameterNotFoundException.class)
     public void validateReference_uriIsNull_exception() throws Exception {
         converter.validateAndGetReference(null, options.getOwnersUri());
     }
 
-    @Test(expectedExceptions = IllegalParameterValueException.class)
+    @Test(expectedExceptions = ReferencedResourceNotFoundException.class)
     public void validateReference_resourceDoesntExist() throws Exception {
         converter.validateAndGetReference("/test/resource/uri", options.getOwnersUri());
     }
@@ -254,6 +447,21 @@ public class ResourceReferenceConverterTest {
         assertFalse(result.isLocal());
         // existing ResourceReference instance is updated with new reference URI
         assertEquals(result.getReferenceURI(), expectedResourceUri);
+    }
+
+    @DataProvider(name = "InvalidResourceURIs")
+    public static Object[][] createInvalidResourceURIs() {
+        return new Object[][] {
+                new Object[]{new String("")},
+                new Object[]{new String("invalid")}
+        };
+    }
+
+    @Test(expectedExceptions = ReferencedResourceNotFoundException.class, dataProvider = "InvalidResourceURIs")
+    public void toServerReference_dataSourceReferenceUri_invalid(final String invalidResourceUri) throws Exception {
+        final ClientReference clientObject = new ClientReference();
+        clientObject.setUri(invalidResourceUri);
+        converter.toServerReference(clientObject, null, options);
     }
 
     @Test
@@ -419,6 +627,12 @@ public class ResourceReferenceConverterTest {
         new ResourceReferenceConverter.FileTypeRestriction(ClientFile.FileType.jrxml).validateReference(file);
     }
 
+    @Test(expectedExceptions = MandatoryParameterNotFoundException.class)
+    public void fileTypeRestrictionTypeIsNull_exception() throws Exception {
+        final ClientFile file = new ClientFile();
+        new ResourceReferenceConverter.FileTypeRestriction(ClientFile.FileType.jrxml).validateReference(file);
+    }
+
     @Test
     public void fileTypeRestriction_validReference() throws Exception {
         final ClientFile file = new ClientFile();
@@ -434,4 +648,41 @@ public class ResourceReferenceConverterTest {
         }
         assertNull(exception);
     }
+
+    private ToClientConverter mockClientConverter(Resource serverObj, ClientResource clientObj) {
+        ToClientConverter toClientConverter = new ToClientConverter() {
+            @Override
+            public Object toClient(Object serverObject, Object options) {
+                assertSame(serverObject, serverObj);
+                return clientObj;
+            }
+
+            @Override
+            public String getClientResourceType() {
+                return DATA_TYPE_CLIENT_TYPE;
+            }
+        };
+        when(resourceConverterProvider.getToClientConverter(serverObj)).thenReturn(toClientConverter);
+
+        return toClientConverter;
+    }
+
+    private ToClientConverter mockClientConverterForPairServerResourceAndClientType(Resource serverObj, String clientType, ClientResource clientObj) {
+        ToClientConverter toClientConverter = new ToClientConverter() {
+            @Override
+            public Object toClient(Object serverObject, Object options) {
+                assertSame(serverObject, serverObj);
+                return clientObj;
+            }
+
+            @Override
+            public String getClientResourceType() {
+                return DATA_TYPE_CLIENT_TYPE;
+            }
+        };
+        when(resourceConverterProvider.getToClientConverter(serverObj.getResourceType(), clientType)).thenReturn(toClientConverter);
+
+        return toClientConverter;
+    }
+
 }

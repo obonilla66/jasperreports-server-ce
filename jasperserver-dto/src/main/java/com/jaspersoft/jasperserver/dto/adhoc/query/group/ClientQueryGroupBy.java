@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.group;
 
@@ -29,6 +32,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author Andriy Godovanets
  */
@@ -42,14 +48,15 @@ public class ClientQueryGroupBy implements ClientGroupBy<ClientGroupAxis> {
         groups = new ArrayList<ClientQueryGroup>();
     }
 
-    public ClientQueryGroupBy(ClientQueryGroupBy groupBy) {
-        this();
+    public ClientQueryGroupBy(ClientQueryGroupBy source) {
+        checkNotNull(source);
 
-        if (groupBy.groups != null) {
-            for (ClientQueryGroup group : groupBy.groups) {
-                this.groups.add(group.deepClone()); // should use deepClone here
-            }
-        }
+        groups = (List<ClientQueryGroup>) copyOf(source.getGroups());
+    }
+
+    @Override
+    public ClientQueryGroupBy deepClone() {
+        return new ClientQueryGroupBy(this);
     }
 
     @XmlTransient
@@ -80,7 +87,7 @@ public class ClientQueryGroupBy implements ClientGroupBy<ClientGroupAxis> {
     }
 
     public ClientQueryGroupBy setGroups(List<? extends ClientQueryGroup> groups) {
-        this.groups = (List<ClientQueryGroup>) groups;
+        this.groups = groups != null ? (List<ClientQueryGroup>) groups : new ArrayList<ClientQueryGroup>();
         return this;
     }
 
@@ -95,13 +102,13 @@ public class ClientQueryGroupBy implements ClientGroupBy<ClientGroupAxis> {
 
         ClientQueryGroupBy that = (ClientQueryGroupBy) o;
 
-        return !(groups != null ? !groups.equals(that.groups) : that.groups != null);
+        return groups.equals(that.groups);
 
     }
 
     @Override
     public int hashCode() {
-        return groups != null ? groups.hashCode() : 0;
+        return groups.hashCode();
     }
 
     @Override

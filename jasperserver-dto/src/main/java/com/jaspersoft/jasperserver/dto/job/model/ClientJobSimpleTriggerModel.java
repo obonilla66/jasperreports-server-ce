@@ -1,25 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job.model;
 
 import com.jaspersoft.jasperserver.dto.job.ClientIntervalUnitType;
 import com.jaspersoft.jasperserver.dto.job.ClientJobSimpleTrigger;
+
 import java.util.Date;
 
 /**
@@ -173,19 +177,7 @@ public class ClientJobSimpleTriggerModel extends ClientJobSimpleTrigger {
         if (this == o) return true;
         if (!(o instanceof ClientJobSimpleTriggerModel)) return false;
         if (!super.equals(o)) return false;
-
-        ClientJobSimpleTriggerModel that = (ClientJobSimpleTriggerModel) o;
-
-        if (isOccurrenceCountModified() != that.isOccurrenceCountModified()) return false;
-        if (isRecurrenceIntervalUnitModified() != that.isRecurrenceIntervalUnitModified()) return false;
-        if (isRecurrenceIntervalModified() != that.isRecurrenceIntervalModified()) return false;
-        if (isStartDateModified() != that.isStartDateModified()) return false;
-        if (isStartTypeModified() != that.isStartTypeModified()) return false;
-        if (isEndDateModified() != that.isEndDateModified()) return false;
-        if (isTimezoneModified() != that.isTimezoneModified()) return false;
-        if (isCalendarNameModified() != that.isCalendarNameModified()) return false;
-        return isMisfireInstructionModified() == that.isMisfireInstructionModified();
-
+        return true;
     }
 
     @Override

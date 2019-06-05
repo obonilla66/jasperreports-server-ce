@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.jasperreports.service;
 
@@ -40,6 +43,17 @@ public interface ReportDataSourceService {
 	 * @param parameterValues map of parameters to be used for running a JasperReport
 	 */
 	void setReportParameterValues(Map parameterValues);
+
+	/**
+	 * Does {@link ReportDataSourceService#setReportParameterValues(Map)} and take into account {@code hasCachedData} argument
+	 * @param parameterValues map of parameters to be used for running a JasperReport
+	 * @param hasCachedData true - if report is built based on Data Snapshot, false - otherwise
+	 */
+	default void setReportParameterValues(Map parameterValues, boolean hasCachedData) {
+		if (!hasCachedData) {
+			setReportParameterValues(parameterValues);
+		}
+	}
 	
 	/**
 	 * Clean up any resources allocated by {{@link #setReportParameterValues(Map)}

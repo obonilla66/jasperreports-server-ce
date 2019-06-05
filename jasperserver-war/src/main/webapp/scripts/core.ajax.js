@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -227,7 +227,7 @@ function targettedResponseHandler(requester) {
     var toLocation = $(fillId);
 
     if (fromId) {
-        toLocation.innerHTML = "";
+        jQuery(toLocation).html("");
         updateUsingResponseSubset(xmlhttp, fromId, toLocation);
     } else {
 
@@ -242,11 +242,13 @@ function targettedResponseHandler(requester) {
             //we want all the retrieved content - throw it all in
             var ajaxBuffer = jQuery(opentTag + closeTag);
 
-            ajaxBuffer.text(xssUtil.escape(body));
+            // Escape extra level per JSON being inserted into & read from the page
+            body = body.replace(/&quot;/g, "&amp;quot;");
+            ajaxBuffer.text(xssUtil.hardEscape(body));
             jQuery(toLocation).html(ajaxBuffer);
         } else {
-        jQuery(toLocation).html(xssUtil.escape(res, {softHTMLEscape: true}));
-    }
+            jQuery(toLocation).html(res);
+        }
     }
 
     invokeCallbacks(callback, toLocation);
@@ -270,7 +272,7 @@ function cumulativeResponseHandler(requester) {
         updateUsingResponseSubset(xmlhttp, fromId, toLocation);
     } else {
         //we want all the retrieved content - throw it all in
-        toLocation.insert(xssUtil.escape(xmlhttp.responseText, {softHTMLEscape: true}), {position: 'after'}); //note this will eval scripts too
+        toLocation.insert(xmlhttp.responseText, {position: 'after'}); //note this will eval scripts too
     }
 
     invokeCallbacks(callback);
@@ -299,7 +301,7 @@ function rowCopyResponseHandler(requester) {
     //put response html into a temp div to form the table
     //var tempDiv = document.createElement('DIV');
     var tempDiv = Builder.node('DIV');
-    tempDiv.innerHTML = xssUtil.escape(xmlhttp.responseText, {softHTMLEscape: true});
+    jQuery(tempDiv).html(xmlhttp.responseText);
     //now copy to existing table body
     copyTable(tempDiv.getElementsByTagName('table')[0], theTable, false, false);
 
@@ -315,7 +317,7 @@ function rowCopyResponseHandler(requester) {
 // TODO Consider for removal
 var clobberingResponseHandler = function(requester) {
     var callback = requester.params[2];
-    document.body.innerHTML = xssUtil.escape(requester.xmlhttp.responseText, {softHTMLEscape: true});
+    jQuery(document.body).html(requester.xmlhttp.responseText);
     document.fire("dom:loaded");
     invokeCallbacks(callback);
 }
@@ -708,7 +710,7 @@ function baseErrorHandler(ajaxAgent){
             // For dashboard frame we should render error message as frame content.
             var dashboardViewFrame = jQuery(".dashboardViewFrame");
             if (dashboardViewFrame.length == 1) {
-                document.body.innerHTML = xssUtil.escape(ajaxAgent.responseText, {softHTMLEscape: true});
+                jQuery(document.body).html(ajaxAgent.responseText);
                 var iFrame = jQuery('#'+JRS.fid, window.parent.document);
                 iFrame.removeClass('hidden').show();
             } else {

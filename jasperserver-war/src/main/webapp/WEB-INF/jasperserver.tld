@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN"
@@ -297,6 +300,7 @@
         </attribute>
     </tag>
 
+<!--
     <tag>
         <name>authorize</name>
         <tagclass>com.jaspersoft.jasperserver.war.tags.TenantAwareAuthorizeTag</tagclass>
@@ -310,30 +314,31 @@
             <name>ifNotGranted</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
-            <!--
+            &lt;!&ndash;
                 A comma separated list of roles which the user must not have
                 for the body to be output.
-            -->
+            &ndash;&gt;
         </attribute>
         <attribute>
             <name>ifAllGranted</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
-            <!--
+            &lt;!&ndash;
                 A comma separated list of roles which the user must all
                 possess for the body to be output.
-            -->
+            &ndash;&gt;
         </attribute>
         <attribute>
             <name>ifAnyGranted</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
-            <!--
+            &lt;!&ndash;
                 A comma separated list of roles, one of which the user must
                 possess for the body to be output.
-            -->
+            &ndash;&gt;
         </attribute>
     </tag>
+-->
 
 
     <tag>
@@ -356,6 +361,22 @@
                 Default value is false.
             -->
             <name>javaScriptEscape</name>
+            <required>false</required>
+        </attribute>
+    </tag>
+
+    <tag>
+        <name>xssNonce</name>
+        <info>
+            Tag adds an html comment with an XSS nonce.  It marks JSP's requested via Ajax as XSS safe, so that
+            XSS escape is not applied.  All the data inserted into JSP's must be XSS safe (via XSSEscapeXmlELResolver)
+
+            type (html|javascript) - type of context where the nonce comment is inserted.  html (default) inserts an html comment.
+        </info>
+        <tagclass>com.jaspersoft.jasperserver.war.tags.XssNonceTag</tagclass>
+        <bodycontent>empty</bodycontent>
+        <attribute>
+            <name>type</name>
             <required>false</required>
         </attribute>
     </tag>

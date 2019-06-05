@@ -1,21 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources.domain;
+
+import javax.validation.constraints.Size;
 
 /**
  * <p></p>
@@ -24,10 +29,19 @@ package com.jaspersoft.jasperserver.dto.resources.domain;
  * @version $Id$
  */
 public class PresentationElement<T extends PresentationElement<T>> extends SchemaElement<T> {
+    public static final int LABEL_MAX_LENGTH = 100;
+    public static final int LABEL_ID_MAX_LENGTH = 256;
+    public static final int DESCRIPTION_MAX_LENGTH = 256;
+    public static final int DESCRIPTION_ID_MAX_LENGTH = 256;
+    @Size(max = LABEL_MAX_LENGTH, message = "domain.schema.presentation.element.label.length.limit")
     private String label;
+    @Size(max = LABEL_ID_MAX_LENGTH, message = "domain.schema.presentation.element.labelId.length.limit")
     private String labelId;
+    @Size(max = DESCRIPTION_MAX_LENGTH, message = "domain.schema.presentation.element.description.length.limit")
     private String description;
+    @Size(max = DESCRIPTION_ID_MAX_LENGTH, message = "domain.schema.presentation.element.descriptionId.length.limit")
     private String descriptionId;
+    private String resourcePath;
 
     public PresentationElement() {
     }
@@ -38,6 +52,21 @@ public class PresentationElement<T extends PresentationElement<T>> extends Schem
         descriptionId = source.getDescriptionId();
         label = source.getLabel();
         labelId = source.getLabelId();
+        resourcePath = source.getResourcePath();
+    }
+
+    public String getResourcePath() {
+        return resourcePath;
+    }
+
+    public T setResourcePath(String resourcePath) {
+        this.resourcePath = resourcePath;
+        return (T) this;
+    }
+
+    @Override
+    public T deepClone() {
+        return (T) new PresentationElement(this);
     }
 
     public String getLabelId() {
@@ -82,15 +111,14 @@ public class PresentationElement<T extends PresentationElement<T>> extends Schem
         if (!(o instanceof PresentationElement)) return false;
         if (!super.equals(o)) return false;
 
-        PresentationElement that = (PresentationElement) o;
+        PresentationElement<?> element = (PresentationElement<?>) o;
 
-        if (description != null ? !description.equals(that.description) : that.description != null) return false;
-        if (descriptionId != null ? !descriptionId.equals(that.descriptionId) : that.descriptionId != null)
+        if (label != null ? !label.equals(element.label) : element.label != null) return false;
+        if (labelId != null ? !labelId.equals(element.labelId) : element.labelId != null) return false;
+        if (description != null ? !description.equals(element.description) : element.description != null) return false;
+        if (descriptionId != null ? !descriptionId.equals(element.descriptionId) : element.descriptionId != null)
             return false;
-        if (label != null ? !label.equals(that.label) : that.label != null) return false;
-        if (labelId != null ? !labelId.equals(that.labelId) : that.labelId != null) return false;
-
-        return true;
+        return resourcePath != null ? resourcePath.equals(element.resourcePath) : element.resourcePath == null;
     }
 
     @Override
@@ -100,6 +128,7 @@ public class PresentationElement<T extends PresentationElement<T>> extends Schem
         result = 31 * result + (labelId != null ? labelId.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (descriptionId != null ? descriptionId.hashCode() : 0);
+        result = 31 * result + (resourcePath != null ? resourcePath.hashCode() : 0);
         return result;
     }
 
@@ -110,6 +139,7 @@ public class PresentationElement<T extends PresentationElement<T>> extends Schem
                 ", labelId='" + labelId + '\'' +
                 ", description='" + description + '\'' +
                 ", descriptionId='" + descriptionId + '\'' +
+                ", resourcePath='" + resourcePath + '\'' +
                 "} " + super.toString();
     }
 }

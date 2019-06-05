@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -466,10 +466,10 @@ repositorySearch.resultsPanel =  {
             var nameTitleElement = element.select(repositorySearch.resultsPanel.NAME_PATTERN)[0];
             var desc = element.select(".resourceDescription")[0];
 
-            name.update(xssUtil.escape(this.getValue().label));
+            name.update(xssUtil.hardEscape(this.getValue().label));
             var that = this;
             new JSTooltip(nameTitleElement, {
-                text: [xssUtil.escape(this.getValue().label), xssUtil.escape(repositorySearch.messages['loading'])],
+                text: [xssUtil.hardEscape(this.getValue().label), xssUtil.hardEscape(repositorySearch.messages['loading'])],
                 templateId: repositorySearch.resultsPanel.RESOURCE_NAME_TOOLTIP_ID,
                 loadTextCallback: function(tooltip) {
                     var folderPath = that.getValue().parentFolder;
@@ -488,8 +488,8 @@ repositorySearch.resultsPanel =  {
                     }
 
                     function updateTooltip(parentUri, label, name) {
-                        label = xssUtil.escape(label);
-                        uri = xssUtil.escape(getUri(parentUri, name));
+                        label = xssUtil.hardEscape(label);
+                        uri = xssUtil.hardEscape(getUri(parentUri, name));
 
                         tooltip.updateText([label, uri]);
                     }
@@ -519,7 +519,7 @@ repositorySearch.resultsPanel =  {
 
             var descriptionValue = this.getValue().description;
 
-            desc.update(xssUtil.escape(descriptionValue));
+            desc.update(xssUtil.hardEscape(descriptionValue));
 
             if(!descriptionValue) {
                 desc.jsTooltip && desc.jsTooltip.disable();
@@ -1105,7 +1105,7 @@ ResourcePermissions.addMethod("_processTemplate", function() {
     this._dom.down(".body").writeAttribute('id', "");
 
     var path = this._dom.select(this.PATH_PATTERN)[0];
-    path.update(xssUtil.escape(this._resource.URIString.truncate(50)));
+    path.update(xssUtil.hardEscape(this._resource.URIString.truncate(50)));
     path.writeAttribute("title", this._resource.URIString);
 
     this._viewByTabSet = this._dom.select(this.VIEW_BY_TAB_SET_PATTERN)[0];
@@ -1416,10 +1416,10 @@ ResourcePermissions.addMethod("_createItem", function(value) {
         } else {
             name.removeClassName(layoutModule.EMPHASIS_CLASS);
         }
-        name.update(xssUtil.escape(this.getValue().getDisplayName()));
+        name.update(xssUtil.hardEscape(this.getValue().getDisplayName()));
 
         if(tenantId && tenantId.length > 0) {
-            new JSTooltip(nameTooltip, { text: xssUtil.escape(tenantId), templateId: template });
+            new JSTooltip(nameTooltip, { text: xssUtil.hardEscape(tenantId), templateId: template });
             var origRemove = element.remove;
             element.remove = function() {
                 tooltipModule.hideJSTooltip(nameTooltip);
@@ -1437,7 +1437,7 @@ ResourcePermissions.addMethod("_createItem", function(value) {
             var option = new Element('option', { value: permissionsConfig[i].name });
 
             permissions.insert(option.update(permission.inheritedPermission == permissionsConfig[i].name
-                 ? xssUtil.escape(label + " *") : xssUtil.escape(label)));
+                 ? xssUtil.hardEscape(label + " *") : xssUtil.hardEscape(label)));
 
             if (permission.newPermission) {
                 permission.newPermission == permissionsConfig[i].name && (index = i);
@@ -1644,13 +1644,13 @@ ResourceProperties.addMethod("_processTemplate", function() {
     this._dom.addClassName('_activeResourcePropertiesDialog');
 
     var title = this._dom.select('.title')[0];
-    title.update(title.innerHTML.strip() + ": " + xssUtil.escape(this._resource.label).truncate(50));
+    title.update(jQuery(title).html().strip() + ": " + xssUtil.hardEscape(this._resource.label).truncate(50));
 
     this._label = this._updateValueAndLabel(this._dom, 'input#displayName', this._resource.label,
          'label[for="displayName"]');
-    this._description = this._updateContentAndLabel(this._dom, 'textarea#description', xssUtil.escape(this._resource.description),
+    this._description = this._updateContentAndLabel(this._dom, 'textarea#description', xssUtil.hardEscape(this._resource.description),
          'label[for="description"]');
-    this._path = this._updateValueAndLabel(this._dom, 'input#path', xssUtil.escape(this._resource.URIString),
+    this._path = this._updateValueAndLabel(this._dom, 'input#path', xssUtil.hardEscape(this._resource.URIString),
          'label[for="path"]');
 
     if (this._showMode) {
@@ -1659,10 +1659,10 @@ ResourceProperties.addMethod("_processTemplate", function() {
         this._label.writeAttribute('readonly', 'readonly');
         this._description.writeAttribute('readonly', 'readonly');
     }
-    this._updateValueAndLabel(this._dom, 'div#resourceID', xssUtil.escape(this._resource.name), 'label[for="resourceID"]');
-    this._updateValueAndLabel(this._dom, 'input#type', xssUtil.escape(this._resource.type), 'label[for="type"]');
-    this._updateValueAndLabel(this._dom, 'input#createdDate', xssUtil.escape(this._resource.date), 'label[for="createdDate"]');
-    this._updateValueAndLabel(this._dom, 'input#userAccess', xssUtil.escape(this._resource.permissionsToString()), 'label[for="userAccess"]');
+    this._updateValueAndLabel(this._dom, 'div#resourceID', xssUtil.hardEscape(this._resource.name), 'label[for="resourceID"]');
+    this._updateValueAndLabel(this._dom, 'input#type', xssUtil.hardEscape(this._resource.type), 'label[for="type"]');
+    this._updateValueAndLabel(this._dom, 'input#createdDate', xssUtil.hardEscape(this._resource.date), 'label[for="createdDate"]');
+    this._updateValueAndLabel(this._dom, 'input#userAccess', xssUtil.hardEscape(this._resource.permissionsToString()), 'label[for="userAccess"]');
 
     this._submitButton = this._dom.select('button.submit')[0];
     this._cancelButton = this._dom.select('button.cancel')[0];
@@ -1863,7 +1863,7 @@ repositorySearch.showBulkDeleteResourcesConfirm = function(resources) {
 repositorySearch._showDeleteDialog = function(message, action) {
     var confirmElement = $(repositorySearch.DeleteConfirmation.ID_DELETE_DIALOG_CONTAINER);
 
-    confirmElement.down('.body').update(xssUtil.escape(message));
+    confirmElement.down('.body').update(xssUtil.hardEscape(message));
 
     dialogs.popupConfirm.show(confirmElement, true, {
         okButtonSelector: '#' + repositorySearch.DeleteConfirmation.ID_DELETE_DIALOG_OK_BUTTON,
@@ -1995,11 +1995,21 @@ repositorySearch.showUploadThemeConfirm = function(folder, reupload) {
                     respObj = responseBody.evalJSON();
                     if (respObj && respObj.status == 'OK') {
                         if (respObj.data.themeExist) {
-                            var ovewrite = confirm(repositorySearch.messages["SEARCH_OVERWRITE_THEME_CONFIRM_MSG"]);
-                            if (ovewrite) {
-                                var action = new repositorySearch.ServerAction.createFolderAction(repositorySearch.ThemeAction.REUPLOAD, options);
-                                action.invokeAction();
-                            }
+                            require(["common/component/dialog/ConfirmationDialog"], function (ConfirmationDialog) {
+                                var msg = repositorySearch.messages["SEARCH_OVERWRITE_THEME_CONFIRM_MSG"];
+
+                                var dialog = new ConfirmationDialog({ text: msg} );
+                                dialog.on("button:yes", function() {
+                                    var action = new repositorySearch.ServerAction.createFolderAction(repositorySearch.ThemeAction.REUPLOAD, options);
+                                    action.invokeAction();
+                                    dialog.remove();
+                                });
+
+                                dialog.on("button:no", function(){
+                                    dialog.remove();
+                                });
+                                dialog.open();
+                            });
                         } else if (respObj.data.isActiveTheme) {
                             var uri = respObj.data.themeUri;
                             var action = new repositorySearch.ServerAction.createFolderAction(repositorySearch.ThemeAction.SETTHEME, { folderUri : uri });
@@ -2065,8 +2075,8 @@ GenerateResource.addMethod("_processTemplate", function(options) {
 
     var title = this._dom.select('.title')[0];
     if (!this.TEMPLATE_TITLE_TEXT)
-        GenerateResource.prototype.TEMPLATE_TITLE_TEXT = title.innerHTML.strip();
-    title.update(this.TEMPLATE_TITLE_TEXT + " " + xssUtil.escape(this._resource.label.truncate(50)));
+        GenerateResource.prototype.TEMPLATE_TITLE_TEXT = jQuery(title).html().strip();
+    title.update(this.TEMPLATE_TITLE_TEXT + " " + xssUtil.hardEscape(this._resource.label.truncate(50)));
 
     var label = options.useDefaultLabel ?
     this._resource.label + " " + repositorySearch.messages['dialog.generateResource.defaultNameSuffix'] : "";

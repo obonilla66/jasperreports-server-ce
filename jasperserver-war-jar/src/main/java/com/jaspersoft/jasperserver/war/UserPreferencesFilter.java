@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war;
 
@@ -25,22 +28,17 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.MetadataUserDetails;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.impl.HttpOnlyResponseWrapper;
+import com.jaspersoft.jasperserver.api.security.UsernamePasswordAuthenticationFilterWarningWrapper;
 import com.jaspersoft.jasperserver.api.security.encryption.EncryptionRequestUtils;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
 import com.jaspersoft.jasperserver.war.common.JasperServerHttpConstants;
 import com.jaspersoft.jasperserver.war.common.LocalesList;
+import com.jaspersoft.jasperserver.war.common.WebConfiguration;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,10 +56,10 @@ public class UserPreferencesFilter implements Filter
 {
 	private static String USER_LOCALE_PARAM = "userLocale";
 	private static String USER_TIMEZONE_PARAM = "userTimezone";
-	private static String USER_NAME = "j_username";
+	private static String USER_NAME = UsernamePasswordAuthenticationFilterWarningWrapper.SPRING_SECURITY_FORM_USERNAME_KEY;
 	private static String USER_PASSWORD = "j_newpassword1";
 
-	protected ConfigurationBean configuration;
+	protected WebConfiguration configuration;
 	protected LocalesList locales;
 
     private int cookieAge;
@@ -87,7 +85,7 @@ public class UserPreferencesFilter implements Filter
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpSession session = httpRequest.getSession();
 
-        String userLocale = request.getParameter(USER_LOCALE_PARAM)!=null ? request.getParameter(USER_LOCALE_PARAM) : LocaleContextHolder.getLocale().toString();
+		String userLocale = request.getParameter(USER_LOCALE_PARAM)!=null ? request.getParameter(USER_LOCALE_PARAM) : LocaleContextHolder.getLocale().toString();
 
         boolean updateTimezoneInSession = false;
         String userTimezone = null;
@@ -97,7 +95,7 @@ public class UserPreferencesFilter implements Filter
         }
 
         if (userTimezone == null){
-            userTimezone = request.getParameter(USER_TIMEZONE_PARAM);
+			userTimezone = request.getParameter(USER_TIMEZONE_PARAM);
             // compatibility with previous implementation
             updateTimezoneInSession = true;
         }
@@ -138,17 +136,12 @@ public class UserPreferencesFilter implements Filter
 				cookie.setMaxAge(cookieAge);
 				httpOnlyResponseWrapper.addCookie(cookie);
 			}
-			TimeZoneContextHolder.setTimeZone(TimeZone.getTimeZone(userTimezone));
 		} else {
             userTimezone = (String)session.getAttribute(JasperServerConstImpl.getUserTimezoneSessionAttr());
-            if (userTimezone != null && userTimezone.length() > 0) {
-                TimeZoneContextHolder.setTimeZone(TimeZone.getTimeZone(userTimezone));
-            } else {
-                TimeZoneContextHolder.setTimeZone(TimeZone.getDefault());
-            }
         }
+		TimeZoneContextHolder.setTimeZone(getTimezone(userTimezone));
 
-		String userName = EncryptionRequestUtils.getValue(httpRequest, USER_NAME);
+		String userName = EncryptionRequestUtils.getValueWithLegacySupport(httpRequest, USER_NAME);
 		String userNewPassword = EncryptionRequestUtils.getValue(httpRequest, USER_PASSWORD);
 		String passwordExpiredDays = request.getParameter("passwordExpiredDays");
 
@@ -263,11 +256,11 @@ public class UserPreferencesFilter implements Filter
 		this.cookieAge = cookieAge;
 	}
 
-	public ConfigurationBean getConfiguration() {
+	public WebConfiguration getConfiguration() {
 		return configuration;
 	}
 
-	public void setConfiguration(ConfigurationBean configuration) {
+	public void setConfiguration(WebConfiguration configuration) {
 		this.configuration = configuration;
 	}
 
@@ -278,4 +271,15 @@ public class UserPreferencesFilter implements Filter
     public void setLocales(LocalesList locales) {
         this.locales = locales;
     }
+
+	private static TimeZone getTimezone(String timeZoneId) {
+		TimeZone timeZone;
+		if (timeZoneId != null && !timeZoneId.isEmpty()) {
+			timeZone = TimeZone.getTimeZone(timeZoneId);
+		} else {
+			timeZone = TimeZone.getDefault();
+		}
+		return timeZone;
+	}
+
 }

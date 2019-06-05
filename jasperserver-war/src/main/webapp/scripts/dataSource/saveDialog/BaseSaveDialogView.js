@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2014 Jaspersoft Corporation. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -36,18 +36,18 @@ define(function (require) {
         browserDetection = require("common/util/browserDetection"),
         ResourceModel = require("bi/repository/model/RepositoryResourceModel"),
         DialogWithModelInputValidation = require("common/component/dialog/DialogWithModelInputValidation"),
-        RepositoryFolderTree = require("bi/repository/repositoryFolderTree/RepositoryFolderTree"),
-        baseSaveDialogTemplate = require('text!dataSource/saveDialog/template/baseSaveDialogTemplate.htm');
+        baseSaveDialogTemplate = require('text!dataSource/saveDialog/template/baseSaveDialogTemplate.htm'),
+
+        settings = require("settings!treeComponent"),
+
+        repositoryTreeFactory = require("bi/repository/factory/repositoryTreeFactory"),
+        repositoryResourceTypes = require("bi/repository/enum/repositoryResourceTypes");
 
     return DialogWithModelInputValidation.extend({
 
         theDialogIsOpen: false,
         autoUpdateResourceID: true,
         saveDialogTemplate: baseSaveDialogTemplate,
-
-        events: _.extend({
-            "resize": "_onDialogResize"
-        }, DialogWithModelInputValidation.prototype.events),
 
         constructor: function (options) {
             options || (options = {});
@@ -65,6 +65,9 @@ define(function (require) {
                 skipLocation: !!options.skipLocation,
                 modal: true,
                 model: model,
+                minHeight: 500,
+                minWidth: 440,
+                setMinSizeAsSize: true,
                 resizable: !options.skipLocation,
                 additionalCssClasses: "dataSourceSaveDialog" + (options.skipLocation ? " no-minheight" : ""),
                 title: i18n["resource.datasource.saveDialog.save"],
@@ -166,7 +169,19 @@ define(function (require) {
 
         initializeTree: function () {
 
-            this.foldersTree = RepositoryFolderTree();
+            this.foldersTree = repositoryTreeFactory({
+                processors: [
+                    "folderTreeProcessor",
+                    "treeNodeProcessor",
+                    "i18nItemProcessor",
+                    "filterPublicFolderProcessor",
+                    "cssClassItemProcessor",
+                    "fakeUriProcessor"
+                ],
+                treeBufferSize: settings.treeLevelLimit,
+                types: [repositoryResourceTypes.FOLDER],
+                tooltipOptions: {}
+            });
 
             this.listenTo(this.foldersTree, "selection:change", function (selection) {
                 var parentFolderUri;
@@ -205,15 +220,6 @@ define(function (require) {
             this.$contentContainer.find("[name=label]").focus();
 
             this.theDialogIsOpen = true;
-
-            // set the initial size of the internal components of the dialog by calling function which
-            // reacts on resizing at a first time
-            var onDialogResize = _.bind(this._onDialogResize, this);
-            if (browserDetection.isIE8() || browserDetection.isIE9()) {
-                setTimeout(onDialogResize, 1);
-            } else {
-                onDialogResize();
-            }
         },
 
         _closeDialog: function () {
@@ -235,26 +241,21 @@ define(function (require) {
             return "resource.datasource.saveDialog.save";
         },
 
-        /*
-         Because under IE it's very hard to maintain auto-resizable area by height (IE8 doesn't support
-         calc() css property), we need to do resizing manually, each time reacting on resizing.
-         Dirty, ugly hack, but it is what it is.
-         */
         _onDialogResize: function () {
             var self = this;
-            var shiftHeight = 73;
-            var dialogSavingArea = this.$contentContainer.find(".control.groupBox.treeBox");
-            var wholeDialog = this.$contentContainer.closest(".jr-mDialog");
+            var heightReservation = 40;
+            var otherElementsHeight = 0;
+            var treeBox = this.$contentContainer.find(".control.groupBox.treeBox");
+            var dialogBody = this.$contentContainer.closest(".jr-mDialog > .jr-mDialog-body");
 
             this.$contentContainer
                 .children()
-                .not(".control.groupBox.treeBox")
+                .not(treeBox)
                 .each(function () {
-                    shiftHeight += self.$(this).outerHeight(true);
+                    otherElementsHeight += self.$(this).outerHeight(true);
                 });
-            shiftHeight += this.$contentContainer.innerHeight() - this.$contentContainer.height();
 
-            dialogSavingArea.height(wholeDialog.outerHeight(true) - shiftHeight);
+            treeBox.height(dialogBody.outerHeight(true) - otherElementsHeight - heightReservation);
         },
 
         _onDataSourceNameChange: function () {
@@ -275,8 +276,6 @@ define(function (require) {
         },
 
         _onSaveDialogSaveButtonClick: function () {
-            var self = this;
-            this._onDialogResize();
             if (!this.model.isValid(true)) {
                 return;
             }
@@ -297,23 +296,19 @@ define(function (require) {
             });
         },
 
-        _saveSuccessCallback: function (model, data) {
+        _saveSuccessCallback: function (model) {
             this._closeDialog();
 
             if (_.isFunction(this.options.success)) {
-                this.options.success();
+                this.options.success(model);
             }
         },
 
         _saveErrorCallback: function (model, xhr, options) {
-
-            var self = this, errors = false, msg;
+			var self = this, errors = false;
             var handled = false;
 
-            try {
-                errors = JSON.parse(xhr.responseText);
-            } catch (e) {
-            }
+			try { errors = JSON.parse(xhr.responseText); } catch(e) {}
 
             if (!_.isArray(errors)) {
                 errors = [errors];

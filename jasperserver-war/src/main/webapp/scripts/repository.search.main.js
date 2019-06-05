@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -61,10 +61,10 @@ function invokeBulkAction(actionName) {
     action.invokeAction();
 }
 
-function invokeRedirectAction(actionName) {
+var invokeRedirectAction = _.debounce(function (actionName) {
    var action = repositorySearch.RedirectAction['create' + actionName].call();
    action.invokeAction();
-}
+}, 500)
 
 function invokeCreate(resourceTypeSuffix, fileType) {
    var action = repositorySearch.RedirectAction.createCreateResourceAction(resourceTypeSuffix, fileType);
@@ -997,14 +997,22 @@ var repositorySearch = {
 
             var action;
             if(msg && msg.indexOf("SYSTEM_CONFIRM_REQUIRED") > -1) {
+                if (data) {
+                    require(["common/component/dialog/ConfirmationDialog"], function(ConfirmationDialog){
+                        var dialog = new ConfirmationDialog({text: Utils.restOfString(msg, "SYSTEM_CONFIRM_REQUIRED:")});
+                        dialog.on("button:yes", function(){
+                            data.overwrite = true;
 
-                var userMsg = Utils.restOfString(msg, "SYSTEM_CONFIRM_REQUIRED:");
-                if (data && confirm(userMsg)) {
-                    data.overwrite = true;
-
-                    var name = repositorySearch.ResourceAction.GENERATE;
-                    action = new repositorySearch.ServerAction.createGenerateAction(name, data);
-                    action.invokeAction();
+                            var name = repositorySearch.ResourceAction.GENERATE;
+                            action = new repositorySearch.ServerAction.createGenerateAction(name, data);
+                            action.invokeAction();
+                            dialog.remove();
+                        });
+                        dialog.on("button:no", function(){
+                            dialog.remove();
+                        });
+                        dialog.open();
+                    });
                 }
 
             } else {

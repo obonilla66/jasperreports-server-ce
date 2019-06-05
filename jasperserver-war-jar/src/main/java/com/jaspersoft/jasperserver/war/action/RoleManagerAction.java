@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.action;
@@ -72,10 +75,10 @@ public class RoleManagerAction extends BaseManagerAction {
         initState(context);
 
         JSONObject jsonConfiguration = new JSONObject();
-        jsonConfiguration.put(JSON_ATTRIBUTE_ROLE_NAME_NOT_SUPPORTED_SYMBOLS, configuration.getRoleNameNotSupportedSymbols());
-        jsonConfiguration.put(JSON_ATTRIBUTE_USER_NAME_SEPARATOR, configuration.getUserNameSeparator());
-        jsonConfiguration.put(JSON_ATTRIBUTE_USER_DEFAULT_ROLE, configuration.getDefaultRole());
-        jsonConfiguration.put(JSON_ATTRIBUTE_USER_PASSWORD_MASK, configuration.getPasswordMask());
+        jsonConfiguration.put(JSON_ATTRIBUTE_ROLE_NAME_NOT_SUPPORTED_SYMBOLS, tenantConfiguration.getRoleNameNotSupportedSymbols());
+        jsonConfiguration.put(JSON_ATTRIBUTE_USER_NAME_SEPARATOR, tenantConfiguration.getUserNameSeparator());
+        jsonConfiguration.put(JSON_ATTRIBUTE_USER_DEFAULT_ROLE, tenantConfiguration.getDefaultRole());
+        jsonConfiguration.put(JSON_ATTRIBUTE_USER_PASSWORD_MASK, webConfiguration.getPasswordMask());
         jsonConfiguration.put(JSON_ATTRIBUTE_SUPERUSER_ROLE, ROLE_SUPERUSER);
         jsonConfiguration.put(JSON_ATTRIBUTE_ADMIN_ROLE, ROLE_ADMINISTRATOR);
 
@@ -98,7 +101,7 @@ public class RoleManagerAction extends BaseManagerAction {
         try {
             final Set tenantIdSet = getSubTenantIdsSet(state.getTenantId());
 
-            List roles = getEntitiesAndUpdateState(entitiesState, configuration.getRoleItemsPerPage(),
+            List roles = getEntitiesAndUpdateState(entitiesState, webConfiguration.getRoleItemsPerPage(),
                     new EntitiesListManager() {
                         public int getResultsCount() {
                             return userService.getTenantVisibleRolesCount(null, tenantIdSet, entitiesState.getText());
@@ -115,8 +118,8 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(rolesJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -142,8 +145,8 @@ public class RoleManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -160,7 +163,7 @@ public class RoleManagerAction extends BaseManagerAction {
 
         String responseModel;
         try {
-            List users = getEntitiesAndUpdateState(entitiesState, configuration.getEntitiesPerPage(),
+            List users = getEntitiesAndUpdateState(entitiesState, webConfiguration.getEntitiesPerPage(),
                     new EntitiesListManager() {
                         public int getResultsCount() {
                             return userService.getUsersCountWithRole(null, state.getSelectedEntity(),
@@ -177,8 +180,8 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(usersJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -195,7 +198,7 @@ public class RoleManagerAction extends BaseManagerAction {
 
         String responseModel;
         try {
-            List users = getEntitiesAndUpdateState(entitiesState, configuration.getEntitiesPerPage(),
+            List users = getEntitiesAndUpdateState(entitiesState, webConfiguration.getEntitiesPerPage(),
                     new EntitiesListManager() {
                         public int getResultsCount() {
                             return userService.getUsersCountWithoutRole(null, state.getSelectedEntity(),
@@ -212,8 +215,8 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(usersJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -234,8 +237,8 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(existJson);
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -266,8 +269,8 @@ public class RoleManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -307,8 +310,8 @@ public class RoleManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e);
             }
         }
@@ -350,8 +353,8 @@ public class RoleManagerAction extends BaseManagerAction {
             }
         } catch (Exception e) {
             try {
-                responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
-            } catch (JSONException e1) {
+                responseModel = createUnexpectedExceptionResponseModel(e);
+            } catch (Exception e1) {
                 return error(e1);
             }
         }
@@ -406,7 +409,7 @@ public class RoleManagerAction extends BaseManagerAction {
                 }
             }
         } catch (Exception e) {
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -466,7 +469,7 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(availableUsers);
         } catch (Exception e) {
 
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -490,7 +493,7 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(assignedUsers);
         } catch (Exception e) {
 
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);
@@ -526,7 +529,7 @@ public class RoleManagerAction extends BaseManagerAction {
             responseModel = jsonHelper.createDataResponseModel(userChanges);
         } catch (Exception e) {
 
-            responseModel = createUnexpectedExceptionResponseModel(e.getMessage());
+            responseModel = createUnexpectedExceptionResponseModel(e);
         }
 
         context.getRequestScope().put(AJAX_RESPONSE_MODEL, responseModel);

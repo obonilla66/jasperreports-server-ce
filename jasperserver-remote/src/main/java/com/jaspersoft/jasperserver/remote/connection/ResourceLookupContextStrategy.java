@@ -1,39 +1,45 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.remote.exception.ReferencedResourceAccessDeniedException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceTypeNotSupportedException;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
-import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResourceLookup;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import com.jaspersoft.jasperserver.remote.exception.ReferencedResourceNotFoundException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -67,29 +73,48 @@ public class ResourceLookupContextStrategy implements
             if(profileAttributesResolver.containsAttribute(resourceLookup.getUri())){
                 throw new IllegalParameterValueException("uri", resourceLookup.getUri());
             }
-            final Resource repositoryResource = repository
-                    .getResource(ExecutionContextImpl.getRuntimeExecutionContext(), resourceLookup.getUri());
-            if(repositoryResource != null){
+            Resource repositoryResource = null;
+            try {
+                String uri = resourceLookup.getUri();
+                // Check if URI is valid before fetching it
+                if (uri.isEmpty() || !uri.startsWith(Folder.SEPARATOR)) {
+                    throw new ReferencedResourceNotFoundException(resourceLookup.getUri(), "uri");
+                }
+                repositoryResource = repository
+                        .getResource(ExecutionContextImpl.getRuntimeExecutionContext(), resourceLookup.getUri());
+            } catch (AccessDeniedException e) {
+                throw new ReferencedResourceAccessDeniedException(resourceLookup.getUri(), "uri");
+            }
+            if(repositoryResource != null) {
                 String clientType = resourceLookup.getResourceType();
                 ToClientConverter<? super Resource, ? extends ClientResource, ToClientConversionOptions> toClientConverter;
-                if(clientType != null){
+                if (clientType != null) {
                     toClientConverter = resourceConverterProvider.getToClientConverter(repositoryResource.getResourceType(), clientType);
                 } else {
                     toClientConverter = resourceConverterProvider.getToClientConverter(repositoryResource.getResourceType());
                     clientType = toClientConverter.getClientResourceType();
                 }
-                if(contextsManager.getConnectionDescriptionClass(clientType) == null){
+                if (contextsManager.getContextDescriptionClass(clientType) == null) {
                     // this client type isn't supported. Let's fail here
-                    throw new RemoteException(new ErrorDescriptor().setMessage("Resource of type [" + clientType +
-                            "] is not supported by this endpoint").setParameters(clientType).setErrorCode("not.supported.resource.type"));
+                    throw new ResourceTypeNotSupportedException(clientType);
                 }
+
                 clientResource = toClientConverter
-                        .toClient(repositoryResource, ToClientConversionOptions.getDefault());
+                        .toClient(repositoryResource, getToClientConversionOptionsForFullResource());
             } else {
                 throw new ReferencedResourceNotFoundException(resourceLookup.getUri(), "uri");
             }
         }
         return clientResource;
+    }
+
+    protected ToClientConversionOptions getToClientConversionOptionsForFullResource() {
+        ToClientConversionOptions toClientConversionOptions = ToClientConversionOptions.getDefault();
+        // we will need to include secure data in order to get full resource
+        // and this method seems like it is only in used for contextsManager (create uuid/ lookup metadata)
+        // otherwise, a field like "password" will be ignored.  See bug JRS-19403
+        toClientConversionOptions.setAllowSecureDataConversation(true);
+        return toClientConversionOptions;
     }
 
     @Override
@@ -115,30 +140,30 @@ public class ResourceLookupContextStrategy implements
 
     @Override
     public ClientResourceLookup createContext(ClientResourceLookup contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
-        final UUID uuid = contextsManager.createConnection(getFullClientResource(contextDescription));
+        final UUID uuid = contextsManager.createContext(getFullClientResource(contextDescription));
         data.put(INNER_UUID, uuid);
         return contextDescription;
     }
 
     @Override
     public void deleteContext(ClientResourceLookup contextDescription, Map<String, Object> data) {
-        contextsManager.removeConnection(getInnerUuid(data));
+        contextsManager.removeContext(getInnerUuid(data));
     }
 
     @Override
-    public ClientResourceLookup getContextForClient(ClientResourceLookup contextDescription, Map<String, Object> data) {
+    public ClientResourceLookup getContextForClient(ClientResourceLookup contextDescription, Map<String, Object> data, Map<String, String[]> additionalProperties) {
         // nothing to secure in resource lookup
         return contextDescription;
     }
 
     @Override
     public Object build(ClientResourceLookup context, Map<String, String[]> options, Map<String, Object> contextData) {
-        return contextsManager.getConnectionMetadata(getInnerUuid(contextData), options);
+        return contextsManager.getContextMetadata(getInnerUuid(contextData), options);
     }
 
     @Override
     public Object build(ClientResourceLookup connection, Object options, Map<String, Object> contextData) {
-        return contextsManager.getConnectionMetadata(getInnerUuid(contextData), options);
+        return contextsManager.getContextMetadata(getInnerUuid(contextData), options);
     }
 
     @Override

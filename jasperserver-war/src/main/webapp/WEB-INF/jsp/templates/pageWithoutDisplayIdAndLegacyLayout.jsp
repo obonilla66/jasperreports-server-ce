@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%--
@@ -39,15 +43,16 @@ Usage:
 <%@ page import="com.jaspersoft.jasperserver.api.JSException" %>
 
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
+<%@ taglib prefix="tx" uri="http://tiles.apache.org/tags-tiles-extras"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
 
 <!--/WEB-INF/jsp/templates/page.jsp revision A-->
-<tiles:useAttribute id="pageTitle" name="pageTitle" classname="java.lang.String" ignore="false"/>
-<tiles:useAttribute id="bodyID" name="bodyID" classname="java.lang.String" ignore="false"/><%-- This should be renamed to 'pageID' but would require name change on all calling pages --%>
-<tiles:useAttribute id="pageClass" name="pageClass" classname="java.lang.String" ignore="true"/>
-<tiles:useAttribute id="bodyClass" name="bodyClass" classname="java.lang.String" ignore="false"/>
-<tiles:useAttribute id="moduleName" name="moduleName" classname="java.lang.String" ignore="true"/>
-<tiles:useAttribute id="decorate" name="decorate" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="pageTitle" name="pageTitle" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute id="bodyID" name="bodyID" classname="java.lang.String" ignore="false"/><%-- This should be renamed to 'pageID' but would require name change on all calling pages --%>
+<tx:useAttribute id="pageClass" name="pageClass" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="bodyClass" name="bodyClass" classname="java.lang.String" ignore="false"/>
+<tx:useAttribute id="moduleName" name="moduleName" classname="java.lang.String" ignore="true"/>
+<tx:useAttribute id="decorate" name="decorate" classname="java.lang.String" ignore="true"/>
 
 <%
     if (pageTitle.length() == 0) { throw new JSException("Attribute \"pageTitle\" can't be empty."); }

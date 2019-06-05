@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ http://www.jaspersoft.com.
+  ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:tx="http://www.springframework.org/schema/tx"
@@ -7,12 +28,13 @@
        xmlns:security="http://www.springframework.org/schema/security"
        xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns:util="http://www.springframework.org/schema/util"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
-        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
-        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
-        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd
-        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd">
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd
+        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
 
     <!-- Enable the configuration of transactional behavior based on annotations -->
     <tx:annotation-driven transaction-manager="transactionManager"/>
@@ -21,7 +43,16 @@
     <!-- Enable aspectj autoproxy-->
     <aop:aspectj-autoproxy />
 
-    <context:component-scan base-package="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl,com.jaspersoft.jasperserver.api.metadata.security, com.jaspersoft.jasperserver.api.metadata.jdbc,com.jaspersoft.jasperserver.api.common.error.handling"/>
+    <context:component-scan base-package="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl,
+    com.jaspersoft.jasperserver.api.metadata.security, com.jaspersoft.jasperserver.api.metadata.jdbc,
+    com.jaspersoft.jasperserver.api.common.error.handling, com.jaspersoft.jasperserver.api.common.timezone,
+, com.jaspersoft.jasperserver.api.metadata.user.service.impl, com.jaspersoft.jasperserver.core.util.type"/>
+    <bean id="messageSourceInterpolator" class="com.jaspersoft.jasperserver.api.metadata.common.util.MessageSourceInterpolator"/>
+
+    <bean id="beanValidator"
+          class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="messageInterpolator" ref="messageSourceInterpolator"/>
+    </bean>
 
     <alias name="${bean.securityContextProvider}" alias="concreteSecurityContextProvider"/>
     <alias name="${bean.engineService}" alias="concreteEngineService"/>
@@ -56,11 +87,14 @@
         <value>organizations</value>
     </util:list>
 
+    <!--Hibernate-Validator Websphere fix-->
+    <!--<bean id="HibernatePersistenceResolverWebsphereFix" class="com.jaspersoft.hibernate.resolver.HibernatePersistenceProviderResolver" init-method="register"/>-->
+
     <!-- Hibernate SessionFactory -->
     <!-- Hibernate SessionFactory
     If internal ActiveMQ server is used then you must add dependency 'depends-on="broker-1"' for sessionFactory or it will fail to start
     -->
-    <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean" depends-on="sysProperties,transactionManagerConfiguration">
         <property name="dataSource" ref="dataSource"/>
         <property name="mappingResources">
             <list>
@@ -69,9 +103,9 @@
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/ContentRepoFileResource.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoBeanDataSource.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoCustomDataSource.hbm.xml</value>
+                <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoCustomDataSourceProperty.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoDataType.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoFileResource.hbm.xml</value>
-                <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/util/BasicPersistentFileResource.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoFolder.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoInputControl.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoJdbcDataSource.hbm.xml</value>
@@ -123,52 +157,31 @@
                 <prop key="hibernate.jdbc.batch_size">20</prop>
                 <prop key="hibernate.cache.use_second_level_cache">true</prop>
                 <prop key="hibernate.cache.use_structured_entries">true</prop>
+
+		<!-- Hibernate 5.x new config settings -->
+		<prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
             </props>
-        </property>
-        <!-- 
-            configure caching for each persistent class
-            this is equivalent to adding <cache> element to each mapping file,
-            but centralizing this is probably preferable
-         -->
-        <property name="entityCacheStrategies">
-            <props>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResourceLight">read-only,defaultRepoCache</prop>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource">read-write,defaultRepoCache</prop>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFolder">read-write,defaultRepoCache</prop>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser">read-write,defaultRepoCache</prop>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoRole">read-write,defaultRepoCache</prop>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoTenant">read-write,defaultRepoCache</prop>
-                <prop key="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.CachedItem">read-write,defaultRepoCache</prop>
-            </props>
-        </property>
-        <property name="eventListeners">
-            <map>
-                <entry key="merge">
-                    <bean class="org.springframework.orm.hibernate3.support.IdTransferringMergeEventListener"/>
-                </entry>
-                <entry key="delete">
-                    <ref bean="hibernateCompositeDeleteListener"/>
-                </entry>
-                <entry key="save-update">
-                    <ref bean="hibernateCompositeSaveOrUpdateListener"/>
-                </entry>
-                <entry key="post-update">
-                    <ref bean="hibernateCompositePostUpdateListener"/>
-                </entry>
-                <entry key="post-commit-delete">
-                    <ref bean="driverDeleteListener" />
-                </entry>
-            </map>
         </property>
         <property name="entityInterceptor">
-            <ref local="hibernateCompositeInterceptor"/>
+            <ref bean="hibernateCompositeInterceptor"/>
         </property>
+    </bean>
+
+    <bean class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateListenersPropagator" depends-on="sessionFactory" init-method="propagate">
+        <property name="sessionFactory" ref="sessionFactory"/>
+        <property name="mergeEventListener">
+            <bean class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.IdTransferringMergeEventListener"/>
+        </property>
+        <property name="deleteEventListener" ref="hibernateCompositeDeleteListener"/>
+        <property name="postUpdateEventListener" ref="hibernateCompositePostUpdateListener"/>
+        <property name="postDeleteEventListener" ref="driverDeleteListener"/>
+
     </bean>
 
     <bean id="themeHibernateListener" class="com.jaspersoft.jasperserver.war.themes.ThemeHibernateListener">
         <property name="themeCacheBeanName" value="themeCache" />
     </bean>
-
+<!--TODO: hibernateUpgrade - recheck statistics thru JMX-->
     <!-- Hibernate 3.0's JMX statistics service (uncomment this and the next bean if you wish to access Hibernate statistics via JMX)
     <bean name="jasperserver:type=HibernateStatistics" class="org.hibernate.jmx.StatisticsService">
         <property name="sessionFactory" ref="sessionFactory"/>
@@ -185,6 +198,7 @@
     <bean id="hibernateCompositeDeleteListener" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateCompositeDeleteListener">
         <property name="listeners" ref="${bean.hibernateCompositeDeleteListenerListeners}" />
     </bean>
+
 
     <bean id="hibernateCompositeInterceptor" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateCompositeInterceptor">
         <property name="listeners" ref="${bean.hibernateCompositeInterceptorListeners}" />
@@ -237,7 +251,7 @@
     </bean>
 
     <!-- Transaction manager for a single Hibernate SessionFactory (alternative to JTA) -->
-    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
     
@@ -622,6 +636,7 @@
             </map>
         </property>
         <property name="poolTimeout" value="900"/>
+        <property name="profileAttributesResolver" ref="profileAttributesResolver"/>
     </bean>
 
     <bean id="mongoDbJDBCReportDataSourceServiceFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.MongoDbJDBCReportDataSourceServiceFactory" parent="jdbcDataSourceServiceFactory">
@@ -701,7 +716,8 @@
         <property name="hibernateTemplate">
             <bean class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateDaoTemplate">
                 <property name="sessionFactory" ref="sessionFactory"/>
-                <property name="flushModeName" value="FLUSH_EAGER"/>
+                <!--TODO: hibernateUpgrade disabling flush mode setter, need to revisit this part-->
+                <!--<property name="flushModeName" value="FLUSH_EAGER"/>-->
             </bean>
         </property>
         <property name="repository">
@@ -752,8 +768,8 @@
     <bean id="hibernateRepositoryCache" class="org.springframework.aop.framework.ProxyFactoryBean">
       <property name="interceptorNames">
         <list>
-          <idref local="hibernateRepositoryCacheReattemptInterceptor"/>
-          <idref local="hibernateRepositoryCacheBean"/>
+          <idref bean="hibernateRepositoryCacheReattemptInterceptor"/>
+          <idref bean="hibernateRepositoryCacheBean"/>
         </list>
       </property>
     </bean>
@@ -853,10 +869,10 @@
 	</bean>
 
 	<util:list id="reportExecutionListenerFactories">
-		<ref local="MDCReportExecutionListenerFactory"/>
-		<ref local="localeContextReportExecutionListenerFactory"/>
-		<ref local="securityContextReportExecutionListenerFactory"/>
-		<ref local="reportExecutionAuditListenerFactory"/>
+		<ref bean="MDCReportExecutionListenerFactory"/>
+		<ref bean="localeContextReportExecutionListenerFactory"/>
+		<ref bean="securityContextReportExecutionListenerFactory"/>
+		<ref bean="reportExecutionAuditListenerFactory"/>
 	</util:list>
 
 	<bean name="MDCReportExecutionListenerFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.MDCReportExecutionListenerFactory"/>
@@ -928,7 +944,7 @@
 
     <bean id="cacheableCompiledReports"
             class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CacheableCompiledReports">
-        <property name="compiler"><ref local="engineService"/></property>
+        <property name="compiler"><ref bean="engineService"/></property>
     </bean>
 
     <bean id="profileAttributeServiceTarget"
@@ -951,8 +967,8 @@
 
     <bean id="profileAttributesResolver"
           class="com.jaspersoft.jasperserver.api.metadata.user.service.impl.ProfileAttributesResolverImpl">
-        <property name="attributePlaceholderPattern" ref="attributePlaceholderPattern"/>
-        <property name="attributeFunctionPattern" ref="attributeFunctionPattern"/>
+        <property name="attributePlaceholderPatterns" ref="attributePlaceholderPatterns"/>
+        <property name="parametrizedResourcePatterns" ref="parametrizedResourcePatterns"/>
         <property name="profileAttributeService" ref="profileAttributeService"/>
         <property name="messageSource" ref="messageSource"/>
         <property name="profileAttributeCategories" ref="${bean.profileAttributeCategories}"/>
@@ -960,13 +976,45 @@
         <property name="enabledResolving" value="true"/>
     </bean>
 
-    <bean id="attributePlaceholderPattern" class="java.lang.String">
-        <constructor-arg value="\{#{attributeFunctionPattern}\}"/>
+    <!--
+        Attribute placeholder patterns definitions.
+
+        Note: each pattern should have 2 mandatory named-capturing groups: "name", "category" otherwise an error message will be thrown.
+            - "name" (?<name>...) group used to retrieve attribute's name from the function, in order to resolve it;
+            - "category" (?<category>...) group used to retrieve attribute's category.
+
+        This 2 groups are injected via Spring Expression Language (SPEL) and are defined as separate beans.
+
+        More about regexp named-capturing groups:
+            - https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html#groupname
+            - https://docs.oracle.com/javase/7/docs/api/java/util/regex/Matcher.html#group(java.lang.String)
+    -->
+    <bean id="attributeNameGroup" class="java.lang.String">
+        <constructor-arg value="?&lt;name&gt;"/>
     </bean>
+    <bean id="categoryGroup" class="java.lang.String">
+        <constructor-arg value="?&lt;category&gt;"/>
+    </bean>
+
     <bean id="attributeFunctionPattern" class="java.lang.String">
-        <constructor-arg value="\s*attribute\s*\(\s*'([^\\/']+)'\s*(,\s*'([^\\/']+)'\s*)?\)\s*"/>
+        <constructor-arg value="\s*attribute\s*\(\s*'(#{ attributeNameGroup }[^\\/']+)'\s*(,\s*'(#{ categoryGroup }[^\\/']+)'\s*)?\)\s*"/>
     </bean>
-    <!-- Without capturing groups -->
+
+    <bean id="attributePatternDoubleSingleQuotes" class="java.lang.String">
+        <constructor-arg value="\{\s*attribute\s*\(\s*''(#{ attributeNameGroup }[^\\/']+)''\s*(,\s*''(#{ categoryGroup }[^\\/']+)''\s*)?\)\s*\}"/>
+    </bean>
+
+    <util:list id="attributePlaceholderPatterns" list-class="java.util.ArrayList" value-type="java.lang.String">
+        <value>\{#{ attributeFunctionPattern }}</value>
+        <value>#{ attributePatternDoubleSingleQuotes }</value>
+    </util:list>
+
+    <util:list id="parametrizedResourcePatterns" list-class="java.util.ArrayList" value-type="java.lang.String">
+        <value>#{ attributeFunctionPattern }</value>
+        <value>#{ attributePatternDoubleSingleQuotes }</value>
+    </util:list>
+
+    <!-- UI Pattern. Without capturing groups -->
     <bean id="attributePlaceholderPatternUI" class="java.lang.String">
         <constructor-arg value="[{]\s*attribute\s*[(]\s*'[^\\/']+'\s*(?:,\s*'[^\\/']+'\s*)?[)]\s*[}]"/>
     </bean>
@@ -996,15 +1044,15 @@
     <bean id="profileAttributeServiceMethodSecurityInterceptor"
           class="org.springframework.security.access.intercept.aopalliance.MethodSecurityInterceptor">
         <property name="authenticationManager">
-            <ref local="authenticationManager"/>
+            <ref bean="authenticationManager"/>
         </property>
         <property name="accessDecisionManager">
             <bean class="org.springframework.security.access.vote.AffirmativeBased">
-                <property name="decisionVoters">
+                <constructor-arg>
                     <list>
-                        <ref local="roleVoter"/>
+                        <ref bean="roleVoter"/>
                     </list>
-                </property>
+                </constructor-arg>
             </bean>
         </property>
         <property name="securityMetadataSource">
@@ -1079,7 +1127,7 @@
     </bean>
 
      <!-- Setup a cache for ACLs -->
-    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" depends-on="sysProperties">
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" depends-on="sysProperties"  p:shared="false" p:acceptExisting="true">
       <property name="configLocation">
          <value>${resource.root}/ehcache.xml</value>
       </property>
@@ -1087,7 +1135,7 @@
 
     <bean id="aclCache" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
       <property name="cacheManager">
-         <ref local="cacheManager"/>
+         <ref bean="cacheManager"/>
       </property>
       <property name="cacheName" value="aclCache"/>
     </bean>
@@ -1189,7 +1237,7 @@
     <bean id="objectPermissionServiceInterceptorNames" class="java.util.ArrayList">
         <constructor-arg  index="0" type="java.util.Collection">
             <list>
-                <idref local="objectPermissionServiceTransactionInterceptor"/>
+                <idref bean="objectPermissionServiceTransactionInterceptor"/>
             </list>
         </constructor-arg>
     </bean>
@@ -1383,7 +1431,7 @@
         </property>
     </bean>
 
-    <bean id="messagesCalendarFormatProvider" class="com.jaspersoft.jasperserver.war.util.MessagesCalendarFormatProvider">
+    <bean id="messagesCalendarFormatProvider" class="com.jaspersoft.jasperserver.inputcontrols.util.MessagesCalendarFormatProvider">
         <property name="datePatternKey" value="date.format"/>
         <property name="calendarDatePatternKey" value="calendar.date.format"/>
         <property name="datetimePatternKey" value="datetime.format"/>
@@ -1394,7 +1442,7 @@
         <property name="lenientFormats" value="false"/>
     </bean>
 
-    <bean id="isoCalendarFormatProvider" class="com.jaspersoft.jasperserver.war.util.IsoCalendarFormatProvider">
+    <bean id="isoCalendarFormatProvider" class="com.jaspersoft.jasperserver.inputcontrols.util.IsoCalendarFormatProvider">
         <property name="lenientFormats" value="false"/>
     </bean>
     
@@ -1422,7 +1470,7 @@
     <bean id="securityContextProvider" class="org.springframework.aop.framework.ProxyFactoryBean">
       <property name="interceptorNames">
         <list>
-          <idref local="securityContextProviderTarget"/>
+          <idref bean="securityContextProviderTarget"/>
             <!--<ref bean="${bean.securityContextProviderTarget}"/>-->
         </list>
       </property>
@@ -1508,7 +1556,7 @@
         <property name="listener">
         	<bean class="com.jaspersoft.jasperserver.war.util.SessionReportListener">
         		<property name="virtualizerFactory">
-        			<ref local="fileVirtualizerFactory"/>
+        			<ref bean="fileVirtualizerFactory"/>
         		</property>
         	</bean>
         </property>
@@ -1587,7 +1635,6 @@
         <property name="reportLevelConfigurable" value="false"/>
         <property name="paginationForSinglePageReport" value="false"/>
 
-        <property name="userItemsPerPage" value="45"/>
         <property name="roleItemsPerPage" value="45"/>
         <property name="tenantItemsPerPage" value="45"/>
 
@@ -1631,6 +1678,13 @@
         <property name="publicFolderUri">
             <value><![CDATA[/public]]></value>
         </property>
+        <property name="topicsURIParentSQLPatternList">
+            <list>
+                <value><![CDATA[/organizations/%/adhoc/topics%]]></value>
+                <value><![CDATA[/public/adhoc/topics%]]></value>
+            </list>
+        </property>
+
         <!-- Application Themes -->
         <property name="themeDefaultName" value="default" />
         <property name="themeFolderName" value="/themes" />
@@ -1648,8 +1702,6 @@
 
         <property name="enableSaveToHostFS" value="false"/>
         <property name="optimizeJavaScript" value="${javascript.optimize}"/>
-        <property name="defaultAddToDomainDependents" value="true"/>
-        <property name="defaultDomainDependentsBlockAndUpdate" value="false"/>
         <property name="enableAccessibility" value="true"/>
         <!-- max upload file size in bytes. -1 means no limit -->
         <property name="maxFileSize" value="-1"/>
@@ -1816,7 +1868,7 @@
 
 
     <!--bean definition for action model service-->
-    <bean id="actionModelService" class="com.jaspersoft.jasperserver.api.engine.common.service.impl.ActionModelServiceImpl" lazy-init="false">
+    <bean id="actionModelService" class="com.jaspersoft.jasperserver.common.actionModel.service.impl.ActionModelServiceImpl" lazy-init="false">
         <property name="actionModelXmlURIStub" value="${resource.root}/actionModel"/>
         <property name="actionModelTypes">
             <list>
@@ -1825,7 +1877,6 @@
                 <value>adhocCrosstab</value>
                 <value>adhocTable</value>
                 <value>navigation</value>
-                <value>dashboard</value>
                 <value>search</value>
                 <value>viewReport</value>
             </list>
@@ -1852,15 +1903,32 @@
         <property name="charactersEscapeMaps">
             <util:map>
                 <entry key="default" value-ref="defaultCharacterEscape"/>
+                <entry key="com.jaspersoft.ji.hibernate.dialect.SQLServerJICustomDialect" value-ref="mssqlCharacterEscape"/>
+                <entry key="com.jaspersoft.ji.hibernate.dialect.OracleJICustomDialect" value-ref="oracleCharacterEscape"/>
             </util:map>
         </property>
         <property name="dialect">
             <value>${metadata.hibernate.dialect}</value>
         </property>
+        <property name="escapeChar" value="!"/>
     </bean>
 
     <util:map id="defaultCharacterEscape" key-type="java.lang.String" value-type="java.lang.String">
         <entry key="\" value="!\"/>
+        <entry key="!" value="!!"/>
+        <entry key="_" value="!_"/>
+        <entry key="%" value="!%"/>
+    </util:map>
+
+    <util:map id="mssqlCharacterEscape" key-type="java.lang.String" value-type="java.lang.String">
+        <entry key="\" value="!\"/>
+        <entry key="!" value="!!"/>
+        <entry key="_" value="!_"/>
+        <entry key="%" value="!%"/>
+        <entry key="[" value="!["/>
+    </util:map>
+
+    <util:map id="oracleCharacterEscape" key-type="java.lang.String" value-type="java.lang.String">
         <entry key="!" value="!!"/>
         <entry key="_" value="!_"/>
         <entry key="%" value="!%"/>
@@ -1949,7 +2017,6 @@
 
 
     <bean id="awsDataSourceRecovery" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsDataSourceRecovery">
-        <property name="awsRegions" ref="awsRegions"/>
         <property name="awsDataSourceActiveStatus" value="available"/>
         <property name="awsProperties" ref="awsProperties"/>
         <property name="messageSource" ref="messageSource"/>
@@ -1978,22 +2045,22 @@
 
     <bean id="instanceProductTypeResolverCe" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.InstanceProductTypeResolver" factory-method="getInstance" lazy-init="false"/>
 
-    <util:list id="awsRegions" >
-       <value>us-east-1.amazonaws.com</value>
-        <value>us-east-2.amazonaws.com</value>
-        <value>us-west-2.amazonaws.com</value>
-        <value>us-west-1.amazonaws.com</value>
-        <value>eu-west-1.amazonaws.com</value>
-        <value>eu-west-2.amazonaws.com</value>
-        <value>ca-central-1.amazonaws.com</value>
-        <value>eu-central-1.amazonaws.com</value>
-        <value>ap-southeast-1.amazonaws.com</value>
-        <value>ap-southeast-2.amazonaws.com</value>
-        <value>ap-northeast-1.amazonaws.com</value>
-        <value>ap-northeast-2.amazonaws.com</value>
-        <value>ap-south-1.amazonaws.com</value>
-        <value>sa-east-1.amazonaws.com</value>
-     </util:list>
+    <bean id="awsRegionsAutoDetection" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsRegionsAutoDetection">
+        <constructor-arg index="0" ref="filterAwsRegionList"/>
+    </bean>
+
+    <util:list id="filterAwsRegionList" list-class="java.util.ArrayList">
+        <value>us-gov-west-1.amazonaws.com</value>
+        <value>us-gov-east-1.amazonaws.com</value>
+    </util:list>
+
+    <bean id="awsRegions" class="java.util.ArrayList">
+        <constructor-arg value="#{awsRegionsAutoDetection.getAwsAllRegionsEndpoints()}"/>
+    </bean>
+
+    <bean id="filteredAwsRegions" class="java.util.ArrayList">
+        <constructor-arg value="#{awsRegionsAutoDetection.getFilteredAwsRegionsEndpoints()}"/>
+    </bean>
 
     <bean id="javascriptOptimizationSettings" class="com.jaspersoft.jasperserver.war.common.JavascriptOptimizationSettings" depends-on="configurationBean">
         <property name="useOptimizedJavascript" value="#{configurationBean.optimizeJavaScript}"/>
@@ -2022,6 +2089,11 @@
                           expression="execution(com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService
                            com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory.createService(com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource)))"/>
             <aop:around pointcut-ref="dataSourceResolver"
+                        method="resolveDataSourceAttributes"/>
+            <aop:pointcut id="dataSourceResolver2"
+                          expression="execution(com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService
+                           com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory.createService(com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource, java.lang.Boolean)))"/>
+            <aop:around pointcut-ref="dataSourceResolver2"
                         method="resolveDataSourceAttributes"/>
             <aop:pointcut id="awsCredentialsResolver"
                           expression="execution(com.amazonaws.auth.AWSCredentials com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsCredentialUtil.getAWSCredentials(java.lang.String, java.lang.String, java.lang.String)))"/>

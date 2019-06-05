@@ -1,29 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.util;
 
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JRDataset;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRValueParameter;
-import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.query.JRJdbcQueryExecuter;
-import org.quartz.TriggerUtils;
 import org.quartz.DateBuilder;
 
 import java.util.Date;
@@ -40,61 +38,17 @@ import static com.jaspersoft.jasperserver.api.security.validators.Validator.vali
  */
 public class JRTimezoneJdbcQueryExecuter extends JRJdbcQueryExecuter {
 
-	protected static class InheritableValue {
-		private final Object value;
-		private final boolean inherited;
-
-		public InheritableValue(Object value, boolean inherited) {
-			this.value = value;
-			this.inherited = inherited;
-		}
-
-		public Object getValue() {
-			return value;
-		}
-
-		public boolean isInherited() {
-			return inherited;
-		}
-	}
-
-	protected static class InheritableFlaggedThreadLocal extends InheritableThreadLocal {
-		protected Object childValue(Object parentValue) {
-			InheritableValue child;
-			if (parentValue == null) {
-				child = null;
-			} else {
-				InheritableValue parent = (InheritableValue) parentValue;
-				child = new InheritableValue(parent.getValue(), true);
-			}
-			return child;
-		}
-
-		public Object get() {
-			InheritableValue value = (InheritableValue) super.get();
-			return value == null ? null : value.getValue();
-		}
-
-		public void set(Object value) {
-			InheritableValue inheritableValue = new InheritableValue(value, false);
-			super.set(inheritableValue);
-		}
-
-		public boolean isInherited() {
-			InheritableValue value = (InheritableValue) super.get();
-			return value == null ? false : value.isInherited();
-		}
-	}
-
 	protected static class TimezoneAdjustInfo {
 		protected final TimeZone timezone;
 		protected final Set adjustedDates;
+		protected final Object reportConnection;
 
-		public TimezoneAdjustInfo(TimeZone timezone) {
+		public TimezoneAdjustInfo(TimeZone timezone, Object reportConnection) {
 			this.timezone = timezone;
-			this.adjustedDates = new HashSet();
+            this.reportConnection = reportConnection;
+            this.adjustedDates = new HashSet();
 		}
-	}
+    }
 
 	protected static class IdentityObjectWrapper {
 		protected final Object object;
@@ -116,7 +70,7 @@ public class JRTimezoneJdbcQueryExecuter extends JRJdbcQueryExecuter {
 		}
 	}
 
-	private static InheritableFlaggedThreadLocal parentTimezone = new InheritableFlaggedThreadLocal();
+	private static InheritableThreadLocal<TimezoneAdjustInfo> parentTimezone = new InheritableThreadLocal<>();
 
 	private final TimezoneAdjustInfo timezoneAdjust;
 	private final boolean timezoneSet;
@@ -124,23 +78,47 @@ public class JRTimezoneJdbcQueryExecuter extends JRJdbcQueryExecuter {
 	public JRTimezoneJdbcQueryExecuter(JasperReportsContext jasperReportsContext, JRDataset dataset, Map map) {
 		super(jasperReportsContext, dataset, map);
 
-		TimezoneAdjustInfo parentTimezoneAdjust = parentTimezone.isInherited()
-				? (TimezoneAdjustInfo) parentTimezone.get()
-				: null;
-		TimeZone timezoneParam = (TimeZone) getValueParameter(
-				JRTimezoneJdbcQueryExecuterFactory.PARAMETER_TIMEZONE).getValue();
-		if (parentTimezoneAdjust != null &&
-				(timezoneParam == null || (parentTimezoneAdjust.timezone != null
-						&& parentTimezoneAdjust.timezone.equals(timezoneParam)))) {
+		Object reportConnection = getReportConnectionFromParams();
+        TimeZone timezoneParam = getDatabaseTimezoneFromParams();
+        TimezoneAdjustInfo parentTimezoneAdjust = getTimezoneAdjustFromParent(reportConnection);
+
+		if (shouldTakeTimezoneAdjustFromParent(timezoneParam, parentTimezoneAdjust)) {
 			timezoneSet = false;
 			timezoneAdjust = parentTimezoneAdjust;
 		} else {
 			timezoneSet = true;
-			timezoneAdjust = new TimezoneAdjustInfo(timezoneParam);
+			timezoneAdjust = new TimezoneAdjustInfo(timezoneParam, reportConnection);
 			parentTimezone.set(timezoneAdjust);
 		}
 	}
 
+    TimezoneAdjustInfo getTimezoneAdjustInfo() {
+	    return timezoneAdjust;
+    }
+
+    private Object getReportConnectionFromParams() {
+        JRValueParameter reportConnectionParam = getValueParameter(JRParameter.REPORT_CONNECTION);
+        return reportConnectionParam.getValue();
+    }
+
+    private TimeZone getDatabaseTimezoneFromParams() {
+        JRValueParameter databaseTimezoneParam = getValueParameter(JRTimezoneJdbcQueryExecuterFactory.PARAMETER_TIMEZONE);
+        return (TimeZone) databaseTimezoneParam.getValue();
+    }
+
+    private TimezoneAdjustInfo getTimezoneAdjustFromParent(Object reportConnection) {
+        TimezoneAdjustInfo value = parentTimezone.get();
+        if (value != null && value.reportConnection.equals(reportConnection)) {
+            return value;
+        }
+        return null;
+    }
+
+    private boolean shouldTakeTimezoneAdjustFromParent(TimeZone timeZone, TimezoneAdjustInfo parentTimezoneAdjust) {
+        return parentTimezoneAdjust != null &&
+                (timeZone == null ||
+                        (parentTimezoneAdjust.timezone != null && parentTimezoneAdjust.timezone.equals(timeZone)));
+    }
 
 	protected JRValueParameter getValueParameter(String parameterName) {
 		JRValueParameter param = super.getValueParameter(parameterName);
@@ -162,7 +140,7 @@ public class JRTimezoneJdbcQueryExecuter extends JRJdbcQueryExecuter {
 
 	public JRDataSource createDatasource() throws JRException {
         /* Checking that query is valid, throw a runtime exception */
-        validateSQL(getQueryString());
+        validateSQL(getQueryString(), connection);
 		JRDataSource dataSource = super.createDatasource();
 		return new JRTimezoneResultSetDataSource(dataSource,
 				timezoneAdjust.timezone);

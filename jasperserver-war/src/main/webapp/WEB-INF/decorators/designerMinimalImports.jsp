@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, width=device-width">
@@ -124,8 +128,8 @@ linkurls = [
 "${pageContext.request.contextPath}/themes/dev/pageSpecific/serverError.css",
 "${pageContext.request.contextPath}/themes/dev/pageSpecific/systemError.css",
 "${pageContext.request.contextPath}/themes/default/samples.css",
-"${pageContext.request.contextPath}/${scriptsFolder}/bower_components/jquery-ui/themes/jquery.ui.theme.css",
-"${pageContext.request.contextPath}/${scriptsFolder}/bower_components/jquery-ui/themes/redmond/jquery-ui-1.10.4-custom.css",
+"${pageContext.request.contextPath}/${scriptsFolder}/runtime_dependencies/jquery-ui/themes/jquery.ui.theme.css",
+"${pageContext.request.contextPath}/${scriptsFolder}/runtime_dependencies/jquery-ui/themes/redmond/jquery-ui-1.10.4-custom.css",
 "${pageContext.request.contextPath}/themes/dev/containers/bg.css",
 "${pageContext.request.contextPath}/themes/dev/lists/bg.css",
 "${pageContext.request.contextPath}/themes/dev/buttons/bg.css",
@@ -233,8 +237,8 @@ Page Specific
 <link rel="stylesheet" href="${pageContext.request.contextPath}/themes/dev/pageSpecific/systemError.css" type="text/css" media="screen,print"/>
 
 <%--TODO: move to commmon themes approach--%>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/${scriptsFolder}/bower_components/jquery-ui/themes/jquery.ui.theme.css" type="text/css" media="screen,print"/>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/${scriptsFolder}/bower_components/jquery-ui/themes/redmond/jquery-ui-1.10.4-custom.css" type="text/css" media="screen">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/${scriptsFolder}/runtime_dependencies/jquery-ui/themes/jquery.ui.theme.css" type="text/css" media="screen,print"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/${scriptsFolder}/runtime_dependencies/jquery-ui/themes/redmond/jquery-ui-1.10.4-custom.css" type="text/css" media="screen">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/themes/dev/containers/bg.css" type="text/css" media="screen,print"/>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/themes/dev/lists/bg.css" type="text/css" media="screen,print"/>

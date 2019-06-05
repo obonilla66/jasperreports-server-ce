@@ -1,28 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
 import com.jaspersoft.jasperserver.dto.resources.ClientReference;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceable;
@@ -30,15 +35,15 @@ import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ClientUriHolder;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
+import com.jaspersoft.jasperserver.remote.exception.ReferencedResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.services.PermissionsService;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl.getRestrictedRuntimeExecutionContext;
 
 /**
  * <p></p>
@@ -50,18 +55,18 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
     protected final ResourceConverterProvider resourceConverterProvider;
     protected final RepositoryService repositoryService;
     protected final List<ClientReferenceRestriction> restrictions = new ArrayList<ClientReferenceRestriction>();
-    protected ConfigurationBean configurationBean;
+    protected RepositoryConfiguration configuration;
     protected PermissionsService permissionsService;
 
     public ResourceReferenceConverter(ResourceConverterProvider resourceConverterProvider,
-            RepositoryService repositoryService, PermissionsService permissionsService, ConfigurationBean configurationBean, ClientReferenceRestriction... restriction) {
+            RepositoryService repositoryService, PermissionsService permissionsService, RepositoryConfiguration configuration, ClientReferenceRestriction... restriction) {
         this.repositoryService = repositoryService;
         this.permissionsService = permissionsService;
         this.resourceConverterProvider = resourceConverterProvider;
         if (restriction != null) {
             restrictions.addAll(Arrays.asList(restriction));
         }
-        this.configurationBean = configurationBean;
+        this.configuration = configuration;
     }
 
     public ResourceReferenceConverter<T> addReferenceRestriction(ClientReferenceRestriction restriction) {
@@ -75,24 +80,41 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
      *
      * @param serverObject ResourceReference instance
      * @param options - to client conversion options
-     * @return client referenceable object
+     * @return client referenced object
      * @throws ClassCastException if server side local resource of given ResourceReference is of wrong type.
      */
     @SuppressWarnings("unchecked")
     public T toClient(ResourceReference serverObject, ToClientConversionOptions options) throws ClassCastException {
         ClientUriHolder result = null;
         if (serverObject != null) {
-            if ((options != null && options.isExpanded())) {
+            if (options != null && options.isExpansionEnabled(serverObject.isLocal())) {
                 try {
                     Resource localResource;
-
                     if (serverObject.isLocal()) {
                         localResource = serverObject.getLocalResource();
                     } else {
-                        localResource = repositoryService.getResource(ExecutionContextImpl.getRuntimeExecutionContext(), serverObject.getReferenceURI());
+                        localResource = repositoryService.getResource(getRestrictedRuntimeExecutionContext(),
+                                serverObject.getReferenceURI());
                     }
 
-                    result = resourceConverterProvider.getToClientConverter(localResource).toClient(localResource, options);
+                    String clientType = resourceConverterProvider.getToClientConverter(localResource).getClientResourceType();
+                    // Some repository resources, like Domain can have multiple client representations(for Domain there are
+                    // semanticLayerDataSource and domain client types). In expansion by type client can declare required
+                    // representation type. So, the idea of this part of code try to find client converter, that matches
+                    // pair (target resource server type) - (expand client type).
+                    if (options.isExpansionByType(serverObject.isLocal())) {
+                        clientType = options.getExpandTypes().stream().filter(((expandClientType) ->
+                                isClientConverterExist(localResource.getResourceType(), expandClientType)))
+                               .findFirst().orElse(clientType);
+                    }
+
+                    if (options.isExpanded(clientType, serverObject.isLocal())) {
+                        result = resourceConverterProvider.
+                                getToClientConverter(localResource.getResourceType(), clientType)
+                                .toClient(localResource, options);
+                    } else {
+                        result = new ClientReference(serverObject.getTargetURI());
+                    }
                 } catch (AccessDeniedException e) {
                     result = new ClientReference(serverObject.getTargetURI());
                 }
@@ -101,6 +123,10 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
             }
         }
         return (T) result;
+    }
+
+    private boolean isClientConverterExist(String serverType, String clientType) {
+        return resourceConverterProvider.getToClientConverter(serverType, clientType) != null;
     }
 
     public ResourceReference toServer(T clientObject,ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
@@ -128,7 +154,7 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         } else {
             // shouldn't happen
             throw new IllegalParameterValueException("References of type "
-                    + ClientTypeHelper.extractClientType(clientObject.getClass()) + " are not supported");
+                    + ClientTypeUtility.extractClientType(clientObject.getClass()) + " are not supported");
         }
         return resourceReference;
     }
@@ -155,17 +181,22 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
 
     protected Resource validateAndGetReference(String referenceUri, String ownersUri) throws IllegalParameterValueException {
         if (referenceUri == null) {
-            throw new IllegalParameterValueException("resourceReference.uri", "null");
+            throw new MandatoryParameterNotFoundException("resourceReference.uri");
         }
 
         if (!isAssignable(ownersUri, referenceUri)){
             throw new IllegalParameterValueException("resourceReference.uri", referenceUri);
         }
         // we need to update reference
+        // but first check if URI is valid before fetching it
+        if (referenceUri.isEmpty() || !referenceUri.startsWith(Folder.SEPARATOR)) {
+            throw new ReferencedResourceNotFoundException(referenceUri, "uri");
+        }
+
         final Resource resource = repositoryService.getResource(ExecutionContextImpl.getRuntimeExecutionContext(), referenceUri);
         if (resource == null) {
             // resource with such URI doesn't exist
-            throw new IllegalParameterValueException("Referenced resource doesn't exist", "resourceReference.uri", referenceUri);
+            throw new ReferencedResourceNotFoundException(referenceUri, "uri");
         } else if (!restrictions.isEmpty()) {
             final ClientResource clientTargetObject = resourceConverterProvider.getToClientConverter(resource).toClient(resource, null);
             for (ClientReferenceRestriction restriction : restrictions) {
@@ -179,7 +210,7 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         ResourceReference result;
         Resource localResource = resourceConverterProvider.getToServerConverter(clientObject).toServer(clientObject, options);
         if (localResource.getName() == null && clientObject.getLabel() != null) {
-            localResource.setName(clientObject.getLabel().replaceAll(configurationBean.getResourceIdNotSupportedSymbols(), "_"));
+            localResource.setName(clientObject.getLabel().replaceAll(configuration.getResourceIdNotSupportedSymbols(), "_"));
         }
         if (options != null && options.isResetVersion()){
             localResource.setVersion(Resource.VERSION_NEW);
@@ -220,7 +251,7 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
                 throw new IllegalParameterValueException("Reference target is of wrong type",
                         "resourceReference.uri",
                         clientResource.getUri(),
-                        ClientTypeHelper.extractClientType(clientResource.getClass()));
+                        ClientTypeUtility.extractClientType(clientResource.getClass()));
             }
         }
     }
@@ -242,18 +273,28 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
             this.fieldName = fieldName;
         }
 
+        public List<ClientFile.FileType> getFileTypes() {
+            return fileTypes;
+        }
+
         @Override
         public void validateReference(ClientResource clientResource) throws IllegalParameterValueException {
-            if(clientResource instanceof ClientFile && !fileTypes.contains(((ClientFile)clientResource).getType())){
-                final IllegalParameterValueException illegalParameterValueException =
-                        new IllegalParameterValueException("Referenced " + (fieldName != null ? fieldName : "file") +
-                                " is of wrong type. File type is expected to be " + fileTypes + " but is ["
-                                + ((ClientFile)clientResource).getType() + "]",
-                        fieldName != null ? fieldName : "file.type",
-                        ((ClientFile) clientResource).getType().name(),
-                                fileTypes.size() > 1 ? fileTypes.toString() : fileTypes.get(0).toString());
-                illegalParameterValueException.getErrorDescriptor().setErrorCode("incompatible.file.type");
-                throw illegalParameterValueException;
+            if (clientResource instanceof ClientFile) {
+                final ClientFile.FileType type = ((ClientFile) clientResource).getType();
+                if(type == null){
+                    throw new MandatoryParameterNotFoundException("type");
+                }
+                if(!fileTypes.contains(type)){
+                    final IllegalParameterValueException illegalParameterValueException =
+                            new IllegalParameterValueException("Referenced " + (fieldName != null ? fieldName : "file") +
+                                    " is of wrong type. File type is expected to be " + fileTypes + " but is ["
+                                    + type + "]",
+                            fieldName != null ? fieldName : "file.type",
+                            type.name(),
+                                    fileTypes.size() > 1 ? fileTypes.toString() : fileTypes.get(0).toString());
+                    illegalParameterValueException.getErrorDescriptor().setErrorCode("incompatible.file.type");
+                    throw illegalParameterValueException;
+                }
             }
         }
     }

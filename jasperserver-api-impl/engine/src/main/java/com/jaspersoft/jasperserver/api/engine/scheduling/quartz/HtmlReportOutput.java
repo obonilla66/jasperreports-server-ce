@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
@@ -34,6 +37,7 @@ import org.quartz.JobExecutionException;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.engine.common.service.impl.WebDeploymentInformation;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.ExportUtil;
+import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobMailNotification;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.MemoryDataContainer;
@@ -147,6 +151,17 @@ public class HtmlReportOutput extends AbstractReportOutput
 				htmlReportConfig.setOverrideHints(true);
 				htmlReportConfig.setConvertSvgToImage(sendMail);
 				htmlReportConfig.setEmbedImage(!sendMail);
+				if (sendMail)
+				{
+					byte resultSendTypeCode = jobContext.getReportJob().getMailNotification().getResultSendTypeCode();
+					if (
+						resultSendTypeCode == ReportJobMailNotification.RESULT_SEND_EMBED
+						|| resultSendTypeCode == ReportJobMailNotification.RESULT_SEND_EMBED_ZIP_ALL_OTHERS
+						)
+					{
+						htmlReportConfig.setUseBackgroundImageToAlign(false);
+					}
+				}
 				JRHyperlinkProducerFactory hyperlinkProducerFactory = jobContext.getHyperlinkProducerFactory();
 				if (hyperlinkProducerFactory != null) 
 				{

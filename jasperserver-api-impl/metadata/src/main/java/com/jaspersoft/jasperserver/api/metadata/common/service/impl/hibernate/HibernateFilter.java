@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate;
 
@@ -43,8 +46,9 @@ import com.jaspersoft.jasperserver.api.metadata.view.domain.ParentFolderFilter;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.PropertyFilter;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.ReferenceFilter;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.URIFilter;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
@@ -219,7 +223,7 @@ public class HibernateFilter implements Filter {
 		String valueParam = StringHelper.repeat( "?, ", objValues.length-1 )  + "?";
 		String[] values = new String[objValues.length];
 		Type[] types = new Type[objValues.length];
-		Arrays.fill(types, Hibernate.STRING);
+		Arrays.fill(types, StringType.INSTANCE);
 		for (int i = 0; i < objValues.length; i++) {
 			values[i] = ((String) objValues[i]).toUpperCase();
 		}

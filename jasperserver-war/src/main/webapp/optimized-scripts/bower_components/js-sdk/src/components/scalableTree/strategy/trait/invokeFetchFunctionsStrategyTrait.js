@@ -1,1 +1,0 @@
-define(["require","underscore"],function(n){var e=n("underscore");return{invokeFetchFunctions:function(n){return e.map(n,function(n){return n()})}}});

@@ -1,19 +1,22 @@
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 
@@ -59,23 +62,6 @@
         <property name="OFFLINE_ARG" value="" />
         <property name="THREAD_ARG" value="" />
         -->
-
-    <macrodef name="oldrunmaven">
-        <attribute name="dir" default="${buildBase}"/>
-        <element name="args" implicit="yes"/>
-        <sequential>
-            <exec executable="${maven}" dir="@{dir}" failonerror="true">
-                <env key="MAVEN_OPTS" value="-Xms128m -Xmx512m"/>
-                <arg value="-s"/>
-                <arg value="${maven.settings.file}"/>
-                <!-- <arg value="-e"/> --> <!-- ERROR INFO MODE -->
-                <!-- <arg value="-X"/> --> <!-- DETAILED DEBUG MODE -->
-                <!-- <arg value="-o"/> --> <!-- OFFLINE MODE -->
-                <args/>
-            </exec>
-        </sequential>
-    </macrodef>
-
 
     <macrodef name="runmaven">
         <attribute name="dir" default="${buildBase}"/>
@@ -225,6 +211,125 @@
         </if>
     </target>
 
+    <target name="check-distr-deps-pro"
+            depends="setup-groovy"
+            description="Generate and check list of third-party JAR dependencies contained in the PRO distribution kit file">
+        <!--Generate library dependencies for PRO version-->
+        <generate-deps archivePath="${distrPath}"
+                       includeDistrFolders="${homePath}/deps/.includeDistrFoldersPro"
+                       excludeDistrPaths="${homePath}/deps/.excludeDistrPathsPro"
+                       version="pro"
+                       outputPath="${homePath}/target/deps"
+                       excludeLibsFilterPathCE="${excludeLibsFilterPathCE}"
+                       excludeLibsFilterPathPRO="${excludeLibsFilterPathPRO}"/>
+        <!--Check library dependencies for PRO version-->
+        <check-deps version="pro"
+                    includeDistrFolders="${homePath}/deps/.includeDistrFoldersPro"
+                    depsFolder="${homePath}/deps"
+                    resultFolder="${homePath}/target/deps"/>
+    </target>
+
+    <target name="check-distr-deps-ce"
+            depends="setup-groovy"
+            description="Generate and check list of third-party JAR dependencies contained in the CE distribution kit file">
+        <!--Generate library dependencies for CE version-->
+        <generate-deps archivePath="${distrPath}"
+                       includeDistrFolders="${homePath}/deps/.includeDistrFoldersCe"
+                       excludeDistrPaths="${homePath}/deps/.excludeDistrPathsCe"
+                       version="ce"
+                       outputPath="${homePath}/target/deps"
+                       excludeLibsFilterPathCE="${excludeLibsFilterPathCE}"/>
+        <!--Check library dependencies for CE version-->
+        <check-deps version="ce"
+                    includeDistrFolders="${homePath}/deps/.includeDistrFoldersCe"
+                    depsFolder="${homePath}/deps"
+                    resultFolder="${homePath}/target/deps"/>
+    </target>
+
+	<!--
+		This is doing the same thing as check-master-list, but it's resolving classes by finding Groovy sources
+		in the implicit classpath "bin/groovy". 
+		We don't have to force the Groovy scripts to follow the same build/run pattern as Java if this behavior
+		does the same thing with a lot less overhead (no compile, jar steps, no extra classpath). 
+		We wouldn't need the build-master-list-common target.
+		I said it was weird to put stuff under bin/groovy but I take that back; we can keep it in its own directory
+		because it doesn't use the same compile/run flow that Java does.
+	-->
+    <target name="check-war-deps-ce"
+            depends="setup-groovy"
+            description="Check current list of WAR dependencies with master list">
+        <!--Generate library dependencies for CE version-->
+        <generate-deps archivePath="${js-path}/jasperserver-war/target/jasperserver.war"
+                       excludeDistrPaths="${js-path}/deps/.excludeDistrPathsCe"
+                       version="ce"
+                       outputPath="${js-path}/target/deps"
+                       excludeLibsFilterPathCE="${js-path}"/>
+        <!--Check library dependencies for CE version-->
+        <check-deps version="ce"
+                    depsFolder="${js-path}/deps"
+                    resultFolder="${js-path}/target/deps"/>
+    </target>
+	
+    <target name="check-war-deps-pro"
+            depends="setup-groovy"
+            description="Check current list of WAR dependencies with master list">
+        <!--Generate library dependencies for PRO version-->
+        <generate-deps archivePath="${js-pro-path}/jasperserver-war/target/jasperserver-pro.war"
+                       excludeDistrPaths="${js-pro-path}/deps/.excludeDistrPathsPro"
+                       version="pro"
+                       outputPath="${js-pro-path}/target/deps"
+                       excludeLibsFilterPathCE="${js-path}"
+                       excludeLibsFilterPathPRO="${js-pro-path}"/>
+        <!--Check library dependencies for PRO version-->
+        <check-deps version="pro"
+                    depsFolder="${js-pro-path}/deps"
+                    resultFolder="${js-pro-path}/target/deps"/>
+    </target>
+
+    <macrodef name="check-deps">
+        <attribute name="version" default="ce"/>
+        <attribute name="includeDistrFolders" default=""/>
+        <attribute name="depsFolder" default="${basedir}/deps"/>
+        <attribute name="resultFolder" default="${basedir}/deps"/>
+        <sequential>
+            <groovy src="bin/groovy/checkWARDeps.groovy">
+                <classpath>
+                    <pathelement path="src/main/groovy/"/>
+                </classpath>
+                <arg value="@{version}"/>
+                <arg value="@{includeDistrFolders}"/>
+                <arg value="@{depsFolder}"/>
+                <arg value="@{resultFolder}"/>
+            </groovy>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="generate-deps"
+                description="Generate a list of third-party JAR dependencies contained in @archivePath file">
+        <!--Path to war/zip file or folder -->
+        <attribute name="archivePath"/>
+        <!--Path to CE sources for exclude all internal CE JARs from list-->
+        <attribute name="excludeLibsFilterPathCE"/>
+        <!--Path to PRO sources for exclude all internal PRO JARs from list-->
+        <attribute name="excludeLibsFilterPathPRO" default=""/>
+        <attribute name="version" default="ce"/>
+        <attribute name="includeDistrFolders" default=""/>
+        <attribute name="excludeDistrPaths" default=""/>
+        <attribute name="outputPath" default="${basedir}"/>
+        <sequential>
+            <groovy src="bin/groovy/generateWARDeps.groovy">
+                <classpath>
+                    <pathelement path="src/main/groovy/"/>
+                </classpath>
+                <arg value="@{archivePath}"/>
+                <arg value="@{version}"/>
+                <arg value="@{includeDistrFolders}"/>
+                <arg value="@{excludeDistrPaths}"/>
+                <arg value="@{outputPath}"/>
+                <arg value="@{excludeLibsFilterPathCE}, @{excludeLibsFilterPathPRO}"/>
+            </groovy>
+        </sequential>
+    </macrodef>
 
     <target name="init-source-paths"
            description="init svn and build paths">
@@ -399,7 +504,7 @@
             <else>
                 <runmaven dir="${js-path}">
                     <arg value="clean"/>
-                    <arg value="-DskipUnitTestDir"/>
+                    <arg value="-DskipUnitTestDir=true"/>
                     <!-- skip execution of integration-tests in production-tests folder -->
                     <arg value="-D${SKIP_TEST_ARG}"/>
                     <arg value="${OFFLINE_ARG}"/>
@@ -435,6 +540,8 @@
                 <runtarget target="assemble-export-files-ce"/>
             </then>
         </if>
+    	<!-- generate list of third-party JARs and check against "master" list -->
+        <runtarget target="check-war-deps-ce"/>
     </target>
 
     <target name="build-pro"
@@ -460,7 +567,7 @@
                 <runmaven dir="${js-pro-path}">
                     <arg value="clean"/>
                     <arg value="install"/>
-                    <arg value="-DskipUnitTestDir"/>
+                    <arg value="-DskipUnitTestDir=true"/>
                     <arg value="${obfuscationArg}"/>
                     <!-- skip execution of integration-tests in production-tests folder -->
                     <arg value="-D${SKIP_TEST_ARG}"/>
@@ -481,6 +588,8 @@
                 <runtarget target="assemble-export-files-pro"/>
             </then>
         </if>
+    	<!-- generate list of third-party JARs and check against "master" list -->
+        
     </target>
 
     <target name="enable-unit-tests">
@@ -606,7 +715,6 @@
         <!-- to use your own xml file from the command line:              -->
         <!--   run-integration-tests-pro -DtestXmlFile=myTestngFile.xml   -->
         <property name="testXmlFile" value="testng-production-tests-pro.xml"/>
-        <property name="testDashboardXmlFile" value="testng-dashboard-test-pro.xml"/>
         <property name="testSsoXmlFile" value="testng-production-sso-tests-pro.xml"/>
         <property name="testExternalDbXmlFile" value="testng-production-externaldb-tests-pro.xml"/>
 
@@ -941,7 +1049,7 @@
         <property name="util-target" value="${basedir}/target/classes"/>
         <delete dir="${util-target}"/>
         <mkdir dir="${util-target}"/>
-        <javac srcdir="${basedir}/src/main/java" destdir="${util-target}" debug="true">
+        <javac srcdir="${basedir}/src/main/java" destdir="${util-target}" debug="true" >
             <classpath>
                 <fileset dir="${js-path}/buildomatic/target">
                     <exclude name="buildomatic.jar"/>

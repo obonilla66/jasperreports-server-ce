@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.query;
@@ -30,6 +33,7 @@ import static com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressions.r
 import static com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressions.variable;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Grant Bacon <gbacon@tibco.com>
@@ -47,7 +51,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
 
         String jsonString = json(query);
 
-        assertThat(jsonString, is("{\n" +
+        assertEquals("{\n" +
                 "  \"where\" : {\n" +
                 "    \"filterExpression\" : {\n" +
                 "      \"object\" : {\n" +
@@ -58,7 +62,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
                 "            }\n" +
                 "          }, {\n" +
                 "            \"timestamp\" : {\n" +
-                "              \"value\" : \"2009-12-01 00:00:00.000\"\n" +
+                "              \"value\" : \"2009-12-01T00:00:00.000\"\n" +
                 "            }\n" +
                 "          } ],\n" +
                 "          \"functionName\" : \"equalsDate\"\n" +
@@ -66,7 +70,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
                 "      }\n" +
                 "    }\n" +
                 "  }\n" +
-                "}"));
+                "}", jsonString);
     }
 
     @Test
@@ -92,7 +96,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
 
         String jsonString = json(query);
 
-        assertThat(jsonString, is("{\n" +
+        assertEquals("{\n" +
                 "  \"where\" : {\n" +
                 "    \"filterExpression\" : {\n" +
                 "      \"object\" : {\n" +
@@ -103,7 +107,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
                 "            }\n" +
                 "          }, {\n" +
                 "            \"timestamp\" : {\n" +
-                "              \"value\" : \"2009-12-01 00:00:00.000\"\n" +
+                "              \"value\" : \"2009-12-01T00:00:00.000\"\n" +
                 "            }\n" +
                 "          } ],\n" +
                 "          \"functionName\" : \"afterDate\"\n" +
@@ -111,7 +115,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
                 "      }\n" +
                 "    }\n" +
                 "  }\n" +
-                "}"));
+                "}", jsonString);
     }
 
     @Test
@@ -121,7 +125,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
 
         String jsonString = json(query);
 
-        assertThat(jsonString, is("{\n" +
+        assertEquals("{\n" +
                 "  \"where\" : {\n" +
                 "    \"filterExpression\" : {\n" +
                 "      \"object\" : {\n" +
@@ -132,11 +136,11 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
                 "            }\n" +
                 "          }, {\n" +
                 "            \"timestamp\" : {\n" +
-                "              \"value\" : \"2009-12-01 00:00:00.000\"\n" +
+                "              \"value\" : \"2009-12-01T00:00:00.000\"\n" +
                 "            }\n" +
                 "          }, {\n" +
                 "            \"timestamp\" : {\n" +
-                "              \"value\" : \"2012-01-01 00:00:00.000\"\n" +
+                "              \"value\" : \"2012-01-01T00:00:00.000\"\n" +
                 "            }\n" +
                 "          } ],\n" +
                 "          \"functionName\" : \"betweenDates\"\n" +
@@ -144,7 +148,7 @@ public class FunctionFilterELSerializationToJSONTest extends QueryTest {
                 "      }\n" +
                 "    }\n" +
                 "  }\n" +
-                "}"));
+                "}", jsonString);
     }
 
     /* Time Tests */

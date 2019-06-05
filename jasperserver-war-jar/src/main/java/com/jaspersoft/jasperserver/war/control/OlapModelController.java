@@ -1,49 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.war.control;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import mondrian.olap.Util.PropertyList;
-import mondrian.rolap.RolapConnectionProperties;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.apache.log4j.Logger;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.validation.BindException;
-import org.springframework.web.servlet.ModelAndView;
-
 import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
-import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
+import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceLookupImpl;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapClientConnection;
@@ -52,7 +35,6 @@ import com.jaspersoft.jasperserver.api.metadata.olap.service.OlapConnectionServi
 import com.jaspersoft.jasperserver.api.metadata.olap.service.OlapManagementService;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import com.jaspersoft.jasperserver.war.util.OlapSessionState;
 import com.tonbeller.jpivot.core.Model;
 import com.tonbeller.jpivot.mondrian.JPivotPackageAccess;
@@ -66,6 +48,20 @@ import com.tonbeller.tbutils.res.Resources;
 import com.tonbeller.wcf.bookmarks.BookmarkManager;
 import com.tonbeller.wcf.controller.RequestContext;
 import com.tonbeller.wcf.table.EditableTableComponent;
+import mondrian.olap.Util.PropertyList;
+import mondrian.rolap.RolapConnectionProperties;
+import org.apache.log4j.Logger;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindException;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.util.*;
 
 
 /**
@@ -557,7 +553,7 @@ public class OlapModelController extends JRBaseMultiActionController {
         }
     else {
         // TODO resolve the double clicking problem
-        ExecutionContext executionContext = JasperServerUtil.getExecutionContext(request);
+        ExecutionContext executionContext = StaticExecutionContextProvider.getExecutionContext();
         ResourceLookup[] olapUnits = repository.findResource(executionContext, FilterCriteria.createFilter(OlapUnit.class));
         modelAndView = new ModelAndView("modules/listOlapViews", "olapUnits", olapUnits);
     }

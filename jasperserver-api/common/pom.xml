@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
@@ -28,7 +31,7 @@
     <parent>
         <groupId>com.jaspersoft.jasperserver</groupId>
         <artifactId>jasperserver-api</artifactId>
-        <version>7.1.1</version>
+        <version>${buildArtifactVersionName}</version>
     </parent>
   <dependencies>
       <dependency>
@@ -86,6 +89,10 @@
                   <artifactId>netty</artifactId>
               </exclusion>
               <exclusion>
+                  <groupId>io.netty</groupId>
+                  <artifactId>netty-all</artifactId>
+              </exclusion>
+              <exclusion>
                   <groupId>org.jboss.narayana.jta</groupId>
                   <artifactId>narayana-jta</artifactId>
               </exclusion>
@@ -106,18 +113,24 @@
       <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <version>1.2.12</version>
+      <version>${log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.unitils</groupId>
       <artifactId>unitils</artifactId>
       <version>2.4</version>
       <scope>test</scope>
+      <exclusions>
+          <exclusion>
+              <groupId>commons-collections</groupId>
+              <artifactId>commons-collections</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-      <version>${spring.security.version}</version>
+      <version>${spring.version}</version>
     </dependency>
     <dependency>
       <groupId>com.jaspersoft.jasperserver</groupId>

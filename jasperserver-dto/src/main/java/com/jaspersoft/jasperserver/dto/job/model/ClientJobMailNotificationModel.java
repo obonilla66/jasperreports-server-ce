@@ -1,25 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job.model;
 
 import com.jaspersoft.jasperserver.dto.job.ClientJobMailNotification;
 import com.jaspersoft.jasperserver.dto.job.ClientMailNotificationSendType;
+
 import java.util.List;
 
 /**
@@ -183,20 +187,7 @@ public class ClientJobMailNotificationModel extends ClientJobMailNotification {
         if (this == o) return true;
         if (!(o instanceof ClientJobMailNotificationModel)) return false;
         if (!super.equals(o)) return false;
-
-        ClientJobMailNotificationModel that = (ClientJobMailNotificationModel) o;
-
-        if (isMessageTextModified() != that.isMessageTextModified()) return false;
-        if (isResultSendTypeModified() != that.isResultSendTypeModified()) return false;
-        if (isSubjectModified() != that.isSubjectModified()) return false;
-        if (isBccAddressesModified() != that.isBccAddressesModified()) return false;
-        if (isCcAddressesModified() != that.isCcAddressesModified()) return false;
-        if (isToAddressesModified() != that.isToAddressesModified()) return false;
-        if (isSkipEmptyReportsModified() != that.isSkipEmptyReportsModified()) return false;
-        if (isMessageTextWhenJobFailsModified() != that.isMessageTextWhenJobFailsModified()) return false;
-        if (isIncludingStackTraceWhenJobFailsModified() != that.isIncludingStackTraceWhenJobFailsModified())
-            return false;
-        return isSkipNotificationWhenJobFailsModified() == that.isSkipNotificationWhenJobFailsModified();
+        return true;
 
     }
 

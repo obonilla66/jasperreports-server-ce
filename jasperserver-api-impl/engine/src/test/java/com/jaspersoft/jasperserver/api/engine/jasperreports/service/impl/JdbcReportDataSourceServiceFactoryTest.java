@@ -1,25 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.JRTimezoneJdbcQueryExecuterFactory;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.JdbcReportDataSourceImpl;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.unitils.UnitilsJUnit4;
 import org.unitils.inject.annotation.InjectIntoByType;
 import org.unitils.inject.annotation.TestedObject;
@@ -32,6 +39,8 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link JdbcReportDataSourceServiceFactory}
@@ -73,6 +82,18 @@ public class JdbcReportDataSourceServiceFactoryTest extends UnitilsJUnit4 {
         rds.setReportParameterValues(paramsMap);
 
         assertEquals(TimeZone.getTimeZone(dsTimeZone), paramsMap.get(JRTimezoneJdbcQueryExecuterFactory.PARAMETER_TIMEZONE));
+
+    }
+
+    @Test
+    public void createService_AppliedProfileAttribute() {
+        JdbcReportDataSource orgReportDataSource = new JdbcReportDataSourceImpl();
+        orgReportDataSource.setConnectionUrl("jdbc:postgresql://localhost:5432/jasperserver");
+        orgReportDataSource.setDriverClass("org.postgresql.Driver");
+        ProfileAttributesResolver profileAttributesResolver = mock(ProfileAttributesResolver.class);
+        jdbcReportDataSourceServiceFactory.setProfileAttributesResolver(profileAttributesResolver);
+        jdbcReportDataSourceServiceFactory.updateJdbcReportDataSource(orgReportDataSource);
+        Mockito.verify(profileAttributesResolver).mergeResource(any(Resource.class));
     }
 
     @Test

@@ -1,29 +1,28 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.jaxrs.resources;
 
 
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.SelfCleaningFileResourceDataWrapper;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
@@ -35,7 +34,7 @@ import com.jaspersoft.jasperserver.dto.resources.hypermedia.HypermediaResourceLo
 import com.jaspersoft.jasperserver.dto.resources.hypermedia.HypermediaResourceLookupLinks;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.jaxrs.poc.hypermedia.common.provider.RequestInfoProvider;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFolder;
@@ -44,7 +43,6 @@ import com.jaspersoft.jasperserver.remote.services.BatchRepositoryService;
 import com.jaspersoft.jasperserver.remote.services.SingleRepositoryService;
 import com.jaspersoft.jasperserver.search.mode.AccessType;
 import com.jaspersoft.jasperserver.search.service.RepositorySearchResult;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -65,6 +64,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -98,8 +98,8 @@ public class HypermediaRepositoryJaxrsService {
     @Resource
     private Map<String, String> contentTypeMapping;
 
-    @Resource
-    private ConfigurationBean configurationBean;
+    @Resource(name = "configurationBean")
+    private RepositoryConfiguration configuration;
 
     @SuppressWarnings("unchecked")
 	@GET
@@ -120,16 +120,17 @@ public class HypermediaRepositoryJaxrsService {
             @QueryParam(RestConstants.QUERY_PARAM_SORT_BY) String sortBy,
             @QueryParam(RestConstants.QUERY_PARAM_EXPANDED) Boolean expanded,
             @QueryParam("forceFullPage") @DefaultValue("false") Boolean forceFullPage,
-            @HeaderParam(HttpHeaders.ACCEPT) String accept) throws RemoteException {
+            @HeaderParam(HttpHeaders.ACCEPT) String accept,
+            @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException {
 
         Response res;
         if (ResourceMediaType.FOLDER_JSON.equals(accept) || ResourceMediaType.FOLDER_XML.equals(accept)) {
-            res = getResourceDetails("", accept, containerType, expanded);
+            res = getResourceDetails("", accept, containerType, expanded, httpServletRequest);
         } else {
 
-            final String organizationFolderRegex = "^(?:" + configurationBean.getOrganizationsFolderUri() + "/([^/]+))*";
+            final String organizationFolderRegex = "^(?:" + configuration.getOrganizationsFolderUri() + "/([^/]+))*";
             final List<String> excludeFoldersWithPublic = new ArrayList<String>(excludeFolders);
-            
+
             AccessType accessType = AccessType.ALL;
             if (accessTypeString != null && !"".equals(accessTypeString)) {
                 if (AccessType.MODIFIED.name().equalsIgnoreCase(accessTypeString)) {
@@ -148,29 +149,26 @@ public class HypermediaRepositoryJaxrsService {
                 }
             }
 
-            RepositorySearchResult<ClientResourceLookup> searchResult = null;
-            if(containerType.contains("folder")){
-                /// split into two queries
+            RepositorySearchResult<ClientResourceLookup> searchResult;
+            if (containerType.contains("folder")) {
                 ArrayList<String> splitContainerType = new ArrayList<String>(containerType);
                 splitContainerType.remove("folder");
-
                 searchResult =
-                    batchRepositoryService.getResourcesForLookupClass(RepoFolder.class.getName(),q, folderUri, ListUtils.union(type, splitContainerType), excludeType, null, excludeFolders,
-                        start, limit,
-                        recursive, showHiddenItems,
-                        sortBy, accessType, user,
-                        forceFullPage);
+                        batchRepositoryService.getResourcesForLookupClass(RepoFolder.class.getName(),q, folderUri, containerType, excludeType, null, excludeFolders,
+                                start, limit,
+                                recursive, showHiddenItems,
+                                sortBy, accessType, user,
+                                forceFullPage);
 
-                int foundFolders=searchResult.getItems().size();
+                int foundFolders = searchResult.getItems().size();
 
                 searchResult.append(
-                    batchRepositoryService.getResourcesForLookupClass(RepoResourceItem.class.getName(),q, folderUri, ListUtils.union(type, containerType), excludeType, null, excludeFolders,
-                        foundFolders>0?0:start-foundFolders<0?0:start-foundFolders, limit-foundFolders,
-                        recursive, showHiddenItems,
-                        sortBy, accessType, user,
-                        forceFullPage)
+                        batchRepositoryService.getResourcesForLookupClass(RepoResourceItem.class.getName(),q, folderUri, ListUtils.union(type, splitContainerType), excludeType, null, excludeFolders,
+                                foundFolders>0?0:start-foundFolders<0?0:start-foundFolders, limit-foundFolders,
+                                recursive, showHiddenItems,
+                                sortBy, accessType, user,
+                                forceFullPage)
                 );
-
 
             } else {
                 searchResult =
@@ -185,7 +183,7 @@ public class HypermediaRepositoryJaxrsService {
             }
 
             List<HypermediaResourceLookup> hypermediaLookups = new ArrayList<HypermediaResourceLookup>(searchResult.getItems().size());
-            excludeFoldersWithPublic.add(configurationBean.getPublicFolderUri());
+            excludeFoldersWithPublic.add(configuration.getPublicFolderUri());
             // split lookups into two groups
             List<ClientResourceLookup> lookup4excludeWithPublicFolders = new ArrayList<ClientResourceLookup>();
             List<ClientResourceLookup> lookup4excludeFolders = new ArrayList<ClientResourceLookup>();
@@ -370,7 +368,8 @@ public class HypermediaRepositoryJaxrsService {
     public Response getResourceDetails(@PathParam(ResourceDetailsJaxrsService.PATH_PARAM_URI) String uri,
                                        @HeaderParam(HttpHeaders.ACCEPT) String accept,
                                        @QueryParam("containerType") List<String> containerType,
-                                       @QueryParam(RestConstants.QUERY_PARAM_EXPANDED) Boolean _expanded) throws RemoteException {
+                                       @QueryParam(RestConstants.QUERY_PARAM_EXPANDED) Boolean _expanded,
+                                       @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException {
 
         boolean expanded = _expanded != null ? _expanded : false;
         uri = Folder.SEPARATOR + uri.replaceAll("/$", "");
@@ -389,7 +388,9 @@ public class HypermediaRepositoryJaxrsService {
         } else {
             final ToClientConverter<? super com.jaspersoft.jasperserver.api.metadata.common.domain.Resource, ? extends ClientResource, ToClientConversionOptions> toClientConverter =
                     resourceConverterProvider.getToClientConverter(resource);
-            final ClientResource clientResource = toClientConverter.toClient(resource, ToClientConversionOptions.getDefault().setExpanded(expanded));
+            final ClientResource clientResource = toClientConverter.toClient(resource,
+                    ToClientConversionOptions.getDefault().setExpanded(expanded)
+                            .setAdditionalProperties(httpServletRequest.getParameterMap()));
 
             final HypermediaResource hypermediaResource = new HypermediaResource(clientResource);
             HypermediaResourceLinks links = new HypermediaResourceLinks();

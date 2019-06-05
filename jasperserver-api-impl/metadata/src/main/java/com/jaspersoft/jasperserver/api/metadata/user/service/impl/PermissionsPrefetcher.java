@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -41,8 +44,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.springframework.orm.hibernate3.HibernateCallback;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate5.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateTemplate;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
@@ -81,7 +84,7 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 	private interface Interceptor{
 		Object process(final MethodInvocation call) throws Throwable;
 	}
-	
+
 	final Map<String, Interceptor> wiredCalls = new HashMap<String, Interceptor>(){
 		private static final long serialVersionUID = 1L;
 		{
@@ -94,7 +97,7 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 					return subFolderList;
 				}
 			});
-			
+
 			put("folderExists", new Interceptor() {
 				@Override
 				public Object process(MethodInvocation call) throws Throwable {
@@ -113,7 +116,7 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 			});
 		}
 	};
-	
+
 	public Object invoke(MethodInvocation call) throws Throwable {
 		Interceptor callback = wiredCalls.get(call.getMethod().getName());
 		if(callback!=null){
@@ -131,10 +134,10 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 	}
 	
 	private List<?> getSubfolders(String folderURI){
-		final String folderClassName = getPersistentClassFactory().getImplementationClassName(Folder.class);		
-		final String queryString = "select f.subFolders from " + folderClassName + " f " + 
-			" where f.URI = :uri ";
-		
+		final String folderClassName = getPersistentClassFactory().getImplementationClassName(Folder.class);
+		final String queryString = "select f.subFolders from " + folderClassName + " f " +
+			" where f.URI = :uri and f.hidden=false";
+
 		HibernateTemplate template = getHibernateTemplate();
 		template.setCacheQueries(true);
 		@SuppressWarnings("unchecked")
@@ -150,7 +153,7 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 		}
 		return Collections.EMPTY_LIST;
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	private void preloadSubFolderPerms(String folderURI, List<?> subFolderList, boolean missingOnly) {
 		// don't prefetch root
@@ -185,18 +188,18 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 					missingEntries.add(uri);
 				}
 			}
-				
+
 			if (missingEntries.size() < minimumPrefetch) {
 				// log.error("****** PREFETCHER minimum not met: ********: " + missingEntries.size() +"<" + minimumPrefetch);
 				return;
 			}
 		}
-		
+
 		final String objPermissionClassName = getPersistentClassFactory().getImplementationClassName(ObjectPermission.class);
 
 		final String fixedFolderURI = folderURI.endsWith("/")? folderURI: folderURI + "/";
-		final String queryString = "from " + objPermissionClassName + 
-			" where URI like :parent " + 
+		final String queryString = "from " + objPermissionClassName +
+			" where URI like :parent " +
             " and URI not like :level";
 
 		List<?> permList = getHibernateTemplate().execute(new HibernateCallback<List>() {
@@ -220,7 +223,7 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
                 return perms;
             }
         });
-		
+
 		String currentURI = null;
 		List<AccessControlEntry> permsForURI = new ArrayList<AccessControlEntry>();
         Acl tempAcl=new JasperServerAclImpl(new InternalURIDefinition(""),null);
@@ -234,7 +237,7 @@ public class PermissionsPrefetcher extends HibernateDaoImpl implements MethodInt
 			// we are sorting by uri; if we've hit a new uri, then we need to 
 			// put the previously gathered up perms for the last uri into the cache
 			if (! perm.getURI().equals(currentURI)) {
-                Acl acl = new JasperServerAclImpl(new InternalURIDefinition(currentURI),permsForURI,parentAcl);
+                Acl acl = new JasperServerAclImpl(new InternalURIDefinition(currentURI), permsForURI, parentAcl);
                 aclCache.putInCache(acl);
 				if (log.isDebugEnabled()) {
 					log.debug("adding acl to cache:".concat(acl.toString()));

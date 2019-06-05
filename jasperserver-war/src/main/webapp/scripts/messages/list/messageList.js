@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -105,18 +105,18 @@ var messageListModule = {
     _getMessageItems: function(messages) {
         var processItemTemplate = function(element) {
             var subject = element.select('.subject a')[0];
-            subject.update(xssUtil.escape(this.getValue().subject));
+            subject.update(this.getValue().subject);
             subject.writeAttribute('href', 'flow.html?_flowExecutionKey=' + messageListModule._flowExecutionKey + '&_eventId=viewMessage&id=' + this.getValue().id);
 
             var date = element.select('.date')[0];
-            date.update(xssUtil.escape(this.getValue().date));
+            date.update(this.getValue().date);
             date.writeAttribute('title', this.getValue().timestamp);
 
             var type = element.select('.type')[0];       
-            type.update(xssUtil.escape(this.getValue().type));
+            type.update(this.getValue().type);
 
             var component = element.select('.component')[0];
-            component.update(xssUtil.escape(this.getValue().component));
+            component.update(this.getValue().component);
             
             return element;
         };

@@ -1,22 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.dataset;
+
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -24,27 +29,26 @@ import javax.xml.bind.annotation.XmlElements;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * @author Vasyl Spachynskyi
  * @version $Id$
  * @since 05.04.2016
  */
-public class ClientAxis {
+public class ClientAxis implements DeepCloneable<ClientAxis> {
     private ClientAxisNode axisNode;
-    private List<ClientMultiAxesDatasetLevel> levels = new ArrayList<ClientMultiAxesDatasetLevel>();
+    private List<ClientMultiAxisDatasetLevel> levels = new ArrayList<ClientMultiAxisDatasetLevel>();
 
     public ClientAxis() {
     }
 
     public ClientAxis(ClientAxis axis) {
-        axisNode = new ClientAxisNode(axis.getAxisNode());
-        for (ClientMultiAxesDatasetLevel groupAxis : axis.getLevels()) {
-            if (groupAxis instanceof ClientMultiAxesAggregationLevel) {
-                levels.add(new ClientMultiAxesAggregationLevel((ClientMultiAxesAggregationLevel) groupAxis));
-            } else {
-                levels.add(new ClientMultiAxesGroupLevel((ClientMultiAxesGroupLevel) groupAxis));
-            }
-        }
+        checkNotNull(axis);
+
+        axisNode = copyOf(axis.getAxisNode());
+        levels = copyOf(axis.getLevels());
     }
 
     public ClientAxisNode getAxisNode() {
@@ -58,14 +62,18 @@ public class ClientAxis {
 
     @XmlElementWrapper(name = "levels")
     @XmlElements({
-            @XmlElement(name = "level", type = ClientMultiAxesGroupLevel.class),
-            @XmlElement(name = "aggregation", type = ClientMultiAxesAggregationLevel.class)})
-    public List<ClientMultiAxesDatasetLevel> getLevels() {
+            @XmlElement(name = "level", type = ClientMultiAxisGroupLevel.class),
+            @XmlElement(name = "aggregation", type = ClientMultiAxisAggregationLevel.class)})
+    public List<ClientMultiAxisDatasetLevel> getLevels() {
         return levels;
     }
 
-    public ClientAxis setLevels(List<ClientMultiAxesDatasetLevel> levels) {
-        this.levels = levels;
+    public ClientAxis setLevels(List<ClientMultiAxisDatasetLevel> levels) {
+        if (levels == null) {
+            this.levels = new ArrayList<ClientMultiAxisDatasetLevel>();
+        } else {
+            this.levels = levels;
+        }
         return this;
     }
 
@@ -77,14 +85,14 @@ public class ClientAxis {
         ClientAxis that = (ClientAxis) o;
 
         if (axisNode != null ? !axisNode.equals(that.axisNode) : that.axisNode != null) return false;
-        return !(levels != null ? !levels.equals(that.levels) : that.levels != null);
+        return levels.equals(that.levels);
 
     }
 
     @Override
     public int hashCode() {
         int result = axisNode != null ? axisNode.hashCode() : 0;
-        result = 31 * result + (levels != null ? levels.hashCode() : 0);
+        result = 31 * result + (levels.hashCode());
         return result;
     }
 
@@ -94,5 +102,10 @@ public class ClientAxis {
                 "axisNode=" + axisNode +
                 ", levels=" + levels +
                 '}';
+    }
+
+    @Override
+    public ClientAxis deepClone() {
+        return new ClientAxis(this);
     }
 }

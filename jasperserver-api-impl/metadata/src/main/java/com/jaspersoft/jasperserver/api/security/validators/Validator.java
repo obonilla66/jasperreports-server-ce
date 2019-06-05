@@ -1,29 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.security.validators;
 
-import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.JSSecurityException;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import com.jaspersoft.jasperserver.api.security.SecurityConfiguration;
 import com.jaspersoft.jasperserver.api.security.encryption.EncryptionFilter;
 import com.jaspersoft.jasperserver.core.util.JSONUtil;
 import com.jaspersoft.jasperserver.core.util.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,6 +39,10 @@ import org.springframework.context.i18n.LocaleContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +51,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.jaspersoft.jasperserver.api.security.SecurityConfiguration.isInputValidationOn;
@@ -89,8 +98,16 @@ public class Validator {
     private static final String END_BRACKET = "]";
     private static final String UNKNOWN_KEY_OR_VALUE = "unknown";
 
+    public static final String SEMICOLON_SUBSTITUTION_VALUE = "SEMICOLON_SUB_VALUE";
+    private static final Pattern SQL_VALIDATION_VIA_META_QUERY_PATTERN
+            = Pattern.compile("(?is)^\\s*(select|call)\\b((?!\\binto\\b).)*;?\\s*$");
+    private static final Pattern SQL_VALIDATION_PATTERN
+            = Pattern.compile("(?is)^\\s*(select|call)\\b((?!\\binto\\b)[^;])*;?\\s*$");
+
     private static MessageSource messages;
     private static ProfileAttributesResolver profileAttributesResolver;
+    private static boolean scriptTagScannerEnabled;
+    private static final AtomicReference<Pattern> sqlCommentsPattern = new AtomicReference<>();
 
     /* Input validationRules */
     private static Map<String, ValidatorRule> validationRules;
@@ -260,6 +277,8 @@ public class Validator {
      *      if all parameter/value pairs are valid.
      * @throws
      *      IntrusionException, ValidationException
+     *
+     * @deprecated Centralized input validation was replaced with output escaping.
      */
     public static boolean validateRequestParams(HttpServletRequest request) {
         if (!isInputValidationOn()) return true;
@@ -469,38 +488,90 @@ public class Validator {
      * @see "validation.properties" for the regex keys, usually beginning with the prefix ValidSQL.  Example: Validator.ValidSQLSelectStart.
      * @see "security.properties" for the ValidatorRule keys.  Example: sqlDomainDesigner
      * @param queryOrParamString The value to validate. This is expected to be either the query string or a query parameter string.
+     * @param connection A {@link Connection} to database, required for additional validation control.
      * @return True if valid.
 	 * @throws JSSecurityException if queryOrParamString is not a secure query according to the rule pointed to by SQL_QUERY_EXECUTOR_RULE_KEY
      */
-    public static boolean validateSQL(String queryOrParamString) {
-        if (!isSQLValidationOn() || queryOrParamString == null) return true;
+    public static boolean validateSQL(String queryOrParamString, Connection connection) {
+        if (!isSQLValidationOn() || StringUtils.isBlank(queryOrParamString)) return true;
 
-        queryOrParamString = queryOrParamString.trim().replaceAll("[;]+$", "");
+        queryOrParamString = queryOrParamString.trim().replaceAll(";+$", ""); // remove trailing semicolons
+        queryOrParamString = removeCommentsFromSql(queryOrParamString);
+
         List<ValidatorRule> validationRuleList = getRulesForParameter(SQL_QUERY_EXECUTOR_RULE_KEY);
+        boolean validationRulesUsed = false;
 
         if (validationRuleList != null) {
 			for (ValidatorRule rule : validationRuleList) {
 				boolean isInputNonEmptyStrings = StringUtil.checkAllInputStringsNonEmpty(queryOrParamString, rule.getContext(), rule.getValueValidationKey());
 
 				if (isInputNonEmptyStrings && rule.getMaxLength() > 0) {
-					// reg exp to remove comments in sql queries. currently removing /**/, --, #. This is optional and the user can delete the regexp from the properties file
-						String sqlCommentsRegexp = SecurityConfiguration.getProperty(SecurityConfiguration.SQL_COMMENTS_REGEXP);
-					if (sqlCommentsRegexp!=null && !sqlCommentsRegexp.isEmpty()){
-						Pattern regex = Pattern.compile(sqlCommentsRegexp, Pattern.DOTALL | Pattern.MULTILINE);
-						queryOrParamString = regex.matcher(queryOrParamString).replaceAll("");
-					}
-
+                    validationRulesUsed = true;
 					boolean isSQLValid = ESAPI.validator().isValidInput(rule.getContext(), queryOrParamString, rule.getValueValidationKey(), rule.getMaxLength(), false);
 					if (!isSQLValid) {
-						String errMsg = (messages == null) ? ERR_MSG_SQL_VALIDATION:messages.getMessage(MSG_VALIDATION_SQL, new Object[]{}, LocaleContextHolder.getLocale());
-						log.error("Invalid SQL:"  + errMsg + ", SQL: " + queryOrParamString);
-						throw new JSSecurityException(errMsg);
+					    throw newSecurityException(queryOrParamString);
 					}
 				}
 			}
         }
 
+        if (!validationRulesUsed) { // customer has no its own validation rules, then use default validation regexps
+
+            if (SecurityConfiguration.isSqlValidationViaMetadataOn() && queryOrParamString.contains(";")) {
+                Matcher matcher = SQL_VALIDATION_VIA_META_QUERY_PATTERN.matcher(queryOrParamString);
+                if (!matcher.matches()) {
+                    throw newSecurityException(queryOrParamString);
+                }
+
+                // ';' is not allowed as statement separator. If it is,
+                // its replacement with random value will brake SQL syntax
+                // and it will fail on next test
+                try {
+                    trySqlSyntax(connection, queryOrParamString.replace(";", SEMICOLON_SUBSTITUTION_VALUE));
+                } catch (SQLFeatureNotSupportedException e) {
+                    matcher = SQL_VALIDATION_PATTERN.matcher(queryOrParamString);
+                    if (!matcher.matches()) {
+                        throw newSecurityException(queryOrParamString);
+                    }
+                } catch (SQLException e) {
+                    throw newSecurityException(queryOrParamString);
+                }
+            } else {
+                Matcher matcher = SQL_VALIDATION_PATTERN.matcher(queryOrParamString);
+                if (!matcher.matches()) {
+                    throw newSecurityException(queryOrParamString);
+                }
+            }
+        }
+
         return true;
+    }
+
+    private static JSSecurityException newSecurityException(String sql) {
+        String errMsg = (messages == null) ? ERR_MSG_SQL_VALIDATION:messages.getMessage(MSG_VALIDATION_SQL, new Object[]{}, LocaleContextHolder.getLocale());
+        log.warn("Invalid SQL:"  + errMsg + ", SQL: " + sql);
+        throw new JSSecurityException(errMsg);
+    }
+
+    // remove comments in sql queries. currently removing /**/, --, #.
+    // This is optional and the user can delete the regexp from the properties file
+    private static String removeCommentsFromSql(String sql) {
+        String sqlCommentsRegexp = SecurityConfiguration.getProperty(SecurityConfiguration.SQL_COMMENTS_REGEXP);
+        if (sqlCommentsRegexp != null && !sqlCommentsRegexp.isEmpty()) {
+            if (sqlCommentsPattern.get() == null) {
+                sqlCommentsPattern.compareAndSet(null, Pattern.compile(sqlCommentsRegexp, Pattern.DOTALL | Pattern.MULTILINE));
+            }
+            sql = sqlCommentsPattern.get().matcher(sql).replaceAll("");
+        }
+        return sql;
+    }
+
+    private static void trySqlSyntax(Connection connection, String sql) throws SQLException {
+        sql = "SELECT * FROM (" + sql + ") SUBQUERY8173082FDC24 WHERE 1=0";
+        ResultSetMetaData metaData = connection.prepareStatement(sql).getMetaData();
+        if (metaData == null) {
+            connection.createStatement().execute(sql);
+        }
     }
 
     private static List<ValidatorRule> getRulesForParameter(String paramName) {
@@ -540,4 +611,9 @@ public class Validator {
     public static void setProfileAttributesResolver(ProfileAttributesResolver profileAttributesResolver) {
         Validator.profileAttributesResolver = profileAttributesResolver;
     }
+
+    public static void setScriptTagScannerEnabled (boolean validator) {
+        Validator.scriptTagScannerEnabled  = validator;
+    }
+
 }

@@ -1,23 +1,25 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
@@ -27,9 +29,13 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import com.jaspersoft.jasperserver.dto.resources.ResourceMediaType;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Service;
 
-import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.*;
+import java.util.List;
+import java.util.Map;
+
+import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.empty;
 
 /**
  * <p></p>
@@ -45,19 +51,19 @@ public class MondrianXmlaDefinitionValidator extends GenericResourceValidator<Mo
     private TenantService tenantService;
 
     @Override
-    protected void internalValidate(MondrianXMLADefinition resource, ValidationErrors errors) {
+    protected void internalValidate(MondrianXMLADefinition resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (!empty(resource.getCatalog())){
             validateUniqueCatalog(resource.getCatalog(), resource.getURIString(), errors);
         } else {
-            addMandatoryParameterNotFoundError(errors, "catalog");
+            errors.add(new MandatoryParameterNotFoundException("catalog"));
         }
 
         if (empty(resource.getMondrianConnection())){
-            addMandatoryParameterNotFoundError(errors, "mondrianConnection");
+            errors.add(new MandatoryParameterNotFoundException("mondrianConnection"));
         }
     }
 
-    private void validateUniqueCatalog(String catalog, String uri, ValidationErrors errors) {
+    private void validateUniqueCatalog(String catalog, String uri, List<Exception> errors) {
         Tenant tenant = tenantService.getTenantBasedOnRepositoryUri(null, uri);
         String tenantFolder = null;
         FilterCriteria criteria = FilterCriteria.createFilter(MondrianXMLADefinition.class);
@@ -97,9 +103,8 @@ public class MondrianXmlaDefinitionValidator extends GenericResourceValidator<Mo
             MondrianXMLADefinition def = (MondrianXMLADefinition) res;
             if (def.getCatalog().toLowerCase().equals(catalog)
                     && !def.getURIString().equals(uri)) {
-                addIllegalParameterValueError(errors,
-                        ResourceMediaType.MONDRIAN_XMLA_DEFINITION_CLIENT_TYPE + ".catalog",
-                        catalog, "Another XML/A source already uses that catalog name");
+                errors.add(new IllegalParameterValueException("Another XML/A source already uses that catalog name",
+                        ResourceMediaType.MONDRIAN_XMLA_DEFINITION_CLIENT_TYPE + ".catalog", catalog));
             }
         }
     }

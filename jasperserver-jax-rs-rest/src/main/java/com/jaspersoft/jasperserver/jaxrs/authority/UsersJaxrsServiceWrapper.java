@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.authority;
 
@@ -23,7 +26,7 @@ import com.jaspersoft.jasperserver.dto.authority.ClientUser;
 import com.jaspersoft.jasperserver.dto.authority.hypermedia.HypermediaAttributesListWrapper;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentity;
 import com.jaspersoft.jasperserver.remote.resources.converters.HypermediaOptions;
 import org.springframework.context.annotation.Scope;
@@ -79,7 +82,7 @@ public class UsersJaxrsServiceWrapper {
                              @QueryParam("hasAllRequiredRoles") Boolean hasAllRequiredRoles,
                              @QueryParam("search") String search,
                              @QueryParam(RestConstants.QUERY_PARAM_SEARCH_QUERY) String q,
-                             @QueryParam("requiredRole") List<String> requredRoleNames) throws RemoteException {
+                             @QueryParam("requiredRole") List<String> requredRoleNames) throws ErrorDescriptorException {
 
         if (q != null){
             search = q;
@@ -93,7 +96,7 @@ public class UsersJaxrsServiceWrapper {
     @GET
     @Path("/{name}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getPropertiesOfUser(@PathParam("name") String name) throws RemoteException {
+    public Response getPropertiesOfUser(@PathParam("name") String name) throws ErrorDescriptorException {
         return service.getPropertiesOfUser(name, null);
     }
 
@@ -101,7 +104,7 @@ public class UsersJaxrsServiceWrapper {
     @Path("/{name}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putUser(ClientUser clientUser,
-                            @PathParam("name") String name) throws RemoteException {
+                            @PathParam("name") String name) throws ErrorDescriptorException {
         if (clientUser.getTenantId() != null && !clientUser.getTenantId().isEmpty()){
             throw new IllegalParameterValueException("tenantId", clientUser.getTenantId());
         }
@@ -111,7 +114,7 @@ public class UsersJaxrsServiceWrapper {
 
     @DELETE
     @Path("/{name}")
-    public Response deleteUser(@PathParam("name") String name) throws RemoteException {
+    public Response deleteUser(@PathParam("name") String name) throws ErrorDescriptorException {
         return service.deleteUser(name, null);
     }
 
@@ -121,7 +124,7 @@ public class UsersJaxrsServiceWrapper {
     public Response getAttributesOfUser(@PathParam("name") String userName,
                                         @QueryParam("name") Set<String> attrNames,
                                         @QueryParam("_embedded") String embedded,
-                                        @HeaderParam(HttpHeaders.ACCEPT) String accept) throws RemoteException {
+                                        @HeaderParam(HttpHeaders.ACCEPT) String accept) throws ErrorDescriptorException {
         HypermediaOptions hypermediaOptions = attributesJaxrsService.getHypermediaOptions(accept, embedded);
         return attributesJaxrsService.getAttributesOfRecipient(getHolder(userName), attrNames, hypermediaOptions);
     }
@@ -135,7 +138,7 @@ public class UsersJaxrsServiceWrapper {
                                   @HeaderParam(HttpHeaders.CONTENT_TYPE) String mediaType,
                                   @HeaderParam(HttpHeaders.ACCEPT) String accept,
                                   @QueryParam("_embedded") String embedded,
-                                  @PathParam("name") String userName) throws RemoteException {
+                                  @PathParam("name") String userName) throws ErrorDescriptorException {
         HypermediaOptions hypermediaOptions = attributesJaxrsService.getHypermediaOptions(accept, embedded);
         return attributesJaxrsService.putAttributes(newCollection.getProfileAttributes(), getHolder(userName), attrNames, hypermediaOptions, mediaType);
     }
@@ -143,7 +146,7 @@ public class UsersJaxrsServiceWrapper {
     @DELETE
     @Path("/{name}/attributes")
     public Response deleteAttributes(@PathParam("name") String userName,
-                                      @QueryParam("name") Set<String> attrNames) throws RemoteException {
+                                      @QueryParam("name") Set<String> attrNames) throws ErrorDescriptorException {
         return attributesJaxrsService.deleteAttributes(getHolder(userName), attrNames);
     }
 
@@ -154,7 +157,7 @@ public class UsersJaxrsServiceWrapper {
     public Response getSpecificAttributeOfUser(@PathParam("name") String userName,
                                                @PathParam("attrName") String attrName,
                                                @HeaderParam(HttpHeaders.ACCEPT) String accept,
-                                               @QueryParam("_embedded") String embedded) throws RemoteException {
+                                               @QueryParam("_embedded") String embedded) throws ErrorDescriptorException {
         HypermediaOptions hypermediaOptions = attributesJaxrsService.getHypermediaOptions(accept, embedded);
         return attributesJaxrsService.getSpecificAttributeOfRecipient(getHolder(userName), attrName, hypermediaOptions);
     }
@@ -168,7 +171,7 @@ public class UsersJaxrsServiceWrapper {
                                  @PathParam("attrName") String attrName,
                                  @HeaderParam(HttpHeaders.ACCEPT) String accept,
                                  @HeaderParam(HttpHeaders.CONTENT_TYPE) MediaType mediaType,
-                                 @QueryParam("_embedded") String embedded) throws RemoteException {
+                                 @QueryParam("_embedded") String embedded) throws ErrorDescriptorException {
         HypermediaOptions hypermediaOptions = attributesJaxrsService.getHypermediaOptions(accept, embedded);
         ClientAttribute clientAttribute = AttributesJaxrsService.parseEntity(stream, mediaType, providers, httpHeaders);
         return attributesJaxrsService
@@ -181,7 +184,7 @@ public class UsersJaxrsServiceWrapper {
     public Response deleteAttribute(@PathParam("name") String userName,
                                     @PathParam("attrName") String attrName,
                                     @HeaderParam(HttpHeaders.ACCEPT) String accept,
-                                    @QueryParam("_embedded") String embedded) throws RemoteException{
+                                    @QueryParam("_embedded") String embedded) throws ErrorDescriptorException {
         return attributesJaxrsService.deleteAttribute(getHolder(userName), attrName);
     }
 

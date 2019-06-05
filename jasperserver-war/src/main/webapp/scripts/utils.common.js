@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -798,7 +798,7 @@ function getTZOffset(timezoneLabel, targetDateStr) {
     if (typeof tzList[timezoneLabel] === "undefined") return 0;
 
     utc_offset = tzList[timezoneLabel].utc;
-	var moment = require("moment");
+	var moment = require("localizedMoment");
     if (moment(targetDateStr).isDST()) {
         utc_offset = tzList[timezoneLabel].utc_dst;
     }
@@ -1757,7 +1757,7 @@ function copyTable(fromT,toT,replace,paramsAreTBody) {
         clearTable(toT);
     }
     try {
-        toBody.insert(fromBody.innerHTML);
+        toBody.insert(jQuery(fromBody).html());
     } catch (e) {
         //nothing to copy?
     }
@@ -1785,7 +1785,7 @@ function clearTable(myTable) {
             myTable.deleteRow(0);
         }
     } else {
-        myTable.innerHTML = "";
+        jQuery(myTable).html("");
     }
 }
 
@@ -2588,7 +2588,7 @@ InPlaceEditor.prototype.makeEditable = function(options){
     var self = this;
     var inputId = this.elem.id + "Input";
     var inputValue = this.value;
-    var inputBox = Builder.node("input", {className: "control input text", id: inputId, value: inputValue});
+    var inputBox = Builder.node("input", {className: "control input text", id: inputId, value: xssUtil.unescape(inputValue)});
     this.elem.update(inputBox);
 
 
@@ -2677,7 +2677,7 @@ InPlaceEditor.prototype.makeEditable = function(options){
 InPlaceEditor.prototype.makeNonEditable = function(){
     if (this.elem && this.elem.firstDescendant() && this.editing) {
         var text = this.elem.firstDescendant().value;
-        this.elem.update(xssUtil.escape(text));
+        this.elem.update(xssUtil.hardEscape(text));
         this.editing = false;
     }
 };
@@ -2685,7 +2685,7 @@ InPlaceEditor.prototype.makeNonEditable = function(){
 
 
 InPlaceEditor.prototype.revertEdit = function(){
-    this.elem.update(this.value);
+    this.elem.update(xssUtil.hardEscape(this.value));
     this.editing = false;
 };
 
@@ -2814,7 +2814,7 @@ function createCSSRule(cssString) {
 
     style.type = 'text/css';
 
-    style.innerHTML = cssString;
+    jQuery(style).html(cssString);
 
     document.getElementsByTagName('head')[0].appendChild(style);
 }
@@ -2872,14 +2872,14 @@ function encodeUriParameter(string) {
 
 function replaceHTML(container,html){
     if (isIE()) {
-        container.innerHTML = html;
+        jQuery(container).html(html);
         return;
     }
-    var container = $(container);
+    container = $(container);
     var nextSibling = container.nextSibling;
     var parent = container.parentNode;
     parent.removeChild(container);
-    container.innerHTML = html;
+    jQuery(container).html(html);
     if (nextSibling) {
         parent.insertBefore(container, nextSibling);
     } else {
@@ -3724,7 +3724,7 @@ fileSender.uploadMultiple = function (inputs, flowId, options, callback) {
         form.insert(input);
 
         for (var key in options) {
-            var inp = Builder.node('INPUT', {type: "hidden", name: key, value:options[key]});
+            var inp = Builder.node('INPUT', {type: "hidden", name: key, value: xssUtil.unescape(options[key])});  //unescape as input value does not produce XSS
             form.insert(inp);
         }
 
@@ -3834,7 +3834,7 @@ fileSender.loaded = function(id) {
     }
 
     if (typeof(i.onComplete) == 'function') {
-        i.onComplete(d.body.innerHTML);
+        i.onComplete(jQuery(d.body).html());
     }
 }
 

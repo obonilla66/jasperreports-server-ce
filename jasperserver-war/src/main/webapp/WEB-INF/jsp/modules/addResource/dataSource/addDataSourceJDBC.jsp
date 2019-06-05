@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
@@ -21,18 +25,19 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
 <%@ page import="com.jaspersoft.jasperserver.war.dto.StringOption"%>
 <%@ taglib prefix="authz" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
 
 <%@ include file="../../common/jsEdition.jsp" %>
 
 <c:set var="isAuthorized" value="false"/>
 <c:choose>
     <c:when test="${isProVersion}">
-        <authz:authorize ifAllGranted="ROLE_SUPERUSER">
+        <authz:authorize access="hasRole('ROLE_SUPERUSER')">
             <c:set var="isAuthorized" value="true"/>
         </authz:authorize>
     </c:when>
     <c:otherwise>
-        <authz:authorize ifAllGranted="ROLE_ADMINISTRATOR">
+        <authz:authorize access="hasRole('ROLE_ADMINISTRATOR')">
             <c:set var="isAuthorized" value="true"/>
         </authz:authorize>
     </c:otherwise>
@@ -136,9 +141,11 @@
         </fieldset>
 
         <script id="jdbcFieldTemplate" type="template/mustache">
-            <label class="control input text {{#error}} error {{/error}} required" for="{{name}}" title="{{title}}">
-                <span class="wrap">{{label}}</span>
-                <input id="{{name}}" type="text" value=""/>
+            <js:xssNonce/>
+            <label class="control input text {{ if (error) { }} error {{ } }} required" for="{{-name}}" title="{{-title}}">
+                <js:xssNonce/>
+                <span class="wrap">{{-label}}</span>
+                <input id="{{-name}}" type="text" value=""/>
                 <span class="message warning"></span>
                 <span class="message hint"></span>
             </label>
@@ -146,7 +153,8 @@
 
         <script id="fileUploadTemplate" type="template/mustache">
             <li class="leaf">
-                <input class="" id="{{fileId}}" type="file" name="{{fileId}}" value="" size="60" accept="jar/jar" />
+                <js:xssNonce/>
+                <input class="" id="{{-fileId}}" type="file" name="{{-fileId}}" value="" size="60" accept="jar/jar" />
                 <span class="message warning">error message here</span>
             </li>
         </script>
@@ -156,6 +164,7 @@
                 <t:putAttribute name="containerClass">hidden</t:putAttribute>
                 <t:putAttribute name="containerTitle"><spring:message code='resource.dataSource.jdbc.selectDriverTitle'/></t:putAttribute>
                 <t:putAttribute name="bodyContent">
+                    <js:xssNonce/>
                     <ul id="fileInputsList" class="" title="Locate local file"></ul>
                     <div id="errorMessage" class="">
                         <span class="message warning">error message here</span>

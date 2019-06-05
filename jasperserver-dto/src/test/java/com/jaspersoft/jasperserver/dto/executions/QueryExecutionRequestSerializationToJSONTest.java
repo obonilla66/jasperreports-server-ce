@@ -1,29 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.executions;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientMultiLevelQuery;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientQuery;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientWhere;
 import com.jaspersoft.jasperserver.dto.adhoc.query.MultiLevelQueryBuilder;
 import com.jaspersoft.jasperserver.dto.adhoc.query.QueryExecutionRequestTest;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientRelativeDateRange;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryField;
@@ -39,25 +42,20 @@ import static org.hamcrest.core.Is.is;
 
 /**
  * @author Grant Bacon <gbacon@tibco.com>
- * @date 1/27/16 3:47PM
  * @version $Id$
+ * @date 1/27/16 3:47PM
  */
 public class QueryExecutionRequestSerializationToJSONTest extends QueryExecutionRequestTest {
+    private static final String FIXTURES_PATH = "query/request/serialization/";
 
     @Test
     public void ensureSelectZeroField() throws Exception {
         ClientMultiLevelQuery cq = MultiLevelQueryBuilder
                 .select()
                 .build();
+        JsonNode json = toJsonObject(fixture(FIXTURES_PATH + "ensureSelectZeroFieldQuery.json"));
 
-
-        assertThat(json(request(cq)), is("{\n" +
-                "  \"query\" : {\n" +
-                "    \"select\" : { }\n" +
-                "  },\n" +
-                "  \"dataSourceUri\" : \"/public/Samples/Ad_Hoc_Views/04__Product_Results_by_Store_Type\"\n" +
-                "}"));
-
+        assertThat(toJsonObject(request(cq)), is(json));
     }
 
     @Test
@@ -65,20 +63,9 @@ public class QueryExecutionRequestSerializationToJSONTest extends QueryExecution
         ClientMultiLevelQuery cq = MultiLevelQueryBuilder
                 .select(new ClientQueryField().setFieldName("sales").setId("fieldName"))
                 .build();
+        JsonNode json = toJsonObject(fixture(FIXTURES_PATH + "ensureSelectOneFieldQuery.json"));
 
-
-        assertThat(json(request(cq)), is("{\n" +
-                "  \"query\" : {\n" +
-                "    \"select\" : {\n" +
-                "      \"fields\" : [ {\n" +
-                "        \"id\" : \"fieldName\",\n" +
-                "        \"field\" : \"sales\"\n" +
-                "      } ]\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"dataSourceUri\" : \"/public/Samples/Ad_Hoc_Views/04__Product_Results_by_Store_Type\"\n" +
-                "}"));
-
+        assertThat(toJsonObject(request(cq)), is(json));
     }
 
 
@@ -88,22 +75,9 @@ public class QueryExecutionRequestSerializationToJSONTest extends QueryExecution
                 .select(new ClientQueryField().setFieldName("sales").setId("fieldName"),
                         new ClientQueryField().setFieldName("city").setId("fieldName2"))
                 .build();
+        JsonNode json = toJsonObject(fixture(FIXTURES_PATH + "ensureSelectTwoFieldsQuery.json"));
 
-
-        assertThat(json(request(cq)), is("{\n" +
-                "  \"query\" : {\n" +
-                "    \"select\" : {\n" +
-                "      \"fields\" : [ {\n" +
-                "        \"id\" : \"fieldName\",\n" +
-                "        \"field\" : \"sales\"\n" +
-                "      }, {\n" +
-                "        \"id\" : \"fieldName2\",\n" +
-                "        \"field\" : \"city\"\n" +
-                "      } ]\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"dataSourceUri\" : \"/public/Samples/Ad_Hoc_Views/04__Product_Results_by_Store_Type\"\n" +
-                "}"));
+        assertThat(toJsonObject(request(cq)), is(json));
     }
 
     @Test
@@ -112,26 +86,9 @@ public class QueryExecutionRequestSerializationToJSONTest extends QueryExecution
                 .select(new ClientQueryField().setFieldName("sales").setId("fieldName"))
                 .groupBy(new ClientQueryGroup().setFieldName("city").setId("g1"))
                 .build();
+        JsonNode json = toJsonObject(fixture(FIXTURES_PATH + "ensureSelectOneField_groupByCityQuery.json"));
 
-
-        assertThat(json(request((ClientMultiLevelQuery) cq)), is("{\n" +
-                "  \"query\" : {\n" +
-                "    \"select\" : {\n" +
-                "      \"fields\" : [ {\n" +
-                "        \"id\" : \"fieldName\",\n" +
-                "        \"field\" : \"sales\"\n" +
-                "      } ]\n" +
-                "    },\n" +
-                "    \"groupBy\" : [ {\n" +
-                "      \"group\" : {\n" +
-                "        \"id\" : \"g1\",\n" +
-                "        \"field\" : \"city\"\n" +
-                "      }\n" +
-                "    } ]\n" +
-                "  },\n" +
-                "  \"dataSourceUri\" : \"/public/Samples/Ad_Hoc_Views/04__Product_Results_by_Store_Type\"\n" +
-                "}"));
-
+        assertThat(toJsonObject(request((ClientMultiLevelQuery) cq)), is(json));
     }
 
     @Test
@@ -146,29 +103,9 @@ public class QueryExecutionRequestSerializationToJSONTest extends QueryExecution
         where.setParameters(params);
         cq.setWhere(where);
 
-        String actualJson = json(request((ClientMultiLevelQuery) cq));
-        assertThat(actualJson, is("{\n" +
-                "  \"query\" : {\n" +
-                "    \"select\" : {\n" +
-                "      \"fields\" : [ {\n" +
-                "        \"id\" : \"fieldName\",\n" +
-                "        \"field\" : \"sales\"\n" +
-                "      } ]\n" +
-                "    },\n" +
-                "    \"where\" : {\n" +
-                "      \"parameters\" : [ {\n" +
-                "        \"name\" : \"DateP\",\n" +
-                "        \"expression\" : {\n" +
-                "          \"object\" : {\n" +
-                "            \"relativeDateRange\" : {\n" +
-                "              \"value\" : \"WEEK-1\"\n" +
-                "            }\n" +
-                "          }\n" +
-                "        }\n" +
-                "      } ]\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"dataSourceUri\" : \"/public/Samples/Ad_Hoc_Views/04__Product_Results_by_Store_Type\"\n" +
-                "}"));
+        JsonNode expectedJson = toJsonObject(fixture(FIXTURES_PATH + "ensureWhereParameterIsRelativeDateRangeQuery.json"));
+        JsonNode actualJson = toJsonObject(request((ClientMultiLevelQuery) cq));
+
+        assertThat(actualJson, is(expectedJson));
     }
 }

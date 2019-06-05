@@ -1,59 +1,108 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.services.impl;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.client.*;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ContentResourceImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.DataTypeImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FileResourceImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.QueryImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceLookupImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientInputControl;
 import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.dto.resources.ResourceMediaType;
-import com.jaspersoft.jasperserver.remote.exception.*;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
+import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
+import com.jaspersoft.jasperserver.remote.exception.FolderAlreadyExistsException;
+import com.jaspersoft.jasperserver.remote.exception.FolderNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.NotAFileException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.VersionNotMatchException;
 import com.jaspersoft.jasperserver.remote.resources.converters.DataTypeResourceConverter;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConversionOptions;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConverter;
 import com.jaspersoft.jasperserver.remote.resources.operation.CopyMoveOperationStrategy;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.ReturnsArgumentAt;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.same;
-import static org.testng.Assert.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.fail;
 
 /**
  * <p></p>
@@ -71,7 +120,7 @@ public class SingleRepositoryServiceImplTest {
     @Mock
     private UriHardModifyProtectionChecker uriHardModifyProtectionChecker;
     @Mock
-    private ConfigurationBean configurationBean;
+    private RepositoryConfiguration configurationBean;
     @Mock
     private ResourceConverterProvider resourceConverterProvider;
     @Mock
@@ -158,11 +207,16 @@ public class SingleRepositoryServiceImplTest {
         doReturn(toServerConverter).when(resourceConverterProvider).getToServerConverter(clientObject);
         doReturn(toClientConverter).when(resourceConverterProvider).getToClientConverter(resource);
         final ClientJndiJdbcDataSource expectedResult = new ClientJndiJdbcDataSource();
-        doReturn(expectedResult).when(toClientConverter).toClient(same(resource), any(ToClientConversionOptions.class));
+        final ArgumentCaptor<ToClientConversionOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ToClientConversionOptions.class);
+        doReturn(expectedResult).when(toClientConverter).toClient(same(resource), optionsArgumentCaptor.capture());
         doReturn(resource).when(toServerConverter).toServer(same(clientObject), isNull(Resource.class), any(ToServerConversionOptions.class));
-        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, true);
+        final HashMap<String, String[]> additionalProperties = new HashMap<String, String[]>();
+        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, true, additionalProperties);
         assertSame(result, expectedResult);
         verify(service, never()).deleteResource(anyString());
+        final ToClientConversionOptions options = optionsArgumentCaptor.getValue();
+        assertNotNull(options);
+        assertSame(options.getAdditionalProperties(), additionalProperties);
     }
 
     @Test(groups = "DRY_RUN")
@@ -176,7 +230,7 @@ public class SingleRepositoryServiceImplTest {
         final ClientJndiJdbcDataSource expectedResult = new ClientJndiJdbcDataSource();
         doReturn(expectedResult).when(toClientConverter).toClient(same(resource), any(ToClientConversionOptions.class));
         doReturn(resource).when(toServerConverter).toServer(same(clientObject), isNull(Resource.class), any(ToServerConversionOptions.class));
-        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, true);
+        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, true, null);
         assertSame(result, expectedResult);
         verify(service, never()).deleteResource(anyString());
     }
@@ -196,7 +250,7 @@ public class SingleRepositoryServiceImplTest {
         reset(service);
         final DataTypeImpl serverObject = new DataTypeImpl();
         doReturn(serverObject).when(service).getResource(uri);
-        service.saveOrUpdate(clientObject, false, true, null, false);
+        service.saveOrUpdate(clientObject, false, true, null, false, null);
     }
 
     @Test(groups = "SAVE_OR_UPDATE", expectedExceptions = VersionNotMatchException.class)
@@ -208,9 +262,9 @@ public class SingleRepositoryServiceImplTest {
 
         doReturn(serverObject).when(service).getResource(uri);
         doReturn(toClientConverter).when(resourceConverterProvider).getToClientConverter(serverObject.getResourceType(),
-                ClientTypeHelper.extractClientType(clientObject.getClass()));
+                ClientTypeUtility.extractClientType(clientObject.getClass()));
 
-        service.saveOrUpdate(clientObject, false, true, null, false);
+        service.saveOrUpdate(clientObject, false, true, null, false, null);
     }
 
     @Test(groups = "SAVE_OR_UPDATE")
@@ -227,7 +281,7 @@ public class SingleRepositoryServiceImplTest {
         when(toClientConverter.getClientResourceType()).thenReturn(ResourceMediaType.DATA_TYPE_CLIENT_TYPE);
         when(resourceConverterProvider.getToClientConverter(serverObject)).thenReturn(toClientConverter);
         when(toClientConverter.toClient(same(serverObject), any(ToClientConversionOptions.class))).thenReturn(clientObject);
-        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, false);
+        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, false, null);
         verify(service).deleteResource(uri);
         assertSame(result, clientObject);
         final ToServerConversionOptions usedOptions = optionsArgumentCaptor.getValue();
@@ -250,7 +304,7 @@ public class SingleRepositoryServiceImplTest {
         when(resourceConverterProvider.getToClientConverter(serverObject)).thenReturn(toClientConverter);
         when(toClientConverter.toClient(same(serverObject), any(ToClientConversionOptions.class))).thenReturn(clientObject);
         when(toClientConverter.getClientResourceType()).thenReturn(ResourceMediaType.INPUT_CONTROL_CLIENT_TYPE);
-        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, false);
+        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, false, null);
         verify(service, never()).deleteResource(any(String.class));
         assertSame(result, clientObject);
         final ToServerConversionOptions usedOptions = optionsArgumentCaptor.getValue();
@@ -270,7 +324,7 @@ public class SingleRepositoryServiceImplTest {
         final ToClientConverter toClientConverter = mock(ToClientConverter.class);
         when(resourceConverterProvider.getToClientConverter(serverObject)).thenReturn(toClientConverter);
         when(toClientConverter.toClient(same(serverObject), any(ToClientConversionOptions.class))).thenReturn(clientObject);
-        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, false);
+        final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, false, null);
         verify(service, never()).deleteResource(any(String.class));
         verify(service, never()).updateResource(any(Resource.class), eq(true));
         assertSame(result, clientObject);

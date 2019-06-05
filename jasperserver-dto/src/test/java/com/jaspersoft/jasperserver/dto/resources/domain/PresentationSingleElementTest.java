@@ -1,93 +1,98 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p/>
  * <p/>
  *
  * @author tetiana.iefimenko
+ * @author Andriy Tivodar <ativodar@tibco>
  * @version $Id$
  * @see
  */
-public class PresentationSingleElementTest {
+public class PresentationSingleElementTest extends BaseDTOTest<PresentationSingleElement> {
 
-    public static final String ELEMENT_NAME = "Name";
-    public static final String DESCRIPTION = "Description";
-    public static final String DESCRIPTION_ID = "DescriptionId";
-    public static final String MASK = "Mask";
-    public static final String MASK_ID = "MaskId";
-    public static final String LABEL = "Label";
-    public static final String LABEL_ID = "LabelId";
-    public static final String RESOURCE_PATH = "ResourcePath";
-    public static final String AGGREGATION = "Aggregation";
-
-    PresentationSingleElement sourceElement;
-    PresentationSingleElement clonedElement;
-
-    @Before
-    public void setUp() {
-        sourceElement = new PresentationSingleElement()
-                .setName(ELEMENT_NAME)
-                .setDescription(DESCRIPTION)
-                .setDescriptionId(DESCRIPTION_ID)
-                .setKind(PresentationSingleElement.Kind.level)
-                .setMask(MASK)
-                .setMaskId(MASK_ID)
-                .setLabel(LABEL)
-                .setLabelId(LABEL_ID)
-                .setResourcePath(RESOURCE_PATH)
-                .setAggregation(AGGREGATION);
-
+    @Override
+    protected List<PresentationSingleElement> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setName("name2"),
+                createFullyConfiguredInstance().setLabel("label2"),
+                createFullyConfiguredInstance().setLabelId("labelId2"),
+                createFullyConfiguredInstance().setDescription("description2"),
+                createFullyConfiguredInstance().setDescriptionId("descriptionId2"),
+                createFullyConfiguredInstance().setMask("mask2"),
+                createFullyConfiguredInstance().setMaskId("maskId2"),
+                createFullyConfiguredInstance().setType("type2"),
+                createFullyConfiguredInstance().setResourcePath("resourcePath2"),
+                createFullyConfiguredInstance().setAggregation("aggregation2"),
+                createFullyConfiguredInstance().setHierarchicalName("hierarchical2"),
+                createFullyConfiguredInstance().setKind(PresentationSingleElement.Kind.level),
+                // with null values
+                createFullyConfiguredInstance().setName(null),
+                createFullyConfiguredInstance().setLabel(null),
+                createFullyConfiguredInstance().setLabelId(null),
+                createFullyConfiguredInstance().setDescription(null),
+                createFullyConfiguredInstance().setDescriptionId(null),
+                createFullyConfiguredInstance().setMask(null),
+                createFullyConfiguredInstance().setMaskId(null),
+                createFullyConfiguredInstance().setType(null),
+                createFullyConfiguredInstance().setResourcePath(null),
+                createFullyConfiguredInstance().setAggregation(null),
+                createFullyConfiguredInstance().setHierarchicalName(null),
+                createFullyConfiguredInstance().setKind(null)
+        );
     }
 
-    @Test
-    public void testCloningConstructor() {
+    @Override
+    protected PresentationSingleElement createFullyConfiguredInstance() {
+        return new PresentationSingleElement()
+                .setName("name")
+                .setLabel("label")
+                .setLabelId("labelId")
+                .setDescription("description")
+                .setDescriptionId("descriptionId")
+                .setMask("mask")
+                .setMaskId("maskId")
+                .setType("type")
+                .setResourcePath("resourcePath")
+                .setAggregation("aggregation")
+                .setHierarchicalName("hierarchical")
+                .setKind(PresentationSingleElement.Kind.measure);
+    }
 
-        clonedElement = new PresentationSingleElement(sourceElement);
+    @Override
+    protected PresentationSingleElement createInstanceWithDefaultParameters() {
+        return new PresentationSingleElement();
+    }
 
-        assertTrue(clonedElement.equals(sourceElement));
-        assertFalse(sourceElement == clonedElement);
-        assertNotNull(clonedElement.getName());
-        assertEquals(ELEMENT_NAME, clonedElement.getName());
-        assertNotNull(clonedElement.getDescription());
-        assertEquals(DESCRIPTION, clonedElement.getDescription());
-        assertNotNull(clonedElement.getDescriptionId());
-        assertEquals(DESCRIPTION_ID, clonedElement.getDescriptionId());
-        assertNotNull(clonedElement.getKind());
-        assertEquals(PresentationSingleElement.Kind.level, clonedElement.getKind());
-        assertNotNull(clonedElement.getMask());
-        assertEquals(MASK, clonedElement.getMask());
-        assertNotNull(clonedElement.getLabel());
-        assertEquals(LABEL, clonedElement.getLabel());
-        assertNotNull(clonedElement.getLabelId());
-        assertEquals(LABEL_ID, clonedElement.getLabelId());
-        assertNotNull(clonedElement.getResourcePath());
-        assertEquals(RESOURCE_PATH, clonedElement.getResourcePath());
-        assertNotNull(clonedElement.getAggregation());
-        assertEquals(AGGREGATION, clonedElement.getAggregation());
-
+    @Override
+    protected PresentationSingleElement createInstanceFromOther(PresentationSingleElement other) {
+        return new PresentationSingleElement(other);
     }
 
 }

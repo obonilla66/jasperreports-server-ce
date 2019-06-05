@@ -1,1 +1,0 @@
-define([],function(){return{processItem:function(e,n,t){return t.addToSelection?n.select(t.id):t.addToSelection=e.isSelected(t.id),t}}});

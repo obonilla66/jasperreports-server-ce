@@ -1,28 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
-import java.util.ArrayList;
-import org.junit.Before;
-import org.junit.Test;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOPresentableTest;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -33,49 +40,75 @@ import static org.junit.Assert.*;
  * @version $Id$
  * @see
  */
-public class PresentationGroupElementTest {
+public class PresentationGroupElementTest extends BaseDTOPresentableTest<PresentationGroupElement> {
 
-    public static final String ELEMENT_NAME = "Name";
-    public static final String DESCRIPTION = "Description";
-    public static final String DESCRIPTION_ID = "DescriptionId";
-    public static final String LABEL = "Label";
-    public static final String LABEL_ID = "LabelId";
-    public static final String RESOURCE_PATH = "ResourcePath";
-    PresentationGroupElement sourceElement;
-    PresentationGroupElement clonedElement;
+    @Override
+    protected List<PresentationGroupElement> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setName("name2"),
+                createFullyConfiguredInstance().setDescription("description2"),
+                createFullyConfiguredInstance().setDescriptionId("descriptionId2"),
+                createFullyConfiguredInstance().setLabel("label2"),
+                createFullyConfiguredInstance().setLabelId("labelId2"),
+                createFullyConfiguredInstance().setKind("kind2"),
+                createFullyConfiguredInstance().setElements(Arrays.asList(new PresentationElement(), new PresentationSingleElement().setName("name2"))),
+                // with null values
+                createFullyConfiguredInstance().setName(null),
+                createFullyConfiguredInstance().setDescription(null),
+                createFullyConfiguredInstance().setDescriptionId(null),
+                createFullyConfiguredInstance().setLabel(null),
+                createFullyConfiguredInstance().setLabelId(null),
+                createFullyConfiguredInstance().setKind(null),
+                createFullyConfiguredInstance().setElements(null)
+        );
+    }
 
-    @Before
-    public void setUp() {
-        sourceElement = new PresentationGroupElement()
-                .setName(ELEMENT_NAME)
-                .setDescription(DESCRIPTION)
-                .setDescriptionId(DESCRIPTION_ID)
-                .setLabel(LABEL)
-                .setLabelId(LABEL_ID)
-                .setElements(new ArrayList<PresentationElement>());
+    @Override
+    protected PresentationGroupElement createFullyConfiguredInstance() {
+        return new PresentationGroupElement()
+                .setName("name")
+                .setDescription("description")
+                .setDescriptionId("descriptionId")
+                .setLabel("label")
+                .setLabelId("labelId")
+                .setKind("kind")
+                .setElements(Arrays.asList(new PresentationElement(), new PresentationSingleElement().setName("name")));
+    }
 
+    @Override
+    protected PresentationGroupElement createInstanceWithDefaultParameters() {
+        return new PresentationGroupElement();
+    }
+
+    @Override
+    protected PresentationGroupElement createInstanceFromOther(PresentationGroupElement other) {
+        return new PresentationGroupElement(other);
     }
 
     @Test
-    public void testCloningConstructor() {
+    public void elementsCanBeAddedWhenElementsDoesNotExist() {
+        PresentationGroupElement instance = new PresentationGroupElement();
 
-        clonedElement = new PresentationGroupElement(sourceElement);
+        PresentationSingleElement element = new PresentationSingleElement().setName("nameForAdd");
+        PresentationSingleElement anotherElement = new PresentationSingleElement().setName("nameForAdd2");
 
-        assertTrue(clonedElement.equals(sourceElement));
-        assertFalse(sourceElement == clonedElement);
-        assertFalse(sourceElement.getElements() == clonedElement.getElements());
-        assertNotNull(clonedElement.getName());
-        assertEquals(ELEMENT_NAME, clonedElement.getName());
-        assertNotNull(clonedElement.getDescription());
-        assertEquals(DESCRIPTION, clonedElement.getDescription());
-        assertNotNull(clonedElement.getDescriptionId());
-        assertEquals(DESCRIPTION_ID, clonedElement.getDescriptionId());
-        assertNotNull(clonedElement.getLabel());
-        assertEquals(LABEL, clonedElement.getLabel());
-        assertNotNull(clonedElement.getLabelId());
-        assertEquals(LABEL_ID, clonedElement.getLabelId());
-
-
+        instance.addElements(element, anotherElement);
+        assertTrue(instance.getElements().contains(element));
+        assertTrue(instance.getElements().contains(anotherElement));
     }
 
+    @Test
+    public void elementsCanBeAddedWhenElementsExist() {
+        PresentationGroupElement instance = new PresentationGroupElement();
+        instance.setElements(new ArrayList<PresentationElement>() {{
+            add(new PresentationSingleElement().setName("element"));
+        }});
+
+        PresentationSingleElement element = new PresentationSingleElement().setName("nameForAdd");
+        PresentationSingleElement anotherElement = new PresentationSingleElement().setName("nameForAdd2");
+
+        instance.addElements(element, anotherElement);
+        assertTrue(instance.getElements().contains(element));
+        assertTrue(instance.getElements().contains(anotherElement));
+    }
 }

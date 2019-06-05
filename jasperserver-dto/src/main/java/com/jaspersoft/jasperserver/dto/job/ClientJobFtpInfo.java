@@ -1,29 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job;
 
-
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.connection.FtpConnection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Map;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * <p/>
  * <p/>
@@ -53,19 +59,21 @@ public class ClientJobFtpInfo implements DeepCloneable<ClientJobFtpInfo>{
     }
 
     public ClientJobFtpInfo(ClientJobFtpInfo other) {
-        this.folderPath = other.folderPath;
-        this.implicit = other.implicit;
-        this.password = other.password;
-        this.pbsz = other.pbsz;
-        this.port = other.port;
-        this.propertiesMap = (other.propertiesMap != null) ? new LinkedHashMap<String, String>(other.propertiesMap) : null;
-        this.prot = other.prot;
-        this.protocol = other.protocol;
-        this.serverName = other.serverName;
-        this.type = other.type;
-        this.userName = other.userName;
-        this.sshKey = other.sshKey;
-        this.sshPassphrase = other.sshPassphrase;
+        checkNotNull(other);
+
+        this.folderPath = other.getFolderPath();
+        this.implicit = other.getImplicit();
+        this.password = other.getPassword();
+        this.pbsz = other.getPbsz();
+        this.port = other.getPort();
+        this.propertiesMap = copyOf(other.getPropertiesMap());
+        this.prot = other.getProt();
+        this.protocol = other.getProtocol();
+        this.serverName = other.getServerName();
+        this.type = other.getType();
+        this.userName = other.getUserName();
+        this.sshKey = other.getSshKey();
+        this.sshPassphrase = other.getSshPassphrase();
     }
 
     public String getUserName() {
@@ -193,37 +201,45 @@ public class ClientJobFtpInfo implements DeepCloneable<ClientJobFtpInfo>{
 
         ClientJobFtpInfo that = (ClientJobFtpInfo) o;
 
-        if (userName != null ? !userName.equals(that.userName) : that.userName != null) return false;
-        if (password != null ? !password.equals(that.password) : that.password != null) return false;
-        if (folderPath != null ? !folderPath.equals(that.folderPath) : that.folderPath != null) return false;
-        if (serverName != null ? !serverName.equals(that.serverName) : that.serverName != null) return false;
-        if (type != that.type) return false;
-        if (protocol != null ? !protocol.equals(that.protocol) : that.protocol != null) return false;
-        if (port != null ? !port.equals(that.port) : that.port != null) return false;
-        if (implicit != null ? !implicit.equals(that.implicit) : that.implicit != null) return false;
-        if (pbsz != null ? !pbsz.equals(that.pbsz) : that.pbsz != null) return false;
-        if (prot != null ? !prot.equals(that.prot) : that.prot != null) return false;
-        if (propertiesMap != null ? !propertiesMap.equals(that.propertiesMap) : that.propertiesMap != null)
+        if (getUserName() != null ? !getUserName().equals(that.getUserName()) : that.getUserName() != null)
             return false;
-        if (sshKey != null ? !sshKey.equals(that.sshKey) : that.sshKey != null) return false;
-        return sshPassphrase != null ? sshPassphrase.equals(that.sshPassphrase) : that.sshPassphrase == null;
+        if (getPassword() != null ? !getPassword().equals(that.getPassword()) : that.getPassword() != null)
+            return false;
+
+        if (getFolderPath() != null ? !getFolderPath().equals(that.getFolderPath()) : that.getFolderPath() != null)
+            return false;
+        if (getServerName() != null ? !getServerName().equals(that.getServerName()) : that.getServerName() != null)
+            return false;
+        if (getType() != that.getType()) return false;
+        if (getProtocol() != null ? !getProtocol().equals(that.getProtocol()) : that.getProtocol() != null)
+            return false;
+        if (getPort() != null ? !getPort().equals(that.getPort()) : that.getPort() != null) return false;
+        if (getImplicit() != null ? !getImplicit().equals(that.getImplicit()) : that.getImplicit() != null)
+            return false;
+        if (getPbsz() != null ? !getPbsz().equals(that.getPbsz()) : that.getPbsz() != null) return false;
+        if (getProt() != null ? !getProt().equals(that.getProt()) : that.getProt() != null) return false;
+        if (getPropertiesMap() != null ? !getPropertiesMap().equals(that.getPropertiesMap()) : that.getPropertiesMap() != null)
+            return false;
+        if (getSshKey() != null ? !getSshKey().equals(that.getSshKey()) : that.getSshKey() != null) return false;
+        return !(getSshPassphrase() != null ? !getSshPassphrase().equals(that.getSshPassphrase()) : that.getSshPassphrase() != null);
+
     }
 
     @Override
     public int hashCode() {
-        int result = userName != null ? userName.hashCode() : 0;
-        result = 31 * result + (password != null ? password.hashCode() : 0);
-        result = 31 * result + (folderPath != null ? folderPath.hashCode() : 0);
-        result = 31 * result + (serverName != null ? serverName.hashCode() : 0);
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (protocol != null ? protocol.hashCode() : 0);
-        result = 31 * result + (port != null ? port.hashCode() : 0);
-        result = 31 * result + (implicit != null ? implicit.hashCode() : 0);
-        result = 31 * result + (pbsz != null ? pbsz.hashCode() : 0);
-        result = 31 * result + (prot != null ? prot.hashCode() : 0);
-        result = 31 * result + (propertiesMap != null ? propertiesMap.hashCode() : 0);
-        result = 31 * result + (sshKey != null ? sshKey.hashCode() : 0);
-        result = 31 * result + (sshPassphrase != null ? sshPassphrase.hashCode() : 0);
+        int result = getUserName() != null ? getUserName().hashCode() : 0;
+        result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
+        result = 31 * result + (getFolderPath() != null ? getFolderPath().hashCode() : 0);
+        result = 31 * result + (getServerName() != null ? getServerName().hashCode() : 0);
+        result = 31 * result + (getType() != null ? getType().hashCode() : 0);
+        result = 31 * result + (getProtocol() != null ? getProtocol().hashCode() : 0);
+        result = 31 * result + (getPort() != null ? getPort().hashCode() : 0);
+        result = 31 * result + (getImplicit() != null ? getImplicit().hashCode() : 0);
+        result = 31 * result + (getPbsz() != null ? getPbsz().hashCode() : 0);
+        result = 31 * result + (getProt() != null ? getProt().hashCode() : 0);
+        result = 31 * result + (getPropertiesMap() != null ? getPropertiesMap().hashCode() : 0);
+        result = 31 * result + (getSshKey() != null ? getSshKey().hashCode() : 0);
+        result = 31 * result + (getSshPassphrase() != null ? getSshPassphrase().hashCode() : 0);
         return result;
     }
 

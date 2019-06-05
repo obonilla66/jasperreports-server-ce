@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -22,6 +25,8 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.Jdbc
 import com.jaspersoft.jasperserver.dto.resources.AbstractClientJdbcDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientJdbcDataSource;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
 
 import static org.testng.Assert.*;
 
@@ -34,13 +39,14 @@ import static org.testng.Assert.*;
 public class GenericJdbcDataSourceResourceConverterTest {
     private GenericJdbcDataSourceResourceConverter converter = new GenericJdbcDataSourceResourceConverter();
 
+    private final String expectedDriverClass = "testDriverClass";
+    private final String expectedPassword = "testPassword";
+    private final String expectedUsername = "testUsername";
+    private final String expectedConnectionUrl = "testConnectionUrl";
+    private final String expectedTimezone = "North Pole";
+
     @Test
     public void resourceSpecificFieldsToServer() throws Exception {
-        final String expectedDriverClass = "testDriverClass";
-        final String expectedPassword = "testPassword";
-        final String expectedUsername = "testUsername";
-        final String expectedConnectionUrl = "testConnectionUrl";
-        final String expectedTimezone = "North Pole";
         final ClientJdbcDataSource clientObject = new ClientJdbcDataSource();
         clientObject.setConnectionUrl(expectedConnectionUrl);
         clientObject.setDriverClass(expectedDriverClass);
@@ -48,7 +54,10 @@ public class GenericJdbcDataSourceResourceConverterTest {
         clientObject.setUsername(expectedUsername);
         clientObject.setTimezone(expectedTimezone);
         final JdbcReportDataSource serverObject = new JdbcReportDataSourceImpl();
-        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+
+        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject,
+                new ArrayList<Exception>(), null);
+
         assertSame(result, serverObject);
         assertEquals(result.getConnectionUrl(), expectedConnectionUrl);
         assertEquals(result.getDriverClass(), expectedDriverClass);
@@ -59,10 +68,6 @@ public class GenericJdbcDataSourceResourceConverterTest {
 
     @Test
     public void resourceSpecificFieldsToServer_passwordNotSet() throws Exception {
-        final String expectedDriverClass = "testDriverClass";
-        final String expectedPassword = "testPassword";
-        final String expectedUsername = "testUsername";
-        final String expectedConnectionUrl = "testConnectionUrl";
         final ClientJdbcDataSource clientObject = new ClientJdbcDataSource();
         clientObject.setConnectionUrl(expectedConnectionUrl);
         clientObject.setDriverClass(expectedDriverClass);
@@ -70,7 +75,9 @@ public class GenericJdbcDataSourceResourceConverterTest {
         clientObject.setUsername(expectedUsername);
         final JdbcReportDataSource serverObject = new JdbcReportDataSourceImpl();
         serverObject.setPassword(expectedPassword);
-        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+
+        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+
         assertSame(result, serverObject);
         assertEquals(result.getConnectionUrl(), expectedConnectionUrl);
         assertEquals(result.getDriverClass(), expectedDriverClass);
@@ -80,11 +87,6 @@ public class GenericJdbcDataSourceResourceConverterTest {
 
     @Test
     public void resourceSpecificFieldsToClient(){
-        final String expectedDriverClass = "testDriverClass";
-        final String expectedPassword = "testPassword";
-        final String expectedUsername = "testUsername";
-        final String expectedConnectionUrl = "testConnectionUrl";
-        final String expectedTimezone = "North Pole";
         final ClientJdbcDataSource clientObject = new ClientJdbcDataSource();
         final JdbcReportDataSource serverObject = new JdbcReportDataSourceImpl();
         serverObject.setConnectionUrl(expectedConnectionUrl);
@@ -92,7 +94,9 @@ public class GenericJdbcDataSourceResourceConverterTest {
         serverObject.setPassword(expectedPassword);
         serverObject.setUsername(expectedUsername);
         serverObject.setTimezone(expectedTimezone);
+
         final AbstractClientJdbcDataSource result = converter.resourceSpecificFieldsToClient(clientObject, serverObject, null);
+
         assertSame(result, clientObject);
         assertEquals(result.getConnectionUrl(), expectedConnectionUrl);
         assertEquals(result.getDriverClass(), expectedDriverClass);
@@ -100,4 +104,16 @@ public class GenericJdbcDataSourceResourceConverterTest {
         assertEquals(result.getUsername(), expectedUsername);
         assertEquals(result.getTimezone(), expectedTimezone);
     }
+
+    @Test
+    public void resourceSecureFieldsToClient_resultContainsPassword(){
+        final ClientJdbcDataSource clientObject = new ClientJdbcDataSource();
+        final JdbcReportDataSource serverObject = new JdbcReportDataSourceImpl();
+        serverObject.setPassword(expectedPassword);
+
+        converter.resourceSecureFieldsToClient(clientObject, serverObject, null);
+
+        assertEquals(clientObject.getPassword(), expectedPassword);
+    }
+
 }

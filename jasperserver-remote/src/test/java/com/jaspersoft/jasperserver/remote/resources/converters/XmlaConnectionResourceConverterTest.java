@@ -1,28 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.XMLAConnection;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.XMLAConnectionImpl;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientXmlaConnection;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -40,7 +45,7 @@ public class XmlaConnectionResourceConverterTest {
 
     @Test
     public void correctClientServerResourceType(){
-        assertEquals(converter.getClientResourceType(), ClientTypeHelper.extractClientType(ClientXmlaConnection.class));
+        assertEquals(converter.getClientResourceType(), ClientTypeUtility.extractClientType(ClientXmlaConnection.class));
         assertEquals(converter.getServerResourceType(), XMLAConnection.class.getName());
     }
 
@@ -58,7 +63,7 @@ public class XmlaConnectionResourceConverterTest {
         clientObject.setDataSource(expectedDataSource);
         clientObject.setPassword(expectedPassword);
         clientObject.setUsername(expectedUsername);
-        final XMLAConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final XMLAConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.getURI(), expectedUrl);
         assertEquals(result.getCatalog(), expectedCatalog);
@@ -73,7 +78,7 @@ public class XmlaConnectionResourceConverterTest {
         ClientXmlaConnection clientObject = new ClientXmlaConnection();
         XMLAConnection serverObject = new XMLAConnectionImpl();
         serverObject.setPassword(expectedPassword);
-        final XMLAConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final XMLAConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertEquals(result.getPassword(), expectedPassword);
     }
 

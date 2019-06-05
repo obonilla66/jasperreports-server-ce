@@ -1,5 +1,5 @@
-Copyright © 2004 Wayne Grant. Relicensed with permission.
-Copyright © 2005-2010 Daniel Reese
+Copyright ï¿½ 2004 Wayne Grant. Relicensed with permission.
+Copyright ï¿½ 2005-2010 Daniel Reese
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

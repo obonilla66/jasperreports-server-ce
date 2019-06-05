@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -32,7 +32,7 @@
 //////////////////////////////////
 // Panel which shows users list
 //////////////////////////////////
-define(["require", "jquery", "org.user.mng.main", "mng.common.actions", "common/util/encrypter"], function(require, jQuery, _tmp1, _tmp2, JSEncrypter) {
+define(["require", "jquery", "org.user.mng.main", "mng.common.actions", "common/util/encrypter", "xregexp"], function(require, jQuery, _tmp1, _tmp2, JSEncrypter, xregexp) {
 
 	orgModule.userManager.userList = {
 		CE_LIST_TEMPLATE_ID: "tabular_twoColumn",
@@ -68,13 +68,13 @@ define(["require", "jquery", "org.user.mng.main", "mng.common.actions", "common/
 					var id = element.select(orgModule.userManager.userList.USER_ID_PATTERN)[0];
 					var name = element.select(orgModule.userManager.userList.USER_NAME_PATTERN)[0];
 
-					id.update(xssUtil.escape(this.getValue().userName));
-					name.update(xssUtil.escape(this.getValue().fullName));
+					id.update(xssUtil.hardEscape(this.getValue().userName));
+					name.update(xssUtil.hardEscape(this.getValue().fullName));
 
 					var tenantId = this.getValue().tenantId;
 					if (isProVersion() && tenantId) {
 						var org = element.select(orgModule.userManager.userList.USER_ORGANIZATION_PATTERN)[0];
-						org.update(xssUtil.escape(tenantId));
+						org.update(xssUtil.hardEscape(tenantId));
 					}
 
 					return element;
@@ -110,8 +110,8 @@ define(["require", "jquery", "org.user.mng.main", "mng.common.actions", "common/
                 showAssigned: true,
                 attributes: {
                     context: {
-                        urlGETTemplate: "rest_v2/attributes?includeInherited=true&holder=user:{{#tenantId}}/{{tenantId}}{{/tenantId}}/{{userName}}&group=custom&excludeGroup=serverSettings",
-                        urlPUTTemplate: "rest_v2{{#tenantId}}/organizations/{{tenantId}}{{/tenantId}}/users/{{userName}}/attributes?_embedded=permission"
+                        urlGETTemplate: "rest_v2/attributes?includeInherited=true&holder=user:{{if (tenantId) { }}/{{-tenantId}}{{ } }}/{{-userName}}&group=custom&excludeGroup=serverSettings",
+                        urlPUTTemplate: "rest_v2{{ if (tenantId) { }}/organizations/{{-tenantId}}{{ } }}/users/{{-userName}}/attributes?_embedded=permission"
                     }
                 }
             }));
@@ -125,8 +125,8 @@ define(["require", "jquery", "org.user.mng.main", "mng.common.actions", "common/
 			this.pass = panel.select(this.PASSWORD_PATTERN)[0];
 			this.confirmPass = panel.select(this.PASSWORD_CONFIRM_PATTERN)[0];
 
-			this.email.blurValidator = orgModule.createRegExpValidator(this.email, "invalidEmail", orgModule.Configuration.emailRegExpPattern);
-			this.pass.inputValidator = orgModule.createRegExpValidator(this.pass, "passwordIsWeak", orgModule.Configuration.passwordPattern);
+			this.email.blurValidator = orgModule.createRegExpValidator(this.email, "invalidEmail", xregexp(orgModule.Configuration.emailRegExpPattern));
+			this.pass.inputValidator = orgModule.createRegExpValidator(this.pass, "passwordIsWeak", xregexp(orgModule.Configuration.passwordPattern));
 			this._validators = [
 				this.email.blurValidator,
 				this.pass.inputValidator,
@@ -420,8 +420,8 @@ define(["require", "jquery", "org.user.mng.main", "mng.common.actions", "common/
 					new RegExpRepresenter(orgModule.Configuration.userNameNotSupportedSymbols).getRepresentedString();
 
 			this.userName.inputValidator = orgModule.createInputRegExValidator(this.userName);
-			this.userEmail.blurValidator = orgModule.createRegExpValidator(this.userEmail, "invalidEmail", orgModule.Configuration.emailRegExpPattern);
-			this.password.inputValidator = orgModule.createRegExpValidator(this.password, "passwordIsWeak", orgModule.Configuration.passwordPattern);
+			this.userEmail.blurValidator = orgModule.createRegExpValidator(this.userEmail, "invalidEmail", xregexp(orgModule.Configuration.emailRegExpPattern));
+			this.password.inputValidator = orgModule.createRegExpValidator(this.password, "passwordIsWeak", xregexp(orgModule.Configuration.passwordPattern));
 			this.confirmPassword.blurValidator =
 					orgModule.createSameValidator(this.confirmPassword, this.password, "invalidConfirmPassword"),
 

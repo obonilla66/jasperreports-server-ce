@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.export.modules.common;
 
+import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import net.sf.jasperreports.types.date.DateRangeBuilder;
 import net.sf.jasperreports.types.date.DateRangeExpression;
@@ -29,6 +33,8 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.export.modules.common.rd.DateRangeDTO;
 import net.sf.jasperreports.engine.JRReport;
 import net.sf.jasperreports.types.date.DateRange;
+import org.exolab.castor.types.AnyNode;
+import org.exolab.castor.types.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -36,6 +42,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -267,6 +274,52 @@ public class DefaultReportParametersTranslatorTest {
     }
 
     @Test
+    public void ensureCorrectDateCreatedFromSqlDateAsAnyNode() {
+        reset(reportLoadingService);
+
+        final String control1Name = "control1";
+        final String sqlDateString = "2016-10-01T00:00:00.000-07:00";
+        final AnyNode sqlDateAnyNode = sqlDateAnyNode(sqlDateString);
+        final InputControl control = control(control1Name, InputControl.TYPE_SINGLE_VALUE);
+        when(reportLoadingService.getInputControls(any(ExecutionContext.class), any(InputControlsContainer.class)))
+                .thenReturn(list(control));
+
+        //Need to mock getReport method since it is very hard to go through real implementation
+        DefaultReportParametersTranslator spy = spy(translator);
+        doReturn(jrReport()).when(spy).getReport(any(ReportUnit.class));
+
+        //Actual test method call
+        Map<String, Object> paramValues = spy.getParameterValues(
+                reportUnit(), array(valueBean(control1Name, sqlDateAnyNode)), null);
+
+        Map.Entry<String, Object> entry = paramValues.entrySet().iterator().next();
+        long expectedDate = stringToDateLong(sqlDateString);
+        long resultDate = ((java.sql.Date) entry.getValue()).getTime();
+
+        assertEquals(control1Name, entry.getKey());
+        assertEquals(java.sql.Date.class, entry.getValue().getClass());
+        assertEquals(expectedDate, resultDate);
+    }
+
+    @Test(expected = JSExceptionWrapper.class)
+    public void ensureParseExceptionWhenCantParseFromSqlDateAsAnyNode() {
+        reset(reportLoadingService);
+
+        final String control1Name = "control1";
+        final AnyNode sqlDateAnyNode = sqlDateAnyNode("INCORRECT");
+        final InputControl control = control(control1Name, InputControl.TYPE_SINGLE_VALUE);
+        when(reportLoadingService.getInputControls(any(ExecutionContext.class), any(InputControlsContainer.class)))
+                .thenReturn(list(control));
+
+        //Need to mock getReport method since it is very hard to go through real implementation
+        DefaultReportParametersTranslator spy = spy(translator);
+        doReturn(jrReport()).when(spy).getReport(any(ReportUnit.class));
+
+        spy.getParameterValues(
+                reportUnit(), array(valueBean(control1Name, sqlDateAnyNode)), null);
+    }
+
+    @Test
     public void ensureCorrectDateRangesCreatedFromDateRangeDTO() {
         reset(reportLoadingService);
 
@@ -383,6 +436,29 @@ public class DefaultReportParametersTranslatorTest {
         dto.setValueClass(valueClass);
 
         return dto;
+    }
+
+    private static Long stringToDateLong(String dateString) {
+        DateTime dateTime = null;
+        try {
+            dateTime = new DateTime(dateString);
+        } catch (ParseException e) {
+            throw new RuntimeException("Incorrect date string.");
+        }
+        return dateTime.toLong();
+    }
+
+    private static AnyNode sqlDateAnyNode(String value) {
+        AnyNode valueAnyNode = new AnyNode((short) 6, null, null, null, value);
+        AnyNode xsiAnyNode = new AnyNode((short) 3, "xsi", "xsi",
+                "http://www.w3.org/2001/XMLSchema-instance", null);
+        xsiAnyNode.addAnyNode(valueAnyNode);
+        AnyNode typeAnyNode = new AnyNode((short) 2, "type", "xsi",
+                "http://www.w3.org/2001/XMLSchema-instance", "sql-date");
+        typeAnyNode.addAnyNode(xsiAnyNode);
+        AnyNode sqlDateAnyNode = new AnyNode((short) 1, "value", null, null, null);
+        sqlDateAnyNode.addAnyNode(typeAnyNode);
+        return sqlDateAnyNode;
     }
 
     private static Map<String, ?> map(Map.Entry<String, ?>... enties) {

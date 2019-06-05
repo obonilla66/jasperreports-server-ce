@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.common.validations;
 
@@ -25,13 +28,14 @@ import java.math.BigDecimal;
  * @version $Id$
  */
 @XmlRootElement
-public class RangeValidationRule extends InvertibleValidationRule<RangeValidationRule>{
+public class RangeValidationRule extends InvertibleValidationRule<RangeValidationRule> {
     private BigDecimal maxValue;
     private BigDecimal minValue;
     private Boolean includeMaxValue = false;
     private Boolean includeMinValue = false;
 
-    public RangeValidationRule(){}
+    public RangeValidationRule() {
+    }
 
     public RangeValidationRule(RangeValidationRule other) {
         super(other);
@@ -39,6 +43,11 @@ public class RangeValidationRule extends InvertibleValidationRule<RangeValidatio
         this.minValue = other.getMinValue();
         this.includeMaxValue = other.isIncludeMaxValue();
         this.includeMinValue = other.isIncludeMinValue();
+    }
+
+    @Override
+    public RangeValidationRule deepClone() {
+        return new RangeValidationRule(this);
     }
 
     public BigDecimal getMaxValue() {
@@ -85,14 +94,11 @@ public class RangeValidationRule extends InvertibleValidationRule<RangeValidatio
 
         RangeValidationRule that = (RangeValidationRule) o;
 
-        if (includeMaxValue != null ? !includeMaxValue.equals(that.includeMaxValue) : that.includeMaxValue != null)
-            return false;
-        if (includeMinValue != null ? !includeMinValue.equals(that.includeMinValue) : that.includeMinValue != null)
-            return false;
         if (maxValue != null ? !maxValue.equals(that.maxValue) : that.maxValue != null) return false;
         if (minValue != null ? !minValue.equals(that.minValue) : that.minValue != null) return false;
-
-        return true;
+        if (includeMaxValue != null ? !includeMaxValue.equals(that.includeMaxValue) : that.includeMaxValue != null)
+            return false;
+        return includeMinValue != null ? includeMinValue.equals(that.includeMinValue) : that.includeMinValue == null;
     }
 
     @Override

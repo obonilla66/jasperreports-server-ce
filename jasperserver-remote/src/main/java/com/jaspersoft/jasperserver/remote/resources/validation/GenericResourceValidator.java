@@ -1,30 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.JSValidationException;
-import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
-import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationErrorsImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
+import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 
-import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.addIllegalParameterValueError;
-import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.addMandatoryParameterNotFoundError;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static com.jaspersoft.jasperserver.remote.resources.validation.ValidationHelper.empty;
 
 /**
@@ -38,48 +43,45 @@ public abstract class GenericResourceValidator<ResourceType extends Resource> im
     private ProfileAttributesResolver profileAttributesResolver;
 
     @Override
-    public void validate(ResourceType resource, boolean skipRepoFieldsValidation) throws JSValidationException {
-        final ValidationErrorsImpl validationErrors = new ValidationErrorsImpl();
+    public List<Exception> validate(ResourceType resource, boolean skipRepoFieldsValidation, Map<String, String[]> additionalParameters) {
+        final List<Exception> validationErrors = new ArrayList<Exception>();
         if(!skipRepoFieldsValidation) {
             genericValidate(resource, validationErrors);
         }
-        internalValidate(resource, validationErrors);
-        if (validationErrors.isError()) {
-            throw new JSValidationException(validationErrors);
-        }
+        internalValidate(resource, validationErrors, additionalParameters);
+        return validationErrors;
     }
 
     @Override
-    public void validate(ResourceType resource) throws JSValidationException {
-        validate(resource, false);
+    public List<Exception> validate(ResourceType resource) {
+        return validate(resource, false, new HashMap<String, String[]>());
     }
 
-    private void genericValidate(Resource resource, ValidationErrors errors) {
+    private void genericValidate(Resource resource, List<Exception> errors) {
         if (empty(resource.getLabel())) {
-            addMandatoryParameterNotFoundError(errors, "label");
+            errors.add(new MandatoryParameterNotFoundException("label"));
         } else {
             if (resource.getLabel().length() > 100) {
-                addIllegalParameterValueError(errors, "label", resource.getLabel(), "The label must not be longer than 100 characters");
+                errors.add(new IllegalParameterValueException("The label must not be longer than 100 characters", "label", resource.getLabel()));
             }
             if (profileAttributesResolver.containsAttribute(resource.getLabel())) {
-                addIllegalParameterValueError(errors, "label", resource.getLabel(), "Attribute placeholder is not allowed");
+                errors.add(new IllegalParameterValueException("Attribute placeholder is not allowed", "label", resource.getLabel()));
             }
         }
 
         if (!empty(resource.getDescription())) {
             if (resource.getDescription().length() > 250) {
-                addIllegalParameterValueError(errors, "description", resource.getLabel(), "The description must not be longer than 250 characters");
+                errors.add(new IllegalParameterValueException("The description must not be longer than 250 characters", "description", resource.getDescription()));
             }
             if (profileAttributesResolver.containsAttribute(resource.getDescription())) {
-                addIllegalParameterValueError(errors, "description", resource.getLabel(), "Attribute placeholder is not allowed");
+                errors.add(new IllegalParameterValueException("Attribute placeholder is not allowed", "description", resource.getDescription()));
             }
-
         }
 
         if (!empty(resource.getName()) && profileAttributesResolver.containsAttribute(resource.getName())) {
-            addIllegalParameterValueError(errors, "name", resource.getName(), "Attribute placeholder is not allowed");
+            errors.add(new IllegalParameterValueException("Attribute placeholder is not allowed", "name", resource.getName()));
         }
     }
 
-    protected abstract void internalValidate(ResourceType resource, ValidationErrors errors);
+    protected abstract void internalValidate(ResourceType resource, List<Exception> errors, Map<String, String[]> additionalParameters);
 }

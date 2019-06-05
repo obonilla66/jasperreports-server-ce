@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job.model;
@@ -184,36 +187,22 @@ public class ClientJobRepositoryDestinationModel extends ClientJobRepositoryDest
         if (this == o) return true;
         if (!(o instanceof ClientJobRepositoryDestinationModel)) return false;
         if (!super.equals(o)) return false;
-
-        ClientJobRepositoryDestinationModel that = (ClientJobRepositoryDestinationModel) o;
-
-        if (isFolderURIModified() != that.isFolderURIModified()) return false;
-        if (isSequentialFilenamesModified() != that.isSequentialFilenamesModified()) return false;
-        if (isOverwriteFilesModified() != that.isOverwriteFilesModified()) return false;
-        if (isOutputDescriptionModified() != that.isOutputDescriptionModified()) return false;
-        if (isTimestampPatternModified() != that.isTimestampPatternModified()) return false;
-        if (isSaveToRepositoryModified() != that.isSaveToRepositoryModified()) return false;
-        if (isDefaultReportOutputFolderURIModified() != that.isDefaultReportOutputFolderURIModified()) return false;
-        if (isUsingDefaultReportOutputFolderURIModified() != that.isUsingDefaultReportOutputFolderURIModified())
-            return false;
-        if (isOutputFTPInfoModified() != that.isOutputFTPInfoModified()) return false;
-        return isOutputLocalFolderModified() == that.isOutputLocalFolderModified();
-
+        return true;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (isFolderURIModified() ? 1 : 0);
-        result = 31 * result + (isSequentialFilenamesModified() ? 1 : 0);
-        result = 31 * result + (isOverwriteFilesModified() ? 1 : 0);
-        result = 31 * result + (isOutputDescriptionModified() ? 1 : 0);
-        result = 31 * result + (isTimestampPatternModified() ? 1 : 0);
-        result = 31 * result + (isSaveToRepositoryModified() ? 1 : 0);
-        result = 31 * result + (isDefaultReportOutputFolderURIModified() ? 1 : 0);
-        result = 31 * result + (isUsingDefaultReportOutputFolderURIModified() ? 1 : 0);
-        result = 31 * result + (isOutputFTPInfoModified() ? 1 : 0);
-        result = 31 * result + (isOutputLocalFolderModified() ? 1 : 0);
+        result = 31 * result + (isFolderURIModified ? 1 : 0);
+        result = 31 * result + (isSequentialFilenamesModified ? 1 : 0);
+        result = 31 * result + (isOverwriteFilesModified ? 1 : 0);
+        result = 31 * result + (isOutputDescriptionModified ? 1 : 0);
+        result = 31 * result + (isTimestampPatternModified ? 1 : 0);
+        result = 31 * result + (isSaveToRepositoryModified ? 1 : 0);
+        result = 31 * result + (isDefaultReportOutputFolderURIModified ? 1 : 0);
+        result = 31 * result + (isUsingDefaultReportOutputFolderURIModified ? 1 : 0);
+        result = 31 * result + (isOutputFTPInfoModified ? 1 : 0);
+        result = 31 * result + (isOutputLocalFolderModified ? 1 : 0);
         return result;
     }
 

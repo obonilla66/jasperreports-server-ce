@@ -1,26 +1,29 @@
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
-<%@ page session="true" contentType="text/html" %>
+<%@ page session="true" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="http://www.tonbeller.com/jpivot" prefix="jp" %>
 <%@ taglib uri="http://www.tonbeller.com/wcf" prefix="wcf" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/jasperserver.tld" prefix="js" %>
-<%@ taglib uri="/spring" prefix="spring" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
 
 <%@ page errorPage="error.jsp" %>
@@ -49,6 +52,36 @@
   how to use the WCF tags (like tree, form, table etc).
 
 --%>
+<%
+
+    String location = (String) session.getAttribute("location");
+    if (location != null) {
+        String curViewName = (String) session.getAttribute("currentView");
+        com.tonbeller.wcf.form.FormComponent frm = (com.tonbeller.wcf.form.FormComponent) session.getAttribute(curViewName + "/saveas");
+        frm.setError("location", location);
+        session.removeAttribute("location");
+    }
+
+    String viewName = (String) session.getAttribute("viewName");
+    if (viewName != null) {
+        String curViewName = (String) session.getAttribute("currentView");
+        com.tonbeller.wcf.form.FormComponent frm = (com.tonbeller.wcf.form.FormComponent) session.getAttribute(curViewName + "/saveas");
+        frm.setError("viewName", viewName);
+        session.removeAttribute("viewName");
+    }
+
+    com.tonbeller.tbutils.res.Resources reso = com.tonbeller.tbutils.res.Resources.instance();
+    String copyString = reso.getResourceBundle().getMessage("JAJ_000_jsp.jpivot.toolb.saveas.copy",
+            null, reso.getLocaleContextHolderLocale());
+
+    String popUpSaveAs = (String) session.getAttribute("save_access_denied");
+    if (popUpSaveAs != null) {
+        String curViewName = (String) session.getAttribute("currentView");
+        com.tonbeller.wcf.form.FormComponent frm = (com.tonbeller.wcf.form.FormComponent) session.getAttribute(curViewName + "/saveas");
+        frm.setVisible(true);
+        session.removeAttribute("save_access_denied");
+    }
+%>
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/page.jsp">
 <t:putAttribute name="pageTitle"><spring:message code="jsp.viewOlap.title"/></t:putAttribute>
@@ -116,36 +149,7 @@
 <t:putAttribute name="bodyContent">
 
 <%--<body bgcolor=white onunload=closeChildWin()>--%>
-<%
 
-    String location = (String) session.getAttribute("location");
-    if (location != null) {
-        String curViewName = (String) session.getAttribute("currentView");
-        com.tonbeller.wcf.form.FormComponent frm = (com.tonbeller.wcf.form.FormComponent) session.getAttribute(curViewName + "/saveas");
-        frm.setError("location", location);
-        session.removeAttribute("location");
-    }
-
-    String viewName = (String) session.getAttribute("viewName");
-    if (viewName != null) {
-        String curViewName = (String) session.getAttribute("currentView");
-        com.tonbeller.wcf.form.FormComponent frm = (com.tonbeller.wcf.form.FormComponent) session.getAttribute(curViewName + "/saveas");
-        frm.setError("viewName", viewName);
-        session.removeAttribute("viewName");
-    }
-
-    com.tonbeller.tbutils.res.Resources reso = com.tonbeller.tbutils.res.Resources.instance();
-    String copyString = reso.getResourceBundle().getMessage("JAJ_000_jsp.jpivot.toolb.saveas.copy",
-            null, reso.getLocaleContextHolderLocale());
-
-    String popUpSaveAs = (String) session.getAttribute("save_access_denied");
-    if (popUpSaveAs != null) {
-        String curViewName = (String) session.getAttribute("currentView");
-        com.tonbeller.wcf.form.FormComponent frm = (com.tonbeller.wcf.form.FormComponent) session.getAttribute(curViewName + "/saveas");
-        frm.setVisible(true);
-        session.removeAttribute("save_access_denied");
-    }
-%>
 
 <form id="olapViewForm" action="<c:url value='viewOlap.html'/>" method="get">
     <wcf:scroller/>
@@ -386,21 +390,21 @@
             <wcf:render ref="${requestScope.name}/saveas" xslUri="/WEB-INF/wcf/wcf.xsl" xslCache="true"/>
 </form>
 
-<%
-    /*
-        // save this for future debugging.
-        java.util.Enumeration en = session.getAttributeNames();
-        out.println("<BR>");
-        out.println("<BR>");
+<%--<%--%>
+    <%--/*--%>
+        <%--// save this for future debugging.--%>
+        <%--java.util.Enumeration en = session.getAttributeNames();--%>
+        <%--out.println("<BR>");--%>
+        <%--out.println("<BR>");--%>
 
-        while (en.hasMoreElements()) {
-           String cur = (String)en.nextElement();
-           out.println("name = " + cur + "--");
-           out.println("<BR>value = " + session.getAttribute(cur) + "--");
-           out.println("<BR><BR>");
-        }
-    */
-%>
+        <%--while (en.hasMoreElements()) {--%>
+           <%--String cur = (String)en.nextElement();--%>
+           <%--out.println("name = " + cur + "--");--%>
+           <%--out.println("<BR>value = " + session.getAttribute(cur) + "--");--%>
+           <%--out.println("<BR><BR>");--%>
+        <%--}--%>
+    <%--*/--%>
+<%--%>--%>
 </t:putAttribute>
 </t:insertTemplate>
 </t:putAttribute>

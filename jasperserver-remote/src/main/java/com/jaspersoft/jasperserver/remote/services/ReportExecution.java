@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services;
 
@@ -21,7 +24,7 @@ import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -29,6 +32,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,7 +50,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @version $Id: ReportExecution.java 26599 2012-12-10 13:04:23Z ykovalchyk $
  */
 @XmlRootElement
-public class ReportExecution {
+public class ReportExecution implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final static Log log = LogFactory.getLog(ReportExecution.class);
     private ExecutionStatus status;
     private Integer totalPages;
@@ -134,8 +141,9 @@ public class ReportExecution {
                             .setMessage("Report execution cancelled");
                 }
                 break;
+                default:
             }
-            if (descriptor != null) throw new RemoteException(descriptor);
+            if (descriptor != null) throw new ErrorDescriptorException(descriptor);
         } catch (InterruptedException e) {
             throw new JSException(e);
         } finally {
@@ -146,12 +154,12 @@ public class ReportExecution {
         }
         return reportUnitResult;
     }
-
+    
     @XmlTransient
     public ReportUnitResult getReportUnitResult() {
         return reportUnitResult;
     }
-
+    
     public void setReportUnitResult(ReportUnitResult reportUnitResult) {
         lock.lock();
         try {
@@ -164,29 +172,29 @@ public class ReportExecution {
             lock.unlock();
         }
     }
-
+    
     public Integer getCurrentPage() {
         return currentPage;
     }
-
+    
     public void setCurrentPage(Integer currentPage) {
         this.currentPage = currentPage;
     }
-
+    
     public String getRequestId() {
         return requestId;
     }
-
+    
     public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
-
+    
     @XmlElement(name = "export")
     @XmlElementWrapper(name = "exports")
     public Set<ExportExecution> getExportsSet() {
         return exports != null && !exports.isEmpty() ? new HashSet<ExportExecution>(exports.values()) : null;
     }
-
+    
     public void setExportsSet(Set<ExportExecution> exportsSet) {
         exports.clear();
         if (exportsSet != null) {
@@ -277,4 +285,14 @@ public class ReportExecution {
     public void setTotalPages(Integer totalPages) {
         this.totalPages = totalPages;
     }
+    
+     
+    private void writeObject(java.io.ObjectOutputStream stream) throws IOException {
+        stream.defaultWriteObject();
+    }
+     
+    private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        stream.defaultReadObject();
+    }
+     
 }

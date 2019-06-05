@@ -1,23 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
@@ -26,13 +30,12 @@ import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianXMLADefiniti
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.MondrianXMLADefinitionImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.client.ObjectPermissionImpl;
+import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientMondrianConnection;
 import com.jaspersoft.jasperserver.dto.resources.ClientMondrianXmlaDefinition;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import com.jaspersoft.jasperserver.remote.resources.validation.BasicResourceValidator;
 import com.jaspersoft.jasperserver.remote.services.PermissionsService;
-import com.jaspersoft.jasperserver.war.cascade.handlers.GenericTypeProcessorRegistry;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -98,7 +101,7 @@ public class MondrianXmlaDefinitionResourceConverterTest {
 
     @Test
     public void correctClientServerResourceType(){
-        assertEquals(converter.getClientResourceType(), ClientTypeHelper.extractClientType(ClientMondrianXmlaDefinition.class));
+        assertEquals(converter.getClientResourceType(), ClientTypeUtility.extractClientType(ClientMondrianXmlaDefinition.class));
         assertEquals(converter.getServerResourceType(), MondrianXMLADefinition.class.getName());
     }
 

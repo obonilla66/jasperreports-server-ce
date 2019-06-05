@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.job;
 
@@ -21,14 +24,18 @@ package com.jaspersoft.jasperserver.dto.job;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.job.adapters.ExcludeDaysXmlAdapter;
 import com.jaspersoft.jasperserver.dto.job.adapters.TimeZoneXmlAdapter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.TimeZone;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.TimeZone;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Yaroslav.Kovalchyk
@@ -75,27 +82,19 @@ public class ClientJobCalendar implements DeepCloneable<ClientJobCalendar> {
     }
 
     public ClientJobCalendar(ClientJobCalendar other) {
-        this.baseCalendar = (other.baseCalendar != null) ? new ClientJobCalendar(other.baseCalendar) : null;
-        this.calendarType = other.calendarType;
-        this.cronExpression = other.cronExpression;
-        this.dataSorted = other.dataSorted;
-        this.description = other.description;
-        if (other.excludeDays != null) {
-            this.excludeDays = new ArrayList<Calendar>();
-            for (Calendar excludeDay : other.excludeDays) {
-                this.excludeDays.add(excludeDay);
-            }
-        }
-        if (other.excludeDaysFlags != null) {
-            this.excludeDaysFlags = new boolean[other.excludeDaysFlags.length];
-            for (int i = 0; i < other.excludeDaysFlags.length; i++) {
-                this.excludeDaysFlags[i] = other.excludeDaysFlags[i];
-            }
-        }
-        this.invertTimeRange = other.invertTimeRange;
-        this.rangeEndingCalendar = (other.rangeEndingCalendar != null) ? (Calendar) other.rangeEndingCalendar.clone() : null;
-        this.rangeStartingCalendar = (other.rangeStartingCalendar != null) ? (Calendar) other.rangeStartingCalendar.clone() : null;
-        this.timeZone = (other.timeZone != null) ? (TimeZone) other.timeZone.clone() : null;
+        checkNotNull(other);
+
+        this.calendarType = other.getCalendarType();
+        this.baseCalendar = copyOf(other.getBaseCalendar());
+        this.description = other.getDescription();
+        this.timeZone = copyOf(other.getTimeZone());
+        this.excludeDays = copyOf(other.getExcludeDays());
+        this.dataSorted = other.isDataSorted();
+        this.cronExpression = other.getCronExpression();
+        this.rangeStartingCalendar = copyOf(other.getRangeStartingCalendar());
+        this.rangeEndingCalendar = copyOf(other.getRangeEndingCalendar());
+        this.invertTimeRange = other.isInvertTimeRange();
+        this.excludeDaysFlags = copyOf(other.getExcludeDaysFlags());
     }
 
     public Type getCalendarType() {
@@ -142,7 +141,7 @@ public class ClientJobCalendar implements DeepCloneable<ClientJobCalendar> {
     }
 
     public ClientJobCalendar setExcludeDays(ArrayList<Calendar> excludeDays) {
-        this.excludeDays = excludeDays;
+        this.excludeDays = (excludeDays == null) ? new ArrayList<Calendar>() : excludeDays;
         return this;
     }
 
@@ -209,41 +208,36 @@ public class ClientJobCalendar implements DeepCloneable<ClientJobCalendar> {
 
         ClientJobCalendar that = (ClientJobCalendar) o;
 
-        if (getCalendarType() != that.getCalendarType()) return false;
-        if (getBaseCalendar() != null ? !getBaseCalendar().equals(that.getBaseCalendar()) : that.getBaseCalendar() != null)
-            return false;
-        if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null)
-            return false;
-        if (getTimeZone() != null ? !getTimeZone().equals(that.getTimeZone()) : that.getTimeZone() != null)
-            return false;
-        if (getExcludeDays() != null ? !getExcludeDays().equals(that.getExcludeDays()) : that.getExcludeDays() != null)
-            return false;
+        if (calendarType != that.calendarType) return false;
+        if (baseCalendar != null ? !baseCalendar.equals(that.baseCalendar) : that.baseCalendar != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null) return false;
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) return false;
+        if (!excludeDays.equals(that.excludeDays)) return false;
         if (dataSorted != null ? !dataSorted.equals(that.dataSorted) : that.dataSorted != null) return false;
-        if (getCronExpression() != null ? !getCronExpression().equals(that.getCronExpression()) : that.getCronExpression() != null)
+        if (cronExpression != null ? !cronExpression.equals(that.cronExpression) : that.cronExpression != null)
             return false;
-        if (getRangeStartingCalendar() != null ? !getRangeStartingCalendar().equals(that.getRangeStartingCalendar()) : that.getRangeStartingCalendar() != null)
+        if (rangeStartingCalendar != null ? !rangeStartingCalendar.equals(that.rangeStartingCalendar) : that.rangeStartingCalendar != null)
             return false;
-        if (getRangeEndingCalendar() != null ? !getRangeEndingCalendar().equals(that.getRangeEndingCalendar()) : that.getRangeEndingCalendar() != null)
+        if (rangeEndingCalendar != null ? !rangeEndingCalendar.equals(that.rangeEndingCalendar) : that.rangeEndingCalendar != null)
             return false;
         if (invertTimeRange != null ? !invertTimeRange.equals(that.invertTimeRange) : that.invertTimeRange != null)
             return false;
-        return Arrays.equals(getExcludeDaysFlags(), that.getExcludeDaysFlags());
-
+        return Arrays.equals(excludeDaysFlags, that.excludeDaysFlags);
     }
 
     @Override
     public int hashCode() {
-        int result = getCalendarType() != null ? getCalendarType().hashCode() : 0;
-        result = 31 * result + (getBaseCalendar() != null ? getBaseCalendar().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getTimeZone() != null ? getTimeZone().hashCode() : 0);
-        result = 31 * result + (getExcludeDays() != null ? getExcludeDays().hashCode() : 0);
+        int result = calendarType != null ? calendarType.hashCode() : 0;
+        result = 31 * result + (baseCalendar != null ? baseCalendar.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+        result = 31 * result + excludeDays.hashCode();
         result = 31 * result + (dataSorted != null ? dataSorted.hashCode() : 0);
-        result = 31 * result + (getCronExpression() != null ? getCronExpression().hashCode() : 0);
-        result = 31 * result + (getRangeStartingCalendar() != null ? getRangeStartingCalendar().hashCode() : 0);
-        result = 31 * result + (getRangeEndingCalendar() != null ? getRangeEndingCalendar().hashCode() : 0);
+        result = 31 * result + (cronExpression != null ? cronExpression.hashCode() : 0);
+        result = 31 * result + (rangeStartingCalendar != null ? rangeStartingCalendar.hashCode() : 0);
+        result = 31 * result + (rangeEndingCalendar != null ? rangeEndingCalendar.hashCode() : 0);
         result = 31 * result + (invertTimeRange != null ? invertTimeRange.hashCode() : 0);
-        result = 31 * result + (getExcludeDaysFlags() != null ? Arrays.hashCode(getExcludeDaysFlags()) : 0);
+        result = 31 * result + Arrays.hashCode(excludeDaysFlags);
         return result;
     }
 

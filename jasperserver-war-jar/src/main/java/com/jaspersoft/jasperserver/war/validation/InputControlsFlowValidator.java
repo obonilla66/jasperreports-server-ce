@@ -1,39 +1,36 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.validation;
 
-import java.util.List;
-
+import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
+import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
+import com.jaspersoft.jasperserver.war.dto.InputControlWrapper;
+import com.jaspersoft.jasperserver.war.dto.ReportUnitWrapper;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
-import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
-import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
-import com.jaspersoft.jasperserver.war.dto.InputControlWrapper;
-import com.jaspersoft.jasperserver.war.dto.ReportUnitWrapper;
+import java.util.List;
 
 public class InputControlsFlowValidator implements Validator {
 
@@ -63,7 +60,7 @@ public class InputControlsFlowValidator implements Validator {
 		if(inputControl.getName()==null || inputControl.getName().trim().length()==0) {
 			errors.rejectValue("inputControl.name", "InputControlsFlowValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateName(inputControl.getName())) {
+			if(!ValidationUtil.regExValidateName(inputControl.getName())) {
 				errors.rejectValue("inputControl.name", "InputControlsFlowValidator.error.invalid.chars");
 			}else{
 				Object parentObject=dto.getParentFlowObject();
@@ -109,7 +106,7 @@ public class InputControlsFlowValidator implements Validator {
 		if(inputControl.getLabel()==null || inputControl.getLabel().trim().length()==0) {
 			errors.rejectValue("inputControl.label", "InputControlsFlowValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateLabel(inputControl.getLabel())) {
+			if(!ValidationUtil.regExValidateLabel(inputControl.getLabel())) {
 				errors.rejectValue("inputControl.label", "InputControlsFlowValidator.error.invalid.chars");
 			}
 		}
@@ -129,7 +126,7 @@ public class InputControlsFlowValidator implements Validator {
 			if(dataType.getName()==null || dataType.getName().trim().length()==0) {
 				errors.rejectValue("inputControl.dataType.name", "InputControlsFlowValidator.error.not.empty");
 			} else {
-				if(!JasperServerUtil.regExValidateName(dataType.getName())) {
+				if(!ValidationUtil.regExValidateName(dataType.getName())) {
 					errors.rejectValue("inputControl.dataType.name", "InputControlsFlowValidator.error.invalid.chars");
 				}
 			}
@@ -137,7 +134,7 @@ public class InputControlsFlowValidator implements Validator {
 			if(dataType.getLabel()==null || dataType.getLabel().trim().length()==0) {
 				errors.rejectValue("inputControl.dataType.label", "InputControlsFlowValidator.error.not.empty");
 			} else {
-				if(!JasperServerUtil.regExValidateLabel(dataType.getLabel())) {
+				if(!ValidationUtil.regExValidateLabel(dataType.getLabel())) {
 					errors.rejectValue("inputControl.dataType.label", "InputControlsFlowValidator.error.invalid.chars");
 				}
 			}
@@ -172,7 +169,7 @@ public class InputControlsFlowValidator implements Validator {
 			if(query.getName()==null || query.getName().trim().length()==0) {
 				errors.rejectValue("inputControl.query.name", "InputControlsFlowValidator.error.not.empty");
 			} else {
-				if(!JasperServerUtil.regExValidateName(query.getName())) {
+				if(!ValidationUtil.regExValidateName(query.getName())) {
 					errors.rejectValue("inputControl.query.name", "InputControlsFlowValidator.error.invalid.chars");
 				}
 			}
@@ -180,7 +177,7 @@ public class InputControlsFlowValidator implements Validator {
 			if(query.getLabel()==null || query.getLabel().trim().length()==0) {
 				errors.rejectValue("inputControl.query.label", "InputControlsFlowValidator.error.not.empty");
 			} else {
-				if(!JasperServerUtil.regExValidateLabel(query.getLabel())) {
+				if(!ValidationUtil.regExValidateLabel(query.getLabel())) {
 					errors.rejectValue("inputControl.query.label", "InputControlsFlowValidator.error.invalid.chars");
 				}
 			}
@@ -211,7 +208,7 @@ public class InputControlsFlowValidator implements Validator {
 			if(listOfValues.getName()==null || listOfValues.getName().trim().length()==0) {
 				errors.rejectValue("inputControl.listOfValues.name", "InputControlsFlowValidator.error.not.empty");
 			} else {
-				if(!JasperServerUtil.regExValidateName(listOfValues.getName())) {
+				if(!ValidationUtil.regExValidateName(listOfValues.getName())) {
 					errors.rejectValue("inputControl.listOfValues.name", "InputControlsFlowValidator.error.invalid.chars");
 				}
 			}
@@ -219,7 +216,7 @@ public class InputControlsFlowValidator implements Validator {
 			if(listOfValues.getLabel()==null || listOfValues.getLabel().trim().length()==0) {
 				errors.rejectValue("inputControl.listOfValues.label", "InputControlsFlowValidator.error.not.empty");
 			} else {
-				if(!JasperServerUtil.regExValidateLabel(listOfValues.getLabel())) {
+				if(!ValidationUtil.regExValidateLabel(listOfValues.getLabel())) {
 					errors.rejectValue("inputControl.listOfValues.label", "InputControlsFlowValidator.error.invalid.chars");
 				}
 			}
@@ -240,7 +237,7 @@ public class InputControlsFlowValidator implements Validator {
 		if(dto.getListItemLabel()==null || size(dto.getListItemLabel())==0) {
 			errors.rejectValue("listItemLabel", "InputControlsFlowValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateLabel(dto.getListItemLabel())) {
+			if(!ValidationUtil.regExValidateLabel(dto.getListItemLabel())) {
 				errors.rejectValue("listItemLabel", "InputControlsFlowValidator.error.invalid.chars");
 			}
 		}

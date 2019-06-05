@@ -1,4 +1,7 @@
-{{ if (message) { }}<p class="message">{{- message }}</p> {{ } }}
+{{ if (message) { }}<p class="message">
+
+    <js-templateNonce></js-templateNonce>
+    {{- message }}</p> {{ } }}
 <div class="control groupBox">
     <ol class="list tabular oneColumn">
         {{ for (var i = 0; i<items.length; i++) { }}

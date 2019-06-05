@@ -1,1 +1,0 @@
-define(["require","common/component/list/model/trait/addToSelectionModelTrait","common/component/list/model/ListWithSelectionAsObjectHashModel"],function(e){var o=e("common/component/list/model/trait/addToSelectionModelTrait"),t=e("common/component/list/model/ListWithSelectionAsObjectHashModel").extend(o);return{create:function(e){return new t(e)}}});

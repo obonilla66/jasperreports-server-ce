@@ -1,28 +1,34 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.jdbcdrivers;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -31,7 +37,7 @@ import java.util.List;
  * @version $Id$
  */
 @XmlRootElement
-public class JdbcDriverInfo {
+public class JdbcDriverInfo implements DeepCloneable<JdbcDriverInfo>{
     private String name;
     private String label;
     private Boolean available;
@@ -45,6 +51,8 @@ public class JdbcDriverInfo {
     }
 
     public JdbcDriverInfo(JdbcDriverInfo source){
+        checkNotNull(source);
+
         name = source.getName();
         label = source.getLabel();
         available = source.getAvailable();
@@ -52,13 +60,12 @@ public class JdbcDriverInfo {
         isDefault = source.isDefault();
         jdbcDriverClass = source.getJdbcDriverClass();
         allowSpacesInDbName = source.getAllowSpacesInDbName();
-        final List<ClientProperty> sourceDefaultValues = source.getDefaultValues();
-        if(sourceDefaultValues != null){
-            defaultValues = new ArrayList<ClientProperty>(sourceDefaultValues.size());
-            for(ClientProperty property : sourceDefaultValues){
-                defaultValues.add(new ClientProperty(property));
-            }
-        }
+        defaultValues = copyOf(source.getDefaultValues());
+    }
+
+    @Override
+    public JdbcDriverInfo deepClone() {
+        return new JdbcDriverInfo(this);
     }
 
     public Boolean getAllowSpacesInDbName() {

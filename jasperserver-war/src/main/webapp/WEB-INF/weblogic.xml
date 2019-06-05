@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <weblogic-web-app xmlns="http://xmlns.oracle.com/weblogic/weblogic-web-app" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -43,13 +46,20 @@
 
     <container-descriptor>
         <servlet-reload-check-secs>60</servlet-reload-check-secs>
+        <!-- JRS-17039, 1 line below --> 
+        <prefer-web-inf-classes>false</prefer-web-inf-classes>
         <prefer-application-packages>
+            <!-- JRS-17039, 1 line below -->
+            <package-name>javassist.*</package-name>
+
             <package-name>antlr.*</package-name>
             <package-name>antlr.collections.*</package-name>
             <package-name>antlr.collections.impl.*</package-name>
             <package-name>antlr.debug.misc.*</package-name>
             
             <!-- START: added for weblogic 12-->
+            <package-name>net.minidev.json.*</package-name>
+            <package-name>com.jayway.jsonpath.*</package-name>
             <package-name>org.antlr.runtime.*</package-name>
             <package-name>com.sun.jersey.*</package-name>
             <package-name>com.sun.research.ws.wadl.*</package-name>
@@ -81,6 +91,7 @@
             <package-name>org.mozilla.classfile.*</package-name>
             <package-name>org.mozilla.javascript.*</package-name>
             <package-name>org.apache.commons.lang.*</package-name>
+            <package-name>org.apache.xmlbeans.*</package-name>
             <package-name>repackage.*</package-name>
             <package-name>schemaorg_apache_xmlbeans.system.sXMLCONFIG.*</package-name>
             <package-name>schemaorg_apache_xmlbeans.system.sXMLLANG.*</package-name>

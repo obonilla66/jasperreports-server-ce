@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.services.async;
@@ -23,7 +26,7 @@ import com.jaspersoft.jasperserver.dto.importexport.State;
 import com.jaspersoft.jasperserver.export.service.ImportExportService;
 import com.jaspersoft.jasperserver.remote.exception.NoResultException;
 import com.jaspersoft.jasperserver.remote.exception.NotReadyResultException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -109,7 +112,7 @@ public class ImportExportTask<T> implements Task {
             errorDescriptor.setErrorCode(ImportExportService.ERROR_CODE_RESTART_ALIVE_TASK);
             errorDescriptor.setParameters(getState().getId());
 
-            throw new RemoteException(errorDescriptor);
+            throw new ErrorDescriptorException(errorDescriptor);
         } else {
             final Locale locale = LocaleContextHolder.getLocale();
             final TimeZone timeZone = TimeZoneContextHolder.getTimeZone();
@@ -183,7 +186,7 @@ public class ImportExportTask<T> implements Task {
             errorDescriptor.setErrorCode(ImportExportService.ERROR_CODE_UPDATE_NOT_PENDING_PHASE);
             errorDescriptor.setParameters(getState().getId());
 
-            throw new RemoteException(errorDescriptor);
+            throw new ErrorDescriptorException(errorDescriptor);
         }
     }
 

@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
@@ -223,6 +227,8 @@
                                                   name="_eventId_testXMLAConnection"><span
                                                     class="wrap"><spring:message code='button.testConnection'/></span>
                                             </span>
+                                            <!-- NOTE: for test we are passing username and password parameters in form - new Spring trying to re-authentificate flow - so we must pass disable Flag -->
+                                            <input id="disable-re-authentication-flag" class="hidden" type="hidden" name="disable-re-authentication-flag" value="1"/>
                                             <div class="message warning">
                                                 <span >error message here</span>
                                                 <a href="#" class="details"><spring:message code='button.details'/></a>

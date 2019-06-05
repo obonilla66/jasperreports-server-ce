@@ -1,26 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.validation;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
 import com.jaspersoft.jasperserver.war.common.JasperServerConst;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import com.jaspersoft.jasperserver.war.dto.ListOfValuesDTO;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -62,7 +65,7 @@ public class ListOfValuesValidator implements Validator
                 errors.rejectValue("listOfValues.name", "ListOfValuesValidator.error.too.long",
                                    new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
             }else{
-                if(!JasperServerUtil.regExValidateName(listOfValues.getName())) {
+                if(!ValidationUtil.regExValidateName(listOfValues.getName())) {
                     errors.rejectValue("listOfValues.name", "ListOfValuesValidator.error.invalid.chars");
                 }/*else{
                     // When in stand alone new mode check name uniquenesss in folder
@@ -93,7 +96,7 @@ public class ListOfValuesValidator implements Validator
 				errors.rejectValue("listOfValues.label", "ListOfValuesValidator.error.too.long",
 								   new Object[]{JasperServerConst.MAX_LENGTH_LABEL_W}, null);
 			}else{
-				if(!JasperServerUtil.regExValidateLabel(listOfValues.getLabel())) {
+				if(!ValidationUtil.regExValidateLabel(listOfValues.getLabel())) {
 					errors.rejectValue("listOfValues.label", "ListOfValuesValidator.error.invalid.chars");
 				}
 			}
@@ -115,7 +118,7 @@ public class ListOfValuesValidator implements Validator
 				errors.rejectValue("newLabel", "ListOfValuesValidator.error.too.long",
 								   new Object[]{JasperServerConst.MAX_LENGTH_VARCHAR_W}, null);
 			}else{
-				if(!JasperServerUtil.regExValidateLabel(newLabel)) {
+				if(!ValidationUtil.regExValidateLabel(newLabel)) {
 					errors.rejectValue("newLabel", "ListOfValuesValidator.error.invalid.chars");
 				}
 			}						

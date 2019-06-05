@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.permission;
 
@@ -26,7 +29,7 @@ import com.jaspersoft.jasperserver.dto.permissions.RepositoryPermission;
 import com.jaspersoft.jasperserver.dto.permissions.RepositoryPermissionListWrapper;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentity;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentityResolver;
@@ -75,7 +78,7 @@ public class RepositoryPermissionsJaxrsService {
     @GET
     @Path("/{uri:.+}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getPermissionsEntryPoint(@Context UriInfo uriInfo) throws RemoteException {
+    public Response getPermissionsEntryPoint(@Context UriInfo uriInfo) throws ErrorDescriptorException {
         PermissionComplexKey permissionComplexKey = new PermissionComplexKey(uriInfo).invoke();
         MultivaluedMap<String, String> queryParams = permissionComplexKey.getQueryParams();
 
@@ -96,14 +99,14 @@ public class RepositoryPermissionsJaxrsService {
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getPermissionsEntryPointRoot(@Context UriInfo uriInfo) throws RemoteException {
+    public Response getPermissionsEntryPointRoot(@Context UriInfo uriInfo) throws ErrorDescriptorException {
         return getPermissionsEntryPoint(uriInfo);
     }
 
     @POST
     @Consumes({"application/collection+xml", "application/collection+json"})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response createPermissions(RepositoryPermissionListWrapper data) throws RemoteException{
+    public Response createPermissions(RepositoryPermissionListWrapper data) throws ErrorDescriptorException {
         List<RepositoryPermission> permissions = data.getPermissions();
         List<ObjectPermission> server = new ArrayList<ObjectPermission>(permissions.size());
         for (RepositoryPermission permission : permissions){
@@ -121,7 +124,7 @@ public class RepositoryPermissionsJaxrsService {
 
     @DELETE
     @Path("/{uri:.+}")
-    public Response deletePermissionsEntryPoint(@Context UriInfo uriInfo) throws RemoteException{
+    public Response deletePermissionsEntryPoint(@Context UriInfo uriInfo) throws ErrorDescriptorException {
         PermissionComplexKey permissionComplexKey = new PermissionComplexKey(uriInfo).invoke();
 
         if (permissionComplexKey.getRecipientUri() == null){
@@ -133,7 +136,7 @@ public class RepositoryPermissionsJaxrsService {
     }
 
     @DELETE
-    public Response deletePermissionsEntryPointRoot(@Context UriInfo uriInfo) throws RemoteException{
+    public Response deletePermissionsEntryPointRoot(@Context UriInfo uriInfo) throws ErrorDescriptorException {
         return deletePermissionsEntryPoint(uriInfo);
     }
 
@@ -142,7 +145,7 @@ public class RepositoryPermissionsJaxrsService {
     @Consumes({"application/collection+xml", "application/collection+json"})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updatePermissions(RepositoryPermissionListWrapper data,
-            @PathParam("uri") String resourceUri) throws RemoteException {
+            @PathParam("uri") String resourceUri) throws ErrorDescriptorException {
         List<RepositoryPermission> permissions = data.getPermissions();
         List<ObjectPermission> server = new ArrayList<ObjectPermission>(permissions.size());
         for (RepositoryPermission permission : permissions){
@@ -161,7 +164,7 @@ public class RepositoryPermissionsJaxrsService {
     @PUT
     @Consumes({"application/collection+xml", "application/collection+json"})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response updatePermissionsRoot(RepositoryPermissionListWrapper data) throws RemoteException {
+    public Response updatePermissionsRoot(RepositoryPermissionListWrapper data) throws ErrorDescriptorException {
         return updatePermissions(data, "");
     }
 
@@ -170,7 +173,7 @@ public class RepositoryPermissionsJaxrsService {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updatePermission(RepositoryPermission permission,
-            @Context UriInfo uriInfo) throws RemoteException {
+            @Context UriInfo uriInfo) throws ErrorDescriptorException {
 
         PermissionComplexKey permissionComplexKey = new PermissionComplexKey(uriInfo).invoke();
         permission.setUri(permissionComplexKey.getResourceUri());
@@ -185,19 +188,19 @@ public class RepositoryPermissionsJaxrsService {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updatePermissionRoot(RepositoryPermission permission,
-            @Context UriInfo uriInfo) throws RemoteException {
+            @Context UriInfo uriInfo) throws ErrorDescriptorException {
         return updatePermission(permission, uriInfo);
     }
 
     @POST
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response createPermission(RepositoryPermission permission) throws RemoteException{
+    public Response createPermission(RepositoryPermission permission) throws ErrorDescriptorException {
         service.createPermission(converter.toServer(permission, null));
         return Response.status(Response.Status.CREATED).entity(permission).build();
     }
 
-    private Response getPermission(String resourceUri, String recipientUri) throws RemoteException{
+    private Response getPermission(String resourceUri, String recipientUri) throws ErrorDescriptorException {
         RecipientIdentity identity = permissionRecipientIdentityResolver.toIdentity(recipientUri);
         ObjectPermission permission =  service.getPermission(resourceUri,identity.getRecipientClass(), identity.getId());
 
@@ -208,7 +211,7 @@ public class RepositoryPermissionsJaxrsService {
         return Response.ok(converter.toClient(permission, null)).build();
     }
 
-    private Response getPermissions(String resourceUri, boolean effectivePermissions, String recipientType, String recipientId, boolean resolveAll, int startIndex, int limit) throws RemoteException {
+    private Response getPermissions(String resourceUri, boolean effectivePermissions, String recipientType, String recipientId, boolean resolveAll, int startIndex, int limit) throws ErrorDescriptorException {
         Class<?> recipientClass = permissionRecipientIdentityResolver.getClassForProtocol(recipientType);
         List<ObjectPermission> permissions = service.getPermissions(resourceUri, recipientClass, recipientId, effectivePermissions, resolveAll);
         int totalCount = permissions.size();
@@ -252,7 +255,7 @@ public class RepositoryPermissionsJaxrsService {
         return response;
     }
 
-    private void deletePermissions(String resourceUri) throws RemoteException{
+    private void deletePermissions(String resourceUri) throws ErrorDescriptorException {
         List<ObjectPermission> permissions = service.getPermissions(resourceUri, null, null, false, false);
 
         for (ObjectPermission permission : permissions){
@@ -260,7 +263,7 @@ public class RepositoryPermissionsJaxrsService {
         }
     }
 
-    private void deletePermission(String resourceUri, String recipientUri) throws RemoteException{
+    private void deletePermission(String resourceUri, String recipientUri) throws ErrorDescriptorException {
         RecipientIdentity identity = permissionRecipientIdentityResolver.toIdentity(recipientUri);
         ObjectPermission permission =  service.getPermission(resourceUri,identity.getRecipientClass(), identity.getId());
 

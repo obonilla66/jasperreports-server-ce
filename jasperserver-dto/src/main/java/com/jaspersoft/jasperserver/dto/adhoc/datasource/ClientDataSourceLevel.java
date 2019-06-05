@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.datasource;
@@ -29,6 +32,11 @@ public class ClientDataSourceLevel extends ClientDataSourceField {
     private String dimensionName;
 
     public ClientDataSourceLevel() {
+    }
+
+    public ClientDataSourceLevel(ClientDataSourceLevel other) {
+        super(other);
+        this.dimensionName = other.dimensionName;
     }
 
     public String getDimensionName() {
@@ -51,6 +59,7 @@ public class ClientDataSourceLevel extends ClientDataSourceField {
         setAggregateArg(field.getAggregateArg());
         setAggregateType(field.getAggregateType());
         setAggregateFunction(field.getAggregateFunction());
+        setAggregateFirstLevelFunction(field.getAggregateFirstLevelFunction());
         return this;
     }
 
@@ -67,6 +76,10 @@ public class ClientDataSourceLevel extends ClientDataSourceField {
     @Override
     public ClientDataSourceLevel setAggregateFunction(String aggregateFunction) {
         return (ClientDataSourceLevel) super.setAggregateFunction(aggregateFunction);
+    }
+
+    public ClientDataSourceLevel setAggregateFirstLevelFunction(String aggregateFirstLevelFunction) {
+        return (ClientDataSourceLevel) super.setAggregateFirstLevelFunction(aggregateFirstLevelFunction);
     }
 
     @Override
@@ -102,25 +115,29 @@ public class ClientDataSourceLevel extends ClientDataSourceField {
 
         ClientDataSourceLevel that = (ClientDataSourceLevel) o;
 
-        return dimensionName.equals(that.dimensionName);
-
+        return getDimensionName() != null ? getDimensionName().equals(that.getDimensionName()) : that.getDimensionName() == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + dimensionName.hashCode();
+        result = 31 * result + (getDimensionName() != null ? getDimensionName().hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ClientDataSourceLevel{");
-        sb.append("dimensionName='").append(dimensionName).append('\'');
+        sb.append("dimensionName='").append(getDimensionName()).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append(", hierarchyName='").append(getHierarchyName()).append('\'');
         sb.append(", type='").append(getType()).append('\'');
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public ClientDataSourceLevel deepClone() {
+        return new ClientDataSourceLevel(this);
     }
 }

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.common.validations;
 
@@ -30,15 +33,21 @@ public class DateTimeFormatValidationRule extends ValidationRule<DateTimeFormatV
     public static final String INVALID_DATE = "fillParameters.error.invalidDate";
     public static final String INVALID_DATE_TIME = "fillParameters.error.invalidDateTime";
     public static final String INVALID_TIME = "fillParameters.error.invalidTime";
+
     private String format;
 
-    public DateTimeFormatValidationRule(){}
+    public DateTimeFormatValidationRule() {
+    }
 
     public DateTimeFormatValidationRule(DateTimeFormatValidationRule other) {
         super(other);
         this.format = other.getFormat();
     }
 
+    @Override
+    public DateTimeFormatValidationRule deepClone() {
+        return new DateTimeFormatValidationRule(this);
+    }
 
     public String getFormat() {
         return format;
@@ -57,15 +66,13 @@ public class DateTimeFormatValidationRule extends ValidationRule<DateTimeFormatV
 
         DateTimeFormatValidationRule that = (DateTimeFormatValidationRule) o;
 
-        if (!format.equals(that.format)) return false;
-
-        return true;
+        return format != null ? format.equals(that.format) : that.format == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + format.hashCode();
+        result = 31 * result + (format != null ? format.hashCode() : 0);
         return result;
     }
 

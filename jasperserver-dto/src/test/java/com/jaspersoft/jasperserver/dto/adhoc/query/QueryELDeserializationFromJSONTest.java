@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.query;
@@ -269,9 +272,9 @@ public class QueryELDeserializationFromJSONTest extends QueryTest {
 
         assertThat(cq, is(instanceOf(ClientMultiLevelQuery.class)));
         assertThat(cq.getWhere().getParameters().size(), is(3));
-        assertThat(cq.getWhere().getParameters().get("Country_multi_select").toString(), is("('USA', 'Mexico')"));
-        assertThat(cq.getWhere().getParameters().get("Cascading_state_multi_select").toString(), is("('CA', 'DF', 'Guerrero', 'OR')"));
-        assertThat(cq.getWhere().getParameters().get("Cascading_name_single_select").toString(), is("'Adams-Steen Transportation Holdings'"));
+        assertThat(cq.getWhere().getParameters().get("Country_multi_select").getObject().toString(), is("('USA', 'Mexico')"));
+        assertThat(cq.getWhere().getParameters().get("Cascading_state_multi_select").getObject().toString(), is("('CA', 'DF', 'Guerrero', 'OR')"));
+        assertThat(cq.getWhere().getParameters().get("Cascading_name_single_select").getObject().toString(), is("'Adams-Steen Transportation Holdings'"));
     }
 
 }

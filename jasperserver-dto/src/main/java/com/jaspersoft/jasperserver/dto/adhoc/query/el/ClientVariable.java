@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el;
 
@@ -27,25 +30,24 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * @author Stas Chubar <schubar@tibco.com>
  * @author Grant Bacon <gbacon@tibco.com>
- * @version $Id $
+ * @version $Id$
  */
-@XmlRootElement(name = "variable")
+@XmlRootElement(name = ClientVariable.EXPRESSION_ID)
 public class ClientVariable extends VariableOperations implements ClientExpression<ClientVariable> {
-    public static final String EXPRESSION_TYPE_VARIABLE = "variable";
+    public static final String EXPRESSION_ID = "variable";
 
     private String name;
-    protected Boolean paren = null;
 
-    protected ClientVariable() {
+    public ClientVariable() {
     }
 
     public ClientVariable(String name) {
         this.name = name;
     }
 
-    public ClientVariable(ClientVariable variable) {
-        this(variable.getName());
-        this.paren = variable.paren;
+    public ClientVariable(ClientVariable source) {
+        super(source);
+        name = source.name;
     }
 
     @XmlAttribute(name = "name")
@@ -54,7 +56,7 @@ public class ClientVariable extends VariableOperations implements ClientExpressi
     }
 
     @XmlTransient
-    public String getType() { return EXPRESSION_TYPE_VARIABLE; }
+    public String getType() { return EXPRESSION_ID; }
 
     public ClientVariable setName(String name) {
         this.name = name;
@@ -64,20 +66,16 @@ public class ClientVariable extends VariableOperations implements ClientExpressi
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ClientVariable)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         ClientVariable that = (ClientVariable) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        return paren != null ? paren.equals(that.paren) : that.paren == null;
-
+        return name != null ? name.equals(that.name) : that.name == null;
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (paren != null ? paren.hashCode() : 0);
-        return result;
+        return name != null ? name.hashCode() : 0;
     }
 
     @Override
@@ -93,21 +91,6 @@ public class ClientVariable extends VariableOperations implements ClientExpressi
     @Override
     protected ClientVariable getMe() {
         return this;
-    }
-
-    /**
-     * This method is used for serialization purposes only
-     *
-     * @return boolean
-     */
-    @XmlElement(name = "paren")
-    public Boolean isParen() {
-        return (paren == null) ? null : paren;
-    }
-
-    @Override
-    public Boolean hasParen() {
-        return isParen() != null && paren;
     }
 
     @Override

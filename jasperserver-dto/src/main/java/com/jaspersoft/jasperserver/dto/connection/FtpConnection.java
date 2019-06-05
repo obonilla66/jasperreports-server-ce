@@ -1,25 +1,30 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.connection;
 
 import com.jaspersoft.jasperserver.dto.common.ResourceLocation;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * <p></p>
@@ -43,9 +48,13 @@ public class FtpConnection implements ResourceLocation {
     private String prot;
     private Long pbsz;
 
-    public FtpConnection(){}
+    public FtpConnection(){
+        userName = "anonymous";
+    }
 
     public FtpConnection(FtpConnection other) {
+        checkNotNull(other);
+
         this.holder = other.getHolder();
         this.host = other.getHost();
         this.userName = other.getUserName();
@@ -65,8 +74,9 @@ public class FtpConnection implements ResourceLocation {
         return holder;
     }
 
-    public void setHolder(String holder) {
+    public FtpConnection setHolder(String holder) {
         this.holder = holder;
+        return this;
     }
 
     public String getFolderPath() {
@@ -142,9 +152,7 @@ public class FtpConnection implements ResourceLocation {
     }
 
     public String getUserName() {
-        // Since the set is not being used by the serializer we need to adjust it via the get
-        String ret = (userName!=null && !userName.isEmpty()) ?  userName : "anonymous";
-        return ret;
+        return userName;
     }
 
     public FtpConnection setUserName(String userName) {
@@ -165,16 +173,18 @@ public class FtpConnection implements ResourceLocation {
         return sshKey;
     }
 
-    public void setSshKey(String sshKey) {
+    public FtpConnection setSshKey(String sshKey) {
         this.sshKey = sshKey;
+        return this;
     }
 
     public String getSshPassphrase() {
         return sshPassphrase;
     }
 
-    public void setSshPassphrase(String sshPassphrase) {
+    public FtpConnection setSshPassphrase(String sshPassphrase) {
         this.sshPassphrase = sshPassphrase;
+        return this;
     }
 
     @Override
@@ -194,7 +204,7 @@ public class FtpConnection implements ResourceLocation {
         if (prot != null ? !prot.equals(that.prot) : that.prot != null) return false;
         if (protocol != null ? !protocol.equals(that.protocol) : that.protocol != null) return false;
         if (type != that.type) return false;
-        if (userName != null ? !userName.equals(that.userName) : that.userName != null) return false;
+        if (!userName.equals(that.userName)) return false;
         if (sshKey != null ? !sshKey.equals(that.sshKey) : that.sshKey != null) return false;
         if (sshPassphrase != null ? !sshPassphrase.equals(that.sshPassphrase) : that.sshPassphrase != null) return false;
 
@@ -205,7 +215,7 @@ public class FtpConnection implements ResourceLocation {
     public int hashCode() {
         int result = host != null ? host.hashCode() : 0;
         result = 31 * result + (holder != null ? holder.hashCode() : 0);
-        result = 31 * result + (userName != null ? userName.hashCode() : 0);
+        result = 31 * result + userName.hashCode();
         result = 31 * result + (password != null ? password.hashCode() : 0);
         result = 31 * result + (folderPath != null ? folderPath.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
@@ -240,5 +250,14 @@ public class FtpConnection implements ResourceLocation {
 
     public enum FtpType{
         ftp, ftps, sftp
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public FtpConnection deepClone() {
+        return new FtpConnection(this);
     }
 }

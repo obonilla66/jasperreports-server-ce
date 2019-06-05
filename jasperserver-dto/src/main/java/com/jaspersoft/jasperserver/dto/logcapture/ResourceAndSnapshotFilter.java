@@ -1,23 +1,34 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.logcapture;
 
-import javax.xml.bind.annotation.*;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Yakiv Tymoshenko
@@ -27,7 +38,7 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement
 @XmlType(propOrder = {"resourceUri", "includeDataSnapshots"})
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ResourceAndSnapshotFilter {
+public class ResourceAndSnapshotFilter implements DeepCloneable<ResourceAndSnapshotFilter> {
     private String resourceUri;
     private Boolean includeDataSnapshots;
 
@@ -35,11 +46,15 @@ public class ResourceAndSnapshotFilter {
     }
 
     public ResourceAndSnapshotFilter(ResourceAndSnapshotFilter other) {
-        this();
-        if (null != other) {
-            this.resourceUri = other.getResourceUri();
-            this.includeDataSnapshots = other.getIncludeDataSnapshots();
-        }
+        checkNotNull(other);
+
+        this.resourceUri = other.getResourceUri();
+        this.includeDataSnapshots = other.getIncludeDataSnapshots();
+    }
+
+    @Override
+    public ResourceAndSnapshotFilter deepClone() {
+        return new ResourceAndSnapshotFilter(this);
     }
 
     /*

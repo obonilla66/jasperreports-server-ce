@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -21,9 +24,9 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -84,7 +87,7 @@ public class ResourceConverterProviderImpl implements ResourceConverterProvider 
 
     @Override
     public ToServerConverter<? super ClientResource, ? extends Resource, ToServerConversionOptions> getToServerConverter(ClientResource clientObject) throws IllegalParameterValueException {
-        return getToServerConverter(ClientTypeHelper.extractClientType(clientObject.getClass()));
+        return getToServerConverter(ClientTypeUtility.extractClientType(clientObject.getClass()));
     }
 
     public ToServerConverter<? super ClientResource, ? extends Resource, ToServerConversionOptions> getToServerConverter(String clientType) throws IllegalParameterValueException {
@@ -136,7 +139,7 @@ public class ResourceConverterProviderImpl implements ResourceConverterProvider 
     }
 
     protected String getCombinedConverterKey(String serverResourceType, String clientResourceType){
-        return serverResourceType + "<=>" + clientResourceType.toLowerCase();
+        return serverResourceType + "<=>" + (clientResourceType != null ? clientResourceType.toLowerCase() : "null");
     }
 
     // cast is safe, spring application context assure safety
@@ -149,7 +152,7 @@ public class ResourceConverterProviderImpl implements ResourceConverterProvider 
     @PostConstruct
     public void initialize(){
         for (Class<?> disabledResourceType : disabledResourceTypes) {
-            disabledResourceClientTypes.add(ClientTypeHelper.extractClientType(disabledResourceType).toLowerCase());
+            disabledResourceClientTypes.add(ClientTypeUtility.extractClientType(disabledResourceType).toLowerCase());
         }
     }
 }

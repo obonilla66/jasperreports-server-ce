@@ -1,23 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.test;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.PermissionUriProtocol;
@@ -27,17 +31,16 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.util.test.BaseServiceSetupTestNG;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.quartz.impl.calendar.HolidayCalendar;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.SessionFactoryUtils;
-import org.springframework.orm.hibernate3.SessionHolder;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.orm.hibernate5.HibernateTemplate;
+import org.springframework.orm.hibernate5.SessionFactoryUtils;
+import org.springframework.orm.hibernate5.SessionHolder;
+import org.springframework.orm.hibernate5.support.HibernateDaoSupport;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -47,12 +50,7 @@ import javax.annotation.Resource;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author srosen
@@ -108,9 +106,9 @@ public class CoreDataCreateTestNG extends BaseServiceSetupTestNG {
 
 		SessionHolder holder = (SessionHolder) TransactionSynchronizationManager.getResource(m_sessionFactory);
 		Session s = holder.getSession();
-		s.flush();
+//		s.flush();
 		TransactionSynchronizationManager.unbindResource(m_sessionFactory);
-		SessionFactoryUtils.releaseSession(s, m_sessionFactory);
+		SessionFactoryUtils.closeSession(s);
 	}
 
     /*
@@ -204,7 +202,7 @@ public class CoreDataCreateTestNG extends BaseServiceSetupTestNG {
         // /themes/default folder needs be R/O for EVERYONE, no exclusions
         Role adminRole = getRole(ROLE_ADMINISTRATOR);
         ObjectPermission objPerm = createObjectPermission("/themes/default", adminRole, JasperServerPermission.READ.getMask());
-        ExecutionContext executionContext = JasperServerUtil.getExecutionContext();
+        ExecutionContext executionContext = StaticExecutionContextProvider.getExecutionContext();
         executionContext.getAttributes().add(ObjectPermissionService.PRIVILEGED_OPERATION);
         getObjectPermissionService().putObjectPermission(executionContext, objPerm);
     }

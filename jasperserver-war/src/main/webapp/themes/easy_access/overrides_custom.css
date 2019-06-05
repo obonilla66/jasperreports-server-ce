@@ -1,4 +1,25 @@
 /*
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * http://www.jaspersoft.com.
+ *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
 .overrides_custom css
 
 (Accessible Version)
@@ -199,7 +220,7 @@ select:focus {
     border-bottom: 1px solid #1388d8;
     height: 28px;
     top: 2px;
-} 
+}
 
 #logo {
     margin-top: 5px;
@@ -308,4 +329,106 @@ textarea.subfocus {
 
 .resourceBlock-table td.fileType.subfocus{
     color: #333;
+}
+
+
+#about > .subfocus:not(select) {
+    background-color: transparent; /* MODIFIED FROM #c9ebf8 */
+    outline: 2px dotted orange;
+}
+
+/*
+ * report TOC tabs
+ */
+#reportPartsContainer {
+    height: 24px;
+}
+
+#reportPartsContainer.superfocus {
+    margin-top: 3px;
+}
+
+#reportPartsContainer .leaf.subfocus:focus {
+    outline: none;
+}
+
+#reportPartsContainer .leaf.subfocus:not(select) {
+    background-color: transparent;
+}
+
+#reportPartsContainer .leaf.subfocus:focus .button {
+    border: 1px dotted royalblue;
+    border-bottom: none;
+}
+
+#reportPartsContainer .leaf.control.subfocus:focus .button {
+    outline: 1px dotted royalblue;
+    border: none;
+}
+
+#reportPartsContainer.superfocus .reportPart {
+    height: 21px;
+    top: 3px;
+}
+
+#reportPartsContainer.superfocus .control.search .button {
+    height: 24px;
+    min-height: 24px;
+}
+
+#reportPartsContainer.superfocus .control.search .button .wrap {
+    margin-top: -2px;
+}
+
+
+/*
+ * report toolbar navigation
+ */
+#reportViewer .toolbar {
+    height: 29px;
+    border-top: 2px solid #fff;
+}
+
+#reportViewer .toolbar > .buttonSet {
+    margin-left: 3px;
+}
+
+#reportViewer .toolbar > .buttonSet .leaf.subfocus:not(select),
+#reportViewer .toolbar > .toolsRight .leaf.subfocus:not(select) {
+    background-color: transparent;
+}
+
+#reportViewer .toolbar > .buttonSet .leaf:focus,
+#reportViewer .toolbar > .toolsRight .leaf:focus {
+    outline: none;
+}
+
+#reportViewer .toolbar > .buttonSet .leaf:focus .button,
+#reportViewer .toolbar > .toolsRight .leaf:focus .button.action {
+    outline: 1px dotted royalblue;
+}
+
+#reportViewer .control.zoom.subfocus .input:not(select),
+#reportViewer .control.search.subfocus .input:not(select) {
+    background-color: transparent;
+    outline: 2px dotted orange;
+}
+
+#reportViewer .control.paging.subfocus input:not(select) {
+    outline: 2px dotted orange;
+}
+
+#reportViewFrame .header > .list.buttonSet > .leaf.subfocus:not(select) {
+    background-color: transparent;
+}
+
+#viewerToolbar > .toolsRight .control.input > input.subfocus:not(select) {
+    background-color: #fff;
+}
+
+/*
+ * report toolbar body
+ */
+#reportViewFrame.column.decorated > .content > .body {
+    top: 28px;
 }

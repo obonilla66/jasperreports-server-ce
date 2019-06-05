@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -23,11 +26,11 @@
        xmlns:util="http://www.springframework.org/schema/util"
        xmlns:security="http://www.springframework.org/schema/security"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
        http://www.springframework.org/schema/security
-       http://www.springframework.org/schema/security/spring-security-3.2.xsd
+       http://www.springframework.org/schema/security/spring-security-4.2.xsd
        http://www.springframework.org/schema/util
-       http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+       http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 
 
 <!-- 2010-05-07: SPRING REFACTOR PROJECT: LIST OF CHANGES                  -->
@@ -166,7 +169,7 @@
     </bean>
 
     <bean id="defaultReportJobValidator" class="com.jaspersoft.jasperserver.api.engine.scheduling.DefaultReportJobValidator">
-        <property name="repository" ref="${bean.unsecureRepositoryService}"/>
+        <property name="repository" ref="${bean.repositoryService}"/>
         <property name="engineServiceBeanName" value="${bean.engineService}"/>
         <property name="repositoryServiceSecurityChecker" ref="${bean.repositoryServiceSecurityChecker}"/>
     </bean>
@@ -175,7 +178,7 @@
         <property name="persistenceService" ref="${bean.reportJobsPersistenceService}"/>
         <property name="jobsInternalService" ref="reportJobsPersistenceHibernateService"/>
         <property name="scheduler" ref="reportScheduler"/>
-        <property name="validator" ref="defaultReportJobValidator"/>
+        <property name="validator" ref="${bean.reportJobValidator}"/>
         <property name="auditContext" ref="${bean.auditContext}"/>
         <property name="outputKeyMapping" ref="outputKeyMapping"/>
         <property name="externalUserService">
@@ -272,14 +275,14 @@
     </bean>
 
     <bean id="reportJobAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-        <property name="allowIfAllAbstainDecisions"><value>true</value></property>
-        <property name="decisionVoters">
+        <constructor-arg>
             <list>
                 <ref bean="reportJobUpdateVoter"/>
                 <ref bean="reportJobDeletionVoter"/>
                 <ref bean="reportJobLoadVoter"/>
             </list>
-        </property>
+        </constructor-arg>
+        <property name="allowIfAllAbstainDecisions"><value>true</value></property>
     </bean>
 
     <bean id="reportJobAfterList" class="org.springframework.security.acls.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider">

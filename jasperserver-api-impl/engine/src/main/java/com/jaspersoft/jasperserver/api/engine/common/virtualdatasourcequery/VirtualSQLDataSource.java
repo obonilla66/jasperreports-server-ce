@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery;
 
@@ -25,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.lang.String;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -34,6 +38,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -104,6 +109,12 @@ public class VirtualSQLDataSource implements javax.sql.DataSource {
     public Set<String> getSubDSTableList(String catalog, String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
         if (connectionFactory instanceof VirtualSQLDataSourceMetaData)
             return ((VirtualSQLDataSourceMetaData)connectionFactory).getSubDSTableList(catalog, schemaPattern, tableNamePattern, types);
+        throw new SQLException("This method only works JDBC/ JNDI sub data source for virtual data source");
+    }
+
+    public boolean testIndividualConnections()  throws SQLException {
+        if (connectionFactory instanceof VirtualSQLDataSourceMetaData)
+            return ((VirtualSQLDataSourceMetaData)connectionFactory).testIndividualConnections();
         throw new SQLException("This method only works JDBC/ JNDI sub data source for virtual data source");
     }
 
@@ -207,7 +218,9 @@ public class VirtualSQLDataSource implements javax.sql.DataSource {
                 try {
 
                     rs2 = conn.getMetaData().getTables(null, schema, null, types);
-                    if (rs2.next()) set.add(schema);
+                    if (rs2.next()) {
+                        if (includeCurrentSchema(conn, schema)) set.add(schema);
+                    }
                     else log.debug(schema + " schema contains no table.  Ignore in VDS");
 
                     /***  take too long to check empty tables
@@ -246,6 +259,27 @@ public class VirtualSQLDataSource implements javax.sql.DataSource {
             log.error("Cannot get schemas", ex);
             throw ex;
         }
+    }
+
+    protected static boolean includeCurrentSchema(Connection conn, String schema) {
+        try {
+            String connectionURL = conn.getMetaData().getURL().toLowerCase();
+            /**
+             * bug JRS-19585 Cannot get context of VDS based on cassandra (simba) datasource in Domain Designer
+             * for simba cassandra driver: VDS should only contains selected key space, ignore all system schemas
+             */
+            if (connectionURL.startsWith("jdbc:cassandra")) {
+                int index = connectionURL.indexOf(";");
+                if (index > 0 && index < connectionURL.length()) {
+                    String paramString = connectionURL.substring(index + 1);
+                    Properties p = new Properties();
+                    p.load(new StringReader(paramString.replaceAll(";", "\n")));
+                    String selectedSchema = p.getProperty("defaultkeyspace");
+                    return (schema.equals(selectedSchema));
+                }
+            }
+        } catch (Exception ex) {};
+        return true;
     }
 
     private static Set<String> getResult(ResultSet rs, String columnName) {

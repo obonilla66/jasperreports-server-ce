@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.api.logging.diagnostic.service.impl;
@@ -92,9 +95,9 @@ public class EhCacheDiagnosticServiceTest extends UnitilsJUnit4 {
     @Before
     public void setUp() {
         finalStatistics = MockUnitils.createMock(CacheStatistics.class);
-
-        finalStatistics.returns(statisticsAccuracy).getStatisticsAccuracy();
-        finalStatistics.returns(statisticsAccuracyDescription).getStatisticsAccuracyDescription();
+// TODO: ogavavka SpringUpgrade 26.08.2016 - after Ehcache upgrade some statistics is missing
+//        finalStatistics.returns(statisticsAccuracy).getStatisticsAccuracy();
+//        finalStatistics.returns(statisticsAccuracyDescription).getStatisticsAccuracyDescription();
         finalStatistics.returns(objectCount).getObjectCount();
         finalStatistics.returns(cacheHitPercentage).getCacheHitPercentage();
         finalStatistics.returns(cacheHits).getCacheHits();
@@ -146,13 +149,14 @@ public class EhCacheDiagnosticServiceTest extends UnitilsJUnit4 {
         Map<DiagnosticAttribute, DiagnosticCallback> resultDiagnosticData = ehCacheDiagnosticService.getMock().getDiagnosticData();
 
         //Test total size of diagnostic attributes collected from SessionRegistryDiagnosticService
-        assertEquals(39, resultDiagnosticData.size());
+        assertEquals(37, resultDiagnosticData.size());
 
         //Test actual values of diagnostic attributes
-        assertEquals(statisticsAccuracy, resultDiagnosticData.get(new DiagnosticAttributeImpl(
-                DiagnosticAttributeBuilder.EHCACHE_STAT_ACCURACY, null, null)).getDiagnosticAttributeValue());
-        assertEquals(statisticsAccuracyDescription, resultDiagnosticData.get(new DiagnosticAttributeImpl(
-                DiagnosticAttributeBuilder.EHCACHE_STAT_ACCURACYDESCR, null, null)).getDiagnosticAttributeValue());
+// TODO: ogavavka SpringUpgrade 26.08.2016 - after Ehcache upgrade some statistics is missing
+//        assertEquals(statisticsAccuracy, resultDiagnosticData.get(new DiagnosticAttributeImpl(
+//                DiagnosticAttributeBuilder.EHCACHE_STAT_ACCURACY, null, null)).getDiagnosticAttributeValue());
+//        assertEquals(statisticsAccuracyDescription, resultDiagnosticData.get(new DiagnosticAttributeImpl(
+//                DiagnosticAttributeBuilder.EHCACHE_STAT_ACCURACYDESCR, null, null)).getDiagnosticAttributeValue());
         assertEquals(objectCount, resultDiagnosticData.get(new DiagnosticAttributeImpl(
                 DiagnosticAttributeBuilder.EHCACHE_STAT_OBJECTCOUNT, null, null)).getDiagnosticAttributeValue());
         assertEquals(cacheHitPercentage, resultDiagnosticData.get(new DiagnosticAttributeImpl(

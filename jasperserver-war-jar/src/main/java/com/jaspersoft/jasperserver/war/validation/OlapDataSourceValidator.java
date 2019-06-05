@@ -1,31 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.validation;
-
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
 import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import com.jaspersoft.jasperserver.war.dto.OlapDataSourceWrapper;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
 /**
  * 
@@ -55,7 +57,7 @@ public class OlapDataSourceValidator extends ReportDataSourceValidator implement
 		if(jndiSource.getJndiName()==null || jndiSource.getJndiName().trim().length()==0) {
 			errors.rejectValue("olapDataSource.jndiName", "OlapDataSourceValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateJndiServiceName(jndiSource.getJndiName())) {
+			if(!ValidationUtil.regExValidateJndiServiceName(jndiSource.getJndiName())) {
 				errors.rejectValue(
 						"olapDataSource.jndiName", "OlapDataSourceValidator.error.invalid.chars");
 			}
@@ -69,7 +71,7 @@ public class OlapDataSourceValidator extends ReportDataSourceValidator implement
 		if(ds.getName()==null || ds.getName().trim().length()==0) {
 			errors.rejectValue("olapDataSource.name", "OlapDataSourceValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateName(ds.getName())) {
+			if(!ValidationUtil.regExValidateName(ds.getName())) {
 				errors.rejectValue("olapDataSource.name", "OlapDataSourceValidator.error.invalid.chars");
 			}
 		}
@@ -77,7 +79,7 @@ public class OlapDataSourceValidator extends ReportDataSourceValidator implement
 		if(ds.getLabel()==null || ds.getLabel().trim().length()==0) {
 			errors.rejectValue("olapDataSource.label", "OlapDataSourceValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateLabel(ds.getLabel())) {
+			if(!ValidationUtil.regExValidateLabel(ds.getLabel())) {
 				errors.rejectValue("olapDataSource.label", "OlapDataSourceValidator.error.invalid.chars");
 			}
 		}
@@ -91,7 +93,7 @@ public class OlapDataSourceValidator extends ReportDataSourceValidator implement
 		if(ds.getDriverClass()==null || ds.getDriverClass().trim().length()==0) {
 			errors.rejectValue("olapDataSource.driverClass", "OlapDataSourceValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateDbDriver(ds.getDriverClass())) {
+			if(!ValidationUtil.regExValidateDbDriver(ds.getDriverClass())) {
 				errors.rejectValue(
 						"olapDataSource.driverClass", "OlapDataSourceValidator.error.invalid.chars");
 			}
@@ -100,7 +102,7 @@ public class OlapDataSourceValidator extends ReportDataSourceValidator implement
 		if(ds.getConnectionUrl()==null || ds.getConnectionUrl().trim().length()==0) {
 			errors.rejectValue("olapDataSource.connectionUrl", "OlapDataSourceValidator.error.not.empty");
 		} else {
-			if(!JasperServerUtil.regExValidateJdbcURL(ds.getConnectionUrl())) {
+			if(!ValidationUtil.regExValidateJdbcURL(ds.getConnectionUrl())) {
 				errors.rejectValue(
 						"olapDataSource.connectionUrl", "OlapDataSourceValidator.error.invalid.chars");
 			}

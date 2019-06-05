@@ -1,26 +1,33 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -29,22 +36,25 @@ import java.util.List;
  * @version $Id$
  */
 @XmlType(name = "resources")
-public class ClientReportUnitResourceListWrapper {
+public class ClientReportUnitResourceListWrapper implements DeepCloneable<ClientReportUnitResourceListWrapper> {
     private List<ClientReportUnitResource> files;
-    public ClientReportUnitResourceListWrapper(){}
 
-    public ClientReportUnitResourceListWrapper(List<ClientReportUnitResource> files){
+    public ClientReportUnitResourceListWrapper() {
+    }
+
+    public ClientReportUnitResourceListWrapper(List<ClientReportUnitResource> files) {
         this.files = files;
     }
 
     public ClientReportUnitResourceListWrapper(ClientReportUnitResourceListWrapper other) {
-        final List<ClientReportUnitResource> srcFiles = other.getFiles();
-        if(srcFiles != null){
-            files = new ArrayList<ClientReportUnitResource>(other.getFiles().size());
-            for(ClientReportUnitResource resource : srcFiles){
-                files.add(new ClientReportUnitResource(resource));
-            }
-        }
+        checkNotNull(other);
+
+        files = copyOf(other.getFiles());
+    }
+
+    @Override
+    public ClientReportUnitResourceListWrapper deepClone() {
+        return new ClientReportUnitResourceListWrapper(this);
     }
 
     @XmlElement(name = "resource")
@@ -52,7 +62,30 @@ public class ClientReportUnitResourceListWrapper {
         return files;
     }
 
-    public void setFiles(List<ClientReportUnitResource> files) {
+    public ClientReportUnitResourceListWrapper setFiles(List<ClientReportUnitResource> files) {
         this.files = files;
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ClientReportUnitResourceListWrapper that = (ClientReportUnitResourceListWrapper) o;
+
+        return files != null ? files.equals(that.files) : that.files == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return files != null ? files.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "ClientReportUnitResourceListWrapper{" +
+                "files=" + files +
+                '}';
     }
 }

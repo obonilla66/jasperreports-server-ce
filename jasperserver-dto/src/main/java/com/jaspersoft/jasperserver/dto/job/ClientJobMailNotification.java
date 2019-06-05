@@ -1,29 +1,35 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.job.adapters.AddressesXmlAdapter;
-import java.util.LinkedList;
-import java.util.List;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p/>
@@ -54,18 +60,20 @@ public class ClientJobMailNotification implements DeepCloneable<ClientJobMailNot
     }
 
     public ClientJobMailNotification(ClientJobMailNotification other) {
-        this.bccAddresses = (other.bccAddresses != null) ? new LinkedList<String>(other.bccAddresses) : null;
-        this.ccAddresses = (other.ccAddresses != null) ? new LinkedList<String>(other.ccAddresses) : null;
-        this.toAddresses = (other.toAddresses != null) ? new LinkedList<String>(other.toAddresses) : null;
-        this.id = other.id;
-        this.includingStackTraceWhenJobFails = other.includingStackTraceWhenJobFails;
-        this.messageText = other.messageText;
-        this.messageTextWhenJobFails = other.messageTextWhenJobFails;
-        this.resultSendType = other.resultSendType;
-        this.skipEmptyReports = other.skipEmptyReports;
-        this.skipNotificationWhenJobFails = other.skipNotificationWhenJobFails;
-        this.subject = other.subject;
-        this.version = other.version;
+        checkNotNull(other);
+
+        this.bccAddresses = copyOf(other.getBccAddresses());
+        this.ccAddresses = copyOf(other.getCcAddresses());
+        this.toAddresses = copyOf(other.getToAddresses());
+        this.id = other.getId();
+        this.includingStackTraceWhenJobFails = other.isIncludingStackTraceWhenJobFails();
+        this.messageText = other.getMessageText();
+        this.messageTextWhenJobFails = other.getMessageTextWhenJobFails();
+        this.resultSendType = other.getResultSendType();
+        this.skipEmptyReports = other.isSkipEmptyReports();
+        this.skipNotificationWhenJobFails = other.isSkipNotificationWhenJobFails();
+        this.subject = other.getSubject();
+        this.version = other.getVersion();
     }
 
     @XmlJavaTypeAdapter(AddressesXmlAdapter.class)
@@ -188,23 +196,19 @@ public class ClientJobMailNotification implements DeepCloneable<ClientJobMailNot
 
         if (bccAddresses != null ? !bccAddresses.equals(that.bccAddresses) : that.bccAddresses != null) return false;
         if (ccAddresses != null ? !ccAddresses.equals(that.ccAddresses) : that.ccAddresses != null) return false;
+        if (toAddresses != null ? !toAddresses.equals(that.toAddresses) : that.toAddresses != null) return false;
+        if (version != null ? !version.equals(that.version) : that.version != null) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (includingStackTraceWhenJobFails != null ? !includingStackTraceWhenJobFails.equals(that.includingStackTraceWhenJobFails) : that.includingStackTraceWhenJobFails != null)
             return false;
         if (messageText != null ? !messageText.equals(that.messageText) : that.messageText != null) return false;
-        if (messageTextWhenJobFails != null ? !messageTextWhenJobFails.equals(that.messageTextWhenJobFails) : that.messageTextWhenJobFails != null)
-            return false;
-        if (resultSendType != null ? !resultSendType.equals(that.resultSendType) : that.resultSendType != null)
-            return false;
+        if (resultSendType != that.resultSendType) return false;
         if (skipEmptyReports != null ? !skipEmptyReports.equals(that.skipEmptyReports) : that.skipEmptyReports != null)
             return false;
         if (skipNotificationWhenJobFails != null ? !skipNotificationWhenJobFails.equals(that.skipNotificationWhenJobFails) : that.skipNotificationWhenJobFails != null)
             return false;
         if (subject != null ? !subject.equals(that.subject) : that.subject != null) return false;
-        if (toAddresses != null ? !toAddresses.equals(that.toAddresses) : that.toAddresses != null) return false;
-        if (version != null ? !version.equals(that.version) : that.version != null) return false;
-
-        return true;
+        return messageTextWhenJobFails != null ? messageTextWhenJobFails.equals(that.messageTextWhenJobFails) : that.messageTextWhenJobFails == null;
     }
 
     @Override
@@ -226,7 +230,7 @@ public class ClientJobMailNotification implements DeepCloneable<ClientJobMailNot
 
     @Override
     public String toString() {
-        return "MailNotification{" +
+        return "ClientJobMailNotification{" +
                 "bccAddresses=" + bccAddresses +
                 ", ccAddresses=" + ccAddresses +
                 ", toAddresses=" + toAddresses +
@@ -234,7 +238,7 @@ public class ClientJobMailNotification implements DeepCloneable<ClientJobMailNot
                 ", id=" + id +
                 ", includingStackTraceWhenJobFails=" + includingStackTraceWhenJobFails +
                 ", messageText='" + messageText + '\'' +
-                ", resultSendType='" + resultSendType + '\'' +
+                ", resultSendType=" + resultSendType +
                 ", skipEmptyReports=" + skipEmptyReports +
                 ", skipNotificationWhenJobFails=" + skipNotificationWhenJobFails +
                 ", subject='" + subject + '\'' +

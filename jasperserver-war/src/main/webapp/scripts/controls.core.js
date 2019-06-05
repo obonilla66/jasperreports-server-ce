@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -27,7 +27,7 @@
 
 /* global JRS, ajax, console, _, Mustache, dialogs */
 
-JRS.Controls = (function(jQuery, _, Mustache, dialogs){
+JRS.Controls = (function(jQuery, _, dialogs){
 
     //module:
     //
@@ -51,6 +51,17 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
     //  dialogs        - components.dialogs module
     var isIE = navigator.userAgent.toLowerCase().indexOf("msie") > -1;
 
+
+    function createTemplateFunction(template){
+        return function (data) {
+            return _.template(template)(_.defaults({
+                data: undefined,
+                uuid: undefined,
+                message: undefined,
+                description: undefined
+            }, data))
+        }
+    }
 
     return {
 
@@ -100,7 +111,7 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
             render:function (templateText, model, type) {
                 if (!type){
                     //Mustache by default
-                    return Mustache.to_html(templateText, model);
+                    return createTemplateFunction(templateText)(model);
                 }else if(type == this.STD_PLACEHOLDERS){
                     var result = String(templateText);
                     _.each(model,  function(val, index){
@@ -111,7 +122,7 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
                 }
             },
             renderUrl:function(templateText, model, encoded){
-              var url = Mustache.to_html(templateText, model);
+              var url = _.template(templateText)(model);
                 if(isIE && !encoded){
                     url = encodeURI(url);
                 }
@@ -129,22 +140,18 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
                 var templateText = scriptTag.html();
 
                 if (templateText && templateText.length > 0) {
-                    return function (model) {
-                        return Mustache.to_html(templateText, model);
-                    };
+                    return createTemplateFunction(templateText)
                 }
             },
 
             // Cut template's text chunk and wrap with a function
             createTemplateSection:function (section, templateId) {
-                var regexpTemplate = '\\{\\{#val\\}\\}(\\s|\\S)*\\{\\{/val\\}\\}';
+                var regexpTemplate = '<!--#val-->(\\s|\\S)*<!--/val-->';
                 var concreteSectionRegexpPattern = regexpTemplate.replace(/val/g, section);
                 var regexp = new RegExp(concreteSectionRegexpPattern, "g");
                 var templateText = this.getTemplateText(templateId);
                 var templateSectionText = templateText.match(regexp)[0];
-                return  function (model) {
-                    return Mustache.to_html(templateSectionText, model);
-                };
+                return createTemplateFunction(templateSectionText);
             },
 
             STD_PLACEHOLDERS : "std_placeholder"
@@ -178,7 +185,7 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
                     parent.removeChild(el);
                 }
 
-                el.innerHTML = "";
+                jQuery(el).html("");
 
                 if (isIE && (el.tagName == "SELECT")) {
                     //workaround for bug in IE, select element and innerHTML functionality
@@ -188,7 +195,7 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
                         var option = document.createElement('OPTION');
                         //hardcoded workaround for report options
                         option.value = !_.isUndefined(data.value) ? data.value : data.id;
-                        option.innerHTML = data.label;
+                        jQuery(option).html(data.label);
                         if (data.selected) {
                             option.setAttribute('selected', 'selected');
                         }
@@ -196,7 +203,7 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
                     });
                     el.appendChild(fragment);
                 } else {
-                    el.innerHTML = template(data);
+                    jQuery(el).html(template(data));
                 }
 
                 if (nextSibling) {
@@ -269,19 +276,18 @@ JRS.Controls = (function(jQuery, _, Mustache, dialogs){
 
         listen:function (listeners, context) {
             _.each(listeners, function (eventHandler, eventName) {
-                jQuery(document).bind(eventName, _.bind(eventHandler, this));
+                jQuery(document).on(eventName, _.bind(eventHandler, this));
             }, !context ? this : context);
         },
 
         ignore:function(eventName, handler){
-            jQuery(document).unbind(eventName, handler);
+            jQuery(document).off(eventName, handler);
         }
     };
 
 })(
     jQuery,
     _,
-    Mustache,
     dialogs
 );
 

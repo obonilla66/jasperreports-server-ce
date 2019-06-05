@@ -1,36 +1,32 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBoolean;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientFloat;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDouble;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLong;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientShort;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientByte;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigDecimal;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTimestamp;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientComparison;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientFunction;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientLogical;
@@ -42,9 +38,8 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.Client
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientAnd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientNot;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientOr;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.filter.ClientFilter;
-import com.jaspersoft.jasperserver.dto.adhoc.query.filter.ClientFilterHint;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -58,7 +53,7 @@ import static java.util.Arrays.asList;
 /**
  * @author Stas Chubar <schubar@tibco.com>
  * @author Grant Bacon <gbacon@tibco.com>
- * @version $Id $
+ * @version $Id$
  */
 public class ClientExpressions {
 
@@ -120,35 +115,35 @@ public class ClientExpressions {
     }
 
     public static ClientLiteral literal(Byte value) {
-        return new ClientByte(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(Short value) {
-        return new ClientShort(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(Integer value) {
-        return new ClientInteger(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(Long value){
-        return new ClientLong(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(BigInteger value){
-        return new ClientBigInteger(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(Float value) {
-        return new ClientFloat(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(Double value) {
-        return new ClientDouble(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(BigDecimal value) {
-        return new ClientBigDecimal(value);
+        return new ClientNumber(value);
     }
 
     public static ClientLiteral literal(Date value) {
@@ -168,7 +163,7 @@ public class ClientExpressions {
     }
 
     public static ClientLiteral literal(char value) {
-        return ClientString.valueOf(value);
+        return new ClientString(String.valueOf(value));
     }
 
     public static ClientLiteral string(String value) {
@@ -239,20 +234,19 @@ public class ClientExpressions {
         return new ClientVariable(string);
     }
 
-    public static ClientFilter filter(String string, ClientExpression expression) {
-        return new ClientFilter(string, expression);
-    }
-
-    public static ClientFilter filter(String string, ClientFilterHint hint, ClientExpression expression) {
-        return new ClientFilter(string, hint, expression);
+    public static ClientNumber number(Number number){
+        return new ClientNumber(number);
     }
 
     public static ClientNot not(ClientExpression expression) {
-        return ClientNot.not(expression);
+        return new ClientNot(expression);
     }
 
     public static ClientAnd and(ClientExpression lhs, ClientExpression rhs) {
         return ClientLogical.and(lhs, rhs);
+    }
+    public static ClientIn in(ClientExpression lhs, ClientExpression rhs) {
+        return new ClientIn(lhs, rhs);
     }
 
     public static ClientOr or(ClientExpression lhs, ClientExpression rhs) {
@@ -284,23 +278,23 @@ public class ClientExpressions {
     }
 
     public static ClientAdd add(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientAdd(asList(lhs, rhs));
+        return new ClientAdd().setOperands(asList(lhs, rhs));
     }
 
     public static ClientMultiply multiply(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientMultiply(asList(lhs, rhs));
+        return new ClientMultiply().setOperands(asList(lhs, rhs));
     }
 
     public static ClientSubtract subtract(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientSubtract(asList(lhs, rhs));
+        return new ClientSubtract().setOperands(asList(lhs, rhs));
     }
 
     public static ClientDivide divide(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientDivide(asList(lhs, rhs));
+        return new ClientDivide().setOperands(asList(lhs, rhs));
     }
 
     public static ClientPercentRatio percentRatio(ClientExpression lhs, ClientExpression rhs) {
-        return new ClientPercentRatio(asList(lhs, rhs));
+        return new ClientPercentRatio().setOperands(asList(lhs, rhs));
     }
 
 }

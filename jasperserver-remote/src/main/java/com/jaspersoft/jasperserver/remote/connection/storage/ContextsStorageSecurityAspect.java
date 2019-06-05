@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection.storage;
 
@@ -42,23 +45,23 @@ import java.util.UUID;
 @Component
 @Aspect
 public class ContextsStorageSecurityAspect {
-    @Resource(name = "connectionsCache")
+    @Resource(name = "contextsCache")
     private Cache cache;
-    @Around("execution(* ConnectionDataStorage.save(ConnectionDataPair))")
+    @Around("execution(* ContextDataStorage.save(com.jaspersoft.jasperserver.remote.connection.storage.ContextDataPair))")
     public Object saveOwnedContext(ProceedingJoinPoint joinPoint) throws Throwable {
         final Object[] args = joinPoint.getArgs();
-        args[0] = getOwnedDataPair((ConnectionDataPair) args[0]);
+        args[0] = getOwnedDataPair((ContextDataPair) args[0]);
         return joinPoint.proceed(args);
     }
-    @Around("execution(* ConnectionDataStorage.update(java.util.UUID, ConnectionDataPair))")
+    @Around("execution(* ContextDataStorage.update(java.util.UUID, com.jaspersoft.jasperserver.remote.connection.storage.ContextDataPair))")
     public void updateOwnedContext(ProceedingJoinPoint joinPoint) throws Throwable {
         final Object[] args = joinPoint.getArgs();
-        args[1] = getOwnedDataPair((ConnectionDataPair) args[1]);
+        args[1] = getOwnedDataPair((ContextDataPair) args[1]);
         joinPoint.proceed(args);
     }
-    @Before("execution(* ConnectionDataStorage.update(java.util.UUID, ConnectionDataPair)) ||" +
-            "execution(* ConnectionDataStorage.get(java.util.UUID)) ||" +
-            "execution(* ConnectionDataStorage.delete(java.util.UUID))"
+    @Before("execution(* ContextDataStorage.update(java.util.UUID, com.jaspersoft.jasperserver.remote.connection.storage.ContextDataPair)) ||" +
+            "execution(* ContextDataStorage.get(java.util.UUID)) ||" +
+            "execution(* ContextDataStorage.delete(java.util.UUID))"
     )
     public void checkOwner(JoinPoint joinPoint){
         final UUID uuid = (UUID) joinPoint.getArgs()[0];
@@ -66,8 +69,8 @@ public class ContextsStorageSecurityAspect {
         if(element != null){
             final Object pair = element.getObjectValue();
             if(pair != null){
-                if(!(pair instanceof OwnedConnectionDataPair &&
-                        getCurrentUserQualifiedName().equals(((OwnedConnectionDataPair) pair).getOwner()))){
+                if(!(pair instanceof OwnedContextDataPair &&
+                        getCurrentUserQualifiedName().equals(((OwnedContextDataPair) pair).getOwner()))){
                     // throw exception if pair isn't null and it has another owner, than current user or doesn't
                     // have owner at all
                     throw new AccessDeniedException(uuid.toString());
@@ -85,10 +88,10 @@ public class ContextsStorageSecurityAspect {
         return cache.get(uuid);
     }
 
-    protected OwnedConnectionDataPair getOwnedDataPair(ConnectionDataPair source){
+    protected OwnedContextDataPair getOwnedDataPair(ContextDataPair source){
         final String userQualifiedName = getCurrentUserQualifiedName();
-        return new OwnedConnectionDataPair(source.getConnection(),
-                source.getData(), userQualifiedName);
+        return (OwnedContextDataPair) new OwnedContextDataPair(source.getContext(),
+                source.getData(), userQualifiedName).setExternalContextClass(source.getExternalContextClass());
     }
 
     protected String getCurrentUserQualifiedName(){
@@ -97,10 +100,10 @@ public class ContextsStorageSecurityAspect {
         return user.getUsername() + (tenantId != null ? "|" + tenantId : "");
     }
 
-    protected static class OwnedConnectionDataPair extends ConnectionDataPair {
+    protected static class OwnedContextDataPair extends ContextDataPair {
         private final String owner;
 
-        public OwnedConnectionDataPair(Object connection, Map<String, Object> data, String owner) {
+        public OwnedContextDataPair(Object connection, Map<String, Object> data, String owner) {
             super(connection, data);
             this.owner = owner;
         }

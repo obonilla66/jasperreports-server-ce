@@ -1,24 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.reports.inputcontrols;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * InputControlOption
@@ -28,16 +35,13 @@ import java.io.Serializable;
  */
 
 @XmlRootElement(name = "inputControlOption")
-public class InputControlOption implements Serializable {
+public class InputControlOption implements Serializable, DeepCloneable<InputControlOption> {
 
-    private final static long serialVersionUID = 1l;
+    private final static long serialVersionUID = 1L;
 
     private boolean selected;
     private String label;
     private String value;
-
-    public InputControlOption() {
-    }
 
     public InputControlOption(String value, String label, boolean selected) {
         this.label = label;
@@ -45,13 +49,17 @@ public class InputControlOption implements Serializable {
         this.selected = selected;
     }
 
+    public InputControlOption() {
+        this(null, null, false);
+    }
+
     public InputControlOption(String value, String label) {
-        this.label = label;
-        this.value = value;
-        this.selected = false;
+        this(value, label, false);
     }
 
     public InputControlOption(InputControlOption other) {
+        checkNotNull(other);
+
         this.selected = other.isSelected();
         this.label = other.getLabel();
         this.value = other.getValue();
@@ -102,5 +110,23 @@ public class InputControlOption implements Serializable {
         result = 31 * result + (label != null ? label.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "InputControlOption{" +
+                "selected=" + selected +
+                ", label='" + label + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
+
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public InputControlOption deepClone() {
+        return new InputControlOption(this);
     }
 }

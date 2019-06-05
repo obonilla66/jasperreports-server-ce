@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans
@@ -24,8 +27,8 @@
         xmlns:context="http://www.springframework.org/schema/context"
         xsi:schemaLocation="http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
-    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
     <alias name="${bean.repositoryService}" alias="concreteRepository"/>
     <alias name="${bean.controlLogicUriMapping}" alias="controlLogicUriMapping"/>
     <alias name="${bean.controlLogicRegestry}" alias="controlLogicRegestry"/>
@@ -35,7 +38,7 @@
 
     <alias name="${bean.securityContextProvider}" alias="concreteSecurityContextProvider"/>
 
-    <context:component-scan base-package="com.jaspersoft.jasperserver.war.cascade"/>
+    <context:component-scan base-package="com.jaspersoft.jasperserver.inputcontrols.cascade"/>
 
     <bean id="controlLogicRegestryCe" class="java.util.HashMap">
         <constructor-arg  index="0" type="java.util.Map">
@@ -46,7 +49,7 @@
         </constructor-arg>
     </bean>
 
-    <bean id="defaultEvaluationEventsHandler" class="com.jaspersoft.jasperserver.war.cascade.EmptyEvaluationEventsHandlerImpl"/>
+    <bean id="defaultEvaluationEventsHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.EmptyEvaluationEventsHandlerImpl"/>
 
 
     <bean id="controlLogicUriMappingCe" class="java.util.HashMap">
@@ -98,7 +101,7 @@
     </util:map>
 	
 	<!-- Cache Manager -->
-	<bean id="controlLogicCacheManager" class="com.jaspersoft.jasperserver.war.cascade.cache.ControlLogicCacheManagerImpl">
+	<bean id="controlLogicCacheManager" class="com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManagerImpl">
 	    <!-- seconds before a user cache is invalid -->
 		<property name="userCacheTimeout" value="600"/>
 		<!-- seconds between server cleanup process checks for invalid user sessions -->
@@ -109,7 +112,7 @@
         <constructor-arg value="true"/>
     </bean>
 
-    <bean id="coreFilterResolver" class="com.jaspersoft.jasperserver.war.cascade.token.FilterCore">
+    <bean id="coreFilterResolver" class="com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterCore">
         <property name="builtInParameterProviders" ref="builtInParameterProviders"/>
     </bean>
 
@@ -122,7 +125,7 @@
     </util:map>
 
 	<!-- query manipulator -->
-	<bean id="CascadeQueryManipulator" class="com.jaspersoft.jasperserver.war.cascade.token.QueryFilter">
+	<bean id="CascadeQueryManipulator" class="com.jaspersoft.jasperserver.inputcontrols.cascade.token.QueryFilter">
 		<property name="filterResolver">
             <ref bean="${bean.filterResolver}"/>
 	    </property>
@@ -148,7 +151,7 @@
         <entry key="3">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.SingleSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.SingleSelectListInputControlHandler">
                         <property name="loader" ref="listOvValuesLoader"/>
                     </bean>
                 </entry>
@@ -160,7 +163,7 @@
         <entry key="4">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.SingleSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.SingleSelectListInputControlHandler">
                         <property name="loader" ref="queryValuesLoader"/>
                     </bean>
                 </entry>
@@ -172,7 +175,7 @@
         <entry key="6">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.MultiSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.MultiSelectListInputControlHandler">
                         <property name="loader" ref="listOvValuesLoader"/>
                     </bean>
                 </entry>
@@ -184,7 +187,7 @@
         <entry key="7">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.MultiSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.MultiSelectListInputControlHandler">
                         <property name="loader" ref="queryValuesLoader"/>
                     </bean>
                 </entry>
@@ -196,7 +199,7 @@
         <entry key="8">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.SingleSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.SingleSelectListInputControlHandler">
                         <property name="loader" ref="listOvValuesLoader"/>
                     </bean>
                 </entry>
@@ -208,7 +211,7 @@
         <entry key="9">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.SingleSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.SingleSelectListInputControlHandler">
                         <property name="loader" ref="queryValuesLoader"/>
                     </bean>
                 </entry>
@@ -220,7 +223,7 @@
         <entry key="10">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.MultiSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.MultiSelectListInputControlHandler">
                         <property name="loader" ref="listOvValuesLoader"/>
                     </bean>
                 </entry>
@@ -232,7 +235,7 @@
         <entry key="11">
             <map>
                 <entry key="handler">
-                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.war.cascade.handlers.MultiSelectListInputControlHandler">
+                    <bean parent="basicInputControlHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.MultiSelectListInputControlHandler">
                         <property name="loader" ref="queryValuesLoader"/>
                     </bean>
                 </entry>

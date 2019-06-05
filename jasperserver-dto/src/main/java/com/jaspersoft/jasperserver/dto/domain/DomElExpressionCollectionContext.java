@@ -1,27 +1,31 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.domain;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p></p>
@@ -32,16 +36,12 @@ import java.util.List;
 public class DomElExpressionCollectionContext extends BaseDomElContext<DomElExpressionCollectionContext> {
     @NotNull
     private List<DomElExpressionContext> expressionContexts;
+
     public DomElExpressionCollectionContext(){}
 
     public DomElExpressionCollectionContext(DomElExpressionCollectionContext source){
-        final List<DomElExpressionContext> sourceExpressionContexts = source.getExpressionContexts();
-        if(sourceExpressionContexts != null){
-            expressionContexts = new ArrayList<DomElExpressionContext>();
-            for (DomElExpressionContext expressionContext : sourceExpressionContexts) {
-                expressionContexts.add(expressionContext.deepClone());
-            }
-        }
+        super(source);
+        expressionContexts = copyOf(source.getExpressionContexts());
     }
 
     @XmlElementWrapper(name = "expressionContexts")
@@ -58,6 +58,7 @@ public class DomElExpressionCollectionContext extends BaseDomElContext<DomElExpr
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+        if (!super.equals(o)) return false;
         if (!(o instanceof DomElExpressionCollectionContext)) return false;
 
         DomElExpressionCollectionContext that = (DomElExpressionCollectionContext) o;
@@ -72,7 +73,7 @@ public class DomElExpressionCollectionContext extends BaseDomElContext<DomElExpr
 
     @Override
     public String toString() {
-        return "DomElExpressionContextCollection{" +
+        return super.toString() +
                 "expressionContexts=" + expressionContexts +
                 '}';
     }

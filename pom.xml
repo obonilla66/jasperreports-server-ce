@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
@@ -24,7 +27,7 @@
     <artifactId>server</artifactId>
     <packaging>pom</packaging>
     <name>Jasper Server</name>
-    <version>7.1.1</version>
+    <version>${buildArtifactVersionName}</version>
     <url>http://www.jaspersoft.com</url>
 
 
@@ -42,9 +45,205 @@
         <module>jasperserver-repository-hibernate/build-db</module>
       </modules>
     </profile>
+
+    <!-- profile auto-activates for jars, resolves variables in the pom file  -->
+    <profile>
+      <id>custom-install-jar</id>
+      <activation>
+        <file>
+          <exists>src/main/java/</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+
+          <plugin>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.4</version>
+            <executions>
+              <execution>
+                <id>overwrite-pom</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>install-file</goal>
+                </goals>
+                <configuration>
+                  <file>${project.basedir}/target/${project.artifactId}-${buildArtifactVersionName}.${project.packaging}</file>
+                  <pomFile>target/modified-pom-replacePomPlaceholder/modified-pom/pom.xml</pomFile>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-help-plugin</artifactId>
+            <version>2.2</version>
+            <executions>
+              <execution>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>effective-pom</goal>
+                </goals>
+                <configuration>
+                  <output>${project.build.outputDirectory}/META-INF/maven/${project.groupId}/${project.artifactId}/effective-pom.xml</output>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- profile auto-activates for jars with tests, resolves variables in the pom file  -->
+    <profile>
+      <id>custom-install-jar-tests</id>
+      <activation>
+        <file>
+          <exists>src/test/java/</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+
+          <plugin>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.4</version>
+            <executions>
+              <!-- default execution is declared to ensure the order, i.e. install-file happens after this one -->
+              <execution>
+                <id>default</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+                <configuration>
+                  <skip>true</skip>
+                </configuration>
+              </execution>
+              <!-- Replaces the pom (with placeholders) in the repository with the pom without placeholders -->
+              <execution>
+                <id>overwrite-pom</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>install-file</goal>
+                </goals>
+                <configuration>
+                  <file>${project.basedir}/target/${project.artifactId}-${buildArtifactVersionName}.${project.packaging}</file>
+                  <pomFile>target/modified-pom-replacePomPlaceholder/modified-pom/pom.xml</pomFile>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-help-plugin</artifactId>
+            <version>2.2</version>
+            <executions>
+              <execution>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>effective-pom</goal>
+                </goals>
+                <configuration>
+                  <output>${project.build.outputDirectory}/META-INF/maven/${project.groupId}/${project.artifactId}/effective-pom.xml</output>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- profile auto-activates for the war, resolves variables in the pom file  -->
+    <profile>
+      <id>custom-install-war</id>
+      <activation>
+        <file>
+          <exists>src/main/webapp/</exists><!-- activate for war which does not have version suffix -->
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.4</version>
+            <executions>
+              <execution>
+                <id>overwrite-pom</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>install-file</goal>
+                </goals>
+                <configuration>
+                  <file>${project.basedir}/target/${project.build.finalName}.${project.packaging}</file>
+                  <pomFile>target/modified-pom-replacePomPlaceholder/modified-pom/pom.xml</pomFile>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- profile auto-activates for pom packaging, resolves variables in the pom file  -->
+    <profile>
+      <id>custom-install-pom</id>
+      <activation>
+        <file>
+          <missing>src/</missing>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>replace-pom-placeholder</id>
+                <phase>install</phase>
+                <goals><goal>single</goal></goals>
+                <configuration>
+                  <finalName>modified-pom</finalName>
+                  <descriptors>
+                    <descriptor>/${js-path}/assemble/replacePomPlaceholder.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.4</version>
+            <executions>
+              <execution>
+                <id>overwrite-pom</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>install-file</goal>
+                </goals>
+                <configuration>
+                  <file>target/modified-pom-replacePomPlaceholder/modified-pom/pom.xml</file>
+                  <pomFile>target/modified-pom-replacePomPlaceholder/modified-pom/pom.xml</pomFile>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+
   </profiles>
 
     <modules>
+      <module>jasperserver-action-model</module>
       <module>jasperserver-api</module>
       <module>jasperserver-api-impl</module>
       <module>jasperserver-core-util</module>
@@ -54,6 +253,7 @@
       <module>jasperserver-custom-datasources</module>
       <module>jasperserver-war-jar</module>
       <module>jasperserver-war</module>
+      <module>jasperserver-web-common-api</module>
       <module>jasperserver-export-package</module>
       <module>jasperserver-search</module>
       <module>jasperserver-remote</module>
@@ -63,8 +263,9 @@
       <module>jasperserver-util</module>
       <module>jasperserver-connectors</module>
       <module>jasperserver-ftp</module>
+      <module>jasperserver-input-controls</module>
       <module>code-coverage</module>
-  </modules>
+    </modules>
   <build>
     <directory>${my.build.directory}</directory>
     <pluginManagement>
@@ -84,16 +285,45 @@
                 <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
+          <version>3.5.1</version>
           <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
+            <source>1.8</source>
+            <target>1.8</target>
           </configuration>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${jacoco-maven-plugin.version}</version>
+        </plugin>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+        	<groupId>org.eclipse.m2e</groupId>
+        	<artifactId>lifecycle-mapping</artifactId>
+        	<version>1.0.0</version>
+        	<configuration>
+        		<lifecycleMappingMetadata>
+        			<pluginExecutions>
+        				<pluginExecution>
+        					<pluginExecutionFilter>
+        						<groupId>
+        							org.apache.maven.plugins
+        						</groupId>
+        						<artifactId>
+        							maven-help-plugin
+        						</artifactId>
+        						<versionRange>[2.2,)</versionRange>
+        						<goals>
+        							<goal>effective-pom</goal>
+        						</goals>
+        					</pluginExecutionFilter>
+        					<action>
+        						<ignore></ignore>
+        					</action>
+        				</pluginExecution>
+        			</pluginExecutions>
+        		</lifecycleMappingMetadata>
+        	</configuration>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -164,7 +394,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.4</version>
+        <version>${maven.dependency.plugin.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
+        <configuration>
+          <argLine>${argLine}</argLine>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
@@ -221,13 +459,32 @@
           </execution>
         </executions>
       </plugin>
+
+      <!-- pom replacement is to resolve all variables before installing the pom into repository -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution><!-- Replace the placeholder of the pom by their values (used by the install plugin below)-->
+            <id>replace-pom-placeholder</id>
+            <phase>package</phase>
+            <goals><goal>single</goal></goals>
+            <configuration>
+              <finalName>modified-pom</finalName>
+              <descriptors>
+                <descriptor>/${js-path}/assemble/replacePomPlaceholder.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.8.1</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -245,7 +502,7 @@
       <dependency>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
-          <version>1.1.1</version>
+          <version>1.2</version>
       </dependency>
       <dependency>
         <groupId>com.jaspersoft.jasperserver.api.common.impl</groupId>
@@ -290,6 +547,11 @@
       <dependency>
         <groupId>com.jaspersoft.jasperserver.api.metadata</groupId>
         <artifactId>jasperserver-api-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.jaspersoft.jasperserver</groupId>
+        <artifactId>jasperserver-action-model</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -344,9 +606,19 @@
       </dependency>
       <dependency>
         <groupId>com.jaspersoft.jasperserver</groupId>
+        <artifactId>jasperserver-web-common-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.jaspersoft.jasperserver</groupId>
         <artifactId>jdbc-dep</artifactId>
         <type>pom</type>
         <version>1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.jaspersoft.jasperserver</groupId>
+        <artifactId>jasperserver-input-controls</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>${jpivot-groupId}</groupId>
@@ -493,12 +765,18 @@
       <dependency>
         <groupId>xerces</groupId>
         <artifactId>xercesImpl</artifactId>
-        <version>2.11.0</version>
+        <version>2.12.0</version>
       </dependency>
       <dependency>
         <groupId>xalan</groupId>
         <artifactId>serializer</artifactId>
         <version>2.7.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>dom4j</groupId>
@@ -624,7 +902,7 @@
       <dependency>
         <groupId>net.sf.jasperreports</groupId>
         <artifactId>jasperreports</artifactId>
-        <version>6.4.32</version>
+        <version>${jasperreports.version}</version>
         <exclusions>
             <exclusion>
                 <groupId>xml-apis</groupId>
@@ -648,7 +926,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.5</version>
+        <version>1.10</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -709,7 +987,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.3.6</version>
+        <version>4.5.5</version>
       </dependency>
         <dependency>
             <groupId>org.codehaus.castor</groupId>
@@ -809,12 +1087,6 @@
           <artifactId>translator-hive</artifactId>
           <version>${teiid.version}</version>
         </dependency>
-        <!--  dependency>
-          <groupId>org.infinispan</groupId>
-          <artifactId>infinispan-core</artifactId>
-          <version>5.2.11.Final</version>
-          <version>5.1.2.FINAL</version>
-        </dependency -->
         <dependency>
           <groupId>javax.resource</groupId>
           <artifactId>connector-api</artifactId>
@@ -823,7 +1095,7 @@
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging</artifactId>
-            <version>3.1.4.GA-redhat-1</version>
+            <version>${jboss.logging.version}</version>
             <!--version>3.1.2.GA</version-->
         </dependency>
 		<dependency>
@@ -839,18 +1111,13 @@
         </dependency>
         <dependency>
           <groupId>net.sf.ehcache</groupId>
-          <artifactId>ehcache-core</artifactId>
-          <version>2.6.0</version>
+          <artifactId>ehcache</artifactId>
+          <version>${ehcache.version}</version>
         </dependency>
         <dependency>
           <groupId>joda-time</groupId>
           <artifactId>joda-time</artifactId>
-          <version>2.2</version>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.axis</groupId>
-          <artifactId>axis-jaxrpc</artifactId>
-          <version>1.4-JS-1</version>
+          <version>${joda-time.version}</version>
         </dependency>
         <dependency>
           <groupId>org.apache.zookeeper</groupId>
@@ -893,19 +1160,37 @@
     <jpivot-version>6.1.0</jpivot-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <my.build.directory>target</my.build.directory>
-    <spring.version>3.2.18.RELEASE</spring.version>
-    <spring.security.version>3.2.10.RELEASE</spring.security.version>
-    <spring.integration.version>3.0.7.RELEASE</spring.integration.version>
-    <aws-java-sdk.version>1.9.31</aws-java-sdk.version>
+    <spring.version>4.3.22.RELEASE</spring.version>
+    <spring.security.version>4.2.11.RELEASE</spring.security.version>
+    <aws-java-sdk.version>1.11.505</aws-java-sdk.version>
     <teiid.version>9.1.1</teiid.version>
     <validation.api.version>1.1.0.Final</validation.api.version>
-    <jasperreports.version>6.4.3</jasperreports.version>
-    <hibernate.validator.version>5.2.2.Final</hibernate.validator.version>
-    <jackson.version>2.3.2</jackson.version>
-    <guava.version>18.0</guava.version>
-    <activemq.version>5.13.2</activemq.version>
+    <jasperreports.version>6.8.1</jasperreports.version>
+    <jasperreports.ext.version>6.8.1</jasperreports.ext.version>
+    <hibernate.validator.version>5.4.2.Final</hibernate.validator.version>
+    <hibernate.core.version>5.2.12.Final</hibernate.core.version>
+    <hibernate.tools.version>5.2.8.Final</hibernate.tools.version>
+    <ehcache.version>2.10.2.2.21</ehcache.version>
+    <jboss.logging.version>3.3.0.Final</jboss.logging.version>
+    <quartz.version>2.2.3</quartz.version>
+    <junit.version>4.12</junit.version>
+    <mockito-all.version>1.10.19</mockito-all.version>
+    <maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
+    <maven.surefire.plugin.version>2.19.1</maven.surefire.plugin.version>
+    <testng.version>6.8.8</testng.version>
+    <joda-time.version>2.2</joda-time.version>
+    <commons-collections.version>3.2.2</commons-collections.version>
+    <aspectj.version>1.8.9</aspectj.version>
+    <antlr.version>2.7.7</antlr.version>
+    <jackson.version>2.9.8</jackson.version>
+    <guava.version>19.0</guava.version>
+    <activemq.version>5.15.8</activemq.version>
     <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
-    <maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
+    <junit-platform-surefire-provider.version>1.0.1</junit-platform-surefire-provider.version>
+    <junit-jupiter.version>5.1.0</junit-jupiter.version>
+    <log4j.version>1.2.17</log4j.version>
+    <asm.version>3.2</asm.version>
+    <cglib.version>2.2</cglib.version>
   </properties>
 
 </project>

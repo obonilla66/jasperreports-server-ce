@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.util.test;
@@ -22,17 +25,14 @@ import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.properties.PropertyChanger;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.TextDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.TextDataSourceValidator;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobsScheduler;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportSchedulingService;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.PermissionUriProtocol;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.*;
@@ -59,7 +59,6 @@ import com.jaspersoft.jasperserver.export.CommandBean;
 import com.jaspersoft.jasperserver.export.Parameters;
 import com.jaspersoft.jasperserver.export.ParametersImpl;
 import com.jaspersoft.jasperserver.remote.services.PermissionsService;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import org.apache.commons.logging.Log;
@@ -418,7 +417,7 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
      * @return boolean
      * @throws Exception
      */
-    public boolean useUpperCaseNames() throws Exception {
+    public boolean useUpperCaseNames() {
         return Boolean.parseBoolean(getJdbcProps().getProperty("foodmart.upperCaseNames"));
     }
 
@@ -700,7 +699,7 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
     }
 
     protected ExecutionContext getExecutionContext() {
-        ExecutionContext executionContext = JasperServerUtil.getExecutionContext();
+        ExecutionContext executionContext = StaticExecutionContextProvider.getExecutionContext();
         executionContext.getAttributes().add(ObjectPermissionService.PRIVILEGED_OPERATION);
         return executionContext;
     }

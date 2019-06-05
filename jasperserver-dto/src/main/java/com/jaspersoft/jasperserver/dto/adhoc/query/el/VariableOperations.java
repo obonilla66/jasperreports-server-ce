@@ -1,33 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.query.el;
 
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientFloat;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDouble;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLong;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientShort;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientByte;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigDecimal;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLiteralType;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRangeBoundary;
@@ -47,6 +43,12 @@ import java.util.List;
  * @version $Id$
  */
 public abstract class VariableOperations extends Operations<ClientVariable> {
+
+    protected VariableOperations() { }
+
+    protected VariableOperations(VariableOperations source) {
+        super(source);
+    }
 
     public ClientIn in(ClientLiteral... values) {
         List<ClientExpression> exprList = new ArrayList<ClientExpression>();
@@ -101,64 +103,64 @@ public abstract class VariableOperations extends Operations<ClientVariable> {
 
     public ClientIn inRange(Byte start, Byte end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientByte(start)),
-                        new ClientRangeBoundary(new ClientByte(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(Short start, Short end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientShort(start)),
-                        new ClientRangeBoundary(new ClientShort(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(Integer start, Integer end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientInteger(start)),
-                        new ClientRangeBoundary(new ClientInteger(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(Long start, Long end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(ClientLong.valueOf(start)),
-                        new ClientRangeBoundary(ClientLong.valueOf(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(BigInteger start, BigInteger end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientBigInteger(start)),
-                        new ClientRangeBoundary(new ClientBigInteger(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(Float start, Float end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientFloat(start)),
-                        new ClientRangeBoundary(new ClientFloat(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(Double start, Double end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientDouble(start)),
-                        new ClientRangeBoundary(new ClientDouble(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }
 
     public ClientIn inRange(BigDecimal start, BigDecimal end) {
         return new ClientIn(getMe(),
-                new ClientRange(new ClientRangeBoundary(new ClientBigDecimal(start)),
-                        new ClientRangeBoundary(new ClientBigDecimal(end))
+                new ClientRange(new ClientRangeBoundary(new ClientNumber(start)),
+                        new ClientRangeBoundary(new ClientNumber(end))
                 )
         );
     }

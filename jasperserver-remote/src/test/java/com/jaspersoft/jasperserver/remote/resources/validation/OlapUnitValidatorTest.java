@@ -1,25 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.ValidationResult;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationDetailImpl;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationResultImpl;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.OlapUnitImpl;
@@ -32,8 +36,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * <p></p>
@@ -76,22 +84,52 @@ public class OlapUnitValidatorTest {
         validator.validate(unit);
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_noQuery() throws Exception {
         unit.setMdxQuery(null);
-        validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(unit);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_emptyQuery() throws Exception {
         unit.setMdxQuery("");
-        validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(unit);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
 
-    @Test(expectedExceptions = {JSValidationException.class})
+    @Test
     public void testValidate_noConnection() throws Exception {
         unit.setOlapClientConnectionReference(null);
-        validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(unit);
+
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
     }
+
+    @Test
+    public void testValidate_invalidQuery() throws Exception {
+        unit.setMdxQuery("invalidMDX");
+        ValidationDetailImpl validationDetail = new ValidationDetailImpl();
+        ValidationDetailImpl detail = new ValidationDetailImpl();
+        detail.setValidationClass(OlapUnit.class);
+        detail.setName(unit.getName());
+        detail.setLabel(unit.getLabel());
+        detail.setResult(ValidationResult.STATE_ERROR);
+        detail.setException(new Exception());
+        detail.setSource(unit.getMdxQuery());
+        detail.setMessage("mdxQuery");
+        ValidationResultImpl validationResult = new ValidationResultImpl();
+        validationResult.addValidationDetail(detail);
+        when(olapConnectionService.validate(any(ExecutionContext.class), any(OlapUnit.class))).thenReturn(validationResult);
+        final List<Exception> exceptions = validator.validate(unit);
+        assertNotNull(exceptions);
+        assertFalse(exceptions.isEmpty());
+    }
+
 
 }

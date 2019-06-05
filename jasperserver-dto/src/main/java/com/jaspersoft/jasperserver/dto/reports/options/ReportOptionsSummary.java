@@ -1,30 +1,37 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.reports.options;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
 @XmlRootElement
-public class ReportOptionsSummary {
+public class ReportOptionsSummary implements DeepCloneable<ReportOptionsSummary> {
     private String uri;
     private String id;
     private String label;
@@ -32,6 +39,8 @@ public class ReportOptionsSummary {
     public ReportOptionsSummary() { }
 
     public ReportOptionsSummary(ReportOptionsSummary other) {
+        checkNotNull(other);
+
         this.uri = other.uri;
         this.id = other.id;
         this.label = other.label;
@@ -41,24 +50,27 @@ public class ReportOptionsSummary {
         return uri;
     }
 
-    public void setUri(String uri) {
+    public ReportOptionsSummary setUri(String uri) {
         this.uri = uri;
+        return this;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public ReportOptionsSummary setId(String id) {
         this.id = id;
+        return this;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String label) {
+    public ReportOptionsSummary setLabel(String label) {
         this.label = label;
+        return this;
     }
 
     @Override
@@ -92,4 +104,12 @@ public class ReportOptionsSummary {
                 '}';
     }
 
+    /*
+     * DeepCloneable
+     */
+
+    @Override
+    public ReportOptionsSummary deepClone() {
+        return new ReportOptionsSummary(this);
+    }
 }

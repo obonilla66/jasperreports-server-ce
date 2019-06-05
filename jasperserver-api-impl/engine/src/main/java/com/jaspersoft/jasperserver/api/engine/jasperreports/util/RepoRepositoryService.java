@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.util;
 
@@ -21,6 +24,8 @@ import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.RepositoryUtils;
 import net.sf.jasperreports.repo.PersistenceService;
 import net.sf.jasperreports.repo.Resource;
@@ -40,6 +45,9 @@ public class RepoRepositoryService implements StreamRepositoryService {
 
 	private static final Log log = LogFactory.getLog(RepoRepositoryService.class);
 	
+	public final static String REPOSITORY_PROTOCOL = "repo";
+	public final static String URL_PROTOCOL_PREFIX = REPOSITORY_PROTOCOL + ':';
+	
 	private Map<Class<?>, PersistenceService> persistenceServices;
 			
 	@Override
@@ -54,7 +62,6 @@ public class RepoRepositoryService implements StreamRepositoryService {
 
 	@Override
     public InputStream getInputStream(String uri) {
-        InputStream data = null;
         RepositoryContext repositoryContext = RepositoryUtil.getThreadRepositoryContext();
         if (repositoryContext == null || !isReportContext(repositoryContext)) {
             if (log.isDebugEnabled()) {
@@ -62,18 +69,47 @@ public class RepoRepositoryService implements StreamRepositoryService {
             }
             return null;
         }
+        
+        //inherited from RepositoryURLHandlerFactory
+        uri = uri.trim();
 
         // filtering cases when the uri is (almost) obviously not a repository path.
         // we could use the repository resource names patters as validation but I'm not sure
         // that the validation is enforced everywhere.
-        if (uri.startsWith("repo:")// for now we are not handling repo: URLs here, at some point we might want to get rid of RepositoryConnection.
-                || uri.startsWith("file:") || uri.startsWith("http:") || uri.startsWith("https:")) {
+        if (uri.startsWith("file:") || uri.startsWith("http:") || uri.startsWith("https:")) {
             return null;
         }
 
-        //FIXME should we look at repositoryContext.getReportUnit()?  it seems to be no longer used.
-        String path = RepositoryUtils.resolveRelativePath(repositoryContext.getContextURI(), uri);
+        if (uri.startsWith(URL_PROTOCOL_PREFIX)) {// handling repo: URLs
+            uri = uri.substring(URL_PROTOCOL_PREFIX.length());
+        }
+        
         ExecutionContext executionContext = repositoryContext.getExecutionContext();
+        
+        if (!uri.startsWith(Folder.SEPARATOR)) {
+            ResourceContainer reportUnit = repositoryContext.getReportUnit();
+            if (reportUnit != null) {
+            	FileResource resource = reportUnit.getResourceLocal(uri);
+                if (resource != null && resource.hasData()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Loading resource \"" + resource.getName()
+                                + "\" from in-memory report unit");
+                    }
+                    InputStream data = resource.getDataStream();
+                    if (resource.getFileType().equals(FileResource.TYPE_JRXML)) {
+                        data = repositoryContext.getCompiledReportProvider().getCompiledReport(
+                                executionContext,
+                                data);//FIXME not currently used, but should do autoUpdateJRXMLResource
+                    }
+                    
+                    if (data != null) {
+                    	return data;
+                    }
+                }
+            }
+        }
+
+        String path = RepositoryUtils.resolveRelativePath(repositoryContext.getContextURI(), uri);
         com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService repository =
                 repositoryContext.getRepository();
 
@@ -92,6 +128,7 @@ public class RepoRepositoryService implements StreamRepositoryService {
             return null;
         }
 
+        InputStream data = null;
         if (resource instanceof FileResource) {
             FileResource fileResource = (FileResource) resource;
             while (fileResource != null && fileResource.isReference()) {

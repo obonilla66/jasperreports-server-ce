@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.olap.domain.impl.hibernate;
 
@@ -23,8 +26,6 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 
 import com.jaspersoft.jasperserver.api.metadata.olap.util.XMLDecoderHandler;
-import org.hibernate.Hibernate;
-import org.hibernate.lob.SerializableBlob;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -34,10 +35,12 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.pe
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.OlapUnitImpl;
 
+import javax.sql.rowset.serial.SerialBlob;
 import javax.xml.parsers.SAXParserFactory;
 import java.beans.XMLDecoder;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.SQLException;
 
 /**
@@ -50,7 +53,7 @@ public class RepoOlapUnit extends RepoResource {
 
     private RepoOlapClientConnection olapClientConn = null;
     private String mdxQuery;
-    private SerializableBlob olapViewOptions;
+    private Blob olapViewOptions;
 
     /**
      * @hibernate.many-to-one
@@ -80,11 +83,11 @@ public class RepoOlapUnit extends RepoResource {
 	mdxQuery = s;
     }
 
-    public SerializableBlob getOlapViewOptions() {
+    public Blob getOlapViewOptions() {
         return olapViewOptions;
     }
 
-    public void setOlapViewOptions(SerializableBlob sb) {
+    public void setOlapViewOptions(Blob sb) {
     	olapViewOptions = sb;
     }
 
@@ -108,7 +111,7 @@ public class RepoOlapUnit extends RepoResource {
             InputStream stream = null;
 
             try{
-                stream = new BufferedInputStream(((SerializableBlob)getOlapViewOptions()).getBinaryStream());
+                stream = new BufferedInputStream(getOlapViewOptions().getBinaryStream());
             } catch (SQLException e) {
                 throw new JSException(e);
             }
@@ -152,13 +155,17 @@ public class RepoOlapUnit extends RepoResource {
     private void copyOlapViewOptions(OlapUnit view) {
         // if it is an instance of SerializableBlob, then no need to perform the serialization: this is for the repo admin flow
         // otherwise, serialize it to XML and set the blob
-        if (view.getOlapViewOptions() != null && !(view.getOlapViewOptions() instanceof SerializableBlob)) {
+        if (view.getOlapViewOptions() != null && !(view.getOlapViewOptions() instanceof SerialBlob)) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             XMLEncoder e = new XMLEncoder(new BufferedOutputStream(baos));
             e.writeObject(view.getOlapViewOptions());
             e.flush();
             e.close();
-            setOlapViewOptions((SerializableBlob) Hibernate.createBlob(baos.toByteArray()));
+            try {
+                setOlapViewOptions(new SerialBlob(baos.toByteArray()));
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 

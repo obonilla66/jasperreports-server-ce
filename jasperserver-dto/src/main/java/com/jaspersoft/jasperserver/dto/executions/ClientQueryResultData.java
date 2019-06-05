@@ -1,30 +1,38 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.executions;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
 import javax.xml.bind.annotation.XmlElement;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Vasyl Spachynskyi
  * @version $Id$
  * @since 19.01.2016
  */
-public abstract class ClientQueryResultData<T extends ClientQueryResultData<T, DataSet, TotalCounts>, DataSet, TotalCounts> {
+public abstract class ClientQueryResultData<T extends ClientQueryResultData<T, DataSet, TotalCounts>, DataSet, TotalCounts> implements DeepCloneable<ClientQueryResultData<T, DataSet, TotalCounts>> {
     protected TotalCounts totalCounts;
     protected DataSet dataSet;
     protected ClientQueryParams queryParams;
@@ -33,10 +41,18 @@ public abstract class ClientQueryResultData<T extends ClientQueryResultData<T, D
     public ClientQueryResultData() {
     }
 
-    public ClientQueryResultData(ClientQueryResultData<T, DataSet, TotalCounts> queryResultData) {
-        queryParams = new ClientQueryParams(queryResultData.getQueryParams());
-        truncated = queryResultData.getTruncated();
+    public ClientQueryResultData(ClientQueryResultData<T, DataSet, TotalCounts> source) {
+        checkNotNull(source);
+
+        setTotalCounts(deepCopyOfTotalCounts(source.getTotalCounts()));
+        setDataSet(deepCopyOfDataSet(source.getDataSet()));
+        queryParams = copyOf(source.getQueryParams());
+        truncated = source.getTruncated();
     }
+
+    protected abstract TotalCounts deepCopyOfTotalCounts(TotalCounts totalCounts);
+
+    protected abstract DataSet deepCopyOfDataSet(DataSet dataSet);
 
     public abstract DataSet getDataSet();
 
@@ -64,8 +80,8 @@ public abstract class ClientQueryResultData<T extends ClientQueryResultData<T, D
     }
 
     @SuppressWarnings("unchecked")
-    public T setTruncated(boolean truncated) {
-        this.truncated = truncated;
+    public T setTruncated(Boolean truncated) {
+        this.truncated = truncated != null ? truncated : false;
         return (T) this;
     }
 
@@ -78,7 +94,8 @@ public abstract class ClientQueryResultData<T extends ClientQueryResultData<T, D
 
         if (getDataSet() != null ? !getDataSet().equals(that.getDataSet()) : that.getDataSet() != null) return false;
         if (queryParams != null ? !queryParams.equals(that.queryParams) : that.queryParams != null) return false;
-        if (getTotalCounts() != null ? !getTotalCounts().equals(that.getTotalCounts()) : that.getTotalCounts() != null) return false;
+        if (getTotalCounts() != null ? !getTotalCounts().equals(that.getTotalCounts()) : that.getTotalCounts() != null)
+            return false;
         if (truncated != that.truncated) return false;
 
         return true;
@@ -89,16 +106,16 @@ public abstract class ClientQueryResultData<T extends ClientQueryResultData<T, D
         int result = getDataSet() != null ? getDataSet().hashCode() : 0;
         result = 31 * result + (queryParams != null ? queryParams.hashCode() : 0);
         result = 31 * result + (getTotalCounts() != null ? getTotalCounts().hashCode() : 0);
-        result = 31 * result + (truncated  ? 1 : 0);
+        result = 31 * result + (truncated ? 1 : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "ClientQueryResultData{" +
-                "dataSet=" + dataSet +
+                "totalCounts=" + totalCounts +
+                ", dataSet=" + dataSet +
                 ", queryParams=" + queryParams +
-                ", totalCounts=" + totalCounts +
                 ", truncated=" + truncated +
                 '}';
     }

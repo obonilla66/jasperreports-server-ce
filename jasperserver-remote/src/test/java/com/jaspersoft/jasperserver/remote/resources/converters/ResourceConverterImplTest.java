@@ -1,22 +1,27 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.api.ExceptionListWrapper;
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -27,39 +32,55 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConve
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.client.ObjectPermissionImpl;
+import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
 import com.jaspersoft.jasperserver.dto.resources.ClientFolder;
+import com.jaspersoft.jasperserver.dto.resources.ClientReference;
+import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
+import com.jaspersoft.jasperserver.dto.resources.domain.ClientDomain;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceGroupProfileAttributeErrorDescriptor;
 import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
 import com.jaspersoft.jasperserver.remote.resources.attachments.AttachmentsProcessor;
 import com.jaspersoft.jasperserver.remote.resources.validation.ResourceValidator;
 import com.jaspersoft.jasperserver.remote.services.PermissionsService;
-import com.jaspersoft.jasperserver.war.cascade.handlers.GenericTypeProcessorRegistry;
+import com.jaspersoft.jasperserver.remote.validation.ClientValidator;
+import org.hibernate.validator.internal.engine.ConstraintViolationImpl;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.security.core.Authentication;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -84,17 +105,25 @@ public class ResourceConverterImplTest {
     private ClientTypeHelper clientTypeHelper;
     @Mock
     private Validator validator;
+    @Mock
+    private ClientValidator domainValidator;
 
     private final ObjectPermission permission = new ObjectPermissionImpl();
     private ToServerConversionOptions options;
+    private List<Exception> exceptions = new ArrayList<Exception>();
 
     @BeforeMethod
-    public void resetConverter() {
+    public void setUp() {
         converter = mock(ResourceConverterImpl.class);
         permission.setPermissionMask(1);
         MockitoAnnotations.initMocks(this);
         when(permissionsService.getEffectivePermission(any(Resource.class), any(Authentication.class))).thenReturn(permission);
-        options = ToServerConversionOptions.getDefault();
+        options = ToServerConversionOptions.getDefault().setAdditionalProperties(Collections.<String, String[]>emptyMap());
+    }
+
+    @AfterMethod
+    public void resetMocks() {
+        reset(permissionsService, genericTypeProcessorRegistry, clientTypeHelper, validator, domainValidator);
     }
 
     @Test(expectedExceptions = JSValidationException.class)
@@ -103,10 +132,11 @@ public class ResourceConverterImplTest {
         final String testResourceType = "testResourceType";
         when(resource.getResourceType()).thenReturn(testResourceType);
         final ResourceValidator validator = mock(ResourceValidator.class);
-        doThrow(JSValidationException.class).when(validator).validate(resource, false);
+        final HashMap<String, String[]> additionalParameters = new HashMap<String, String[]>();
+        doThrow(JSValidationException.class).when(validator).validate(resource, false, additionalParameters);
         when(genericTypeProcessorRegistry.getTypeProcessor(testResourceType, ResourceValidator.class, false)).thenReturn(validator);
-        doCallRealMethod().when(converter).validateResource(resource, false);
-        converter.validateResource(resource, false);
+        doCallRealMethod().when(converter).validateResource(resource, false, additionalParameters);
+        converter.validateResource(resource, false, additionalParameters);
     }
 
     @Test
@@ -117,9 +147,124 @@ public class ResourceConverterImplTest {
         serverObject.setURIString("/test/uri");
         when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
-        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
         converter.toServer(clientObject, serverObject, options);
-        verify(converter).validateResource(anotherServerObject, false);
+        verify(converter).validateResource(anotherServerObject, false, options.getAdditionalProperties());
+    }
+
+    @Test
+    public void toServer_OptionsWithNullProperties() throws MandatoryParameterNotFoundException, IllegalParameterValueException {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientFolder clientObject = new ClientFolder();
+        serverObject.setURIString("/test/uri");
+        options.setAdditionalProperties(null);
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
+        converter.toServer(clientObject, serverObject, options);
+        verify(converter).validateResource(anotherServerObject, false, new HashMap<String, String[]>());
+    }
+
+
+
+    @Test(expectedExceptions = ExceptionListWrapper.class)
+    public void toServer_withValidation_withConstraintViolations() throws MandatoryParameterNotFoundException, IllegalParameterValueException {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientFolder clientObject = new ClientFolder();
+        Set<ConstraintViolation<ClientFolder>> constraintViolations = new HashSet<ConstraintViolation<ClientFolder>>();
+        ConstraintViolationImpl constraintViolation = mock(ConstraintViolationImpl.class);
+        constraintViolations.add(constraintViolation);
+        serverObject.setURIString("/test/uri");
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        doReturn(constraintViolations).when(validator).validate(clientObject);
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
+        converter.toServer(clientObject, serverObject, options);
+        verify(converter).validateResource(anotherServerObject, false, options.getAdditionalProperties());
+    }
+
+    @Test
+    public void toServer_withMandatoryParameterExceptionAndViolations() {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientDomain clientObject = new ClientDomain();
+        ClientReferenceableDataSource datasource = new ClientReference();
+        clientObject.setDataSource(datasource);
+        serverObject.setURIString("/test/uri");
+        Set<ConstraintViolation<ClientFolder>> constraintViolations = new HashSet<ConstraintViolation<ClientFolder>>();
+        ConstraintViolationImpl constraintViolation = mock(ConstraintViolationImpl.class);
+        constraintViolations.add(constraintViolation);
+        doReturn(constraintViolations).when(validator).validate(clientObject);
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenThrow(MandatoryParameterNotFoundException.class);
+        try{
+            converter.toServer(clientObject, serverObject, options);
+        } catch (ExceptionListWrapper list) {
+            assertTrue(list.getExceptions().size() == 2);
+        }
+    }
+    @Test(expectedExceptions = MandatoryParameterNotFoundException.class)
+    public void toServer_withValidation_withMandatoryParameterNotFoundException() {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientDomain clientObject = new ClientDomain();
+        ClientReferenceableDataSource datasource = new ClientReference();
+        clientObject.setDataSource(datasource);
+        serverObject.setURIString("/test/uri");
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenThrow(MandatoryParameterNotFoundException.class);
+        converter.toServer(clientObject, serverObject, options);
+    }
+
+    @Test(expectedExceptions = ExceptionListWrapper.class)
+    public void toServer_withValidation_withHibernateValidatorFailure() throws MandatoryParameterNotFoundException, IllegalParameterValueException {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientFolder clientObject = new ClientFolder();
+        Set<ConstraintViolation<ClientFolder>> constraintViolations = new HashSet<ConstraintViolation<ClientFolder>>();
+        ConstraintViolationImpl constraintViolation = mock(ConstraintViolationImpl.class);
+        constraintViolations.add(constraintViolation);
+        serverObject.setURIString("/test/uri");
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        doThrow(new ConcurrentModificationException()).when(validator).validate(clientObject);
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
+        converter.toServer(clientObject, serverObject, options);
+        verify(converter).validateResource(anotherServerObject, false, options.getAdditionalProperties());
+    }
+
+    @Test
+    public void toServer_withDomainValidation() throws MandatoryParameterNotFoundException, IllegalParameterValueException {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientFolder clientObject = new ClientFolder();
+        serverObject.setURIString("/test/uri");
+        when(genericTypeProcessorRegistry.getTypeProcessor(clientObject.getClass(), ClientValidator.class, false)).thenReturn(domainValidator);
+        doReturn(new LinkedList<Exception>()).when(domainValidator).validate(clientObject);
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
+        converter.toServer(clientObject, serverObject, options);
+        verify(converter).validateResource(anotherServerObject, false, options.getAdditionalProperties());
+}
+
+    @Test
+    public void toServer_withDomainValidation_withValidationErrors() throws MandatoryParameterNotFoundException, IllegalParameterValueException {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        ResourceLookup anotherServerObject = new ResourceLookupImpl();
+        final ClientFolder clientObject = new ClientFolder();
+        serverObject.setURIString("/test/uri");
+        when(genericTypeProcessorRegistry.getTypeProcessor(clientObject.getClass(), ClientValidator.class, false)).thenReturn(domainValidator);
+        doReturn(new LinkedList<Exception>()).when(domainValidator).validate(clientObject);
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
+        converter.toServer(clientObject, serverObject, options);
+        verify(converter).validateResource(anotherServerObject, false, options.getAdditionalProperties());
+        verify(genericTypeProcessorRegistry).getTypeProcessor(clientObject.getClass(), ClientValidator.class, false);
+        verify(domainValidator).validate(clientObject);
     }
 
     @Test
@@ -131,9 +276,9 @@ public class ResourceConverterImplTest {
         serverObject.setURIString("/test/uri");
         when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(anotherServerObject);
-        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, options)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, options)).thenReturn(anotherServerObject);
         converter.toServer(clientObject, serverObject, options);
-        verify(converter).validateResource(anotherServerObject, true);
+        verify(converter).validateResource(anotherServerObject, true, options.getAdditionalProperties());
     }
 
     @Test
@@ -144,9 +289,13 @@ public class ResourceConverterImplTest {
         serverObject.setURIString("/test/uri");
         when(converter.toServer(clientObject, serverObject, null)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientObject, serverObject, null)).thenReturn(anotherServerObject);
-        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, null)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, null)).thenReturn(anotherServerObject);
+        final ArgumentCaptor<Map> mapArgumentCaptor = ArgumentCaptor.forClass(Map.class);
+        doReturn(new ArrayList<Exception>()).when(converter).validateResource(same(anotherServerObject), eq(false), mapArgumentCaptor.capture());
         converter.toServer(clientObject, serverObject, null);
-        verify(converter).validateResource(anotherServerObject, false);
+        final Map additionalParameters = mapArgumentCaptor.getValue();
+        assertNotNull(additionalParameters);
+        assertTrue(additionalParameters.isEmpty());
     }
 
     @Test
@@ -158,9 +307,9 @@ public class ResourceConverterImplTest {
         serverObject.setURIString("/test/uri");
         when(converter.toServer(clientObject, serverObject, toServerConversionOptions)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientObject, serverObject, toServerConversionOptions)).thenReturn(anotherServerObject);
-        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, toServerConversionOptions)).thenReturn(anotherServerObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, anotherServerObject, exceptions, toServerConversionOptions)).thenReturn(anotherServerObject);
         converter.toServer(clientObject, serverObject, toServerConversionOptions);
-        verify(converter, never()).validateResource(any(Resource.class), eq(true));
+        verify(converter, never()).validateResource(any(Resource.class), eq(true), any(Map.class));
     }
 
     @Test
@@ -209,7 +358,7 @@ public class ResourceConverterImplTest {
         final ClientFolder clientObject = new ClientFolder();
         when(converter.toServer(clientObject, serverObject, toServerConversionOptions)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientObject, serverObject, toServerConversionOptions)).thenReturn(serverObject);
-        when(converter.resourceSpecificFieldsToServer(clientObject, serverObject, toServerConversionOptions)).thenReturn(serverObject);
+        when(converter.resourceSpecificFieldsToServer(clientObject, serverObject, exceptions, toServerConversionOptions)).thenReturn(serverObject);
         when(converter.getClientTypeClass()).thenReturn(ClientResource.class);
         final AttachmentsProcessor attachmentsProcessor = mock(AttachmentsProcessor.class);
         when(genericTypeProcessorRegistry.getTypeProcessor(ClientResource.class, AttachmentsProcessor.class, false)).thenReturn(attachmentsProcessor);
@@ -246,7 +395,7 @@ public class ResourceConverterImplTest {
         when(converter.getServerResourceType()).thenReturn(testResourceType);
         when(converter.toServer(clientResource, serverObject, options)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientResource, serverObject, options)).thenCallRealMethod();
-        when(converter.resourceSpecificFieldsToServer(clientResource, serverObject, options)).thenReturn(serverObject);
+        when(converter.resourceSpecificFieldsToServer(clientResource, serverObject, exceptions, options)).thenReturn(serverObject);
         final Resource resource = converter.toServer(clientResource, serverObject, options);
         assertSame(resource, serverObject);
         assertEquals(resource.getURIString(), clientResource.getUri());
@@ -284,7 +433,7 @@ public class ResourceConverterImplTest {
         when(converter.getServerResourceType()).thenReturn(testResourceType);
         when(converter.toServer(clientResource, serverObject, options)).thenCallRealMethod();
         when(converter.genericFieldsToServer(clientResource, serverObject, options)).thenCallRealMethod();
-        when(converter.resourceSpecificFieldsToServer(clientResource, serverObject, options)).thenReturn(serverObject);
+        when(converter.resourceSpecificFieldsToServer(clientResource, serverObject, exceptions, options)).thenReturn(serverObject);
         final Resource resource = converter.toServer(clientResource, serverObject, options);
 
         assertEquals(resource.getVersion(), Resource.VERSION_NEW);
@@ -318,7 +467,7 @@ public class ResourceConverterImplTest {
         when(converter.getServerResourceType()).thenReturn(testResourceType);
         when(converter.toServer(eq(clientResource), eq(serverObject), any(ToServerConversionOptions.class))).thenCallRealMethod();
         when(converter.genericFieldsToServer(eq(clientResource), eq(serverObject), any(ToServerConversionOptions.class))).thenCallRealMethod();
-        when(converter.resourceSpecificFieldsToServer(eq(clientResource), eq(serverObject), any(ToServerConversionOptions.class))).thenReturn(serverObject);
+        when(converter.resourceSpecificFieldsToServer(eq(clientResource), eq(serverObject), any(List.class), any(ToServerConversionOptions.class))).thenReturn(serverObject);
         final Resource resource = converter.toServer(clientResource, serverObject, ToServerConversionOptions.getDefault().setResetVersion(true));
 
         assertEquals(resource.getVersion(), Resource.VERSION_NEW);
@@ -336,6 +485,77 @@ public class ResourceConverterImplTest {
         assertEquals(result.getVersion(), Resource.VERSION_NEW);
     }
 
+    @Test
+    public void genericFieldToClient_inMemoryResource_skipsVersionAndPermissionMask() {
+        final ResourceLookup serverObject = new ResourceLookupImpl();
+        serverObject.setVersion(10);
+        ObjectPermission objectPermission = mock(ObjectPermission.class);
+        ToClientConversionOptions options = new ToClientConversionOptions()
+                .setInMemoryResource(true);
+
+        when(objectPermission.getPermissionMask()).thenReturn(1);
+        when(permissionsService.getEffectivePermission(eq(serverObject), Matchers.<Authentication>any())).thenReturn(objectPermission);
+        when(converter.getDateTimeFormat()).thenReturn(mock(DateFormat.class));
+        when(converter.genericFieldsToClient(any(ClientResource.class), any(Resource.class), any(ToClientConversionOptions.class))).thenCallRealMethod();
+
+        ClientResource clientResource = converter.genericFieldsToClient(new ClientFolder(), serverObject, options);
+
+        assertNull(clientResource.getVersion());
+        assertNull(clientResource.getPermissionMask());
+        verifyZeroInteractions(permissionsService);
+    }
+
+    @Test
+    public void genericFieldToClient_notInMemoryResource_setsVersionAndPermissionMask() {
+        final Integer version = 10;
+        final Integer permissionMask = 1;
+        final ResourceLookup serverObject = new ResourceLookupImpl();
+        serverObject.setVersion(version);
+        ObjectPermission objectPermission = mock(ObjectPermission.class);
+        ToClientConversionOptions options = new ToClientConversionOptions()
+                .setInMemoryResource(false);
+
+        when(objectPermission.getPermissionMask()).thenReturn(permissionMask);
+        when(permissionsService.getEffectivePermission(eq(serverObject), Matchers.<Authentication>any())).thenReturn(objectPermission);
+        when(converter.getDateTimeFormat()).thenReturn(mock(DateFormat.class));
+        when(converter.genericFieldsToClient(any(ClientResource.class), any(Resource.class), any(ToClientConversionOptions.class))).thenCallRealMethod();
+
+        ClientResource clientResource = converter.genericFieldsToClient(new ClientFolder(), serverObject, options);
+
+        assertEquals(clientResource.getVersion(), version);
+        assertEquals(clientResource.getPermissionMask(), permissionMask);
+    }
+    @Test
+    public void toServer_exceptionsListIsForwardedTo_resourceSpecificFieldsToServer(){
+        final ClientFolder clientObject = new ClientFolder();
+        final FolderImpl serverObject = new FolderImpl();
+        final ToServerConversionOptions options = ToServerConversionOptions.getDefault();
+        final RuntimeException runtimeException = new RuntimeException();
+        when(converter.genericFieldsToServer(clientObject, serverObject, options)).thenReturn(serverObject);
+        when(converter.resourceSpecificFieldsToServer(same(clientObject), same(serverObject), any(List.class), same(options))).then(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                final List<Exception> exceptions = (List<Exception>) invocation.getArguments()[2];
+                assertNotNull(exceptions);
+                exceptions.add(runtimeException);
+                return serverObject;
+            }
+        });
+        ExceptionListWrapper exceptionListWrapper = null;
+        when(converter.toServer(clientObject, serverObject, options)).thenCallRealMethod();
+        try {
+            converter.toServer(clientObject, serverObject, options);
+        } catch (Exception e) {
+            assertTrue(e instanceof ExceptionListWrapper);
+            exceptionListWrapper = (ExceptionListWrapper) e;
+        }
+        assertNotNull(exceptionListWrapper);
+        final List<? extends Exception> resultExceptions = exceptionListWrapper.getExceptions();
+        assertNotNull(resultExceptions);
+        assertEquals(resultExceptions.size(), 1);
+        assertSame(resultExceptions.get(0), runtimeException);
+    }
+
 
     @Test
     public void toClient() {
@@ -347,13 +567,26 @@ public class ResourceConverterImplTest {
         when(converter.toClient(serverObject, options)).thenCallRealMethod();
         converter.toClient(serverObject, options);
         verify(converter).genericFieldsToClient(expectedClientObject, serverObject, options);
+        verify(converter, never()).resourceSecureFieldsToClient(expectedClientObject, serverObject, options);
+    }
+
+    @Test
+    public void toClient_allowSecureDataConversationIsEnabled_checkResourceSecuredFieldsToClientIsCalled() {
+        ResourceLookup serverObject = new ResourceLookupImpl();
+        serverObject.setURIString("/test/uri");
+        ClientResource expectedClientObject = new ClientFolder();
+        when(converter.getNewClientObjectInstance()).thenReturn(expectedClientObject);
+        final ToClientConversionOptions options = ToClientConversionOptions.getDefault().setAllowSecureDataConversation(true);
+        when(converter.toClient(serverObject, options)).thenCallRealMethod();
+        converter.toClient(serverObject, options);
+        verify(converter).resourceSecureFieldsToClient(any(ClientResource.class), any(Resource.class), any(ToClientConversionOptions.class));
     }
 
     @Test
     public void getNewClientObjectInstance() {
         ResourceConverterImpl<Folder, ClientFolder> converter = new ResourceConverterImpl<Folder, ClientFolder>() {
             @Override
-            protected Folder resourceSpecificFieldsToServer(ClientFolder clientObject, Folder resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+            protected Folder resourceSpecificFieldsToServer(ClientFolder clientObject, Folder resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
                 return resultToUpdate;
             }
 
@@ -367,6 +600,32 @@ public class ResourceConverterImplTest {
     }
 
     @Test
+    public void addValidExceptions() {
+        ArrayList<Exception> includedExceptions = new ArrayList<Exception>();
+        ArrayList<Exception> allFoundExceptions = new ArrayList<Exception>();
+        allFoundExceptions.add(new ErrorDescriptorException(new ResourceGroupProfileAttributeErrorDescriptor()));
+        ToServerConversionOptions toServerConversionOptions = new ToServerConversionOptions();
+        HashMap<String, String[]> additionalProperties = new HashMap<String, String[]>();
+        additionalProperties.put(ToServerConversionOptions.SKIP_DATA_BASE_METADATA_CHECK, new String[]{"true"});
+        toServerConversionOptions.setAdditionalProperties(additionalProperties);
+        converter.addValidExceptions(includedExceptions, allFoundExceptions, toServerConversionOptions);
+        assertEquals(includedExceptions.size(), 0);
+    }
+
+    @Test
+    public void addValidExceptions_WithNullValues() {
+        ArrayList<Exception> includedExceptions = new ArrayList<Exception>();
+        ArrayList<Exception> allFoundExceptions = new ArrayList<Exception>();
+        allFoundExceptions.add(new ErrorDescriptorException(new ResourceGroupProfileAttributeErrorDescriptor()));
+        ToServerConversionOptions toServerConversionOptions = new ToServerConversionOptions();
+        HashMap<String, String[]> additionalProperties = new HashMap<String, String[]>();
+        additionalProperties.put(ToServerConversionOptions.SKIP_DATA_BASE_METADATA_CHECK, null);
+        toServerConversionOptions.setAdditionalProperties(additionalProperties);
+        converter.addValidExceptions(includedExceptions, allFoundExceptions, toServerConversionOptions);
+        assertEquals(includedExceptions.size(), 0);
+    }
+
+    @Test
     public void getClientResourceType() {
         when(clientTypeHelper.getClientResourceType()).thenReturn(TEST_CLIENT_OBJECT_NAME);
         when(converter.getClientResourceType()).thenCallRealMethod();
@@ -377,14 +636,15 @@ public class ResourceConverterImplTest {
     public void getClientTypeClass_rawConverter() {
 
         final ResourceConverterImpl resourceConverter = new ResourceConverterImpl() {
-            @Override
-            protected Resource resourceSpecificFieldsToServer(ClientResource clientObject, Resource resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-                return resultToUpdate;
-            }
 
             @Override
             protected ClientResource resourceSpecificFieldsToClient(ClientResource client, Resource serverObject, ToClientConversionOptions options) {
                 return client;
+            }
+
+            @Override
+            protected Resource resourceSpecificFieldsToServer(ClientResource clientObject, Resource resultToUpdate, List list, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+                return resultToUpdate;
             }
         };
         IllegalStateException exception = null;
@@ -400,7 +660,7 @@ public class ResourceConverterImplTest {
     public void getClientTypeClass() {
         final ResourceConverterImpl resourceConverter = new ResourceConverterImpl<Folder, ClientFolder>() {
             @Override
-            protected Folder resourceSpecificFieldsToServer(ClientFolder clientObject, Folder resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+            protected Folder resourceSpecificFieldsToServer(ClientFolder clientObject, Folder resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
                 return resultToUpdate;
             }
 
@@ -440,7 +700,7 @@ public class ResourceConverterImplTest {
         // correct resource converter for folder resources
         ResourceConverterImpl<Folder, ClientFolder> folderConverter = new ResourceConverterImpl<Folder, ClientFolder>() {
             @Override
-            protected Folder resourceSpecificFieldsToServer(ClientFolder clientObject, Folder resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+            protected Folder resourceSpecificFieldsToServer(ClientFolder clientObject, Folder resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
                 return resultToUpdate;
             }
 
@@ -455,7 +715,7 @@ public class ResourceConverterImplTest {
         // incorrect resource converter for unknown resource type
         ResourceConverterImpl<?, ?> rawConverter = new ResourceConverterImpl() {
             @Override
-            protected Resource resourceSpecificFieldsToServer(ClientResource clientObject, Resource resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+            protected Resource resourceSpecificFieldsToServer(ClientResource clientObject, Resource resultToUpdate, List exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
                 return resultToUpdate;
             }
 

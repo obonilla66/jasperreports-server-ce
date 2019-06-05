@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.search.filter;
@@ -27,11 +30,10 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.engine.scheduling.hibernate.PersistentReportJob;
+import com.jaspersoft.jasperserver.core.util.DBUtil;
 import com.jaspersoft.jasperserver.search.common.SearchAttributes;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.TransformerUtils;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Criterion;
@@ -42,7 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.commons.collections.CollectionUtils.transformedCollection;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Scheduler filter.
@@ -111,11 +112,11 @@ public class ScheduleFilter extends BaseSearchFilter implements Serializable {
 
             List idList = getHibernateTemplate().findByCriteria(idCriteria);
 
-            if (!idList.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(idList)) {
                 if (scheduled) {
-                    criteria.add(Restrictions.in("id", idList));
+                    criteria.add(DBUtil.getBoundedInCriterion("id", idList));
                 } else {
-                    criteria.add(Restrictions.not(Restrictions.in("id", idList)));
+                    criteria.add(Restrictions.not(DBUtil.getBoundedInCriterion("id", idList)));
                 }
             } else {
                 throw new RuntimeException("No resources found for URI list " +
@@ -175,7 +176,9 @@ public class ScheduleFilter extends BaseSearchFilter implements Serializable {
         // Pool all URIs directly from persistence layer
         SearchCriteria uriCriteria = SearchCriteria.forClass(PersistentReportJob.class);
         uriCriteria.addProjection(Projections.property("source.reportUnitURI"));
-        uriCriteria.add(Restrictions.in("id",reportJobIds));
+        if(CollectionUtils.isNotEmpty(reportJobIds)){
+            uriCriteria.add(DBUtil.getBoundedInCriterion("id",reportJobIds));
+        }
         return reportJobIds.isEmpty() ? new ArrayList() : getHibernateTemplate().findByCriteria(uriCriteria);
 
     }

@@ -1,19 +1,23 @@
+<%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
 <%-- tempates for list (dynamicList.List component) --%>
@@ -276,38 +280,6 @@ using only the mouse, but happens really easily using the keyboard. -->
             <p class="column one"><a class="launcher"></a></p>
             <p class="column two">
             </p>
-        </div>
-    </li>
-</ul>
-
-<%--Template used for custom url prompt in dashboard--%>
-<ul id="inputControls_option_list" class="list setLeft tabular twoColumn" tabindex="0" js-navtype="dynamiclist">
-    <li js-navtype="dynamiclist" id="inputControls_option_list:header" class="leaf">
-        <div class="wrap header">
-            <b class="icon" title=""></b>
-            <p class="column one">
-                <span class="label"><spring:message code="ADH_774_INPUT_CONTROL"/></span>
-            </p>
-            <p class="column two">
-                <span class="label"><spring:message code="ADH_775_URL_PARAMETER_NAME"/></span>
-            </p>
-        </div>
-    </li>
-
-    <%--for each control--%>
-    <li js-navtype="dynamiclist" id="inputControls_option_list:control" class="leaf">
-        <div class="wrap"><b class="icon" title=""></b>
-            <div class="column one">
-                <div class="control checkBox">
-                    <label id="label_for_param_1" class="wrap" for="parameter_1"></label>
-                    <input id="parameter_1" type="checkbox" value=""/>
-                </div>
-            </div>
-            <div class="column two">
-                <label id="label_for_param_1_value" class="control input text" for="parameter_1_value">
-                    <input id="parameter_1_value" type="text" value="Country"/>
-                </label>
-            </div>
         </div>
     </li>
 </ul>

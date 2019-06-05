@@ -1,1 +1,0 @@
-define([],function(){"use strict";var n={extension:{},onConstructor:function(){},beforeInitialize:function(){},afterInitialize:function(){},beforeSetElement:function(){},afterSetElement:function(){},beforeOpen:function(){},afterOpen:function(){},beforeClose:function(){},afterClose:function(){},onRemove:function(){}};return n});

@@ -1,25 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
-import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -86,20 +90,19 @@ public class InputControlResourceValidator extends GenericResourceValidator<Inpu
     }
 
     @Override
-    protected void internalValidate(InputControl resource, ValidationErrors errors) {
+    protected void internalValidate(InputControl resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         String type = Integer.toString(resource.getInputControlType());
         Map<String, Object> config = inputControlTypeConfiguration.get(type);
 
         for (String visibleColumn : resource.getQueryVisibleColumns()){
             if (visibleColumn.isEmpty()) {
-                addIllegalParameterValueError(errors, "visibleColumns", Arrays.toString(resource.getQueryVisibleColumns()),
-                    "'queryVisibleColumns' should not contain an empty value");
+                errors.add(new IllegalParameterValueException("'queryVisibleColumns' should not contain an empty value", "visibleColumns", Arrays.toString(resource.getQueryVisibleColumns())));
                 break;
             }
         }
 
         if (config == null) {
-            addIllegalParameterValueError(errors, "type", type, "The type " + type + " is invalid");
+            errors.add(new IllegalParameterValueException("The type " + type + " is invalid", "type", type));
         } else {
             List<String> required = config.containsKey(PROPERTY_REQUIRED) ? Arrays.asList(config.get(PROPERTY_REQUIRED).toString().split(PROPERTY_REQUIRED_SEPARATOR)) : Collections.EMPTY_LIST;
             for (String property : properties.keySet()) {
@@ -108,15 +111,15 @@ public class InputControlResourceValidator extends GenericResourceValidator<Inpu
                     Object value = properties.get(property).getReadMethod().invoke(resource);
                     if (empty(value) == mustBe) {
                         if (mustBe) {
-                            addMandatoryParameterNotFoundError(errors, property);
+                            errors.add(new MandatoryParameterNotFoundException(property));
                         } else {
-                            addIllegalParameterValueError(errors, property, "", "The property " + property + " should not be set for input control type " + type);
+                            errors.add(new IllegalParameterValueException("The property " + property + " should not be set for input control type " + type, property, ""));
                         }
                     }
                     if (value instanceof Collection) {
                         for (Object item : (Collection) value) {
                             if (empty(item) == mustBe) {
-                                addIllegalParameterValueError(errors, property + ".item", item.toString(), "An item should not be empty");
+                                errors.add(new IllegalParameterValueException("An item should not be empty", property + ".item", item.toString()));
                             }
                         }
                     }

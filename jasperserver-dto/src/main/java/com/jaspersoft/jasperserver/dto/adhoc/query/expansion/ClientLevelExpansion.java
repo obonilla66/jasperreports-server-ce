@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.expansion;
 
@@ -21,6 +24,8 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.ClientFieldReference;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Andriy Godovanets
@@ -36,12 +41,11 @@ public class ClientLevelExpansion implements ClientExpandable<String>, ClientFie
     }
 
     public ClientLevelExpansion(ClientLevelExpansion expansion) {
-        if (expansion != null) {
-            this
-                    .setExpanded(expansion.isExpanded())
-                    .setLevelReference(expansion.getLevelReference())
-                    .setAggregationLevel(expansion.isAggregationLevel());
-        }
+        checkNotNull(expansion);
+
+        isExpanded = expansion.isExpanded();
+        isAggregationLevel = expansion.isAggregationLevel();
+        levelReference = expansion.getLevelReference();
     }
 
     @Override
@@ -100,7 +104,7 @@ public class ClientLevelExpansion implements ClientExpandable<String>, ClientFie
     }
 
     public ClientLevelExpansion setAggregationLevel(Boolean aggregationLevel) {
-        isAggregationLevel = aggregationLevel;
+        isAggregationLevel = aggregationLevel != null ? aggregationLevel : false;
         return this;
     }
 
@@ -112,8 +116,7 @@ public class ClientLevelExpansion implements ClientExpandable<String>, ClientFie
         ClientLevelExpansion that = (ClientLevelExpansion) o;
 
         if (isExpanded() != that.isExpanded()) return false;
-        if (isAggregationLevel != null ? !isAggregationLevel.equals(that.isAggregationLevel) : that.isAggregationLevel != null)
-            return false;
+        if (!isAggregationLevel.equals(that.isAggregationLevel)) return false;
         return getLevelReference() != null ? getLevelReference().equals(that.getLevelReference()) : that.getLevelReference() == null;
 
     }
@@ -121,7 +124,7 @@ public class ClientLevelExpansion implements ClientExpandable<String>, ClientFie
     @Override
     public int hashCode() {
         int result = (isExpanded() ? 1 : 0);
-        result = 31 * result + (isAggregationLevel != null ? isAggregationLevel.hashCode() : 0);
+        result = 31 * result + isAggregationLevel.hashCode();
         result = 31 * result + (getLevelReference() != null ? getLevelReference().hashCode() : 0);
         return result;
     }

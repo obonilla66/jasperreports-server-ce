@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.jaxrs.authority;
 
@@ -26,7 +29,7 @@ import com.jaspersoft.jasperserver.dto.authority.hypermedia.HypermediaAttributes
 import com.jaspersoft.jasperserver.dto.authority.hypermedia.Relation;
 import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentity;
 import com.jaspersoft.jasperserver.remote.resources.converters.HypermediaOptions;
@@ -62,7 +65,7 @@ public class AttributesJaxrsService {
     @Resource
     protected AttributesService attributesService;
 
-    public Response getAttributes(AttributesSearchCriteria searchCriteria, HypermediaOptions hypermediaOptions) throws RemoteException {
+    public Response getAttributes(AttributesSearchCriteria searchCriteria, HypermediaOptions hypermediaOptions) throws ErrorDescriptorException {
         AttributesSearchResult<ClientAttribute> result = attributesService.getAttributes(searchCriteria, includePermissions(hypermediaOptions));
 
         if (result.getList().size() > 0) {
@@ -81,7 +84,7 @@ public class AttributesJaxrsService {
         }
     }
 
-    public Response getAttributesOfRecipient(RecipientIdentity recipientIdentity, Set<String> names, HypermediaOptions hypermediaOptions) throws RemoteException {
+    public Response getAttributesOfRecipient(RecipientIdentity recipientIdentity, Set<String> names, HypermediaOptions hypermediaOptions) throws ErrorDescriptorException {
         List<ClientAttribute> result = attributesService.getAttributes(recipientIdentity, names, includePermissions(hypermediaOptions));
 
         if (result.size() > 0) {
@@ -92,7 +95,7 @@ public class AttributesJaxrsService {
     }
 
     public Response putAttributes(List<HypermediaAttribute> newCollection, RecipientIdentity recipientIdentity,
-                                  Set<String> attrNames, HypermediaOptions hypermediaOptions, String mediaType) throws RemoteException {
+                                  Set<String> attrNames, HypermediaOptions hypermediaOptions, String mediaType) throws ErrorDescriptorException {
         if (!mediaType.contains(HAL_FORMAT) && newCollection != null) {
             for (HypermediaAttribute hypermediaAttribute : newCollection) {
                 hypermediaAttribute.setEmbedded(null);
@@ -106,7 +109,7 @@ public class AttributesJaxrsService {
     }
 
     public  Response putAttribute(ClientAttribute client, RecipientIdentity recipientIdentity, String attrName,
-                                 HypermediaOptions hypermediaOptions, String mediaType) throws RemoteException {
+                                 HypermediaOptions hypermediaOptions, String mediaType) throws ErrorDescriptorException {
         if (!mediaType.contains(HAL_FORMAT) && client instanceof HypermediaAttribute) {
             ((HypermediaAttribute)client).setEmbedded(null);
         }
@@ -145,14 +148,14 @@ public class AttributesJaxrsService {
         return Response.status(status).entity(result.get(0)).build();
     }
 
-    public Response deleteAttribute(RecipientIdentity recipientIdentity, String attrName) throws RemoteException {
+    public Response deleteAttribute(RecipientIdentity recipientIdentity, String attrName) throws ErrorDescriptorException {
         attributesService.deleteAttributes(recipientIdentity,  Collections.singleton(attrName));
 
         return Response.noContent().build();
     }
 
     public Response deleteAttributes(RecipientIdentity recipientIdentity,
-                                     Set<String> attrNames) throws RemoteException {
+                                     Set<String> attrNames) throws ErrorDescriptorException {
         attributesService.deleteAttributes(recipientIdentity, attrNames);
 
         return Response.noContent().build();
@@ -160,7 +163,7 @@ public class AttributesJaxrsService {
 
     public Response getSpecificAttributeOfRecipient(RecipientIdentity recipientIdentity,
                                                     String attrName,
-                                                    HypermediaOptions hypermediaOptions) throws RemoteException {
+                                                    HypermediaOptions hypermediaOptions) throws ErrorDescriptorException {
         List<ClientAttribute> existingAttributes = attributesService.getAttributes(recipientIdentity,
                 Collections.singleton(attrName), includePermissions(hypermediaOptions));
 

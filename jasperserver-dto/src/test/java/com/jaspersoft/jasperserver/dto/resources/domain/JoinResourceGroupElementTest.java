@@ -1,79 +1,101 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
+import com.jaspersoft.jasperserver.dto.basetests.BaseDTOTest;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
+
+
+import static com.jaspersoft.jasperserver.dto.utils.CustomAssertions.assertNotSameCollection;
 
 /**
  * <p/>
  * <p/>
  *
  * @author tetiana.iefimenko
+ * @author ativodar
  * @version $Id$
  * @see
  */
-public class JoinResourceGroupElementTest {
+public class JoinResourceGroupElementTest extends BaseDTOTest<JoinResourceGroupElement> {
 
-    public static final ClientExpressionContainer FILTER_EXPRESSION = new ClientExpressionContainer().setString("FilterExpression");
-    public static final String SOURCE_NAME = "SourceName";
-    public static final String ELEMENT_NAME = "Name";
     JoinResourceGroupElement sourceElement;
     JoinResourceGroupElement clonedElement;
 
-    @Before
-    public void setUp() {
-        sourceElement = new JoinResourceGroupElement()
-                .setJoinInfo(new JoinInfo()
-                        .setIncludeAllJoinsForQueryFieldTables(true)
-                        .setJoins(new ArrayList<Join>()))
-                .setElements(new ArrayList<SchemaElement>())
-                .setFilterExpression(FILTER_EXPRESSION)
-                .setSourceName(SOURCE_NAME)
-                .setName(ELEMENT_NAME);
 
+    @Override
+    protected JoinResourceGroupElement createInstanceWithDefaultParameters() {
+        return new JoinResourceGroupElement();
     }
 
-    @Test
-    public void testCloningConstructor() throws Exception {
+    @Override
+    protected JoinResourceGroupElement createFullyConfiguredInstance() {
+        JoinResourceGroupElement JoinResourceGroupElement = new JoinResourceGroupElement();
+        JoinResourceGroupElement.setJoinInfo(new JoinInfo().setIncludeAllDataIslandJoins(true));
+        JoinResourceGroupElement.setElements(Arrays.asList(new SchemaElement(), new SchemaElement().setName("name")));
+        JoinResourceGroupElement.setFilterExpression(new ClientExpressionContainer().setString("string"));
+        JoinResourceGroupElement.setName("name");
+        JoinResourceGroupElement.setSourceName("source");
+        return JoinResourceGroupElement;
+    }
 
-        clonedElement = new JoinResourceGroupElement(sourceElement);
+    @Override
+    protected List<JoinResourceGroupElement> prepareInstancesWithAlternativeParameters() {
+        return Arrays.asList(
+                createFullyConfiguredInstance().setJoinInfo(new JoinInfo().setIncludeAllDataIslandJoins(false)),
+                createFullyConfiguredInstance().setElements(Arrays.asList(new SchemaElement(), new SchemaElement().setName("name2"))),
+                createFullyConfiguredInstance().setFilterExpression(new ClientExpressionContainer().setString("string2")),
+                createFullyConfiguredInstance().setName("name2"),
+                createFullyConfiguredInstance().setSourceName("source2"),
+                // with null values
+                createFullyConfiguredInstance().setJoinInfo(null),
+                createFullyConfiguredInstance().setElements(null),
+                createFullyConfiguredInstance().setFilterExpression(null),
+                createFullyConfiguredInstance().setName(null),
+                createFullyConfiguredInstance().setSourceName(null)
+        );
+    }
 
-        assertTrue(clonedElement.equals(sourceElement));
-        assertFalse(sourceElement == clonedElement);
-        assertFalse(sourceElement.getJoinInfo() == clonedElement.getJoinInfo());
-        assertEquals(sourceElement.getJoinInfo(), clonedElement.getJoinInfo());
-        assertFalse(sourceElement.getElements() == clonedElement.getElements());
-        assertNotNull(clonedElement.getFilterExpression());
-        assertEquals(FILTER_EXPRESSION, clonedElement.getFilterExpression());
-        assertNotNull(clonedElement.getSourceName());
-        assertEquals(SOURCE_NAME, clonedElement.getSourceName());
-        assertNotNull(clonedElement.getName());
-        assertEquals(ELEMENT_NAME, clonedElement.getName());
+    @Override
+    protected JoinResourceGroupElement createInstanceFromOther(JoinResourceGroupElement other) {
+        return new JoinResourceGroupElement(other);
+    }
 
+    @Override
+    protected void assertFieldsHaveUniqueReferences(JoinResourceGroupElement expected, JoinResourceGroupElement actual) {
+        assertNotSameCollection(expected.getElements(), actual.getElements());
+        assertNotSame(expected.getJoinInfo(), actual.getJoinInfo());
+        assertNotSame(expected.getFilterExpression(), actual.getFilterExpression());
     }
 }

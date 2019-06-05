@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
@@ -119,7 +122,7 @@ public class GenericReportUnitResourceConverterTest {
         clientObject.setControlsLayout(ClientReportUnit.ControlsLayoutType.separatePage);
         clientObject.setInputControlRenderingView(inputControlRenderingView);
         clientObject.setReportRenderingView(reportRenderingView);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.isAlwaysPromptControls(), alwaysPromptControls);
         assertEquals(result.getControlsLayout(), ReportUnit.LAYOUT_SEPARATE_PAGE);
@@ -173,7 +176,7 @@ public class GenericReportUnitResourceConverterTest {
         final ClientReference clientReference = new ClientReference(queryReferenceUri);
         clientObject.setQuery(clientReference);
         when(queryResourceReferenceConverter.toServer(eq(clientReference),any(ResourceReference.class), any(ToServerConversionOptions.class))).thenReturn(queryReference);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertSame(result.getQuery(), queryReference);
     }
@@ -203,7 +206,7 @@ public class GenericReportUnitResourceConverterTest {
         final ClientReference clientReference = new ClientReference(fileReferenceUri);
         when(fileResourceReferenceConverter.toServer(eq(clientReference),any(ResourceReference.class), any(ToServerConversionOptions.class))).thenReturn(fileReference);
         clientObject.setJrxml(clientReference);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         final ResourceReference resultReference = result.getMainReport();
         assertSame(resultReference, fileReference);
@@ -233,7 +236,7 @@ public class GenericReportUnitResourceConverterTest {
         clientObject.setInputControls(inputControls);
         final ResourceReference expectedReference = new ResourceReference("");
         when(inputControlResourceReferenceConverter.toServer(any(ClientReference.class), any(ResourceReference.class),any(ToServerConversionOptions.class))).thenReturn(expectedReference);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNotNull(result);
         final List<ResourceReference> serverInputControls = result.getInputControls();
         assertNotNull(serverInputControls);
@@ -288,9 +291,10 @@ public class GenericReportUnitResourceConverterTest {
         List<ResourceReference> serverResources = new ArrayList<ResourceReference>();
         clientObject.setFiles(clientResources);
         final ReportUnit serverObject = new ReportUnitImpl();
-        when(converterPartialMock.resourceSpecificFieldsToServer(clientObject, serverObject, null)).thenCallRealMethod();
+        final ArrayList<Exception> exceptions = new ArrayList<Exception>();
+        when(converterPartialMock.resourceSpecificFieldsToServer(clientObject, serverObject, exceptions, null)).thenCallRealMethod();
         when(converterPartialMock.convertResourcesToServer(clientResources, serverResources, null)).thenReturn(serverResources);
-        final ReportUnit result = converterPartialMock.resourceSpecificFieldsToServer(clientObject, serverObject, null);
+        final ReportUnit result = converterPartialMock.resourceSpecificFieldsToServer(clientObject, serverObject, exceptions, null);
         assertSame(result, serverObject);
         assertSame(result.getResources(), serverResources);
     }

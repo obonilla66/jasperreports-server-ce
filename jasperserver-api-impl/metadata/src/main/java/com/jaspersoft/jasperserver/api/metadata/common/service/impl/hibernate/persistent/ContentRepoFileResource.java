@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent;
 
@@ -38,24 +41,29 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.DataContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileBufferedDataContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ComparableBlob;
+
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.DataContainerStreamUtil;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.GzipDataContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.ReferenceResolver;
+
+import javax.persistence.Entity;
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialException;
 
 
 /**
 * @hibernate.joined-subclass table="content_file"
 * @hibernate.joined-subclass-key column="id"
 */
+@Entity
 public class ContentRepoFileResource extends RepoResource
 {
 	private static final Log log = LogFactory.getLog(ContentRepoFileResource.class);
 
 		private String contentFileType;
 
-		private ComparableBlob data;
+		private Blob data;
 
 
 		/**
@@ -65,7 +73,7 @@ public class ContentRepoFileResource extends RepoResource
 			return data;
 		}
 
-		public void setData(ComparableBlob data) {
+		public void setData(Blob data) {
 			this.data = data;
 		}
 
@@ -88,16 +96,20 @@ public class ContentRepoFileResource extends RepoResource
 			} else {
 				//only update when the client has set some data
 				if (dataRes.hasData()) {
-                                        ComparableBlob blob;
+										SerialBlob blob = null;
                                         /* ContentResourceImpl uses a dataContainer that can either have content
                                          * completely in memory or have part of the content stored on disk.
                                          */ 
                                         try {
-                                            blob = new ComparableBlob(readFully(dataRes.getDataStream()));
+                                            blob = new SerialBlob(readFully(dataRes.getDataStream()));
                                         } catch (IOException ex) {
                                             throw new JSException(ex);
-                                        }
-                                        setData(blob);
+                                        } catch (SerialException e) {
+											e.printStackTrace();
+										} catch (SQLException e) {
+											e.printStackTrace();
+										}
+					setData(blob);
 				}
 			}
 		}

@@ -1,51 +1,74 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.remote.services.impl;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ContentResourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FileResourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceVersionNotMatchException;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
+import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
-import com.jaspersoft.jasperserver.remote.exception.*;
-import com.jaspersoft.jasperserver.remote.resources.ClientTypeHelper;
+import com.jaspersoft.jasperserver.remote.exception.AccessDeniedException;
+import com.jaspersoft.jasperserver.remote.exception.FolderAlreadyExistsException;
+import com.jaspersoft.jasperserver.remote.exception.FolderNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.NotAFileException;
+import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceInUseException;
+import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
+import com.jaspersoft.jasperserver.remote.exception.VersionNotMatchException;
 import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverterProvider;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConversionOptions;
 import com.jaspersoft.jasperserver.remote.resources.converters.ToServerConverter;
 import com.jaspersoft.jasperserver.remote.resources.operation.CopyMoveOperationStrategy;
 import com.jaspersoft.jasperserver.remote.services.SingleRepositoryService;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
 import org.hibernate.JDBCException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Component("singleRepositoryService")
@@ -54,8 +77,8 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
 
     private Pattern nameWithNumber = Pattern.compile("^.*_\\d+$", Pattern.CASE_INSENSITIVE);
 
-    @javax.annotation.Resource
-    private ConfigurationBean configurationBean;
+    @javax.annotation.Resource(name = "configurationBean")
+    private RepositoryConfiguration configuration;
 
     @javax.annotation.Resource
     private UriHardModifyProtectionChecker uriHardModifyProtectionChecker;
@@ -76,7 +99,7 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
 
     @Override
     public Resource getResource(String uri) {
-        Resource resource = repositoryService.getResource(ExecutionContextImpl.getRuntimeExecutionContext(), uri);
+        Resource resource = repositoryService.getResource(ExecutionContextImpl.getRestrictedRuntimeExecutionContext(), uri);
         if (resource == null) {
             resource = repositoryService.getFolder(null, uri);
         }
@@ -142,7 +165,7 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
     }
 
     @Override
-    public Resource createResource(Resource serverResource, String parentUri, boolean createFolders, boolean dryRun) throws RemoteException {
+    public Resource createResource(Resource serverResource, String parentUri, boolean createFolders, boolean dryRun) throws ErrorDescriptorException {
         if (createFolders) {
             if(!dryRun) ensureFolderUri(parentUri);
         } else if (!repositoryService.folderExists(null, parentUri)) {
@@ -170,7 +193,8 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
         return dryRun ? serverResource : getResource(serverResource.getURIString());
     }
 
-    public ClientResource saveOrUpdate(ClientResource clientResource, boolean overwrite, boolean createFolders, String clientType, boolean dryRun) throws RemoteException {
+    public ClientResource saveOrUpdate(ClientResource clientResource, boolean overwrite, boolean createFolders,
+            String clientType, boolean dryRun, Map<String, String[]> additionalProperties) throws ErrorDescriptorException {
         final String uri = clientResource.getUri();
         Resource resource = getResource(uri);
 
@@ -178,7 +202,7 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
         // because BinaryDataResourceConverter returns null as serverResourceType
         if (resource != null) {
             // is it different type of resource?
-            if (resourceConverterProvider.getToClientConverter(resource.getResourceType(), ClientTypeHelper.extractClientType(clientResource.getClass())) == null) {
+            if (resourceConverterProvider.getToClientConverter(resource.getResourceType(), ClientTypeUtility.extractClientType(clientResource.getClass())) == null) {
                 if (overwrite) {
                     if(!dryRun) deleteResource(uri);
                     resource = null;
@@ -197,7 +221,8 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
             }
         }
         resource = ((ToServerConverter<ClientResource, Resource, ToServerConversionOptions>)resourceConverterProvider.getToServerConverter(clientResource))
-                .toServer(clientResource, resource, ToServerConversionOptions.getDefault().setOwnersUri(uri));
+                .toServer(clientResource, resource,
+                        ToServerConversionOptions.getDefault().setOwnersUri(uri).setAdditionalProperties(additionalProperties));
         if(resource.isNew()){
             resource = createResource(resource, resource.getParentPath(), createFolders, dryRun);
         } else {
@@ -208,10 +233,11 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
             toClientConverter = resourceConverterProvider.getToClientConverter(resource.getResourceType(),
                     clientType);
             if (toClientConverter == null) {
-                throw new NotAcceptableException(clientType);
+                throw new NotAcceptableException();
             }
         }
-        return toClientConverter.toClient(resource, ToClientConversionOptions.getDefault());
+        return toClientConverter.toClient(resource, ToClientConversionOptions.getDefault()
+                .setAdditionalProperties(additionalProperties));
     }
 
     @Override
@@ -253,7 +279,7 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
 
     @Override
     public Resource createFileResource(InputStream stream, String parentFolderUri, String name, String label,
-            String description, String type, boolean createFolders, boolean dryRun) throws RemoteException {
+            String description, String type, boolean createFolders, boolean dryRun) throws ErrorDescriptorException {
         Resource file = fileResourceTypes.contains(type) ? new FileResourceImpl() : new ContentResourceImpl();
         file.setLabel(label);
         file.setName(name);
@@ -272,7 +298,7 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
     }
 
     @Override
-    public Resource updateFileResource(InputStream stream, String parentUri, String name, String label, String description, String type, boolean dryRun) throws RemoteException {
+    public Resource updateFileResource(InputStream stream, String parentUri, String name, String label, String description, String type, boolean dryRun) throws ErrorDescriptorException {
         String uri = parentUri.endsWith(Folder.SEPARATOR) ? parentUri + name : parentUri + Folder.SEPARATOR + name;
         Resource file = getResource(uri);
 
@@ -401,11 +427,11 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
     }
 
     private String transformLabelToName(String label){
-        return label.replaceAll(configurationBean.getResourceIdNotSupportedSymbols(), "_");
+        return label.replaceAll(configuration.getResourceIdNotSupportedSymbols(), "_");
     }
 
     private boolean isAllTemporary(Collection<ResourceLookup> resources){
-        String tempPrefix = (configurationBean.getTempFolderUri() == null ? "/temp" : configurationBean.getTempFolderUri()).concat(Folder.SEPARATOR);
+        String tempPrefix = (configuration.getTempFolderUri() == null ? "/temp" : configuration.getTempFolderUri()).concat(Folder.SEPARATOR);
         boolean res = true;
 
         for (Resource r: resources){

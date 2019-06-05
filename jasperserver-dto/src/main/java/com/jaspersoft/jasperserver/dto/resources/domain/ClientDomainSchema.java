@@ -1,22 +1,26 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.resources.domain;
 
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 
 import javax.validation.Valid;
@@ -27,6 +31,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
 /**
  * <p></p>
  *
@@ -34,19 +40,26 @@ import java.util.List;
  * @version $Id$
  */
 @XmlRootElement(name = "domainSchema")
-public class ClientDomainSchema extends ClientResource<ClientDomainSchema> {
+public class ClientDomainSchema extends ClientResource<ClientDomainSchema> implements DeepCloneable<ClientDomainSchema> {
     @Valid
     private final Schema schema;
 
     public ClientDomainSchema(){
         schema = new Schema();
     }
+
     public ClientDomainSchema(Schema schema){
         this.schema = schema != null ? new Schema(schema) : new Schema();
     }
+
     public ClientDomainSchema(ClientDomainSchema source){
         super(source);
-        this.schema = source.getSchema() != null ? new Schema(source.getSchema()) : new Schema();
+        this.schema = copyOf(source.getSchema());
+    }
+
+    @Override
+    public ClientDomainSchema deepClone() {
+        return new ClientDomainSchema(this);
     }
 
     @XmlTransient
@@ -55,8 +68,8 @@ public class ClientDomainSchema extends ClientResource<ClientDomainSchema> {
     }
 
     public ClientDomainSchema setSchema(Schema schema){
-        this.schema.setPresentation(schema.getPresentation());
-        this.schema.setResources(schema.getResources());
+        this.schema.setPresentation(schema != null ? schema.getPresentation() : null);
+        this.schema.setResources(schema != null ? schema.getResources() : null);
         return this;
     }
 
@@ -111,7 +124,7 @@ public class ClientDomainSchema extends ClientResource<ClientDomainSchema> {
 
     @Override
     public String toString() {
-        return "ClientSchema{" +
+        return "ClientDomainSchema{" +
                 "schema=" + schema +
                 "} " + super.toString();
     }

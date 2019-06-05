@@ -1,30 +1,37 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.job.adapters.ReportJobSourceParametersXmlAdapter;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.Map;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.hashCodeOfMapWithArraysAsValues;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.isMapsWithArraysAsValuesEquals;
 
 /**
  * <p/>
@@ -45,16 +52,12 @@ public class ClientJobSource implements DeepCloneable<ClientJobSource> {
     }
 
     public ClientJobSource(ClientJobSource other) {
-        this.reportUnitURI = other.reportUnitURI;
-        this.referenceHeight = other.referenceHeight;
-        this.referenceWidth = other.referenceWidth;
+        checkNotNull(other);
 
-        if (other.parameters != null) {
-            this.parameters = new LinkedHashMap<String, String[]>();
-            for (Map.Entry<String, String[]> entry : other.parameters.entrySet()) {
-                this.parameters.put(entry.getKey(), entry.getValue());
-            }
-        }
+        this.reportUnitURI = other.getReportUnitURI();
+        this.referenceHeight = other.getReferenceHeight();
+        this.referenceWidth = other.getReferenceWidth();
+        this.parameters = copyOf(other.getParameters());
     }
 
     public String getReportUnitURI() {
@@ -101,34 +104,28 @@ public class ClientJobSource implements DeepCloneable<ClientJobSource> {
 
         ClientJobSource source = (ClientJobSource) o;
 
-        if (parameters != null && source.parameters != null) {
-            if (parameters.size() != source.parameters.size()) return false;
-            if (!(parameters.keySet().containsAll(source.parameters.keySet()) && source.parameters.keySet().containsAll(parameters.keySet()))) return false;
-            for (String key : parameters.keySet()) {
-                String[] values = parameters.get(key);
-                String[] sourceValues = source.parameters.get(key);
-                if (!Arrays.equals(values, sourceValues)) return false;
-            }
-        } else {
-            if ((parameters != null & source.parameters == null) || (parameters == null & source.parameters != null))
-                return false;
-        }
+        if (!isMapsWithArraysAsValuesEquals(parameters, source.parameters))
+            return false;
         if (reportUnitURI != null ? !reportUnitURI.equals(source.reportUnitURI) : source.reportUnitURI != null)
             return false;
-
+        if (referenceHeight != null ? !referenceHeight.equals(source.referenceHeight) : source.referenceHeight != null)
+            return false;
+        if (referenceWidth != null ? !referenceWidth.equals(source.referenceWidth) : source.referenceWidth != null) return false;
         return true;
     }
 
     @Override
     public int hashCode() {
         int result = reportUnitURI != null ? reportUnitURI.hashCode() : 0;
-        result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
+        result = 31 * result + hashCodeOfMapWithArraysAsValues(parameters);
+        result = 31 * result + (referenceHeight != null ? referenceHeight.hashCode() : 0);
+        result = 31 * result + (referenceWidth != null ? referenceWidth.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "JobSource{" +
+        return "ClientJobSource{" +
                 "reportUnitURI='" + reportUnitURI + '\'' +
                 ", parameters=" + parameters +
                 '}';

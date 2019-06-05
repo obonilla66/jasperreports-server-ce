@@ -1,21 +1,24 @@
 <%--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
-<%@ page contentType="text/html" %>
+<%@ page contentType="text/html; charset=utf-8" %>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
@@ -57,6 +60,11 @@
         <c:set var="pageClass">twoColumn</c:set>
     </c:otherwise>
 </c:choose>
+<c:set var="modelDocument">
+    <%= SearchActionModelSupport.getInstance((String) request.getAttribute("mode")).getClientActionModelDocument(request) %>
+</c:set>
+
+
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/page.jsp">
     <t:putAttribute name="pageTitle" value="${pageTitle}"/>
@@ -69,7 +77,7 @@
 
         <%--get action model data for search menus--%>
         <script type="text/json" id="searchActionModel">
-            <%= SearchActionModelSupport.getInstance((String) request.getAttribute("mode")).getClientActionModelDocument(request) %>
+            <js:out escapeScript="false">${modelDocument}</js:out>
         </script>
 
     </t:putAttribute>

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el.ast;
 
@@ -22,19 +25,12 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientList;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientLiteral;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBoolean;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientFloat;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDouble;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigInteger;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientLong;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientShort;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientByte;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBigDecimal;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTimestamp;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientFunction;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientAdd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientDivide;
@@ -52,7 +48,6 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientNot
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientOr;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.membership.ClientIn;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRange;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.range.ClientRangeBoundary;
 
 /**
  * <p>
@@ -165,53 +160,8 @@ public abstract class ClientELVisitorAdapter implements ClientELVisitor {
     }
 
     @Override
-    public void visit(ClientRangeBoundary expression) {
-
-    }
-
-    @Override
     public void visit(ClientList expression) {
         
-    }
-
-    @Override
-    public void visit(ClientByte expression) {
-
-    }
-
-    @Override
-    public void visit(ClientShort expression) {
-
-    }
-
-    @Override
-    public void visit(ClientInteger expression) {
-
-    }
-
-    @Override
-    public void visit(ClientLong expression) {
-
-    }
-
-    @Override
-    public void visit(ClientBigInteger expression) {
-
-    }
-
-    @Override
-    public void visit(ClientFloat expression) {
-
-    }
-
-    @Override
-    public void visit(ClientDouble expression) {
-
-    }
-
-    @Override
-    public void visit(ClientBigDecimal expression) {
-
     }
 
     @Override
@@ -241,6 +191,11 @@ public abstract class ClientELVisitorAdapter implements ClientELVisitor {
 
     @Override
     public void visit(ClientNull expression) {
+
+    }
+
+    @Override
+    public void visit(ClientNumber clientNumber) {
 
     }
 }

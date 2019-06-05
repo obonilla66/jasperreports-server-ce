@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.el.literal;
 
@@ -28,19 +31,19 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.regex.Pattern;
 
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.JavaAlias.TIME;
-import static com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime.LITERAL_ID;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Grant Bacon <gbacon@tibco.com>
  * @author Stas Chubar <schubar@tibco.com>
- * @version $Id $
+ * @version $Id$
  */
-@XmlRootElement(name = LITERAL_ID)
+@XmlRootElement(name = ClientTime.EXPRESSION_ID)
 public class ClientTime extends ClientLiteral<Time, ClientTime> {
-    public static final String LITERAL_ID = TIME;
-
+    public static final String EXPRESSION_ID = "time";
     public static final DateFormat FORMATTER = DomELCommonSimpleDateFormats.timeFormat();
 
     public ClientTime() {
@@ -51,7 +54,9 @@ public class ClientTime extends ClientLiteral<Time, ClientTime> {
     }
 
     public ClientTime(ClientTime source){
-        super(source.getValue() != null ? (Time) source.getValue().clone() : null);
+        checkNotNull(source);
+
+        setValue(copyOf(source.getValue()));
     }
 
     @Override
@@ -88,6 +93,11 @@ public class ClientTime extends ClientLiteral<Time, ClientTime> {
             valueString = (value != null) ? FORMATTER.format(value) : ClientExpressions.MISSING_REPRESENTATION;
         } catch (IllegalArgumentException e) {
             valueString = ClientExpressions.MISSING_REPRESENTATION;
+        }
+        // DomEL format removes milliseconds from time if they are all zero
+        String zeroMilliseconds = "(\\.0+)$";
+        if (valueString.contains(".") && Pattern.matches("[\\d\\s:]*" + zeroMilliseconds, valueString)) {
+            valueString = valueString.substring(0, valueString.indexOf("."));
         }
         return "t'" + valueString + "'";
     }

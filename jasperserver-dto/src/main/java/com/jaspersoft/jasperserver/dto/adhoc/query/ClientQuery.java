@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
@@ -23,10 +26,14 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.group.ClientGroupBy;
 import com.jaspersoft.jasperserver.dto.adhoc.query.group.axis.ClientAxis;
 import com.jaspersoft.jasperserver.dto.adhoc.query.order.ClientOrder;
 import com.jaspersoft.jasperserver.dto.adhoc.query.select.ClientSelect;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
@@ -34,7 +41,7 @@ import java.util.List;
  *
  * @version $Id$
  */
-public abstract class ClientQuery {
+public abstract class ClientQuery implements DeepCloneable {
     @Valid
     private ClientSelect select;
 
@@ -50,17 +57,12 @@ public abstract class ClientQuery {
     }
 
     public ClientQuery(ClientQuery query) {
-        this();
-        if (query != null) {
-            this.setSelect(new ClientSelect(query.getSelect()));
-            if (query.getWhere() != null) {
-                this.setWhere(new ClientWhere(query.getWhere()));
-            }
-            if (query.getFrom() != null) {
-                this.setFrom(new ClientFrom(query.getFrom()));
-            }
-            this.setLimit(query.getLimit());
-        }
+        checkNotNull(query);
+
+        select = copyOf(query.getSelect());
+        from = copyOf(query.getFrom());
+        where = copyOf(query.getWhere());
+        limit = query.getLimit();
     }
 
     public ClientWhere getWhere() {

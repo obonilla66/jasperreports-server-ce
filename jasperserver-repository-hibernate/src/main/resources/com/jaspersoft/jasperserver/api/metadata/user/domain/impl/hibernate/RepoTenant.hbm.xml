@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
   <class table="JITenant" name="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoTenant" batch-size="1000">
-    <id type="long" column="id" name="id">
+    <id type="long" column="id" name="id" unsaved-value="-1">
       <generator class="native"/>
     </id>
     <natural-id>
@@ -36,17 +39,17 @@
     <property name="tenantUri" not-null="true" length="250" type="string" column="tenantUri"/>
     <property name="tenantFolderUri" not-null="true" length="250" type="string" column="tenantFolderUri"/>
     <property name="theme" not-null="false" length="250" type="string" column="theme"/>
-    <set name="subTenants" inverse="true" batch-size="1000"  lazy="true" outer-join="auto"> 
+    <set name="subTenants" inverse="true" batch-size="1000"  lazy="true" outer-join="auto">
       <key column="parentId"/>
       <one-to-many
         class="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoTenant"/>
     </set>
-    <set name="users" inverse="true" cascade="delete,delete-orphan" batch-size="1000" lazy="true" outer-join="auto"> 
+    <set name="users" inverse="true" cascade="delete,delete-orphan" batch-size="1000" lazy="true" outer-join="auto">
       <key column="tenantId"/>
       <one-to-many
         class="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser"/>
     </set>
-    <set name="roles" inverse="true" batch-size="1000" outer-join="auto">
+    <set name="roles" inverse="true" batch-size="1000" outer-join="auto"  cascade="delete,delete-orphan">
       <key column="tenantId"/> 
       <one-to-many
         class="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoRole"/>

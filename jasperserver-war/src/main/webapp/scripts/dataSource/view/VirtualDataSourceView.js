@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -205,7 +205,12 @@ define(function(require) {
         },
 
         renderVirtualSpecificSection: function() {
-            var self = this;
+            var self = this,
+                hideNodesFn = function () {
+                    self._hideAvailableSubDataSources(self.model.subDataSources.map(function (subDataSource) {
+                        return subDataSource.get("uri");
+                    }));
+                };
 
             this.$el.append(_.template(virtualSpecificTemplate, this.templateData()));
             this.$el.append(_.template(dependenciesTemplate, this.templateData()));
@@ -230,16 +235,11 @@ define(function(require) {
 			this.subDataSourcesTree.observe("node:unselected", _.bind(this.updateRightButtonState, this));
 			this.subDataSourcesTree.observe("leaf:selected", _.bind(this.updateRightButtonState, this));
 			this.subDataSourcesTree.observe("leaf:unselected", _.bind(this.updateRightButtonState, this));
+            this.subDataSourcesTree.observe("children:loaded", hideNodesFn);
 
-			var prefetchNodesUri = [];
-
-			if(this.model.subDataSources.length) {
-				prefetchNodesUri = this.model.subDataSources.map(function(subDataSource) {return subDataSource.get("uri"); });
-			}
-
-			this.subDataSourcesTree.showTreePrefetchNodes(prefetchNodesUri.join(","), function(arg) {
-				self._hideAvailableSubDataSources(prefetchNodesUri);
-			});
+            this.subDataSourcesTree.showTreePrefetchNodes(this.model.subDataSources.map(function (subDataSource) {
+                return subDataSource.get("uri");
+            }).join(","), hideNodesFn);
         },
 
         _hideAvailableSubDataSources: function(uri) {
@@ -252,45 +252,55 @@ define(function(require) {
             } else {
                 var node = this.subDataSourcesTree.findLastLoadedNode(uri);
 
-                // keep removed node for the case if user unselects it
-                this._subDataSourcesHiddenNodes[uri] = {
-                    parent: node.parent,
-                    child: node
-                };
+                if (node && node.param.uri === uri) {
+                    // keep removed node for the case if user unselects it
+                    this._subDataSourcesHiddenNodes[uri] = {
+                        parent: node.parent,
+                        child: node
+                    };
 
-                var parent = node.parent;
-                parent.removeChild(node);
-                parent.resortChilds();
+                    var parent = node.parent;
+                    parent.removeChild(node);
+                    parent.resortChilds();
+                }
             }
         },
 
         _unhideAvailableSubDataSources: function(uri) {
             function expandTreePath(tree, uri) {
-                tree.processNodePath(uri, function(node) {
-                    if(node.parent) {
+                tree.processNodePath(uri, function (node) {
+                    if (node.parent) {
                         if (tree.rootNode != node.parent && tree.getState(node.parent.id) == dynamicTree.TreeNode.State.CLOSED) {
                             node.parent.handleNode();
+                        }
+
+                        if (node.param.uri === uri) {
+                            node.select();
                         }
                     }
                 });
             }
 
-            var self = this;
+            var self = this,
+                notLoadedHiddenNodes = [];
 
-            if(_.isArray(uri)) {
-                _.each(uri, function(uriItem) {
-                    self._unhideAvailableSubDataSources(uriItem);
-                })
-            } else {
-                var hiddenNode = this._subDataSourcesHiddenNodes[uri];
+            _.each(_.isArray(uri) ? uri : [uri], function (uriItem) {
+                var hiddenNode = self._subDataSourcesHiddenNodes[uriItem];
 
-                if(hiddenNode) {
+                if (hiddenNode) {
                     hiddenNode.parent.addChild(hiddenNode.child);
                     hiddenNode.parent.resortChilds();
                     hiddenNode.parent.refreshNode();
-                    expandTreePath(this.subDataSourcesTree, uri);
-                    hiddenNode.child.select();
+                    expandTreePath(self.subDataSourcesTree, uriItem);
+                } else {
+                    notLoadedHiddenNodes.push(uriItem);
                 }
+            });
+
+            if (notLoadedHiddenNodes.length){
+                this.subDataSourcesTree.showTreePrefetchNodes(notLoadedHiddenNodes.join(","), function(){
+                    _.each(notLoadedHiddenNodes, _.bind(expandTreePath, this, self.subDataSourcesTree));
+                });
             }
         },
 

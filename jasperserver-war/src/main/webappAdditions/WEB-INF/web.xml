@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ http://www.jaspersoft.com.
+  ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <web-app version="2.4"
     xmlns="http://java.sun.com/xml/ns/j2ee"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -108,20 +129,14 @@
     <filter>
         <description>
             Filter wraps request and response. If there are load balancer request headers that tell
-            JRS the load balancer's protocol, address, port
+            JRS the load balancer's protocol, address, port and prefix(context path)
             the requests would be redirected there. Otherwise, the
             request object server name, server port, and http protocol determine the redirect url.
 
             This filter should be the first one in the chain.
         </description>
-        <filter-name>proxyUrlFilter</filter-name>
-        <filter-class>
-            org.springframework.web.filter.DelegatingFilterProxy
-        </filter-class>
-        <init-param>
-            <param-name>targetBeanName</param-name>
-            <param-value>proxyUrlFilter</param-value>
-        </init-param>
+        <filter-name>ForwardedHeaderFilter</filter-name>
+        <filter-class>org.springframework.web.filter.ForwardedHeaderFilter</filter-class>
     </filter>
 
     <!--  UNCOMMENT FOR SESSION REPLICATION -->
@@ -184,6 +199,33 @@
     </filter>
 
     <filter>
+        <description>
+            Put the request object into a ThreadLocal variable to make it accessible
+            throughout the application.
+
+            NOTE: This filter must be placed towards the end of the filter chain to make all
+            the request attributes introduced in the filter chain available throughout the
+            application (via RequestContextHolder.attributes.request).
+
+            The filter was placed before sitemesh filter, because sitemesh renders pages after
+            chain.doFilter.  RequestContextFilter destroys RequestContextHolder on exit.
+            If we placed RequestContextFilter after sitemesh, the pages would not be able to access
+            RequestContextHolder.attributes.request.
+        </description>
+        <filter-name>RequestContextFilter</filter-name>
+        <filter-class>org.springframework.web.filter.RequestContextFilter</filter-class>
+        <init-param>
+            <description>This paramter makes Request object available to the children threads</description>
+            <param-name>threadContextInheritable</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+
+    <!-- RequestContextFilter must come before securityFilter.
+         RequestContextFilter sets a Locale from 'accept-language' header,
+         but the Locale is expected to be set via 'userLocale' cookie which is handled by UserPerferenceFilter (it comes from securityFilter).-->
+
+    <filter>
         <filter-name>securityFilter</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
         <init-param>
@@ -227,25 +269,11 @@
     </filter>
 
     <filter>
-        <description>
-            Put the request object into a ThreadLocal variable to make it accessible
-            throughout the application.
-
-            NOTE: This filter must be placed towards the end of the filter chain to make all
-            the request attributes introduced in the filter chain available throughout the
-            application (via RequestContextHolder.attributes.request).
-
-            The filter was placed before sitemesh filter, because sitemesh renders pages after
-            chain.doFilter.  RequestContextFilter destroys RequestContextHolder on exit.
-            If we placed RequestContextFilter after sitemesh, the pages would not be able to access
-            RequestContextHolder.attributes.request.
-        </description>
-        <filter-name>RequestContextFilter</filter-name>
-        <filter-class>org.springframework.web.filter.RequestContextFilter</filter-class>
+        <filter-name>SwitchUserProcessingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
         <init-param>
-            <description>This paramter makes Request object available to the children threads</description>
-            <param-name>threadContextInheritable</param-name>
-            <param-value>true</param-value>
+            <param-name>targetBeanName</param-name>
+            <param-value>switchUserProcessingFilter</param-value>
         </init-param>
     </filter>
 
@@ -288,7 +316,7 @@
     </filter>
 
     <filter-mapping>
-        <filter-name>proxyUrlFilter</filter-name>
+        <filter-name>ForwardedHeaderFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
@@ -329,6 +357,18 @@
       <filter-name>sessionDecoratorProxyFilter</filter-name>
       <url-pattern>/*</url-pattern>
   </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>RequestContextFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>ERROR</dispatcher>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+    </filter-mapping>
+
+    <!-- RequestContextFilter must come before securityFilter.
+         RequestContextFilter sets a Locale from 'accept-language' header,
+         but the Locale is expected to be set via 'userLocale' cookie which is handled by UserPerferenceFilter (it comes from securityFilter).-->
 
   <filter-mapping>
       <filter-name>securityFilter</filter-name>
@@ -372,11 +412,8 @@
   </filter-mapping>
 
     <filter-mapping>
-        <filter-name>RequestContextFilter</filter-name>
+        <filter-name>SwitchUserProcessingFilter</filter-name>
         <url-pattern>/*</url-pattern>
-        <dispatcher>ERROR</dispatcher>
-        <dispatcher>REQUEST</dispatcher>
-        <dispatcher>FORWARD</dispatcher>
     </filter-mapping>
 
   <filter-mapping>
@@ -439,10 +476,6 @@
     <servlet-mapping>
         <servlet-name>jasperserver</servlet-name>
         <url-pattern>/jrpxml/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>jasperserver</servlet-name>
-        <url-pattern>/bif/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>jasperserver</servlet-name>

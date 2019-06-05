@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.metadata.data.snapshot.hibernate;
 
@@ -30,7 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +55,7 @@ public class HibernateDataSnapshotService extends HibernateDaoImpl implements Da
 	public boolean matchesVersion(ExecutionContext context, final long snapshotId,
 			final int version) {
 		return getHibernateTemplate().execute(new HibernateCallback<Boolean>() {
-			public Boolean doInHibernate(Session session) throws HibernateException, SQLException {
+			public Boolean doInHibernate(Session session) throws HibernateException {
 				Criteria criteria = session.createCriteria(PersistentDataSnapshot.class);
 				criteria.add(Restrictions.idEq(snapshotId));
 				criteria.add(Restrictions.eq("version", version));
@@ -151,7 +154,7 @@ public class HibernateDataSnapshotService extends HibernateDaoImpl implements Da
 	public DataSnapshotSavedId saveDataSnapshot(final ExecutionContext context,
 			final DataCacheSnapshot snapshot, final Long existingSnapshotId) {
 		return getHibernateTemplate().execute(new HibernateCallback<DataSnapshotSavedId>() {
-			public DataSnapshotSavedId doInHibernate(Session session) throws HibernateException, SQLException {
+			public DataSnapshotSavedId doInHibernate(Session session) throws HibernateException {
 				PersistentDataSnapshot persistentSnapshot = null;
 				if (existingSnapshotId != null) {
 					persistentSnapshot = getHibernateTemplate().get(PersistentDataSnapshot.class, existingSnapshotId);
@@ -201,7 +204,7 @@ public class HibernateDataSnapshotService extends HibernateDaoImpl implements Da
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
 	public long saveDataSnapshot(final ExecutionContext context, final DataCacheSnapshotData snapshot) {
 		return getHibernateTemplate().execute(new HibernateCallback<Long>() {
-			public Long doInHibernate(Session session) throws HibernateException, SQLException {
+			public Long doInHibernate(Session session) throws HibernateException {
 				PersistentDataSnapshot persistentSnapshot = new PersistentDataSnapshot();
 
 				// saving the new snapshot
@@ -271,7 +274,7 @@ public class HibernateDataSnapshotService extends HibernateDaoImpl implements Da
 		}
 		
 		return getHibernateTemplate().execute(new HibernateCallback<Long>() {
-			public Long doInHibernate(Session session) throws HibernateException, SQLException {
+			public Long doInHibernate(Session session) throws HibernateException {
 				PersistentDataSnapshot copy = new PersistentDataSnapshot();
 				copy.setSnapshotDate(persistentSnapshot.getSnapshotDate());
 				copy.setContentsId(copyContentsId);

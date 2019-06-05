@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.adhoc.datasource;
@@ -21,14 +24,17 @@ package com.jaspersoft.jasperserver.dto.adhoc.datasource;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientAggregate;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientFormattable;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+
 /**
  * @author Andriy Godovanets
  */
-public class ClientDataSourceField implements ClientField, ClientAggregate, ClientFormattable {
+public class ClientDataSourceField implements ClientField, ClientAggregate, ClientFormattable, DeepCloneable<ClientDataSourceField> {
     @NotNull
     private String name;
     private String type;
@@ -49,17 +55,18 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
     }
 
     public ClientDataSourceField(ClientDataSourceField field) {
-        if (field != null) {
-            this
-                    .setName(field.getName())
-                    .setType(field.getType())
-                    .setFormat(field.getFormat())
-                    .setHierarchyName(field.getHierarchyName())
-                    .setAggregateFunction(field.getAggregateFunction())
-                    .setAggregateExpression(field.getAggregateExpression())
-                    .setAggregateArg(field.getAggregateArg())
-                    .setAggregateType(field.getAggregateType());
-        }
+        checkNotNull(field);
+
+        this
+                .setName(field.getName())
+                .setType(field.getType())
+                .setFormat(field.getFormat())
+                .setHierarchyName(field.getHierarchyName())
+                .setAggregateFunction(field.getAggregateFunction())
+                .setAggregateFirstLevelFunction(field.getAggregateFirstLevelFunction())
+                .setAggregateExpression(field.getAggregateExpression())
+                .setAggregateArg(field.getAggregateArg())
+                .setAggregateType(field.getAggregateType());
     }
 
     @Override
@@ -116,6 +123,12 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
         return aggregateFirstLevelFunction;
     }
 
+
+    public ClientDataSourceField setAggregateFirstLevelFunction(String aggregateFirstLevelFunction) {
+        this.aggregateFirstLevelFunction = aggregateFirstLevelFunction;
+        return this;
+    }
+
     public ClientDataSourceField setAggregateFunction(String aggregateFunction) {
         this.aggregateFunction = aggregateFunction;
         return this;
@@ -155,11 +168,11 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ClientDataSourceField)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         ClientDataSourceField that = (ClientDataSourceField) o;
 
-        if (!name.equals(that.name)) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (type != null ? !type.equals(that.type) : that.type != null) return false;
         if (format != null ? !format.equals(that.format) : that.format != null) return false;
         if (hierarchyName != null ? !hierarchyName.equals(that.hierarchyName) : that.hierarchyName != null)
@@ -168,19 +181,21 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
             return false;
         if (aggregateExpression != null ? !aggregateExpression.equals(that.aggregateExpression) : that.aggregateExpression != null)
             return false;
+        if (aggregateFirstLevelFunction != null ? !aggregateFirstLevelFunction.equals(that.aggregateFirstLevelFunction) : that.aggregateFirstLevelFunction != null)
+            return false;
         if (aggregateArg != null ? !aggregateArg.equals(that.aggregateArg) : that.aggregateArg != null) return false;
-
         return aggregateType != null ? aggregateType.equals(that.aggregateType) : that.aggregateType == null;
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
+        int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (format != null ? format.hashCode() : 0);
         result = 31 * result + (hierarchyName != null ? hierarchyName.hashCode() : 0);
         result = 31 * result + (aggregateFunction != null ? aggregateFunction.hashCode() : 0);
         result = 31 * result + (aggregateExpression != null ? aggregateExpression.hashCode() : 0);
+        result = 31 * result + (aggregateFirstLevelFunction != null ? aggregateFirstLevelFunction.hashCode() : 0);
         result = 31 * result + (aggregateArg != null ? aggregateArg.hashCode() : 0);
         result = 31 * result + (aggregateType != null ? aggregateType.hashCode() : 0);
         return result;
@@ -196,4 +211,8 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
         return sb.toString();
     }
 
+    @Override
+    public ClientDataSourceField deepClone() {
+        return new ClientDataSourceField(this);
+    }
 }

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.connection.storage;
 
@@ -60,11 +63,11 @@ public class ContextsStorageSecurityAspectTest {
     @Test
     public void saveOwnedContext_callSequence_success() throws Throwable {
         final ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
-        final ConnectionDataPair initialPair = new ConnectionDataPair(null, null);
+        final ContextDataPair initialPair = new ContextDataPair(null, null);
         final Object[] args = {initialPair};
         when(joinPoint.getArgs()).thenReturn(args);
-        final ContextsStorageSecurityAspect.OwnedConnectionDataPair ownedPair =
-                new ContextsStorageSecurityAspect.OwnedConnectionDataPair(null, null, null);
+        final ContextsStorageSecurityAspect.OwnedContextDataPair ownedPair =
+                new ContextsStorageSecurityAspect.OwnedContextDataPair(null, null, null);
         when(aspect.getOwnedDataPair(initialPair)).thenReturn(ownedPair);
         final Object expectedResult = new Object();
         when(joinPoint.proceed(args)).thenReturn(expectedResult);
@@ -79,11 +82,11 @@ public class ContextsStorageSecurityAspectTest {
     @Test
     public void updateOwnedContext_callSequence_success() throws Throwable {
         final ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
-        final ConnectionDataPair initialPair = new ConnectionDataPair(null, null);
+        final ContextDataPair initialPair = new ContextDataPair(null, null);
         final Object[] args = {null, initialPair};
         when(joinPoint.getArgs()).thenReturn(args);
-        final ContextsStorageSecurityAspect.OwnedConnectionDataPair ownedPair =
-                new ContextsStorageSecurityAspect.OwnedConnectionDataPair(null, null, null);
+        final ContextsStorageSecurityAspect.OwnedContextDataPair ownedPair =
+                new ContextsStorageSecurityAspect.OwnedContextDataPair(null, null, null);
         when(aspect.getOwnedDataPair(initialPair)).thenReturn(ownedPair);
         doCallRealMethod().when(aspect).updateOwnedContext(joinPoint);
 
@@ -104,7 +107,7 @@ public class ContextsStorageSecurityAspectTest {
         final String expectedOwner = "someOwnerUser";
         when(aspect.getCurrentUserQualifiedName()).thenReturn(expectedOwner);
         when(aspect.getElement(uuid)).thenReturn(new Element(uuid,
-                new ContextsStorageSecurityAspect.OwnedConnectionDataPair(new Object(), new HashMap(), expectedOwner)));
+                new ContextsStorageSecurityAspect.OwnedContextDataPair(new Object(), new HashMap(), expectedOwner)));
         doCallRealMethod().when(aspect).checkOwner(joinPoint);
         Exception exception = null;
 
@@ -124,7 +127,7 @@ public class ContextsStorageSecurityAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[]{uuid});
         when(aspect.getCurrentUserQualifiedName()).thenReturn("someAnotherUser");
         when(aspect.getElement(uuid)).thenReturn(new Element(uuid,
-                new ContextsStorageSecurityAspect.OwnedConnectionDataPair(new Object(), new HashMap(), "someOwnerUser")));
+                new ContextsStorageSecurityAspect.OwnedContextDataPair(new Object(), new HashMap(), "someOwnerUser")));
         doCallRealMethod().when(aspect).checkOwner(joinPoint);
 
         aspect.checkOwner(joinPoint);
@@ -152,14 +155,14 @@ public class ContextsStorageSecurityAspectTest {
     public void getOwnedDataPair(){
         final Object connection = new Object();
         final HashMap<String, Object> data = new HashMap<String, Object>();
-        final ConnectionDataPair pair = new ConnectionDataPair(connection, data);
+        final ContextDataPair pair = new ContextDataPair(connection, data);
         when(aspect.getCurrentUserQualifiedName()).thenReturn("someOwnerUser");
         when(aspect.getOwnedDataPair(pair)).thenCallRealMethod();
 
-        final ContextsStorageSecurityAspect.OwnedConnectionDataPair result = aspect.getOwnedDataPair(pair);
+        final ContextsStorageSecurityAspect.OwnedContextDataPair result = aspect.getOwnedDataPair(pair);
 
         assertNotNull(result);
-        assertSame(result.getConnection(), connection);
+        assertSame(result.getContext(), connection);
         assertSame(result.getData(), data);
         assertEquals(result.getOwner(), "someOwnerUser");
     }

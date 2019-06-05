@@ -1,1 +1,0 @@
-var initModule={};initModule.pageInit=function(){layoutModule.initialize(),primaryNavModule.initializeNavigation(),actionModel.initializeOneTimeMenuHandlers()},document.observe("dom:loaded",initModule.pageInit.bind(initModule));

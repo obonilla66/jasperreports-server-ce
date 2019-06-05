@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
@@ -36,15 +39,15 @@ import com.jaspersoft.jasperserver.remote.ReportExporter;
 import com.jaspersoft.jasperserver.remote.ServiceException;
 import com.jaspersoft.jasperserver.remote.ServicesConfiguration;
 import com.jaspersoft.jasperserver.remote.exception.ExportExecutionRejectedException;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.remote.services.ReportExecutionOptions;
 import com.jaspersoft.jasperserver.remote.services.ReportExecutor;
 import com.jaspersoft.jasperserver.remote.utils.AuditHelper;
 import com.jaspersoft.jasperserver.remote.utils.RepositoryHelper;
-import com.jaspersoft.jasperserver.war.cascade.CachedRepositoryService;
-import com.jaspersoft.jasperserver.war.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedRepositoryService;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import net.sf.jasperreports.engine.JRAbstractExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
@@ -61,7 +64,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -107,15 +109,15 @@ public class ReportExecutorImpl implements ReportExecutor {
      * @param parameters             - input parameters
      * @param reportExecutionOptions - report execution options
      * @return report unit execution result
-     * @throws com.jaspersoft.jasperserver.remote.exception.RemoteException
+     * @throws ErrorDescriptorException
      *          if any error occurs
      */
     public ReportUnitResult runReport(String reportUnitUri, Map<String, Object> parameters,
-            ReportExecutionOptions reportExecutionOptions) throws RemoteException {
+            ReportExecutionOptions reportExecutionOptions) throws ErrorDescriptorException {
         InputControlsContainer report = getResource(InputControlsContainer.class, reportUnitUri);
         RunReportStrategy strategy = getStrategyForReport(report);
         if (strategy == null) {
-            throw new RemoteException(new ErrorDescriptor()
+            throw new ErrorDescriptorException(new ErrorDescriptor()
                     .setErrorCode("webservices.error.errorExecutingReportUnit").setParameters(report.getURI()));
         }
         
@@ -136,7 +138,7 @@ public class ReportExecutorImpl implements ReportExecutor {
                 getJasperReportsContext(reportExecutionOptions.isInteractive()), reportExecutionOptions);
 
         if (reportUnitResult == null) {
-            throw new RemoteException(new ErrorDescriptor()
+            throw new ErrorDescriptorException(new ErrorDescriptor()
                     .setErrorCode("webservices.error.errorExecutingReportUnit").setParameters(report.getURI()));
         }
 

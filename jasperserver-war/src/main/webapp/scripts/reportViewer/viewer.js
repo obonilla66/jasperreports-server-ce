@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -31,9 +31,10 @@ define(function(require) {
     var JReport = require("jasperreports-report"),
         $ = require("jquery"),
         css = require("csslink!jive.vm.css"),
-        browserDetection = require("common/util/browserDetection");
+        browserDetection = require("common/util/browserDetection"),
+        stdnav = require("stdnav");
 
-    require("jquery-ui/jquery.ui.draggable");
+    require("jquery-ui/widgets/draggable");
 
     // i18n
     var jivei18nText = require("text!jive.i18n.tmpl"),
@@ -90,7 +91,6 @@ define(function(require) {
             }
         });
 
-        it.zoomAdhocViewDfd = null;
         it.features = {
             zoom: {
                 options: [],
@@ -138,7 +138,7 @@ define(function(require) {
         };
 
         /********** Report Container Zoom **********/
-        if ($('script#reportZoomText').size() > 0) {
+        if ($('script#reportZoomText').length > 0) {
             it.features.zoom.options = JSON.parse($('script#reportZoomText').html());
 
             $('button#zoom_in').on('click', function(evt) {
@@ -151,18 +151,27 @@ define(function(require) {
                 it.zoomOut();
                 it.zoomChanged();
             });
-
+            $('input#zoom_value').on('keydown', function(evt) {
+                if (evt.which === 13) { // on enter key released
+                    if (this.value.length) {
+                        it.zoomTo(parseFloat(this.value)/100);
+                        it.getOptionsMenu('zoom').hide();
+                    }
+                }
+            });
             $('button#zoom_value_button').on('click', function(evt) {
                 var btnOpt = $(this),
-                    offset = $('input#zoom_value').offset(),
+                    input = $("input#zoom_value"),
+                    offset = input.offset(),
                     optionsMenu = it.getOptionsMenu('zoom'),
                     openFor = optionsMenu.data('openFor') || "";
 
-                if (optionsMenu.is(':visible') && openFor == "zoom") {
+                if (optionsMenu.is(':visible') && openFor === "zoom") {
                     optionsMenu.hide();
                     optionsMenu.data('openFor', null);
+                    input.focus();
                 } else {
-                    if (optionsMenu.is(':visible') && openFor != "zoom") {
+                    if (optionsMenu.is(':visible') && openFor !== "zoom") {
                         optionsMenu.hide();
                     }
                     optionsMenu.show().offset({
@@ -170,6 +179,7 @@ define(function(require) {
                         top: offset.top + btnOpt.height()
                     });
                     optionsMenu.data('openFor', 'zoom');
+                    input.blur();
                 }
             });
 
@@ -186,10 +196,10 @@ define(function(require) {
         /************************/
 
         /*********** Report Search **********/
-		if ($('script#reportSearchText').size() > 0) {
+		if ($('script#reportSearchText').length > 0) {
             it.features.search.options = JSON.parse($('script#reportSearchText').html());
-            $('input#search_report').on('keyup', function(evt) {
-                if (evt.which == 13) { // on enter key released
+            $('input#search_report').on('keydown', function(evt) {
+                if (evt.which === 13) { // on enter key released
                     if (this.value.length) {
                         it.reportInstance.search({
                             searchString: this.value,
@@ -204,7 +214,7 @@ define(function(require) {
             });
 
             $('button#search_report_button').on('click', function(evt) {
-                $('input#search_report').trigger($.Event("keyup", {which: 13}));
+                $('input#search_report').trigger($.Event("keydown", {which: 13}));
             });
 
             $('button#search_options').on('click', function(evt) {
@@ -213,11 +223,11 @@ define(function(require) {
                     optionsMenu = it.getOptionsMenu('search'),
                     openFor = optionsMenu.data('openFor') || "";
 
-                if (optionsMenu.is(':visible') && openFor == "search") {
+                if (optionsMenu.is(':visible') && openFor === "search") {
                     optionsMenu.hide();
                     optionsMenu.data('openFor', null);
                 } else {
-                    if (optionsMenu.is(':visible') && openFor != "search") {
+                    if (optionsMenu.is(':visible') && openFor !== "search") {
                         optionsMenu.hide();
                     }
                     optionsMenu.show().offset({
@@ -239,7 +249,7 @@ define(function(require) {
 
                 // search results are sorted by page number in ascending order
                 for (i = 0, ln = it.search.results.length; i < ln; i++) {
-                    if (currentPage == it.search.results[i].page - 1) {
+                    if (currentPage === it.search.results[i].page - 1) {
                         resultsForPage = it.search.results[i].hitCount;
                     }
                     if (currentPage < it.search.results[i].page - 1) {
@@ -260,7 +270,7 @@ define(function(require) {
 
                     it.search.currentPage = currentPage;
                 } else {
-                    if (nextPage == currentPage) {
+                    if (nextPage === currentPage) {
                         spans.eq(it.search.currentIndex).removeClass('highlight');
                         it.search.currentIndex = 0;
 
@@ -291,7 +301,7 @@ define(function(require) {
                     resultsForPage = 0, i, elem;
 
                 for (i = it.search.results.length - 1; i >= 0; i--) {
-                    if (currentPage == it.search.results[i].page - 1) {
+                    if (currentPage === it.search.results[i].page - 1) {
                         resultsForPage = it.search.results[i].hitCount;
                     }
                     if (currentPage > it.search.results[i].page - 1) {
@@ -314,7 +324,7 @@ define(function(require) {
 
                     it.search.currentPage = currentPage;
                 } else {
-                    if (prevPage == currentPage) {
+                    if (prevPage === currentPage) {
                         spans.eq(it.search.currentIndex).removeClass('highlight');
                         it.search.currentIndex = resultsForPage - 1;
 
@@ -342,7 +352,7 @@ define(function(require) {
         /*************** Report Bookmarks **************/
         it.bookmarksContainer = null;
         $('button#bookmarksDialog').on('click', function() {
-            it.bookmarksContainer && it.bookmarksContainer.show().offset({left: 10, top: 95});
+            it.bookmarksContainer && it.bookmarksContainer.toggle().offset({left: 10, top: 95});
         });
         /*****************************/
 
@@ -357,7 +367,7 @@ define(function(require) {
 				html;
 
             // if bookmarks already in place, do nothing
-            if (container.length && container.find('.jrbookmark').size() > 0) {
+            if (container.length && container.find('.jrbookmark').length > 0) {
                 return;
             }
 
@@ -381,7 +391,7 @@ define(function(require) {
 						pageIndex = span.data('pageindex'),
 						anchor = span.text();
 
-					if (it.reportInstance.currentpage == pageIndex) {
+					if (it.reportInstance.currentpage === pageIndex) {
 							window.location.hash = anchor;
 					} else {
 						it.reportInstance.gotoPage(pageIndex).then(function() {
@@ -437,7 +447,7 @@ define(function(require) {
                 html += "<li class='leaf'><p class='wrap button'><b class='icon noninteractive'></b><a href='" + href + "' data-pageindex='" + bookmark.pageIndex + "' class='jrbookmark'>" + label + "</a></p>";
             }
 
-			html += "</li>"
+			html += "</li>";
 
 			return html;
 		},
@@ -448,58 +458,46 @@ define(function(require) {
         // report parts
         prepareReportParts: function(parts, forceRedraw) {
             var it = this,
-                partsContainer = $('div#reportPartsContainer'),
-                navigationContainer = $('div#reportPartsNavigation'),
+                partsContainer = $('ul#reportPartsContainer'),
                 html = "";
 
             // if parts already in place, do nothing
-            if (partsContainer.length && partsContainer.find('div.reportPart').size() > 0 && !forceRedraw) {
+            if (partsContainer.length && partsContainer.find('div.reportPart').length > 0 && !forceRedraw) {
                 return;
             }
 
             if (!it.initializedPartsContainer) {
-                partsContainer.parent().show();
+                if (partsContainer.find("li.control.search").length === 2) {
+                    it.tabs.navButtons = partsContainer.html();
+                }
+
+                partsContainer.parent().removeClass('hidden');
                 partsContainer.on('click', 'div.reportPart', function(evt) {
                     evt.preventDefault();
                     var tab = $(this),
                         pageIndex = tab.data('pageindex');
 
-                    if (it.reportInstance.currentpage != pageIndex) {
+                    if (it.reportInstance.currentpage !== pageIndex) {
                         partsContainer.find('div.reportPart.active').removeClass('active');
                         tab.addClass('active');
                         it.reportInstance.gotoPage(pageIndex);
                     }
                 });
 
-                navigationContainer.on('click', 'button#part_prev', function(evt) {
-                    var activeTab = partsContainer.find('div.reportPart.active'),
-                        prevPart,
-                        prevTab = activeTab.prev();
-
-                    if (!prevTab.length) {
-                        prevPart = it.getPreviousPart(activeTab);
-                        partsContainer.find('div.reportPart:last').remove();
-                        prevTab = $(it.exportPart(prevPart));
-                        partsContainer.prepend(prevTab);
-                    }
-
+                partsContainer.on('click', 'button#part_prev', function(evt) {
+                    var activeTab = partsContainer.find('li div.reportPart.active').closest('li'),
+                        // prevPart,
+                        prevTab = activeTab.prev('li').not('li.control.search');
                     $(this).prop('disabled', true);
-                    prevTab.trigger('click');
+                    prevTab.find(".button").trigger('click');
                 });
-                navigationContainer.on('click', 'button#part_next', function(evt) {
-                    var activeTab = partsContainer.find('div.reportPart.active'),
-                        nextPart,
-                        nextTab = activeTab.next();
 
-                    if (!nextTab.length) {
-                        nextPart = it.getNextPart(activeTab);
-                        partsContainer.find('div.reportPart:first').remove();
-                        nextTab = $(it.exportPart(nextPart));
-                        partsContainer.append(nextTab);
-                    }
-
+                partsContainer.on('click', 'button#part_next', function(evt) {
+                    var activeTab = partsContainer.find('li div.reportPart.active').closest('li'),
+                        // nextPart,
+                        nextTab = activeTab.next('li').not('li.control.search');
                     $(this).prop('disabled', true);
-                    nextTab.trigger('click');
+                    nextTab.find(".button").trigger('click');
                 });
 
                 it.reportPartsContainer = partsContainer;
@@ -515,6 +513,7 @@ define(function(require) {
                 it.partsStartIndex.push(part.idx);
             });
 
+            html += it.tabs.navButtons;
             partsContainer.html(html);
             it.markActiveReportPart();
         },
@@ -526,8 +525,9 @@ define(function(require) {
                 name = part.name.substring(0, it.tabs.maxLabelLength) + "...";
             }
 
-            return "<div class='reportPart' role='button' tabindex='0' js-navtype='button' data-pageindex='"
-                + part.idx + "'><span aria-label='" + name +"'>" + name + "</span></div>";
+            return "<li class='leaf'>" +
+                "<div class='button reportPart' role='button' js-navtype='button' data-pageindex='"
+                + part.idx + "' data-title='true' aria-label='" + name + "' tabindex='-1'><span>" + name + "</span></div></li>";
         },
         getNextPart: function(tab) {
             var it = this,
@@ -576,7 +576,7 @@ define(function(require) {
                 }
             });
 
-            if (activePartIndex != -1) {
+            if (activePartIndex !== -1) {
                 it.reportPartsContainer.find('div.reportPart.active').removeClass('active');
                 tabToActivate = it.reportPartsContainer.find("div.reportPart[data-pageindex='"+ activePartStartIndex + "']");
 
@@ -602,17 +602,21 @@ define(function(require) {
                         html += it.exportPart(parts[j]);
                     }
 
+                    html += it.tabs.navButtons;
                     it.reportPartsContainer.html(html);
                     tabToActivate = it.reportPartsContainer.find("div.reportPart[data-pageindex='"+ activePartStartIndex + "']");
                 }
 
                 tabToActivate.addClass('active');
 
-                btnPrev = it.reportPartsContainer.parent().find('#part_prev');
-                btnNext = it.reportPartsContainer.parent().find('#part_next');
+                btnPrev = it.reportPartsContainer.find('#part_prev');
+                btnNext = it.reportPartsContainer.find('#part_next');
 
                 if (activePartIndex === 0) {
                     btnPrev.prop('disabled', true);
+                    if(it.reportPartsContainer.find("li.search:first").is(".subfocus")){
+                        stdnav.forceFocus("#reportPartsContainer li.search:last");
+                    }
                 } else {
                     btnPrev.prop('disabled', false);
                 }
@@ -621,6 +625,9 @@ define(function(require) {
                     btnNext.prop('disabled', false);
                 } else {
                     btnNext.prop('disabled', true);
+                    if(it.reportPartsContainer.find("li.search:last").is(".subfocus")){
+                        stdnav.forceFocus("#reportPartsContainer li.search:first");
+                    }
                 }
             }
         },
@@ -653,7 +660,7 @@ define(function(require) {
         restoreLastActiveSearchHighlight: function() {
             var it = this, spans;
             if (it.search.results.length) {
-                if (it.reportInstance.currentpage == it.search.currentPage) {
+                if (it.reportInstance.currentpage === it.search.currentPage) {
                     spans = $('.jr_search_result');
                     spans.eq(it.search.currentIndex).addClass('highlight');
                 }
@@ -667,8 +674,8 @@ define(function(require) {
                 menu = $("div#templateElements > div#reportViewerMenuHolder > div#vwroptions > div.menu"),
                 optionsContainer, i, opt, buf, once = false;
 
-            if (menu.size() === 0) {
-                buf = "<div id ='reportViewerMenuHolder'><div id='vwroptions'><div class='menu vertical dropDown fitable' style='display: none; z-index: 99999'><div class='content'><ul>";
+            if (menu.length === 0) {
+                buf = "<div id ='reportViewerMenuHolder'><div id='vwroptions'><div class='menu vertical dropDown fitable' style='display: none; z-index: 99999'><div class='content'><ul js-navtype='toolbar'>";
                 buf += "</ul></div></div></div></div>";
                 menu = $("div#templateElements").append(buf).find('div#vwroptions div.menu');
                 menu.on('mouseleave', function(evt) {
@@ -688,8 +695,8 @@ define(function(require) {
                     once = true;
                     optionsContainer.append("<li class='leaf separator'></li>");
                 }
-                if (featureConfig.selectedKeys.length && $.inArray(opt.key, featureConfig.selectedKeys) != -1) {
-                    optionsContainer.append("<li class='leaf'><p class='wrap toggle button down' data-val='" + opt.key + "'><span class='icon'></span>" + opt.value + "</p></li>");
+                if (featureConfig.selectedKeys.length && $.inArray(opt.key, featureConfig.selectedKeys) !== -1) {
+                    optionsContainer.append("<li class='leaf selected'><p class='wrap toggle button down' data-val='" + opt.key + "'><span class='icon'></span>" + opt.value + "</p></li>");
                 } else {
                     optionsContainer.append("<li class='leaf'><p class='wrap toggle button' data-val='" + opt.key + "'><span class='icon'></span>" + opt.value + "</p></li>");
                 }
@@ -699,11 +706,14 @@ define(function(require) {
                 var p = $(this),
                     val = p.attr('data-val');
 
-                if (featureConfig.optionType == 'select') {
+                if (featureConfig.optionType === 'select') {
                     p.closest('ul').find('p').removeClass('down');
+                    p.closest('ul').find('li').removeClass('selected');
                     p.addClass('down');
-                } else if (featureConfig.optionType == 'toggle') {
+                    p.closest('li').addClass('selected');
+                } else if (featureConfig.optionType === 'toggle') {
                     p.toggleClass('down');
+                    p.closest('li').toggleClass('selected');
                 }
 
                 featureConfig.onClick.apply(null, [val]);
@@ -919,7 +929,7 @@ define(function(require) {
             var currentLevel = this.features.zoom.levels.current,
                 prevLevel = this.features.zoom.levels.previous;
 
-            if (currentLevel.value != prevLevel.value || currentLevel.literal != prevLevel.literal) {
+            if (currentLevel.value !== prevLevel.value || currentLevel.literal !== prevLevel.literal) {
                 this.features.zoom.localZoomChange = true;
                 this.reportInstance.saveZoom(currentLevel.literal || currentLevel.value);
             }
@@ -970,7 +980,7 @@ define(function(require) {
             }
 
             // ARIA fixups
-            $('table.jrPage').prop('tabindex', '"0"');
+            $('table.jrPage').prop('tabindex', '8');
             // Prevent screen-readers from guessing that our table is used only for layout purposes,
             // because of all the blank cells at the edges
             $('table.jrPage').attr('role', 'grid');
@@ -996,7 +1006,7 @@ define(function(require) {
                 $.each(scripts, function(i, v) {
                     var $ = window.$;
                     eval(v); // jshint ignore: line
-                    if(it.reportInstance.loader.jasperPrintName != Report.jasperPrintName) {
+                    if(it.reportInstance.loader.jasperPrintName !== Report.jasperPrintName) {
                         it.reportInstance.loader.jasperPrintName = Report.jasperPrintName;
                     }
                 });
@@ -1017,6 +1027,11 @@ define(function(require) {
             !container.hasClass(customClass) && container.addClass(customClass);
             return container;
         },
+
+        _zoom: function(currentZoom) {
+            this.processZoomOption(currentZoom.literal ? currentZoom.literal : currentZoom.value);
+        },
+
         setupEventsForReport: function(report) {
             var it = this;
 
@@ -1038,7 +1053,7 @@ define(function(require) {
                         $('table.jrPage').css({'margin-left': 'auto', 'margin-right': 'auto'}); /* FIXME: remove or place inside CSS file */
                         it.dfds['jive.inactive'].resolve();
                         // Give the table a tabindex so that Standard Navigation can work with it.
-                        $('table.jrPage').prop('tabindex', '"0"');
+                        $('table.jrPage').prop('tabindex', '8');
                         // Prevent screen-readers from guessing that our table is used only for layout purposes,
                         // because of all the blank cells at the edges
                         $('table.jrPage').attr('role', 'grid');
@@ -1055,7 +1070,7 @@ define(function(require) {
                     it.render($(htm).removeClass("hidden").html());
                     $('table.jrPage').css({'margin-left': 'auto', 'margin-right': 'auto'}); /* FIXME: remove or place inside CSS file */
                     // Give the table a tabindex so that Standard Navigation can work with it.
-                    $('table.jrPage').prop('tabindex', '"0"');
+                    $('table.jrPage').prop('tabindex', '8');
                     // Prevent screen-readers from guessing that our table is used only for layout purposes,
                     // because of all the blank cells at the edges
                     $('table.jrPage').attr('role', 'grid');
@@ -1090,13 +1105,10 @@ define(function(require) {
                     for the chart itself. Unfortunatelly at this point we do not know which charts are
                     Adhoc based, so we do it for all the Highcharts chart reports.
                  */
-                it.zoomAdhocViewDfd = new $.Deferred();
-                it.zoomAdhocViewDfd.then(function() {
-                    it.processZoomOption(currentZoom.literal ? currentZoom.literal : currentZoom.value);
-                });
+                it.currentZoom = currentZoom;
 
                 if (!$(htm).find('div.highcharts_parent_container').length) {
-                    it.zoomAdhocViewDfd.resolve();
+                    it._zoom(currentZoom);
                 }
 
                 it.restoreLastActiveSearchHighlight();
@@ -1113,7 +1125,7 @@ define(function(require) {
                 scrollContainer.scrollTop(0);
 
                 // search is an action, but the search controls should not be reset before it
-                if (!evt.type || evt.type != "search") {
+                if (!evt.type || evt.type !== "search") {
                     it.resetSearch();
                 }
 
@@ -1146,7 +1158,19 @@ define(function(require) {
                     buttonManager.disable($('#undo')[0]);
                     buttonManager.disable($('#undoAll')[0]);
                 }
-                this.refreshPage(0);
+                this.refreshPage(0).then(function () {
+                    // switch navigation focus to opposite button if no more stack steps available
+                    if (!it.stateStack.hasPrevious()) {
+                        var $preDialogFocusedElem = $("#viewerToolbar li.preDialogFocus");
+                        var $newDialogFocusedElem = $('#redo').closest("li");
+                        if($preDialogFocusedElem.length){
+                            $preDialogFocusedElem.removeClass("preDialogFocus");
+                            $newDialogFocusedElem.addClass("preDialogFocus");
+                        } else {
+                            stdnav.forceFocus($newDialogFocusedElem[0]);
+                        }
+                    }
+                });
             });
             report.on("redo", function() {
                 it.isUndoRedo = true;
@@ -1157,7 +1181,19 @@ define(function(require) {
                 if (!it.stateStack.hasNext()) {
                     buttonManager.disable($('#redo')[0]);
                 }
-                this.refreshPage(0);
+                this.refreshPage(0).then(function () {
+                    // switch navigation focus to opposite button if no more stack steps available
+                    if (!it.stateStack.hasNext()) {
+                        var $preDialogFocusedElem = $("#viewerToolbar li.preDialogFocus");
+                        var $newDialogFocusedElem = $('#undo').closest("li");
+                        if($preDialogFocusedElem.length){
+                            $preDialogFocusedElem.removeClass("preDialogFocus");
+                            $newDialogFocusedElem.addClass("preDialogFocus");
+                        } else {
+                            stdnav.forceFocus($newDialogFocusedElem[0]);
+                        }
+                    }
+                });
             });
             report.on("undoall", function() {
                 it.isUndoRedo = true;
@@ -1165,7 +1201,17 @@ define(function(require) {
                 buttonManager.enable($('#redo')[0]);
                 buttonManager.disable($('#undo')[0]);
                 buttonManager.disable($('#undoAll')[0]);
-                this.refreshPage(0);
+                this.refreshPage(0).then(function () {
+                    // switch navigation focus to opposite button if no more stack steps available
+                    var $preDialogFocusedElem = $("#viewerToolbar li.preDialogFocus");
+                    var $newDialogFocusedElem = $('#redo').closest("li");
+                    if($preDialogFocusedElem.length){
+                        $preDialogFocusedElem.removeClass("preDialogFocus");
+                        $newDialogFocusedElem.addClass("preDialogFocus");
+                    } else {
+                        stdnav.forceFocus($newDialogFocusedElem[0]);
+                    }
+                });
             });
             report.on("action", function() {
                 it.isUndoRedo = false;
@@ -1191,7 +1237,7 @@ define(function(require) {
 
                     // if we have results for the current page, just refresh it
                     for (i = 0, ln = results.length; i < ln; i++) {
-                        if (currentPage == results[i].page - 1) {
+                        if (currentPage === results[i].page - 1) {
                             searchPage = currentPage;
                             break;
                         }
@@ -1204,7 +1250,7 @@ define(function(require) {
 
                         it.search.currentPage = searchPage;
 
-                        if (results.length > 1 || (results.length == 1 && results[0].hitCount > 1)) {
+                        if (results.length > 1 || (results.length === 1 && results[0].hitCount > 1)) {
                             $('button#search_next').prop('disabled', false);
                             $('button#search_previous').prop('disabled', false);
                         } else {
@@ -1299,9 +1345,11 @@ define(function(require) {
                         }
                     }
 
-                    return Math.max(400, it.container.height() - hcParentContainer.position().top);
+                    var offsetTop = hcParentContainer.offset().top - it.container.offset().top;
+
+                    return Math.max(400, it.container.height() - offsetTop);
                 }
-                if(it.reportInstance.components && it.reportInstance.components.chart && it.reportInstance.components.chart.length && it.reportInstance.components.chart[0].config.hcinstancedata.services[0].service == 'adhocHighchartsSettingService') {
+                if(it.reportInstance.components && it.reportInstance.components.chart && it.reportInstance.components.chart.length && it.reportInstance.components.chart[0].config.hcinstancedata.services[0].service === 'adhocHighchartsSettingService') {
                     isAdhocView = true;
                     it.container.css({position:'absolute',top:0,right:0,bottom:0,left:0});
                     var jrPage = $('table.jrPage'),
@@ -1350,7 +1398,7 @@ define(function(require) {
                 }
 
                 // resolve deferred zoom (necessary for reports with HC charts to be done after the Adhoc ones do their CSS mods for resizing)
-                it.zoomAdhocViewDfd.resolve();
+                it._zoom(it.currentZoom);
 
                 /*
                     If Highcharts are present render them
@@ -1447,6 +1495,17 @@ define(function(require) {
 					});
 				}
 
+				/*
+					Handle Google Maps
+				 */
+				if (components.googlemap && components.googlemap.length) {
+
+				    // disable JRS keyboard navigation on google maps reports. JS-33653
+                    $('table.jrPage').attr('js-stdnav', 'false');
+
+                }
+
+
                 Report.reportRefreshed();
 
                 // very dirty hack to fix mystical issue http://bugzilla.jaspersoft.com/show_bug.cgi?id=39694
@@ -1469,11 +1528,12 @@ define(function(require) {
         },
         handleReportBookmarks: function(componentsContainer) {
             var it = this;
+            var parentLi = $('button#bookmarksDialog').closest("li");
             if (componentsContainer.bookmarks && componentsContainer.bookmarks.length) {
                 it.prepareBookmarks(componentsContainer.bookmarks[0].config.bookmarks);
-                $('button#bookmarksDialog').show();
+                parentLi.removeClass('hidden').prev('li.divider').removeClass('hidden');
             } else {
-                $('button#bookmarksDialog').hide();
+                parentLi.addClass('hidden').prev("li.divider").addClass('hidden');
                 it.bookmarksContainer && it.bookmarksContainer.hide();
             }
         },
@@ -1484,12 +1544,12 @@ define(function(require) {
                     forceRedraw =  true;
 
                 // check if we have a different number of parts than existing
-                if (it.partsStartIndex && it.partsStartIndex.length == parts.length) {
+                if (it.partsStartIndex && it.partsStartIndex.length === parts.length) {
                     forceRedraw = false;
                 }
 
                 it.prepareReportParts(parts, forceRedraw);
-                it.reportPartsContainer && it.reportPartsContainer.show();
+                it.reportPartsContainer && it.reportPartsContainer.removeClass('hidden');
             }
         },
         setLocation: function(loc) {

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 
@@ -37,6 +40,8 @@ import org.springframework.context.ApplicationContext;
 import org.unitils.UnitilsJUnit4;
 import org.unitils.inject.annotation.TestedObject;
 import org.unitils.mock.Mock;
+
+import java.util.Date;
 
 /**
  * Tests for {@link ReportExecutionJob}
@@ -72,6 +77,8 @@ public class ReportExecutionJobTest extends UnitilsJUnit4 {
     public void executeMethodShouldFlushLoggingContext() throws Exception {
         jobExecutionContextMock.returns(schedulerMock).getScheduler();
         jobExecutionContextMock.returns(triggerMock).getTrigger();
+        jobExecutionContextMock.returns(new Date()).getScheduledFireTime();
+        jobExecutionContextMock.returns(new Date()).getFireTime();
         schedulerMock.returns(schedulerContextMock).getContext();
         schedulerContextMock.returns(applicationContextMock).get(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_APPLICATION_CONTEXT);
         schedulerContextMock.returns(securityContextProviderMock).get(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_SECURITY_CONTEXT_PROVIDER);

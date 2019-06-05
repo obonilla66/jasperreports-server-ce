@@ -1,27 +1,29 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.action.tree;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.core.util.CipherUtil;
-import com.jaspersoft.jasperserver.jsp.EscapeXssScript;
-import com.jaspersoft.jasperserver.war.common.ConfigurationBean;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
 import com.jaspersoft.jasperserver.war.model.TreeDataProvider;
 import com.jaspersoft.jasperserver.war.model.TreeDataProviderFactory;
 import com.jaspersoft.jasperserver.war.model.TreeHelper;
@@ -63,7 +65,7 @@ public class TreeAction extends MultiAction {
 
 	private TreeDataProviderFactory treeDataProviderFactory;
 	private MessageSource messageSource;
-    private ConfigurationBean configurationBean;
+    private RepositoryConfiguration configuration;
 
 	// Actions
 
@@ -123,16 +125,16 @@ public class TreeAction extends MultiAction {
         TreeNode treeNode;
         if (prefetchList == null) {
             try {
-                treeNode = treeDataProvider.getNode(exContext(context), uri, d);
+                treeNode = treeDataProvider.getNode(exContext(), uri, d);
             }  catch (AccessDeniedException e) {
-                treeNode = treeDataProvider.getNode(exContext(context), configurationBean.getPublicFolderUri(), d);
+                treeNode = treeDataProvider.getNode(exContext(), configuration.getPublicFolderUri(), d);
             }
         } else {
             try {
-                treeNode = TreeHelper.getSubtree(exContext(context), treeDataProvider, uri, prefetchList, d);
+                treeNode = TreeHelper.getSubtree(exContext(), treeDataProvider, uri, prefetchList, d);
             } catch (AccessDeniedException e) {
-                treeNode = TreeHelper.getSubtree(exContext(context), treeDataProvider,
-                        configurationBean.getPublicFolderUri(), prefetchList, d);
+                treeNode = TreeHelper.getSubtree(exContext(), treeDataProvider,
+						configuration.getPublicFolderUri(), prefetchList, d);
             }
         }
 
@@ -177,7 +179,7 @@ public class TreeAction extends MultiAction {
 
     	TreeDataProvider treeDataProvider = findProvider(context, providerId);
 
-    	TreeNode treeNode = treeDataProvider.getNode(exContext(context), uri, 1);
+    	TreeNode treeNode = treeDataProvider.getNode(exContext(), uri, 1);
 
     	String model = "";
     	if (treeNode != null) {
@@ -224,7 +226,7 @@ public class TreeAction extends MultiAction {
 
 	    boolean empty = true;
         for (String uri : uris) {
-            TreeNode treeNode = treeDataProvider.getNode(exContext(context), uri, 1);
+            TreeNode treeNode = treeDataProvider.getNode(exContext(), uri, 1);
 
             if (treeNode != null) {
                 if (empty) {
@@ -284,8 +286,8 @@ public class TreeAction extends MultiAction {
         this.treeDataProviderFactory = treeDataProviderFactory;
     }
 
-	private ExecutionContext exContext(RequestContext rContext) {
-		return JasperServerUtil.getExecutionContext(rContext);
+	private ExecutionContext exContext() {
+		return StaticExecutionContextProvider.getExecutionContext();
 	}
 
 	public MessageSource getMessageSource() {
@@ -296,8 +298,8 @@ public class TreeAction extends MultiAction {
 		this.messageSource = messageSource;
 	}
 
-    public void setConfigurationBean(ConfigurationBean configurationBean) {
-        this.configurationBean = configurationBean;
-    }
+	public void setConfiguration(RepositoryConfiguration configuration) {
+		this.configuration = configuration;
+	}
 }
 

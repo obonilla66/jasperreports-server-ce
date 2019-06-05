@@ -1,1 +1,0 @@
-define(["require","./BiComponentError","./enum/biComponentErrorCodes"],function(r){"use strict";var o=r("./BiComponentError"),n=r("./enum/biComponentErrorCodes");return o.extend({constructor:function(r){o.prototype.constructor.call(this,n.INPUT_CONTROL_PARAMETER_NOT_FOUND_ERROR,r)}})});

@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright © 2005 - 2018 TIBCO Software Inc.
+  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
+  ~ Unless you have purchased a commercial license agreement from Jaspersoft,
+  ~ the following license terms apply:
+  ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -24,13 +27,17 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:p="http://www.springframework.org/schema/p"
        xsi:schemaLocation="
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
-http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 
     <context:component-scan base-package="com.jaspersoft.jasperserver.war.httpheaders"/>
-  <!-- Tiles 2 integration. -->
-  <bean class="com.jaspersoft.jasperserver.war.tiles2.SpringTilesConfigurer" />
+  <!-- Tiles 3 integration. -->
+    <bean class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+        <property name="preparerFactoryClass" value="org.springframework.web.servlet.view.tiles3.SimpleSpringPreparerFactory"/>
+        <property name="useMutableTilesContainer" value="true"/>
+
+    </bean>
 
   <!-- pull in properties -->
   <bean id="propertyConfigurer" class="com.jaspersoft.jasperserver.api.common.properties.DecryptingPropertyPlaceholderConfigurer">
@@ -643,25 +650,6 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
 
     <alias name="${bean.xmlaRepository}" alias="concreteXmlaRepository"/>
 
-    <bean id="mondrianOlap4jMeasureHelper" class="mondrian.olap4j.MondrianOlap4jMemberHelper" factory-method="getInstance" scope="singleton">
-        <!--
-           rolapAnnotationGroupMarker - rolap annotations marker, which will be used for represent measure group
-           rolap annotation.
-
-           For example if customer want measure "Unit Sales" to be in group "MEASURE GROUP" he has to
-           define:
-
-           <Measure name="Unit Sales" column="unit_sales" formatString="Standard" aggregator="sum">
-             <Annotations>
-                <Annotation name="JRSBusinessGroup">
-                      <![CDATA[MEASURE_GROUP]]>
-                  </Annotation>
-              </Annotations>
-           </Measure>
-        -->
-        <property name="rolapAnnotationGroupMarker" value="AnalyzerBusinessGroup"/>
-    </bean>
-
     <!--
     This rules to apply HTTP headers to the response. The rule it self consist of HTTP method together with regexp pattern of the URL.
     Most specific rules should be first. Only headers from first matching rule will be applied to the response.
@@ -726,7 +714,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                                 <constructor-arg value="Vary"/>
                                 <constructor-arg value="Accept-Language"/>
                             </bean>
-                            <ref local="staticResourcesExpiresHeader" />
+                            <ref bean="staticResourcesExpiresHeader" />
                         </list>
                     </property>
                 </bean>
@@ -745,7 +733,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                                 <constructor-arg value="Vary"/>
                                 <constructor-arg value="Accept-Language"/>
                             </bean>
-                            <ref local="staticResourcesExpiresHeader" />
+                            <ref bean="staticResourcesExpiresHeader" />
                         </list>
                     </property>
                 </bean>
@@ -770,7 +758,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                                 <constructor-arg value="Pragma"/>
                                 <constructor-arg value=""/>
                             </bean>
-                            <ref local="thumbnailsListExpiresHeader" />
+                            <ref bean="thumbnailsListExpiresHeader" />
                         </list>
                     </property>
                 </bean>
@@ -786,7 +774,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                                 <constructor-arg value="Pragma"/>
                                 <constructor-arg value=""/>
                             </bean>
-                            <ref local="staticResourcesExpiresHeader" />
+                            <ref bean="staticResourcesExpiresHeader" />
                         </list>
                     </property>
                 </bean>
@@ -801,7 +789,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                                 <constructor-arg value="Pragma"/>
                                 <constructor-arg value=""/>
                             </bean>
-                            <ref local="staticResourcesExpiresHeader" />
+                            <ref bean="staticResourcesExpiresHeader" />
                         </list>
                     </property>
                 </bean>
@@ -817,33 +805,6 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                     </property>
                 </bean>
             </list>
-        </property>
-    </bean>
-
-    <bean id="proxyUrlFilter" class="com.jaspersoft.jasperserver.war.ProxyUrlFilter">
-        <description>
-            Either specify the load balancer headers passed to JRS node (forwardedForProtoHeaderName, forwardedForPortHeaderName)
-            OR
-            specify the url pointing to load balancer in the proxyUrl property
-
-            proxyUrl, if specified correctly, trumps the headers.
-
-            The default header config is for AWS ELB to work out of the box.
-        </description>
-
-        <property name="proxyUrl" value="[[Set up proxy url if LB does not send headers.  Eg. https://LB_Host:8443]]"/>
-
-        <property name="forwardedForProtoHeaderName" value="X-Forwarded-Proto">
-            <description>
-                header in which LB specifies its HTTP protocol.
-                If this property is absent from the bean config and proxyUrl is not set correctly, request.getScheme() is used.
-            </description>
-        </property>
-        <property name="forwardedForPortHeaderName" value="X-Forwarded-Port">
-            <description>
-                forwardedForPortHeaderName - header in which LB specifies its port.
-                If this property is absent from the bean config and proxyUrl is not set correctly, request.getPort() is used.
-            </description>
         </property>
     </bean>
 

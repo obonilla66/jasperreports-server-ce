@@ -1,34 +1,36 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.validation;
 
-import java.util.List;
-
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
-
+import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
 import com.jaspersoft.jasperserver.war.common.JasperServerConst;
-import com.jaspersoft.jasperserver.war.common.JasperServerUtil;
+import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
 import com.jaspersoft.jasperserver.war.dto.FileResourceWrapper;
 import com.jaspersoft.jasperserver.war.dto.InputControlWrapper;
 import com.jaspersoft.jasperserver.war.dto.OlapClientConnectionWrapper;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
+
+import java.util.List;
 
 /**
  * 
@@ -63,7 +65,7 @@ public class OlapClientConnectionValidator implements Validator {
 			if (wrapper.getConnectionLabel().length() > 100) {
 				errors
 						.rejectValue("connectionLabel", "OlapClientConnectionValidator.error.too.long");
-			} else if (!JasperServerUtil.regExValidateLabel(wrapper.getConnectionLabel()))
+			} else if (!ValidationUtil.regExValidateLabel(wrapper.getConnectionLabel()))
 				errors.rejectValue("connectionLabel", "OlapClientConnectionValidator.error.invalid.chars");
 		}
 
@@ -73,7 +75,7 @@ public class OlapClientConnectionValidator implements Validator {
 		} else {
 			if (wrapper.getConnectionName().length() > 100) {
 				errors.rejectValue("connectionName", "OlapClientConnectionValidator.error.too.long");
-			} else if (!JasperServerUtil.regExValidateName(wrapper.getConnectionName()))
+			} else if (!ValidationUtil.regExValidateName(wrapper.getConnectionName()))
 				errors.rejectValue("connectionName", "OlapClientConnectionValidator.error.invalid.chars");
 			else {
 				if (wrapper.isNewMode()

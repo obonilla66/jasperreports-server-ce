@@ -1,21 +1,21 @@
 /*
- * Copyright (C) 2005 - 2018 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
- * Unless you have purchased  a commercial license agreement from Jaspersoft,
- * the following license terms  apply:
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
  *
- * This program is free software: you can redistribute it and/or  modify
- * it under the terms of the GNU Affero General Public License  as
- * published by the Free Software Foundation, either version 3 of  the
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero  General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public  License
+ * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -39,7 +39,8 @@ define(function (require) {
 		DateAndTimePicker = require("components/dateAndTime/DateAndTimePicker"),
 
 		holydayCalView = require('scheduler/view/editor/holidayCalView'),
-		holidayCalsCollection = require('scheduler/collection/holidayCalsCollection');
+		holidayCalsCollection = require('scheduler/collection/holidayCalsCollection'),
+        moment = require("localizedMoment");
 
 	// prepare a date and time format for jQuery Date/Time library from our internal i18n settings
 	var jqueryDateFormat = config.calendar.timepicker.dateFormat;
@@ -101,6 +102,7 @@ define(function (require) {
 		},
 
 		setupDatepickersOn: function () {
+		    var self = this;
 
 			this.$el.find(".datepicker").each(function (index, calendar) {
 
@@ -116,6 +118,11 @@ define(function (require) {
 				});
 
 				$calendar.next().addClass('button').addClass('picker');
+
+                self.listenTo(self.model, "change:trigger", function () {
+                    var appTimeZone = moment.tz(this.model.get("trigger").timezone).utcOffset();
+                    $.datepicker._getInst($(calendar)[0]).settings.timepicker.timezone = appTimeZone;
+                });
 
 				// Prototype.js compatibility
 				$(calendar)[0].getValue = function () {

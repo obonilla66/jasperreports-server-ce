@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
@@ -30,7 +33,7 @@ import com.jaspersoft.jasperserver.dto.authority.hypermedia.HypermediaAttribute;
 import com.jaspersoft.jasperserver.dto.authority.hypermedia.HypermediaAttributeEmbeddedContainer;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.dto.permissions.RepositoryPermission;
-import com.jaspersoft.jasperserver.remote.exception.RemoteException;
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceAlreadyExistsException;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentity;
 import com.jaspersoft.jasperserver.remote.helpers.RecipientIdentityResolver;
@@ -75,9 +78,9 @@ public class AttributesServiceImpl implements AttributesService {
      *
      * @param holder
      * @param names attribute to delete names.
-     * @throws RemoteException
+     * @throws ErrorDescriptorException
      */
-    public void deleteAttributes(RecipientIdentity holder, Set<String> names) throws RemoteException {
+    public void deleteAttributes(RecipientIdentity holder, Set<String> names) throws ErrorDescriptorException {
         Object attributeHolder = recipientIdentityResolver.resolveRecipientObject(holder);
 
         @SuppressWarnings("unchecked")
@@ -100,7 +103,7 @@ public class AttributesServiceImpl implements AttributesService {
 
     @SuppressWarnings("unchecked")
     public AttributesSearchResult<ClientAttribute>
-    getAttributes(AttributesSearchCriteria searchCriteria, boolean includeEffectivePermissionsInResult) throws RemoteException {
+    getAttributes(AttributesSearchCriteria searchCriteria, boolean includeEffectivePermissionsInResult) throws ErrorDescriptorException {
         String attributeHolder = searchCriteria.getHolder() == null ||
                 searchCriteria.getHolder().equals(ROOT_HOLDER) ? ROOT_HOLDER.concat(TenantService.ORGANIZATIONS) : searchCriteria.getHolder();
         Object recipient;
@@ -135,7 +138,7 @@ public class AttributesServiceImpl implements AttributesService {
     @Override
     public List<ClientAttribute> putAttributes(RecipientIdentity holder,
                                                    List<? extends ClientAttribute> attributes,
-                                                   Set<String> names, boolean includeEffectivePermissionsInResult) throws RemoteException {
+                                                   Set<String> names, boolean includeEffectivePermissionsInResult) throws ErrorDescriptorException {
         Object attributeHolder = recipientIdentityResolver.resolveRecipientObject(holder);
 
         List<ProfileAttribute> attributesToDelete = new ArrayList<ProfileAttribute>();
@@ -238,7 +241,7 @@ public class AttributesServiceImpl implements AttributesService {
     @Override
     public List<ClientAttribute> getAttributes(RecipientIdentity holder,
                                                    Set<String> names,
-                                                   boolean includeEffectivePermissions) throws RemoteException {
+                                                   boolean includeEffectivePermissions) throws ErrorDescriptorException {
         Object recipient = recipientIdentityResolver.resolveRecipientObject(holder);
 
         AttributesSearchCriteria searchCriteria = new AttributesSearchCriteria.Builder().
@@ -277,7 +280,7 @@ public class AttributesServiceImpl implements AttributesService {
     }
 
     /**
-     * @throws com.jaspersoft.jasperserver.remote.exception.RemoteException
+     * @throws ErrorDescriptorException
      * if the list contains duplicate names
      */
     protected Set<String> createUniqueNamesSet(List<? extends ClientAttribute> attributes) {
@@ -297,7 +300,7 @@ public class AttributesServiceImpl implements AttributesService {
             if (!duplicates.isEmpty()) {
                 String[] duplicateNames = duplicates.toArray(new String[duplicates.size()]);
                 Arrays.sort(duplicateNames);
-                throw new RemoteException(new ErrorDescriptor()
+                throw new ErrorDescriptorException(new ErrorDescriptor()
                         .setErrorCode("collection.has.duplicates")
                         .setMessage("Collection of attributes contains duplicated names")
                         .setParameters(duplicateNames));

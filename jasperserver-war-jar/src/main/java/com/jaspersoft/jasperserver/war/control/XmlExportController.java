@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.war.control;
 
@@ -32,7 +35,7 @@ import org.springframework.web.servlet.view.AbstractView;
 
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
-import com.jaspersoft.jasperserver.war.action.hyperlinks.HyperlinkProducerFactoryFlowFactory;
+import com.jaspersoft.jasperserver.api.engine.export.HyperlinkProducerFactoryFlowFactory;
 import com.jaspersoft.jasperserver.war.util.SessionObjectSerieAccessor;
 
 import net.sf.jasperreports.engine.JRException;
@@ -54,7 +57,7 @@ public class XmlExportController  implements Controller
 	private SessionObjectSerieAccessor jasperPrintAccessor;
 	private String jasperPrintNameParameter;
 	private String pageParameter;
-	private HyperlinkProducerFactoryFlowFactory hyperlinkProducerFactory;
+	private HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> hyperlinkProducerFactory;
 	private JasperReportsContext jasperReportsContext;
 
 	protected static class XmlExportView extends AbstractView 
@@ -172,11 +175,11 @@ public class XmlExportController  implements Controller
 		this.pageParameter = pageParameter;
 	}
 
-	public HyperlinkProducerFactoryFlowFactory getHyperlinkProducerFactory() {
+	public HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> getHyperlinkProducerFactory() {
 		return hyperlinkProducerFactory;
 	}
 
-	public void setHyperlinkProducerFactory(HyperlinkProducerFactoryFlowFactory hyperlinkProducerFactory) {
+	public void setHyperlinkProducerFactory(HyperlinkProducerFactoryFlowFactory<HttpServletRequest, HttpServletResponse> hyperlinkProducerFactory) {
 		this.hyperlinkProducerFactory = hyperlinkProducerFactory;
 	}
 

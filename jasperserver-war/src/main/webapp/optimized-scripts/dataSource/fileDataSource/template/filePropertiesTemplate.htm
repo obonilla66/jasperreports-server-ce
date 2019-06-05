@@ -1,4 +1,6 @@
 <div name="filePropertiesContainer" class="section">
+
+    <js-templateNonce></js-templateNonce>
 	
 	<h4 class="title">{{- i18n['resource.datasource.text.fileProperties.title']}}</h4>
 
@@ -12,7 +14,7 @@
                         {{ _.each(fieldDelimiterOptions, function(delimeter) {
                         var value = delimeter.value, label = delimeter.label;
                         }}
-                        <option value="{{- value }}" {{- (value == modelAttributes.fieldDelimiter) ? "selected='selected'" : "" }} > {{- i18n[label] }}</option>
+                        <option value="{{- value }}" {{- (value == modelAttributes.fieldDelimiter) ? "selected=selected" : "" }} > {{- i18n[label] }}</option>
                         {{ }); }}
                     </select>
 
@@ -53,7 +55,7 @@
                         {{ _.each(rowDelimiterOptions, function(delimeter) {
                         var value = delimeter.value, label = delimeter.label;
                         }}
-                        <option value="{{- value }}" {{- (value == modelAttributes.rowDelimiter) ? "selected='selected'" : "" }} > {{- i18n[label] }}</option>
+                        <option value="{{- value }}" {{- (value == modelAttributes.rowDelimiter) ? "selected=selected" : "" }} > {{- i18n[label] }}</option>
                         {{ }); }}
                     </select>
                     <span class="message warning"></span>
@@ -91,7 +93,7 @@
 				{{ _.each(encodingOptions, function(encoding) {
                 var value = encoding.value, label = encoding.label;
 				}}
-				<option value="{{- value }}" {{- (value == modelAttributes.encodingType) ? "selected='selected'" : "" }} > {{- i18n[label] }}</option>
+				<option value="{{- value }}" {{- (value == modelAttributes.encodingType) ? "selected=selected" : "" }} > {{- i18n[label] }}</option>
 				{{ }); }}
 			</select>
 			<span class="message warning"></span>
@@ -117,7 +119,7 @@
 	<div class="group">
 		<div class="control checkBox toggle">
 			<label for="__jrs_firstRowFieldNames" class="wrap">{{- i18n['resource.datasource.text.fileProperties.firstRow']}}</label>
-			<input type="checkbox" id="__jrs_firstRowFieldNames" name="useFirstRowAsHeader" {{- modelAttributes.useFirstRowAsHeader ? "checked='checked'" : "" }}>
+			<input type="checkbox" id="__jrs_firstRowFieldNames" name="useFirstRowAsHeader" {{- modelAttributes.useFirstRowAsHeader ? "checked=checked" : "" }}>
 		</div>
 	</div>
 	<div class="group hidden">

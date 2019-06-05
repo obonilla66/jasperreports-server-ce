@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job.model;
@@ -38,10 +41,12 @@ import com.jaspersoft.jasperserver.dto.job.ClientJobRepositoryDestination;
 import com.jaspersoft.jasperserver.dto.job.ClientJobSource;
 import com.jaspersoft.jasperserver.dto.job.ClientJobTrigger;
 import com.jaspersoft.jasperserver.dto.job.ClientReportJob;
-import java.util.Set;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.sql.Timestamp;
+import java.util.Set;
 
 @XmlRootElement(name = "jobModel")
 public class ClientReportJobModel extends ClientReportJob {
@@ -208,6 +213,13 @@ public class ClientReportJobModel extends ClientReportJob {
     }
 
     @Override
+    public ClientReportJobModel setCreationDate(Timestamp creationDate) {
+        super.setCreationDate(creationDate);
+        isCreationDateModified = true;
+        return this;
+    }
+
+    @Override
     public ClientReportJobModel setLabel(String label) {
         super.setLabel(label);
         isLabelModified = true;
@@ -247,39 +259,24 @@ public class ClientReportJobModel extends ClientReportJob {
         if (this == o) return true;
         if (!(o instanceof ClientReportJobModel)) return false;
         if (!super.equals(o)) return false;
-
-        ClientReportJobModel that = (ClientReportJobModel) o;
-
-        if (isCreationDateModified() != that.isCreationDateModified()) return false;
-        if (isSourceModified() != that.isSourceModified()) return false;
-        if (isTriggerModified() != that.isTriggerModified()) return false;
-        if (isMailNotificationModified() != that.isMailNotificationModified()) return false;
-        if (isAlertModified() != that.isAlertModified()) return false;
-        if (isContentRespositoryDestinationModified() != that.isContentRespositoryDestinationModified()) return false;
-        if (isDescriptionModified() != that.isDescriptionModified()) return false;
-        if (isLabelModified() != that.isLabelModified()) return false;
-        if (isBaseOutputFileNameModified() != that.isBaseOutputFileNameModified()) return false;
-        if (isOutputFormatsModified() != that.isOutputFormatsModified()) return false;
-        if (isUsernameModified() != that.isUsernameModified()) return false;
-        return isOutputLocaleModified() == that.isOutputLocaleModified();
-
+        return true;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (isCreationDateModified() ? 1 : 0);
-        result = 31 * result + (isSourceModified() ? 1 : 0);
-        result = 31 * result + (isTriggerModified() ? 1 : 0);
-        result = 31 * result + (isMailNotificationModified() ? 1 : 0);
-        result = 31 * result + (isAlertModified() ? 1 : 0);
-        result = 31 * result + (isContentRespositoryDestinationModified() ? 1 : 0);
-        result = 31 * result + (isDescriptionModified() ? 1 : 0);
-        result = 31 * result + (isLabelModified() ? 1 : 0);
-        result = 31 * result + (isBaseOutputFileNameModified() ? 1 : 0);
-        result = 31 * result + (isOutputFormatsModified() ? 1 : 0);
-        result = 31 * result + (isUsernameModified() ? 1 : 0);
-        result = 31 * result + (isOutputLocaleModified() ? 1 : 0);
+        result = 31 * result + (isCreationDateModified ? 1 : 0);
+        result = 31 * result + (isSourceModified ? 1 : 0);
+        result = 31 * result + (isTriggerModified ? 1 : 0);
+        result = 31 * result + (isMailNotificationModified ? 1 : 0);
+        result = 31 * result + (isAlertModified ? 1 : 0);
+        result = 31 * result + (isContentRespositoryDestinationModified ? 1 : 0);
+        result = 31 * result + (isDescriptionModified ? 1 : 0);
+        result = 31 * result + (isLabelModified ? 1 : 0);
+        result = 31 * result + (isBaseOutputFileNameModified ? 1 : 0);
+        result = 31 * result + (isOutputFormatsModified ? 1 : 0);
+        result = 31 * result + (isUsernameModified ? 1 : 0);
+        result = 31 * result + (isOutputLocaleModified ? 1 : 0);
         return result;
     }
 

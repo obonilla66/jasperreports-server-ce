@@ -1,1 +1,0 @@
-define([],function(){"use strict";return{supportsTouch:function(){return"ontouchstart"in window||navigator.msMaxTouchPoints}()}});

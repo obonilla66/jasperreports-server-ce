@@ -902,16 +902,7 @@ public class PUTTest extends RESTTest
 		deleteSampleFolder();
 		
 	}
-	
-	
-	
-	@Test
-	public void Resource_Dashboard_PUT_200() throws Exception{
-		putSampleFolder();
-		sendAndAssert_PRO(httpReqPro, RESOURCE+"/JUNIT_NEW_FOLDER", LOCAL_RESOURCE_DESCRIPTOR_PATH+"/dashboard/dashboard.xml", HttpStatus.SC_CREATED);
-		deleteSampleFolder();
-	}
-	
+
 	@Test 
 	public void Resource_ReportOptions_PUT_201() throws Exception{
 		putSampleResource_PRO(LOCAL_RESOURCE_DESCRIPTOR_PATH+"/reportOptions/reportOptions.xml", RESOURCE+"/reports/samples/");

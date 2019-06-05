@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.impl;
 
@@ -45,7 +48,6 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomRepor
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -54,13 +56,11 @@ import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.TranslatorException;
 
 import javax.sql.DataSource;
-
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -508,9 +508,11 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
         return connection;
     }
 
-    private boolean isSelectedSchema(String schemaName, com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource reportDataSource) {
+    protected boolean isSelectedSchema(String schemaName, com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource reportDataSource) {
         Set<String> schemaSet = getSchemaSet(reportDataSource);
-        if (schemaSet == null) return true;
+        if (schemaSet == null || schemaSet.isEmpty()) {
+            return true;
+        }
         return schemaSet.contains(schemaName);
     }
 

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2005 - 2018 TIBCO Software Inc.
+ * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.jaspersoft.jasperserver.dto.job;
@@ -22,13 +25,16 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.common.OutputFormat;
 import com.jaspersoft.jasperserver.dto.job.adapters.OutputFormatXmlAdapter;
 import com.jaspersoft.jasperserver.dto.job.adapters.TimestampToStringXmlAdapter;
-import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.sql.Timestamp;
+import java.util.Set;
+
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * <p/>
@@ -61,27 +67,23 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
     }
 
     public ClientReportJob(ClientReportJob other) {
-        this.alert = (other.alert != null) ? new ClientJobAlert(other.alert) : null;
-        this.baseOutputFilename = other.baseOutputFilename;
-        this.description = other.description;
-        this.id = other.id;
-        this.label = other.label;
-        this.mailNotification = (other.mailNotification != null) ? new ClientJobMailNotification(other.mailNotification) : null;
-        if (other.outputFormats != null) {
-            this.outputFormats = new HashSet<OutputFormat>();
-            for (OutputFormat outputFormat : other.outputFormats) {
-                this.outputFormats.add(outputFormat);
-            }
-        }
-        this.outputLocale = other.outputLocale;
-        this.outputTimeZone = other.outputTimeZone;
-        this.repositoryDestination = (other.repositoryDestination != null) ?
-                new ClientJobRepositoryDestination(other.repositoryDestination) : null;
-        this.source = (other.source != null) ? new ClientJobSource(other.source) : null;
-        this.username = other.username;
-        this.version = other.version;
-        this.creationDate = (other.creationDate != null) ? new Timestamp(other.creationDate.getTime()) : null;
-        this.trigger = (other.trigger != null) ? other.trigger.deepClone() : null;
+        checkNotNull(other);
+
+        this.id = other.getId();
+        this.version = other.getVersion();
+        this.username = other.getUsername();
+        this.label = other.getLabel();
+        this.description = other.getDescription();
+        this.creationDate = copyOf(other.getCreationDate());
+        this.trigger = copyOf(other.getTrigger());
+        this.source = copyOf(other.getSource());
+        this.baseOutputFilename = other.getBaseOutputFilename();
+        this.outputFormats = copyOf(other.getOutputFormats());
+        this.outputLocale = other.getOutputLocale();
+        this.outputTimeZone = other.getOutputTimeZone();
+        this.repositoryDestination = copyOf(other.getRepositoryDestination());
+        this.mailNotification = copyOf(other.getMailNotification());
+        this.alert = copyOf(other.getAlert());
     }
 
     public Long getId() {
@@ -232,28 +234,30 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ClientReportJob)) return false;
 
-        ClientReportJob job = (ClientReportJob) o;
+        ClientReportJob that = (ClientReportJob) o;
 
-        if (alert != null ? !alert.equals(job.alert) : job.alert != null) return false;
-        if (baseOutputFilename != null ? !baseOutputFilename.equals(job.baseOutputFilename) : job.baseOutputFilename != null)
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (version != null ? !version.equals(that.version) : that.version != null) return false;
+        if (username != null ? !username.equals(that.username) : that.username != null) return false;
+        if (label != null ? !label.equals(that.label) : that.label != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null) return false;
+        if (creationDate != null ? !creationDate.equals(that.creationDate) : that.creationDate != null) return false;
+        if (trigger != null ? !trigger.equals(that.trigger) : that.trigger != null) return false;
+        if (source != null ? !source.equals(that.source) : that.source != null) return false;
+        if (baseOutputFilename != null ? !baseOutputFilename.equals(that.baseOutputFilename) : that.baseOutputFilename != null)
             return false;
-        if (creationDate != null ? !creationDate.equals(job.creationDate) : job.creationDate != null) return false;
-        if (description != null ? !description.equals(job.description) : job.description != null) return false;
-        if (id != null ? !id.equals(job.id) : job.id != null) return false;
-        if (label != null ? !label.equals(job.label) : job.label != null) return false;
-        if (mailNotification != null ? !mailNotification.equals(job.mailNotification) : job.mailNotification != null)
+        if (outputFormats != null ? !outputFormats.equals(that.outputFormats) : that.outputFormats != null)
             return false;
-        if (outputFormats != null ? !outputFormats.equals(job.outputFormats) : job.outputFormats != null) return false;
-        if (outputLocale != null ? !outputLocale.equals(job.outputLocale) : job.outputLocale != null) return false;
-        if (repositoryDestination != null ? !repositoryDestination.equals(job.repositoryDestination) : job.repositoryDestination != null)
+        if (outputLocale != null ? !outputLocale.equals(that.outputLocale) : that.outputLocale != null) return false;
+        if (outputTimeZone != null ? !outputTimeZone.equals(that.outputTimeZone) : that.outputTimeZone != null)
             return false;
-        if (source != null ? !source.equals(job.source) : job.source != null) return false;
-        if (trigger != null ? !trigger.equals(job.trigger) : job.trigger != null) return false;
-        if (username != null ? !username.equals(job.username) : job.username != null) return false;
-        if (version != null ? !version.equals(job.version) : job.version != null) return false;
-
+        if (repositoryDestination != null ? !repositoryDestination.equals(that.repositoryDestination) : that.repositoryDestination != null)
+            return false;
+        if (mailNotification != null ? !mailNotification.equals(that.mailNotification) : that.mailNotification != null)
+            return false;
+        if (alert != null ? !alert.equals(that.alert) : that.alert != null) return false;
         return true;
     }
 
@@ -265,34 +269,36 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
         result = 31 * result + (label != null ? label.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
+        result = 31 * result + (trigger != null ? trigger.hashCode() : 0);
+        result = 31 * result + (source != null ? source.hashCode() : 0);
         result = 31 * result + (baseOutputFilename != null ? baseOutputFilename.hashCode() : 0);
+        result = 31 * result + (outputFormats != null ? outputFormats.hashCode() : 0);
         result = 31 * result + (outputLocale != null ? outputLocale.hashCode() : 0);
+        result = 31 * result + (outputTimeZone != null ? outputTimeZone.hashCode() : 0);
         result = 31 * result + (repositoryDestination != null ? repositoryDestination.hashCode() : 0);
         result = 31 * result + (mailNotification != null ? mailNotification.hashCode() : 0);
-        result = 31 * result + (source != null ? source.hashCode() : 0);
         result = 31 * result + (alert != null ? alert.hashCode() : 0);
-        result = 31 * result + (outputFormats != null ? outputFormats.hashCode() : 0);
-        result = 31 * result + (trigger != null ? trigger.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "Job{" +
+        return "ClientReportJob{" +
                 "id=" + id +
                 ", version=" + version +
                 ", username='" + username + '\'' +
                 ", label='" + label + '\'' +
                 ", description='" + description + '\'' +
-                ", creationDate='" + creationDate + '\'' +
+                ", creationDate=" + creationDate +
+                ", trigger=" + trigger +
+                ", source=" + source +
                 ", baseOutputFilename='" + baseOutputFilename + '\'' +
+                ", outputFormats=" + outputFormats +
                 ", outputLocale='" + outputLocale + '\'' +
+                ", outputTimeZone='" + outputTimeZone + '\'' +
                 ", repositoryDestination=" + repositoryDestination +
                 ", mailNotification=" + mailNotification +
-                ", source=" + source +
                 ", alert=" + alert +
-                ", outputFormats=" + outputFormats +
-                ", trigger=" + trigger +
                 '}';
     }
 
