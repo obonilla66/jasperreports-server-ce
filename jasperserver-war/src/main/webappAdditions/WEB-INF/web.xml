@@ -584,11 +584,23 @@
     <servlet>
         <servlet-name>ResourceForwardingServlet</servlet-name>
         <servlet-class>com.jaspersoft.jasperserver.war.ResourceForwardingServlet</servlet-class>
+
         <init-param>
-            <param-name>forwardForbiddenDirectories</param-name>
+            <param-name>forwardWhitelist</param-name>
             <param-value>
-                <!-- Comma separated list of any additional directories
-                    (besides WEB-INF, META-INF) that the access is forbidden to-->
+                <!--
+                    Comma separated list of the directories and resources where forwarding is permitted.
+                -->
+                /scripts,
+                /optimized-scripts,
+                /themes,
+                /rest_v2/bundles,
+                /rest_v2/settings,
+                /JavaScriptServlet,
+                /getRequirejsConfig.html,
+                /reportresource,
+                /wcf,
+                /fusion
             </param-value>
         </init-param>
     </servlet>

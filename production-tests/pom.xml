@@ -28,7 +28,7 @@
     <parent>
         <groupId>com.jaspersoft.jasperserver</groupId>
         <artifactId>server</artifactId>
-        <version>7.1.0</version>
+        <version>7.1.1</version>
     </parent>
     <dependencies>
         <dependency>
@@ -224,7 +224,7 @@
         <dependency>
             <groupId>com.jaspersoft.jasperserver</groupId>
             <artifactId>jasperserver-war</artifactId>
-            <version>7.1.0</version>
+            <version>7.1.1</version>
             <type>war</type>
             <scope>test</scope>
         </dependency>

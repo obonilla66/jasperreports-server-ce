@@ -256,7 +256,7 @@
   "fileExclusionRegExp": /(^\.|prototype.*patched\.js|Owasp\.CsrfGuard\.js)/,
   "shim": {
     "mustache": {
-      "init": function () {
+      "init": function() {
                     return Mustache;
                 }
     }

@@ -94,7 +94,7 @@ requirejs.config({
   },
   shim: {
     jquery: {
-      init: function () {
+      init: function() {
                 return this.jQuery.noConflict();
             }
     },
