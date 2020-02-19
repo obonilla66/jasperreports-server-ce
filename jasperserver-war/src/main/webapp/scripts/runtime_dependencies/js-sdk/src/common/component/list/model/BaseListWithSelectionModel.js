@@ -1,3 +1,10 @@
+define(function(require, exports, module) {
+var __disableStrictMode__ = "use strict";
+
+var _ = require('underscore');
+
+var ScalableListModel = require('./ScalableListModel');
+
 /*
  * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
@@ -45,231 +52,231 @@
  * this Model implementation looks for following additional options in hash provided to constructor:
  *      selection       - initial selection
  */
-
-/*global window, Backbone, _, jaspersoft.components */
-
-define(function (require) {
-    'use strict';
-
-    var _ = require("underscore"),
-        ScalableListModel = require("common/component/list/model/ScalableListModel");
-
-    var BaseListWithSelectionModel = ScalableListModel.extend(
-        /** @lends BaseListWithSelectionModel.prototype */
-        {
-
-        initialize: function(options) {
-            ScalableListModel.prototype.initialize.call(this, options);
-
-            this.select(options.value, {silent: true});
-        },
-
-        /* Methods which supposed to be overridden */
-
-        /**
-         * Adding to selection should be done only through this method.
-         * No direct change of this.selection object is allowed
-         */
-        _addToSelection: function(value, index) {
-            throw "Not implemented";
-        },
-
-        /**
-         * Removing from selection should be done only through this method.
-         * No direct change of this.selection object is allowed
-         */
-        _removeFromSelection: function(value, index) {
-            throw "Not implemented";
-        },
-
-        /**
-         * Clearing selection should be done only through this method.
-         * No direct change of this.selection object is allowed
-         */
-        _clearSelection: function() {
-            throw "Not implemented";
-        },
-
-        /**
-         * Selection contains should be checked only through this method
-         * No direct change of this.selection object is allowed
-         */
-        _selectionContains: function(value, index) {
-            throw "Not implemented";
-        },
-
-        /**
-         * Returns current selection
-         * No direct change of this.selection object is allowed
-         */
-        _getSelection: function() {
-            throw "Not implemented";
-        },
-
-        /* Internal helper methods */
-
-        _triggerSelectionChange: function(options) {
-            if (!options || !options.silent) {
-                this.trigger("change");
-            }
-
-            this.trigger("selection:change");
-        },
-
-        _addRangeToSelection: function(data, rangeStart, rangeEnd) {
-            for (var i = 0; i < data.length; i++) {
-                this._addToSelection(data[i].value, i + rangeStart);
-            }
-
-            this.trigger("selection:addRange", {start: rangeStart, end: rangeEnd, selection: this.getSelection()});
-        },
-
-        _fetchAllDataAndModifySelection: function(modifySelection, onDone) {
-            this.getData().done(function(values) {
-                for (var i = 0; i < values.data.length; i++) {
-                    modifySelection(values.data[i].value, i);
-                }
-
-                onDone && onDone();
-            }).fail(this.fetchFailed);
-
-            return this;
-        },
-
-        /*-------------------------
-         * API
-         -------------------------*/
-
-        /*
-            Adds value selection and triggers add event
-        */
-        addValueToSelection: function(value, index) {
-            this.selectionStartIndex = index;
-            this._addToSelection(value, index);
-            return this.trigger("selection:add", {value: value, index: index});
-        },
-
-        /*
-            Adds value selection and triggers add event
-        */
-        addRangeToSelection: function(value, index) {
-
-            //No range determined - use single item selection
-            if (typeof this.selectionStartIndex === "undefined") {
-                this.addValueToSelection(value, index);
-                return;
-            }
-
-            //Same element selected no need to fire range selection
-            if (this.selectionStartIndex === index) {
-                return;
-            }
-
-            //Calculate range dimensions
-            var rangeStart = Math.min(this.selectionStartIndex, index);
-            var rangeEnd = Math.max(this.selectionStartIndex, index);
-            this.selectionStartIndex = index;
-
-            if (rangeStart >= this.get("bufferStartIndex") && rangeEnd <= this.get("bufferEndIndex")) {
-                //All data from this range already fetched
-                var data = Array.prototype.slice.call(this.get("items"),
-                    rangeStart - this.get("bufferStartIndex"), rangeEnd - this.get("bufferStartIndex") + 1);
-                this._addRangeToSelection(data, rangeStart, rangeEnd);
-            } else {
-                //Need to fetch data
-                var that = this;
-                this.getData({
-                    offset: rangeStart,
-                    limit: rangeEnd - rangeStart + 1}
-                ).done(function(values) {
-                    that._addRangeToSelection(values.data, rangeStart, rangeEnd);
-                }).fail(this.fetchFailed);
-            }
-        },
-
-        /*
-             Removes value from selection and triggers remove event
-         */
-        removeValueFromSelection: function(value, index) {
-            this._removeFromSelection(value, index);
-            this.trigger("selection:remove", {value: value, index: index});
-        },
-
-        /*
-            Does selection toggle for passed value
-         */
-        toggleSelection: function(value, index) {
-            if (this.selectionContains(value, index)) {
-                this.removeValueFromSelection(value, index);
-            } else {
-                this.addValueToSelection(value, index);
-            }
-        },
-
-        /*
-            Returns true if value present in selection
-        */
-        selectionContains: function(value, index) {
-            return this._selectionContains(value, index);
-        },
-
-        /*
-            Removes all items from selection
-         */
-        clearSelection: function() {
-            this._clearSelection();
-            return this.trigger("selection:clear");
-        },
-
-        /*
-            Returns all selected values
-        */
-        getSelection: function() {
-            return this._getSelection();
-        },
-
-        /*
-            Selects passed selection
-         */
-        select: function(selection, options) {
-            throw "Not implemented";
-        },
-
-        /*
-            Selects all values
-         */
-        selectAll: function() {
-            var self = this,
-                firstIteration = true;
-
-            this._fetchAllDataAndModifySelection(function(value, index) {
-
-                //this is necessary when getData is slow operation
-                //so model will not be empty too early
-                if (firstIteration) {
-                    self._clearSelection();
-                    firstIteration = false;
-                }
-
-                self._addToSelection(value, index);
-            }, _.bind(this._triggerSelectionChange, this));
-        },
-
-        /*
-            Inverts selection
-         */
-        invertSelection: function() {
-            var self = this;
-
-            this._fetchAllDataAndModifySelection(function(value, index) {
-                if (self._selectionContains(value, index)) {
-                    self._removeFromSelection(value, index);
-                } else {
-                    self._addToSelection(value, index);
-                }
-            }, _.bind(this._triggerSelectionChange, this));
-        }
+var BaseListWithSelectionModel = ScalableListModel.extend(
+/** @lends BaseListWithSelectionModel.prototype */
+{
+  initialize: function initialize(options) {
+    ScalableListModel.prototype.initialize.call(this, options);
+    this.select(options.value, {
+      silent: true
     });
+  },
 
-    return BaseListWithSelectionModel;
+  /* Methods which supposed to be overridden */
+
+  /**
+   * Adding to selection should be done only through this method.
+   * No direct change of this.selection object is allowed
+   */
+  _addToSelection: function _addToSelection(value, index) {
+    throw "Not implemented";
+  },
+
+  /**
+   * Removing from selection should be done only through this method.
+   * No direct change of this.selection object is allowed
+   */
+  _removeFromSelection: function _removeFromSelection(value, index) {
+    throw "Not implemented";
+  },
+
+  /**
+   * Clearing selection should be done only through this method.
+   * No direct change of this.selection object is allowed
+   */
+  _clearSelection: function _clearSelection() {
+    throw "Not implemented";
+  },
+
+  /**
+   * Selection contains should be checked only through this method
+   * No direct change of this.selection object is allowed
+   */
+  _selectionContains: function _selectionContains(value, index) {
+    throw "Not implemented";
+  },
+
+  /**
+   * Returns current selection
+   * No direct change of this.selection object is allowed
+   */
+  _getSelection: function _getSelection() {
+    throw "Not implemented";
+  },
+
+  /* Internal helper methods */
+  _triggerSelectionChange: function _triggerSelectionChange(options) {
+    if (!options || !options.silent) {
+      this.trigger("change");
+    }
+
+    this.trigger("selection:change");
+  },
+  _addRangeToSelection: function _addRangeToSelection(data, rangeStart, rangeEnd) {
+    for (var i = 0; i < data.length; i++) {
+      this._addToSelection(data[i].value, i + rangeStart);
+    }
+
+    this.trigger("selection:addRange", {
+      start: rangeStart,
+      end: rangeEnd,
+      selection: this.getSelection()
+    });
+  },
+  _fetchAllDataAndModifySelection: function _fetchAllDataAndModifySelection(modifySelection, onDone) {
+    this.getData().done(function (values) {
+      for (var i = 0; i < values.data.length; i++) {
+        modifySelection(values.data[i].value, i);
+      }
+
+      onDone && onDone();
+    }).fail(this.fetchFailed);
+    return this;
+  },
+
+  /*-------------------------
+   * API
+   -------------------------*/
+
+  /*
+      Adds value selection and triggers add event
+  */
+  addValueToSelection: function addValueToSelection(value, index) {
+    this.selectionStartIndex = index;
+
+    this._addToSelection(value, index);
+
+    return this.trigger("selection:add", {
+      value: value,
+      index: index
+    });
+  },
+
+  /*
+      Adds value selection and triggers add event
+  */
+  addRangeToSelection: function addRangeToSelection(value, index) {
+    //No range determined - use single item selection
+    if (typeof this.selectionStartIndex === "undefined") {
+      this.addValueToSelection(value, index);
+      return;
+    } //Same element selected no need to fire range selection
+
+
+    if (this.selectionStartIndex === index) {
+      return;
+    } //Calculate range dimensions
+
+
+    var rangeStart = Math.min(this.selectionStartIndex, index);
+    var rangeEnd = Math.max(this.selectionStartIndex, index);
+    this.selectionStartIndex = index;
+
+    if (rangeStart >= this.get("bufferStartIndex") && rangeEnd <= this.get("bufferEndIndex")) {
+      //All data from this range already fetched
+      var data = Array.prototype.slice.call(this.get("items"), rangeStart - this.get("bufferStartIndex"), rangeEnd - this.get("bufferStartIndex") + 1);
+
+      this._addRangeToSelection(data, rangeStart, rangeEnd);
+    } else {
+      //Need to fetch data
+      var that = this;
+      this.getData({
+        offset: rangeStart,
+        limit: rangeEnd - rangeStart + 1
+      }).done(function (values) {
+        that._addRangeToSelection(values.data, rangeStart, rangeEnd);
+      }).fail(this.fetchFailed);
+    }
+  },
+
+  /*
+       Removes value from selection and triggers remove event
+   */
+  removeValueFromSelection: function removeValueFromSelection(value, index) {
+    this._removeFromSelection(value, index);
+
+    this.trigger("selection:remove", {
+      value: value,
+      index: index
+    });
+  },
+
+  /*
+      Does selection toggle for passed value
+   */
+  toggleSelection: function toggleSelection(value, index) {
+    if (this.selectionContains(value, index)) {
+      this.removeValueFromSelection(value, index);
+    } else {
+      this.addValueToSelection(value, index);
+    }
+  },
+
+  /*
+      Returns true if value present in selection
+  */
+  selectionContains: function selectionContains(value, index) {
+    return this._selectionContains(value, index);
+  },
+
+  /*
+      Removes all items from selection
+   */
+  clearSelection: function clearSelection() {
+    this._clearSelection();
+
+    return this.trigger("selection:clear");
+  },
+
+  /*
+      Returns all selected values
+  */
+  getSelection: function getSelection() {
+    return this._getSelection();
+  },
+
+  /*
+      Selects passed selection
+   */
+  select: function select(selection, options) {
+    throw "Not implemented";
+  },
+
+  /*
+      Selects all values
+   */
+  selectAll: function selectAll() {
+    var self = this,
+        firstIteration = true;
+
+    this._fetchAllDataAndModifySelection(function (value, index) {
+      //this is necessary when getData is slow operation
+      //so model will not be empty too early
+      if (firstIteration) {
+        self._clearSelection();
+
+        firstIteration = false;
+      }
+
+      self._addToSelection(value, index);
+    }, _.bind(this._triggerSelectionChange, this));
+  },
+
+  /*
+      Inverts selection
+   */
+  invertSelection: function invertSelection() {
+    var self = this;
+
+    this._fetchAllDataAndModifySelection(function (value, index) {
+      if (self._selectionContains(value, index)) {
+        self._removeFromSelection(value, index);
+      } else {
+        self._addToSelection(value, index);
+      }
+    }, _.bind(this._triggerSelectionChange, this));
+  }
+});
+module.exports = BaseListWithSelectionModel;
+
 });

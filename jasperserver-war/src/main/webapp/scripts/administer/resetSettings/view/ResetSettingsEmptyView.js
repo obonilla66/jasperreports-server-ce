@@ -1,3 +1,12 @@
+define(function(require, exports, module) {
+var __disableStrictMode__ = "use strict";
+
+var _ = require('underscore');
+
+var Marionette = require('backbone.marionette');
+
+var emptyCollectionViewTemplate = require("text!../templates/emptyCollectionViewTemplate.htm");
+
 /*
  * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
@@ -18,23 +27,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+var ResetSettingsEmptyView = Marionette.ItemView.extend({
+  className: 'table-row',
+  template: _.template(emptyCollectionViewTemplate)
+});
+module.exports = ResetSettingsEmptyView;
 
-/**
- * @author: Olesya Bobruyko
- * @version: $Id$
- */
-
-define(function(require) {
-    var _ = require("underscore"),
-        Marionette = require("backbone.marionette"),
-        emptyCollectionViewTemplate = require("text!../templates/emptyCollectionViewTemplate.htm");
-
-
-    var ResetSettingsEmptyView = Marionette.ItemView.extend({
-        className: "table-row",
-
-        template: _.template(emptyCollectionViewTemplate)
-    });
-
-    return ResetSettingsEmptyView;
 });

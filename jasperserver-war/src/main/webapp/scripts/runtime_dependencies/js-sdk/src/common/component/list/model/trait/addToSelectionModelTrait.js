@@ -1,3 +1,8 @@
+define(function(require, exports, module) {
+var __disableStrictMode__ = "use strict";
+
+var _ = require('underscore');
+
 /*
  * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
@@ -18,46 +23,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
-
-/**
- * @author: Olesya Bobruyko
- * @version: $Id: addToSelectionModelTrait.js
- */
-
-define(function (require) {
-    'use strict';
-
-    var _ = require("underscore"),
-        ScalableListModel = require("common/component/list/model/ScalableListModel");
-
-    return {
-        afterFetchComplete: function(items, total) {
-            _.each(items, function(item, i) {
-                if (item) {
-                    if (item.addToSelection) {
-                        toggleSelection.call(this, item, i, true);
-                    } else if(!_.isUndefined(item.addToSelection)) {
-                        toggleSelection.call(this, item, i);
-                    }
-                }
-            }, this);
+module.exports = {
+  afterFetchComplete: function afterFetchComplete(items, total) {
+    _.each(items, function (item, i) {
+      if (item) {
+        if (item.addToSelection) {
+          toggleSelection.call(this, item, i, true);
+        } else if (!_.isUndefined(item.addToSelection)) {
+          toggleSelection.call(this, item, i);
         }
-    };
+      }
+    }, this);
+  }
+};
 
-    function toggleSelection(item, i, select) {
-        var index = this.get("bufferStartIndex") + i;
+function toggleSelection(item, i, select) {
+  var index = this.get('bufferStartIndex') + i;
 
-        if (this.selectionContains) {
-            if (select) {
-                item.selected = true;
-                !this.selectionContains(item.value, index) && this.addValueToSelection(item.value, index);
-            } else {
-                item.selected = false;
-                this.selectionContains(item.value, index) && this.removeValueFromSelection(item.value, index);
-            }
-        }
-
-        delete item.addToSelection;
+  if (this.selectionContains) {
+    if (select) {
+      item.selected = true;
+      !this.selectionContains(item.value, index) && this.addValueToSelection(item.value, index);
+    } else {
+      item.selected = false;
+      this.selectionContains(item.value, index) && this.removeValueFromSelection(item.value, index);
     }
+  }
+
+  delete item.addToSelection;
+}
+
 });

@@ -92,6 +92,6 @@
         </dependency>
     </dependencies>
     <properties>
-        <mondrian-version>3.6.4-JS-2</mondrian-version>
+        <mondrian-version>3.6.7-JS-vfs1-1</mondrian-version>
     </properties>
 </project>

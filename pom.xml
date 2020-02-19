@@ -30,9 +30,30 @@
     <version>${buildArtifactVersionName}</version>
     <url>http://www.jaspersoft.com</url>
 
-
-
   <profiles>
+    <profile>
+      <id>DependencyCheckProfile</id>
+      <build>
+        <plugins>
+          <plugin>
+          <groupId>org.owasp</groupId>
+          <artifactId>dependency-check-maven</artifactId>
+          <version>5.1.0</version>
+          <executions>
+           <execution>
+            <goals>
+             <goal>check</goal>
+            </goals>
+           </execution>
+          </executions>
+          <configuration>
+           <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
+           <suppressionFile>${cve.suppress.ce.file}</suppressionFile>
+          </configuration>
+         </plugin>
+        </plugins>
+      </build>
+	</profile>
     <profile>
       <id>additional-tests</id>
       <modules>
@@ -78,7 +99,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-help-plugin</artifactId>
-            <version>2.2</version>
+            <version>3.2.0</version>
             <executions>
               <execution>
                 <phase>generate-resources</phase>
@@ -140,7 +161,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-help-plugin</artifactId>
-            <version>2.2</version>
+            <version>3.2.0</version>
             <executions>
               <execution>
                 <phase>generate-resources</phase>
@@ -202,7 +223,9 @@
         <plugins>
 
           <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.1.1</version>
             <executions>
               <execution>
                 <id>replace-pom-placeholder</id>
@@ -246,6 +269,7 @@
       <module>jasperserver-action-model</module>
       <module>jasperserver-api</module>
       <module>jasperserver-api-impl</module>
+      <module>jasperserver-util</module>
       <module>jasperserver-core-util</module>
       <module>jasperserver-repository-hibernate</module>
       <module>jasperserver-export-tool</module>
@@ -260,12 +284,27 @@
       <module>production-tests</module>
       <module>jasperserver-jax-rs-rest</module>
       <module>jasperserver-dto</module>
-      <module>jasperserver-util</module>
       <module>jasperserver-connectors</module>
       <module>jasperserver-ftp</module>
       <module>jasperserver-input-controls</module>
       <module>code-coverage</module>
     </modules>
+   <reporting>
+   <plugins>
+    <plugin>
+     <groupId>org.owasp</groupId>
+     <artifactId>dependency-check-maven</artifactId>
+     <version>5.1.0</version>
+     <reportSets>
+      <reportSet>
+       <reports>
+        <report>aggregate</report>
+       </reports>
+      </reportSet>
+     </reportSets>
+    </plugin>
+   </plugins>
+  </reporting>
   <build>
     <directory>${my.build.directory}</directory>
     <pluginManagement>
@@ -285,10 +324,11 @@
                 <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.5.1</version>
+          <version>3.8.1</version>
           <configuration>
             <source>1.8</source>
             <target>1.8</target>
+            <forceJavacCompilerUse>true</forceJavacCompilerUse>
           </configuration>
         </plugin>
         <plugin>
@@ -312,7 +352,7 @@
         						<artifactId>
         							maven-help-plugin
         						</artifactId>
-        						<versionRange>[2.2,)</versionRange>
+        						<versionRange>[3.2.0,)</versionRange>
         						<goals>
         							<goal>effective-pom</goal>
         						</goals>
@@ -401,8 +441,13 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin.version}</version>
         <configuration>
+          <environmentVariables>
+            <ks>${project.build.directory}/test-classes</ks>
+            <ksp>${project.build.directory}/test-classes</ksp>
+          </environmentVariables>
+          <printSummary>false</printSummary>
           <argLine>${argLine}</argLine>
-        </configuration>
+         </configuration>
       </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
@@ -462,7 +507,9 @@
 
       <!-- pom replacement is to resolve all variables before installing the pom into repository -->
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.1</version>
         <executions>
           <execution><!-- Replace the placeholder of the pom by their values (used by the install plugin below)-->
             <id>replace-pom-placeholder</id>
@@ -488,6 +535,30 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.opentest4j</groupId>
+      <artifactId>opentest4j</artifactId>
+      <version>1.2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-commons</artifactId>
+      <version>1.5.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apiguardian</groupId>
+      <artifactId>apiguardian-api</artifactId>
+      <version>1.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
     </dependency>
@@ -499,6 +570,37 @@
   </dependencies>
   <dependencyManagement>
     <dependencies>
+     <dependency>
+     <groupId>org.infinispan</groupId>
+     <artifactId>infinispan-core</artifactId>
+     <version>${infinispan.version}</version>
+     <exclusions>
+      <exclusion>
+       <groupId>org.jgroups</groupId>
+       <artifactId>jgroups</artifactId>
+      </exclusion>
+      <exclusion>
+       <groupId>com.github.ben-manes.caffeine</groupId>
+       <artifactId>caffeine</artifactId>
+      </exclusion>
+      <exclusion>
+       <groupId>org.jboss.spec.javax.transaction</groupId>
+       <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+      </exclusion>
+      <exclusion>
+       <groupId>org.jboss.marshalling</groupId>
+       <artifactId>jboss-marshalling-osgi</artifactId>
+      </exclusion>
+      <exclusion>
+       <groupId>org.jboss.logging</groupId>
+       <artifactId>jboss-logging</artifactId>
+      </exclusion>
+      <exclusion>
+       <groupId>io.reactivex.rxjava2</groupId>
+       <artifactId>rxjava</artifactId>
+      </exclusion>
+     </exclusions>
+    </dependency>
       <dependency>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
@@ -547,6 +649,11 @@
       <dependency>
         <groupId>com.jaspersoft.jasperserver.api.metadata</groupId>
         <artifactId>jasperserver-api-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.jaspersoft.jasperserver</groupId>
+        <artifactId>jasperserver-util</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -621,10 +728,25 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>${hibernate.core.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
         <groupId>${jpivot-groupId}</groupId>
         <artifactId>${jpivot-artifactId}</artifactId>
         <version>${jpivot-version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+          </exclusion>
           <exclusion>
               <groupId>mondrian</groupId>
               <artifactId>mondrian</artifactId>
@@ -662,7 +784,7 @@
             <dependency>
                 <groupId>pentaho</groupId>
                 <artifactId>mondrian</artifactId>
-                <version>3.6.4-JS-2</version>
+                <version>3.6.7-JS-vfs1-1</version>
                 <exclusions>
                     <!-- exclude XML APIs -->
                     <exclusion>
@@ -740,6 +862,10 @@
         <version>1.1-beta-8-JS-1</version>
         <exclusions>
           <exclusion>
+              <groupId>dom4j</groupId>
+              <artifactId>dom4j</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>pull-parser</groupId>
             <artifactId>pull-parser</artifactId>
           </exclusion>
@@ -779,9 +905,9 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>dom4j</groupId>
+        <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>1.6.1</version>
+        <version>2.1.1</version>
         <exclusions>
           <exclusion>
             <groupId>xalan</groupId>
@@ -926,28 +1052,23 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.10</version>
+        <version>${commons-codec.version}</version>
       </dependency>
       <dependency>
+        <groupId>commons-configuration</groupId>
+        <artifactId>commons-configuration</artifactId>
+        <version>${commons-configuration.version}</version>
+      </dependency>
+      <!-- dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.6.1</version>
-			</dependency>
-      <dependency>
+			</dependency -->
+      <!-- dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-log4j12</artifactId>
-        <version>1.6.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-core-asl</artifactId>
-        <version>1.9.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-mapper-asl</artifactId>
-        <version>1.9.2</version>
-      </dependency>
+        <version>1.7.26</version>
+      </dependency -->
       <dependency>
         <groupId>com.lowagie</groupId>
         <artifactId>itext</artifactId>
@@ -972,7 +1093,13 @@
       <dependency>
         <groupId>com.jaspersoft.jasperserver.crypto</groupId>
         <artifactId>js-crypto</artifactId>
-        <version>1.0.6</version>
+        <version>${js-crypto.version}</version>
+        <exclusions>
+          <exclusion>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+      </exclusion>
+      </exclusions>
       </dependency>
       <dependency>
         <groupId>commons-fileupload</groupId>
@@ -1008,7 +1135,7 @@
       <dependency>
         <groupId>com.jaspersoft.connectors.mongodb</groupId>
         <artifactId>js-mongodb-datasource</artifactId>
-        <version>2.0.9</version>
+        <version>3.10.2</version>
         <exclusions>
           <exclusion>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -1023,7 +1150,7 @@
       <dependency>
           <groupId>org.mongodb</groupId>
           <artifactId>mongo-java-driver</artifactId>
-          <version>3.3.0</version>
+          <version>3.10.2</version>
       </dependency>
       <dependency>
           <groupId>org.jboss.teiid</groupId>
@@ -1039,6 +1166,16 @@
           <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-engine</artifactId>
           <version>${teiid.version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>jaxen</groupId>
+              <artifactId>jaxen</artifactId>
+            </exclusion>
+            <exclusion>
+            <groupId>org.osgeo</groupId>
+            <artifactId>proj4j</artifactId>
+            </exclusion>
+          </exclusions>
       </dependency>
       <dependency>
           <groupId>org.jboss.teiid</groupId>
@@ -1088,11 +1225,6 @@
           <version>${teiid.version}</version>
         </dependency>
         <dependency>
-          <groupId>javax.resource</groupId>
-          <artifactId>connector-api</artifactId>
-          <version>1.5</version>
-        </dependency>
-        <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging</artifactId>
             <version>${jboss.logging.version}</version>
@@ -1101,14 +1233,13 @@
 		<dependency>
             <groupId>org.jgroups</groupId>
             <artifactId>jgroups</artifactId>
-            <version>3.2.13.Final-redhat-1</version>
-            <!--version>3.2.7.Final</version-->
+            <version>${jgroups.version}</version>
         </dependency>
         <dependency>
             <groupId>org.owasp</groupId>
             <artifactId>csrfguard</artifactId>
             <version>3.1.0</version>
-        </dependency>
+         </dependency>
         <dependency>
           <groupId>net.sf.ehcache</groupId>
           <artifactId>ehcache</artifactId>
@@ -1120,24 +1251,46 @@
           <version>${joda-time.version}</version>
         </dependency>
         <dependency>
-          <groupId>org.apache.zookeeper</groupId>
-          <artifactId>zookeeper</artifactId>
-          <version>3.4.10</version>
-          <exclusions>
-            <exclusion>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-log4j12</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>jline</groupId>
-              <artifactId>jline</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>io.netty</groupId>
-              <artifactId>netty</artifactId>
-            </exclusion>
-          </exclusions>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bcprov-jdk15on.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk15on</artifactId>
+          <version>${bcprov-jdk15on.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ec2</artifactId>
+            <version>${aws-java-sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+      <!-- commons-beanutils -->
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${commons.beanutils.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <distributionManagement>
@@ -1160,37 +1313,47 @@
     <jpivot-version>6.1.0</jpivot-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <my.build.directory>target</my.build.directory>
-    <spring.version>4.3.22.RELEASE</spring.version>
-    <spring.security.version>4.2.11.RELEASE</spring.security.version>
+    <spring.version>4.3.23.RELEASE</spring.version>
+    <spring.security.version>4.2.13.RELEASE</spring.security.version>
     <aws-java-sdk.version>1.11.505</aws-java-sdk.version>
     <teiid.version>9.1.1</teiid.version>
     <validation.api.version>1.1.0.Final</validation.api.version>
-    <jasperreports.version>6.8.1</jasperreports.version>
-    <jasperreports.ext.version>6.8.1</jasperreports.ext.version>
+    <jasperreports.version>6.11.0</jasperreports.version>
+    <jasperreports.ext.version>6.11.0</jasperreports.ext.version>
     <hibernate.validator.version>5.4.2.Final</hibernate.validator.version>
     <hibernate.core.version>5.2.12.Final</hibernate.core.version>
-    <hibernate.tools.version>5.2.8.Final</hibernate.tools.version>
+    <hibernate.tools.version>5.4.2.Final</hibernate.tools.version>
     <ehcache.version>2.10.2.2.21</ehcache.version>
     <jboss.logging.version>3.3.0.Final</jboss.logging.version>
-    <quartz.version>2.2.3</quartz.version>
+    <quartz.version>2.3.2</quartz.version>
     <junit.version>4.12</junit.version>
-    <mockito-all.version>1.10.19</mockito-all.version>
+    <mockito-core.version>2.23.0</mockito-core.version>
     <maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
-    <maven.surefire.plugin.version>2.19.1</maven.surefire.plugin.version>
-    <testng.version>6.8.8</testng.version>
+    <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+    <testng.version>6.8.21</testng.version>
     <joda-time.version>2.2</joda-time.version>
     <commons-collections.version>3.2.2</commons-collections.version>
     <aspectj.version>1.8.9</aspectj.version>
     <antlr.version>2.7.7</antlr.version>
-    <jackson.version>2.9.8</jackson.version>
-    <guava.version>19.0</guava.version>
-    <activemq.version>5.15.8</activemq.version>
-    <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
-    <junit-platform-surefire-provider.version>1.0.1</junit-platform-surefire-provider.version>
-    <junit-jupiter.version>5.1.0</junit-jupiter.version>
-    <log4j.version>1.2.17</log4j.version>
+    <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
+    <junit-platform-surefire-provider.version>1.3.2</junit-platform-surefire-provider.version>
+    <junit-jupiter.version>5.5.0</junit-jupiter.version>
+    <log4j.version>2.12.1</log4j.version>
     <asm.version>3.2</asm.version>
     <cglib.version>2.2</cglib.version>
+    <ant.version>1.10.6</ant.version>
+    <hibernate.commons.annotations.version>5.1.0.Final</hibernate.commons.annotations.version> <!-- matches hiberante.tools version 5.4.2 -->
+    <guava.version>19.0</guava.version>
+    <jackson.version>2.10.0</jackson.version>
+    <jackson.databind.version>2.10.0</jackson.databind.version>
+    <commons.beanutils.version>1.9.4</commons.beanutils.version>
+    <activemq.version>5.15.9</activemq.version>   
+	<js-crypto.version>2.0.2</js-crypto.version>
+    <commons-codec.version>1.10</commons-codec.version>
+    <commons-configuration.version>1.10</commons-configuration.version>
+    <infinispan.version>9.4.15.Final</infinispan.version>
+    <jgroups.version>4.0.20.Final</jgroups.version>
+    <bcprov-jdk15on.version>1.64</bcprov-jdk15on.version>
   </properties>
 
 </project>

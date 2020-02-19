@@ -1,3 +1,6 @@
+define(function(require, exports, module) {
+var __disableStrictMode__ = "use strict";
+
 /*
  * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
@@ -18,11 +21,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
-define(function(require){
-
-    return {
-        // empty
-    }
+module.exports = {};
 
 });

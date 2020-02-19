@@ -1,3 +1,8 @@
+define(function(require, exports, module) {
+var __disableStrictMode__ = "use strict";
+
+var Epoxy = require('backbone.epoxy');
+
 /*
  * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
@@ -18,46 +23,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
-
-/**
- * @version: $Id$
- */
-
-define(function(require) {
-    var Epoxy = require("backbone.epoxy");
-
-    var ResetSettingsModel = Epoxy.Model.extend({
-        defaults: {
-            id: undefined,
-            name: undefined,
-            value: "",
-            description: ""
-        },
-
-        initialize: function() {
-            if (!this.get("id")) {
-                // By default id is generated from the attribute name.
-                this.setId();
-            }
-        },
-
-        url: function() {
-            // duplicated on purpose - overrides some strange behaviour of FF
-            var safeId = encodeURIComponent(this.id).replace("'", "%27");
-            safeId = safeId.replace("'", "%27");
-            return this.collection.url(this.isNew() ? "" : safeId);
-        },
-
-        setId: function() {
-            var name = this.get("name"),
-                id = this.get("id");
-
-            name !== id && this.set("id", name);
-        }
-
-    });
-
-    return ResetSettingsModel;
+var ResetSettingsModel = Epoxy.Model.extend({
+  defaults: {
+    id: undefined,
+    name: undefined,
+    value: '',
+    description: ''
+  },
+  initialize: function initialize() {
+    if (!this.get('id')) {
+      // By default id is generated from the attribute name.
+      this.setId();
+    }
+  },
+  url: function url() {
+    // duplicated on purpose - overrides some strange behaviour of FF
+    var safeId = encodeURIComponent(this.id).replace('\'', '%27');
+    safeId = safeId.replace('\'', '%27');
+    return this.collection.url(this.isNew() ? '' : safeId);
+  },
+  setId: function setId() {
+    var name = this.get('name'),
+        id = this.get('id');
+    name !== id && this.set('id', name);
+  }
 });
+module.exports = ResetSettingsModel;
 
+});

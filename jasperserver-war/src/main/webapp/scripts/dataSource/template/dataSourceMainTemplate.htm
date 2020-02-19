@@ -1,25 +1,32 @@
-<div class="column decorated primary showingToolBar">
+<div class="column decorated primary addNewDataSource">
+
 
     <js-templateNonce></js-templateNonce>
     <div class="content hasFooter">
-        <div class="header">
-            <div class="title">
-                {{ if (isEditMode) { }}
-                    {{- i18n['resource.dataSource.title.edit'] }}
-                {{ } else { }}
+        <div class="pageHeader">
+            <div class="pageHeader-title">
+                <div class="pageHeader-title-icon">
+                    <span class="icon datasource"></span>
+                </div>
+                <div class="pageHeader-title-text">
+                    {{ if (!isEditMode) { }}
                     {{- i18n['resource.dataSource.title.new'] }}
-                {{ } }}
+                    {{ } }}
+                </div>
             </div>
         </div>
         <div class="body {{ if (supportsTouch) { }}swipeScroll{{ } }}">
-            <div id="flowControls"></div>
-
             <div id="stepDisplay">
-
                 <fieldset class="row instructions">
                     <legend class="offLeft"><span>{{- i18n["resource.dataSource.instructions"] }}</span></legend>
-                    <h2 class="textAccent02">{{- i18n["resource.dataSource.instructions1"] }}</h2>
-                    <h4>{{- i18n["resource.dataSource.instructions2"] }}</h4>
+                    <h2 class="textAccent02">
+                        {{ if (isEditMode) { }}
+                        {{- i18n["resource.dataSource.instructions.form.header.edit"] }}
+                        {{ } else { }}
+                        {{- i18n["resource.dataSource.instructions1"] }}
+                        {{ } }}
+
+                    </h2>
                 </fieldset>
 
                 <fieldset class="row inputs oneColumn">
@@ -27,7 +34,7 @@
                     <div class="column primary">
                         <div class="content">
                             <div class="header">
-                                <div class="title">{{- i18n["resource.dataSource.type"] }}</div>
+                                <div class="title {{ if (isEditMode) { }}disabled{{ } }}">{{- i18n["resource.dataSource.type"] }}</div>
                                 <label class="control select inline" title="{{- i18n['resource.dataSource.dsType'] }}">
                                     <span class="wrap offLeft">{{- i18n['resource.dataSource.dsType'] }}</span>
                                     <select name="dataSourceType" {{ if (isEditMode) { }}disabled="disabled"{{ } }}>

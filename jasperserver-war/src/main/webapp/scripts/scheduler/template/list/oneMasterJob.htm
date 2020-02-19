@@ -1,7 +1,3 @@
-{{
-	var moment = require("localizedMoment");
-}}
-
 <div class="wrap draggable">
 
     <js-templateNonce></js-templateNonce>
@@ -20,24 +16,10 @@
     </div>
     <div class="column four">
         <p class="lastRanDate">
-            {{ if (model.state.previousFireTime) { }}
-                {{-
-                    moment(model.state.previousFireTime).utcOffset(timeZoneOffsetFunction(model.state.previousFireTime)).format("M/D/YYYY hh:mm:ss A")
-                }}
-            {{ } else { }}
-                &nbsp;
-            {{ } }}
+            {{- lastRanDate }}
         </p>
         <p class="nextRunDate">
-            {{ if (model.state.value!=='NORMAL' && model.state.value!=='EXECUTING'){ }}
-                {{- i18n['report.scheduling.list.label.disabled'] }}
-            {{ } else if (model.state.nextFireTime) { }}
-                {{-
-                    moment(model.state.nextFireTime).utcOffset(timeZoneOffsetFunction(model.state.nextFireTime)).format("M/D/YYYY hh:mm:ss A")
-                }}
-            {{ } else { }}
-                &nbsp;
-            {{ } }}
+            {{- nextRunDate }}
         </p>
     </div>
     <div class="column five">
@@ -48,7 +30,7 @@
 		    <button name="editJob" class="button action simple edit"></button>
 	    </div>
 	    <div class="jobEnabled">
-		    <input name="enableJob" type="checkbox" {{ if (model.state.value=='NORMAL' || model.state.value=='EXECUTING') { }} checked="checked" {{ } }} ></input>
+		    <input name="enableJob" type="checkbox" {{ if (isJobEnabled) { }} checked="checked" {{ } }}></input>
 	    </div>
     </div>
 </div>

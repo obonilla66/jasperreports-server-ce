@@ -1,1 +1,0 @@
-define({XDM:"xdm",REQUIREJS:"requirejs",LOGIN:"login",SETTINGS:"settings"});

@@ -10,6 +10,75 @@
         <input name="file" class="upload-file" id="uploadFile" type="file"/>
     </label>
 </fieldset>
+<fieldset class="group" id="secretKey">
+    <legend class="">
+        <span>{{- i18n['import.secret.key'] }}</span>
+    </legend>
+
+    <ul class="list inputSet">
+        <li class="leaf">
+            <div class="control radio twoLine">
+                <label for="optionOne" class="wrap">{{- i18n['import.use.default.key'] }}</label>
+
+                <input
+                        checked="checked"
+                        id="optionOne"
+                        class="jr-jDefaultKey"
+                        name="keyType"
+                        type="radio"
+                        value=""
+                        data-bind="checked:keyType"
+                >
+            </div>
+        </li>
+
+        <li class="leaf">
+            <div class="control radio twoLine">
+                <label for="optionOne" class="wrap">{{- i18n['import.use.key.value'] }}</label>
+
+                <input
+                        id="optionTwo"
+                        class="jr-jKeyValue"
+                        name="keyType"
+                        type="radio"
+                        value="{{- model.secureKeyTypes.VALUE }}"
+                        data-bind="checked:keyType"
+                >
+
+                <div class="control inline" data-bind="classes:{error:invalidKeyError}">
+                    <input class="jr-jSecretKey" data-bind="enabled:isKeyUseValue, value:secretKey" name="secret-key" type="password" size="60">
+                    <div class="warning message" data-bind="text:invalidKeyError"></div>
+                </div>
+            </div>
+        </li>
+
+        <li class="leaf last">
+            <div class="control radio twoLine">
+                <label for="optionThree" class="wrap">
+                    {{- i18n['import.use.key.file'] }}
+                </label>
+
+                <input
+                        id="optionThree"
+                        class="jr-jKeyFile"
+                        name="keyType"
+                        type="radio"
+                        value="{{- model.secureKeyTypes.FILE }}"
+                        data-bind="checked:keyType"
+                >
+
+                <div class="control inline" data-bind="classes:{error:invalidSecureFileContentError}">
+                    <input data-bind="enabled:isKeyUseFile, value:secretUri" class="jr-jSecretUri" type="text" name="secretUri" size="60">
+                    <button data-bind="enabled:isKeyUseFile" class="button action jr-jRepositoryBrowserButton" type="button" name="repositoryBrowserButton">
+                        <span class="wrap">{{- i18n2['button.browse'] }}<span class="icon"></span></span>
+                    </button>
+                    <span class="message warning" data-bind="text:invalidSecureFileContentError"></span>
+                    <span class="message hint"></span>
+                </div>
+            </div>
+        </li>
+    </ul>
+</fieldset>
 <fieldset class="group">
     <legend class="">
         <span>{{- i18n['import.options'] }}</span>

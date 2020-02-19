@@ -11,12 +11,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuBar;
 import mondrian.gui.Workbench;
 import mondrian.gui.WorkbenchMenubarPlugin;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 public class JaspersoftBranding implements WorkbenchMenubarPlugin {
 
     private static final Logger LOGGER
-            = Logger.getLogger(JaspersoftBranding.class);
+            = LogManager.getLogger(JaspersoftBranding.class);
 
     public static final String GUIResourceName =
         "com.jaspersoft.mondrian.workbench.gui.resources.gui";

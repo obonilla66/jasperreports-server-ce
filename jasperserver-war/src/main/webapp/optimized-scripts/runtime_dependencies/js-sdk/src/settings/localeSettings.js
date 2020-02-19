@@ -1,1 +1,0 @@
-define(["require"],function(e){return{localeSettings:{locale:"en_US",decimalSeparator:".",groupingSeparator:",",timeFormat:"hh:mm:ss",dateFormat:"yy-mm-dd",timestampSeparator:" "}}});

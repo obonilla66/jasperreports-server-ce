@@ -35,10 +35,3 @@
 	<span class="message warning"></span>
 </label>
 {{ } }}
-
-{{ if (!(isEmbedded || isEditMode)) { }}
-<div class="control checkBox toggle">
-    <label for="__jrs_prepareDataForReporting" class="wrap">{{- i18n['resource.datasource.saveDialog.prepareData']}}</label>
-    <input type="checkbox" name="prepareDataForReporting" id="__jrs_prepareDataForReporting" {{ if (model.prepareDataForReporting) { }}checked="checked"{{ } }} />
-</div>
-{{ } }}

@@ -1,1 +1,1 @@
-define(["require"],function(e){return{}});
+define(["require","exports","module"],function(e,o,r){r.exports={}});
