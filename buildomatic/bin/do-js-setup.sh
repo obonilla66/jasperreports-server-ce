@@ -53,7 +53,7 @@ runAnt() {
     log "Running $targetName Ant task."
     log
 
-    $ANT_RUN --noconfig -nouserlib -f build.xml $targetName $options 2>&1 | tee -a $JS_LOG_FILE
+    $ANT_RUN --noconfig -nouserlib -lib . -lib lib -f build.xml $targetName $options 2>&1 | tee -a $JS_LOG_FILE
     antReturnCode=$?
 
     antReturnCodeMessage="Checking Ant return code:"

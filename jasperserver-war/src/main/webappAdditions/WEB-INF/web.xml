@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -259,21 +259,6 @@
 
     <!-- This filter must come AFTER securityFilter as it relies on SecurityContext set there. -->
     <filter>
-        <filter-name>CrossDomainFilter</filter-name>
-        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-        <init-param>
-            <param-name>targetBeanName</param-name>
-            <param-value>crossDomainFilter</param-value>
-        </init-param>
-    </filter>
-
-    <filter>
-        <filter-name>CorsFilter</filter-name>
-        <filter-class>com.jaspersoft.jasperserver.api.security.csrf.CorsFilter</filter-class>
-    </filter>
-
-    <!-- This filter must come AFTER securityFilter to prevent CSRF protection on the login page -->
-    <filter>
         <filter-name>CsrfGuardFilter</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
         <init-param>
@@ -396,33 +381,6 @@
       <url-pattern>/*</url-pattern>
   </filter-mapping>
 
-    <!-- This filter must come AFTER securityFilter as it relies on SecurityContext set there. -->
-  <filter-mapping>
-      <filter-name>CrossDomainFilter</filter-name>
-      <url-pattern>/*</url-pattern>
-  </filter-mapping>
-
-  <filter-mapping>
-      <filter-name>CorsFilter</filter-name>
-      <url-pattern>*.woff</url-pattern>
-  </filter-mapping>
-    <filter-mapping>
-        <filter-name>CorsFilter</filter-name>
-        <url-pattern>*.woff2</url-pattern>
-    </filter-mapping>
-  <filter-mapping>
-      <filter-name>CorsFilter</filter-name>
-      <url-pattern>*.ttf</url-pattern>
-  </filter-mapping>
-  <filter-mapping>
-      <filter-name>CorsFilter</filter-name>
-      <url-pattern>*.svg</url-pattern>
-  </filter-mapping>
-  <filter-mapping>
-      <filter-name>CorsFilter</filter-name>
-      <url-pattern>*.eot</url-pattern>
-  </filter-mapping>
-
     <!-- This filter must come AFTER securityFilter to prevent CSRF protection on the login page -->
   <filter-mapping>
       <filter-name>CsrfGuardFilter</filter-name>
@@ -490,10 +448,6 @@
     <servlet-mapping>
         <servlet-name>jasperserver</servlet-name>
         <url-pattern>/reportresource/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>jasperserver</servlet-name>
-        <url-pattern>/jrpxml/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>jasperserver</servlet-name>

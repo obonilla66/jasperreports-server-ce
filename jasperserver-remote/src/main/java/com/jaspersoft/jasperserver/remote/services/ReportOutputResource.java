@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,6 +35,7 @@ public class ReportOutputResource {
     private String fileName;
     private String pages;
     private Boolean outputFinal;
+    private Long outputTimestamp;
 
     public String getPages() {
         return pages;
@@ -79,6 +80,15 @@ public class ReportOutputResource {
 
     public ReportOutputResource setOutputFinal(Boolean outputFinal) {
         this.outputFinal = outputFinal;
+        return this;
+    }
+
+    public Long getOutputTimestamp() {
+        return outputTimestamp;
+    }
+
+    public ReportOutputResource setOutputTimestamp(Long outputTimestamp) {
+        this.outputTimestamp = outputTimestamp;
         return this;
     }
 }

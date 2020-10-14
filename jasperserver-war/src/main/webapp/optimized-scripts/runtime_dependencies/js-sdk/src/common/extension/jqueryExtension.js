@@ -1,1 +1,0 @@
-define(["require","exports","module","../util/xssUtil"],function(t,e,i){var l=t("../util/xssUtil");i.exports={extend:function(t){var e=t.htmlPrefilter;t.htmlPrefilter=function(t){return t=e.call(this,t),l.softHtmlEscape(t)}}}});

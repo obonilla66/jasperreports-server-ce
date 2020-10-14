@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,6 +23,8 @@ package com.jaspersoft.jasperserver.jaxrs.report;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * @author Yaroslav.Kovalchyk
  * @version $Id: ReportExecutionStatusEntity.java 26599 2012-12-10 13:04:23Z ykovalchyk $
@@ -34,6 +36,7 @@ public class ReportExecutionStatusEntity {
     private String value = VALUE_CANCELLED;
 
     @XmlValue
+    @Schema(description = "The status of the report execution", example = "cancelled")
     public String getValue() {
         return value;
     }

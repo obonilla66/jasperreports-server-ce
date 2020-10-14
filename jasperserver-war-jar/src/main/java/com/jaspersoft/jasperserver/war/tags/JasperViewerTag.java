@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -31,6 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyContent;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportLoadingService;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import net.sf.jasperreports.engine.JRPropertiesUtil;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.ReportContext;
@@ -154,15 +159,16 @@ public class JasperViewerTag extends RequestContextAwareTag
 					request.setAttribute("snapshotSaveStatus", snapshotSaveStatus.toString());
 				}
 			}
-			
+			ApplicationContext applicationContext = getRequestContext().getWebApplicationContext();
+			JasperReportsContext jasperReportsContext = getJasperReportsContext(applicationContext);
 			// set the partial page count
 			request.setAttribute("lastPartialPageIndex", new Integer(reportStatus.getCurrentPageCount() - 1));
 			
 			// if the page count is null, it means that the fill is not yet done but there is at least a page
-			boolean emptyReport = totalPageCount != null && totalPageCount.intValue() == 0;
-			request.setAttribute(EMPTY_REPORT_ATTRIBUTE, Boolean.valueOf(emptyReport));
+			String resultData = jasperReportsContext.getProperty("DUMMY_REPORT");
+			boolean emptyReport = Boolean.parseBoolean(resultData) || totalPageCount != null && totalPageCount.intValue() == 0;
 
-            ApplicationContext applicationContext = getRequestContext().getWebApplicationContext();
+			request.setAttribute(EMPTY_REPORT_ATTRIBUTE, Boolean.valueOf(emptyReport));
             request.setAttribute(MESSAGE_SOURCE, applicationContext.getBean("messageSource"));
 
             if (!emptyReport) {
@@ -177,9 +183,7 @@ public class JasperViewerTag extends RequestContextAwareTag
 				if (!pageStatus.isPageFinal()) {
 					request.setAttribute("pageTimestamp", pageStatus.getTimestamp());
 				}
-				
-	            JasperReportsContext jasperReportsContext = getJasperReportsContext(applicationContext);
-				
+
 	            AbstractHtmlExporter<HtmlReportConfiguration, HtmlExporterConfiguration> exporter = ExportUtil.getInstance(jasperReportsContext).createHtmlExporter();
 	            exporter.setExporterInput(new SimpleExporterInput(printAccessor.getJasperPrint()));
 				

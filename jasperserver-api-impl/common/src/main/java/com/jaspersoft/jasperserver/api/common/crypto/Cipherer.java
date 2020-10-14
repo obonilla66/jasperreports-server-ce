@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -182,12 +182,16 @@ public class Cipherer extends BaseCipher {
     private AlgorithmParameterSpec getIV(ByteBuffer byteBuffer) {
         AlgorithmParameterSpec ivSpec = null;
         byte[] ivPrefixData = new byte[IV_PREFIX_SIZE];
-        int ivLength = byteBuffer.get(ivPrefixData).getInt();
-        String ivPrefix = new String(ivPrefixData);
-        if (IV_PREFIX.equals(ivPrefix) && (ivLength == 8 || ivLength == 16)) {
-            byte[] contentIv = new byte[ivLength];
-            byteBuffer.get(contentIv);
-            ivSpec = new IvParameterSpec(contentIv);
+        try {
+            int ivLength = byteBuffer.get(ivPrefixData).getInt();
+            String ivPrefix = new String(ivPrefixData);
+            if (IV_PREFIX.equals(ivPrefix) && (ivLength == 8 || ivLength == 16)) {
+                byte[] contentIv = new byte[ivLength];
+                byteBuffer.get(contentIv);
+                ivSpec = new IvParameterSpec(contentIv);
+            }
+        } catch (BufferUnderflowException e) {
+            ivSpec = null;
         }
         return ivSpec;
     }

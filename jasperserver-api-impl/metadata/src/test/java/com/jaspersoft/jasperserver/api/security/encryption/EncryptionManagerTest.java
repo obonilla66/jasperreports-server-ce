@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,7 +25,7 @@ import com.jaspersoft.jasperserver.api.common.crypto.CipherFactory;
 import com.jaspersoft.jasperserver.api.common.crypto.KeystoreManagerFactory;
 import com.jaspersoft.jasperserver.core.util.StringUtil;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.DeprecatedHttpParameterEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.DeprecatedHttpParameterEnc;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -66,7 +66,7 @@ public class EncryptionManagerTest {
         public CipherFactory httpParameterCipherFactory() throws Exception {
             CipherFactory factory = new CipherFactory();
             factory.setCipherClass(EncryptionRSA.class);
-            factory.setConfId(DeprecatedHttpParameterEnc.ID);
+            factory.setConfId(DeprecatedHttpParameterEnc.value().getConfId());
             return factory;
         }
 //        @Bean

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,8 +20,9 @@
  */
 package com.jaspersoft.jasperserver.api.security.encryption;
 
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.HttpParameterEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.HttpParameterEnc;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -51,6 +52,7 @@ public class EncryptionManager {
 
     @Autowired
     private KeystoreManager keystoreManager;
+    private JrsKeystore keystore;
     private Encryption encryption;
 
     private enum EncryptionTypes {
@@ -85,7 +87,10 @@ public class EncryptionManager {
              keyPair = this.encryption.generateKeyPair();
             //httpRequest.getSession().setAttribute(KEYPAIR_SESSION_KEY, keys);
         } else {
-             keyPair = keystoreManager.getKeyPair(HttpParameterEnc.ID);
+             if (keystore == null) {
+                 keystore = keystoreManager.getKeystore(null);
+             }
+             keyPair = keystore.getKeyPair(HttpParameterEnc.getConfId());
         }
         return keyPair;
     }

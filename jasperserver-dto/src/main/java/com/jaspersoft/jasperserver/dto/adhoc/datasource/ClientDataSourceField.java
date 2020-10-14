@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -42,6 +42,7 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
 
     private String hierarchyName;
 
+    private String fieldExpression;
     private String aggregateFunction;
     private String aggregateExpression;
 
@@ -65,6 +66,7 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
                 .setAggregateFunction(field.getAggregateFunction())
                 .setAggregateFirstLevelFunction(field.getAggregateFirstLevelFunction())
                 .setAggregateExpression(field.getAggregateExpression())
+                .setFieldExpression(field.getFieldExpression())
                 .setAggregateArg(field.getAggregateArg())
                 .setAggregateType(field.getAggregateType());
     }
@@ -139,9 +141,19 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
         return aggregateExpression;
     }
 
-
     public ClientDataSourceField setAggregateExpression(String aggregateExpression) {
         this.aggregateExpression = aggregateExpression;
+        return this;
+    }
+
+    @Override
+    public String getFieldExpression() {
+        return fieldExpression;
+    }
+
+
+    public ClientDataSourceField setFieldExpression(String fieldExpression) {
+        this.fieldExpression = fieldExpression;
         return this;
     }
 
@@ -181,6 +193,8 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
             return false;
         if (aggregateExpression != null ? !aggregateExpression.equals(that.aggregateExpression) : that.aggregateExpression != null)
             return false;
+        if (fieldExpression != null ? !fieldExpression.equals(that.fieldExpression) : that.fieldExpression != null)
+            return false;
         if (aggregateFirstLevelFunction != null ? !aggregateFirstLevelFunction.equals(that.aggregateFirstLevelFunction) : that.aggregateFirstLevelFunction != null)
             return false;
         if (aggregateArg != null ? !aggregateArg.equals(that.aggregateArg) : that.aggregateArg != null) return false;
@@ -194,10 +208,10 @@ public class ClientDataSourceField implements ClientField, ClientAggregate, Clie
         result = 31 * result + (format != null ? format.hashCode() : 0);
         result = 31 * result + (hierarchyName != null ? hierarchyName.hashCode() : 0);
         result = 31 * result + (aggregateFunction != null ? aggregateFunction.hashCode() : 0);
-        result = 31 * result + (aggregateExpression != null ? aggregateExpression.hashCode() : 0);
         result = 31 * result + (aggregateFirstLevelFunction != null ? aggregateFirstLevelFunction.hashCode() : 0);
         result = 31 * result + (aggregateArg != null ? aggregateArg.hashCode() : 0);
         result = 31 * result + (aggregateType != null ? aggregateType.hashCode() : 0);
+        result = 31 * result + (fieldExpression != null ? fieldExpression.hashCode() : 0);
         return result;
     }
 

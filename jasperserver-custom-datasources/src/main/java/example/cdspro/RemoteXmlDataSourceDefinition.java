@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,12 +21,9 @@
 
 package example.cdspro;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.AbstractTextDataSourceDefinition;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomDomainMetaData;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
 import net.sf.jasperreports.data.DataAdapter;
 import net.sf.jasperreports.data.DataAdapterService;
 import net.sf.jasperreports.data.xml.RemoteXmlDataAdapter;
@@ -35,14 +32,15 @@ import net.sf.jasperreports.engine.JRField;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.data.JaxenXmlDataSource;
 import net.sf.jasperreports.engine.design.JRDesignField;
-
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.jaspersoft.jasperserver.api.engine.jasperreports.util.AbstractTextDataSourceDefinition;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomDomainMetaData;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * A definition of an XML datasource which accesses a remote XML file.

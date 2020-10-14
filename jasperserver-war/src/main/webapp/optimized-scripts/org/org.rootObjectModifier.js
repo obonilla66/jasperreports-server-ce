@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(n,o,i){function e(){l=null!==window.organizationId&&""!==window.organizationId,r=!l}var l=null,r=null;i.exports=e});

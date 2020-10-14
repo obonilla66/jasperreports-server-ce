@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -36,12 +36,15 @@ import com.jaspersoft.jasperserver.remote.connection.datadiscovery.ConnectionOpe
 import com.jaspersoft.jasperserver.remote.connection.datadiscovery.JdbcMetadataBuilder;
 import com.jaspersoft.jasperserver.remote.connection.datadiscovery.MetadataBuilder;
 import com.jaspersoft.jasperserver.remote.connection.datadiscovery.SpecialCharacterEscape;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -58,17 +61,21 @@ public class JdbcDataSourceMetadataBuilder<ConnectionDescriptionType extends Cli
         ContextParametrizedMetadataBuilder<ConnectionDescriptionType, PartialMetadataOptions>, MultipleTypeProcessor {
     private static final List<Class<?>> IMPLEMENTED_PROCESSOR_CLASSES = Arrays.asList(
             ContextMetadataBuilder.class, ContextParametrizedMetadataBuilder.class);
-    private static final List<Class<?>> SUPPORTED_PROCESSING_CLASSES = (List)Arrays.asList(ClientJdbcDataSource.class,
+    private static List<Class<?>> SUPPORTED_PROCESSING_CLASSES = (List)Arrays.asList(ClientJdbcDataSource.class,
             ClientJndiJdbcDataSource.class, ClientVirtualDataSource.class, ClientAwsDataSource.class,
             ClientAzureSqlDataSource.class);
+
     @Resource
     private ClientJdbcConnector clientJdbcConnector;
+    @Resource(name = "jdbcDataSourceMetadataBuilderSupportedList")
+    private List<String> jdbcDataSourceMetadataBuilderSupportedList;
     @Resource
     private SqlEscapingFactory sqlEscapingFactory;
     private ConnectionOperationTemplate<ConnectionDescriptionType, Connection> connectionOperationTemplate;
     @Resource
     private JdbcMetadataBuilder jdbcMetadataBuilder;
 
+    private final static Log log = LogFactory.getLog(JdbcDataSourceMetadataBuilder.class);
 
     private SpecialCharacterEscape specialCharacterEscape = new SpecialCharacterEscape() {
         @Override
@@ -81,6 +88,7 @@ public class JdbcDataSourceMetadataBuilder<ConnectionDescriptionType extends Cli
         connectionOperationTemplate
                 = new ConnectionOperationTemplate<ConnectionDescriptionType, Connection>(clientJdbcConnector);
 
+        buildProcessingClasses(jdbcDataSourceMetadataBuilderSupportedList);
         jdbcMetadataBuilder.setCharacterEscape(specialCharacterEscape);
     }
 
@@ -111,4 +119,19 @@ public class JdbcDataSourceMetadataBuilder<ConnectionDescriptionType extends Cli
     public List<Class<?>> getProcessableTypes(Class<?> processorClass) {
         return IMPLEMENTED_PROCESSOR_CLASSES.contains(processorClass) ? SUPPORTED_PROCESSING_CLASSES : null;
     }
+
+    protected void buildProcessingClasses(List<String> supportedClasses) {
+        if (supportedClasses == null) return;
+        SUPPORTED_PROCESSING_CLASSES = new ArrayList<>();
+        for (String supportedClass :  supportedClasses) {
+            try {
+                SUPPORTED_PROCESSING_CLASSES.add(Class.forName(supportedClass));
+                log.debug("Added " + supportedClass + " to supported data source list for JDBC metadata builder");
+            } catch (ClassNotFoundException ex) {
+                log.error("Failed to add " + supportedClass + " to supported data source list for JDBC metadata builder");
+
+            }
+        }
+    }
+
 }

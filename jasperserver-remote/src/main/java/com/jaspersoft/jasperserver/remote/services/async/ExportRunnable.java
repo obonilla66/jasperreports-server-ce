@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,8 +21,11 @@
 
 package com.jaspersoft.jasperserver.remote.services.async;
 
+import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.dto.common.WarningDescriptor;
 import com.jaspersoft.jasperserver.dto.importexport.State;
+import com.jaspersoft.jasperserver.export.service.ExportFailedException;
+import com.jaspersoft.jasperserver.export.service.ImportExportService;
 import com.jaspersoft.jasperserver.remote.exception.NoResultException;
 import com.jaspersoft.jasperserver.remote.exception.NotReadyResultException;
 import org.apache.commons.logging.Log;
@@ -34,11 +37,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+
+import static com.jaspersoft.jasperserver.export.service.ImportExportService.ERROR_INVALID_KEY;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /*
 *  @author inesterenko
@@ -96,9 +99,15 @@ public class ExportRunnable extends BaseImportExportTaskRunnable<InputStream> {
         } catch (Exception e) {
             log.error("Export failed: ", e);
 
+            Optional<ErrorDescriptor> error =
+                    e instanceof ExportFailedException && e.getMessage().contains("java.security.InvalidKeyException")
+                            ? of(new ErrorDescriptor().setMessage(localize("export.invalid.key")).setErrorCode(ERROR_INVALID_KEY))
+                            : empty();
+
             synchronized (state) {
                 state.setPhase(Task.FAILED);
                 state.setMessage(localize("export.failed"));
+                error.ifPresent(state::setError);
             }
 
             if (file != null){

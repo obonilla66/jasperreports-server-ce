@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -547,7 +547,7 @@
                 <include name="install_resources/sql/**"/>
                 <include name="install_resources/export/**"/>
                 <include name="src/**"/>
-                <include name="target/*.jar"/>
+                <include name="lib/*.jar"/>
                 <include name="*.xml"/>
                 <include name="*.sh"/>
                 <include name="*.bat"/>

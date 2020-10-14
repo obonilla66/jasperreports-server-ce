@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -58,6 +58,10 @@ public abstract class AbstractVirtualDataSourceQueryServiceImpl implements Virtu
 
     public void setPoolTimeoutInMinute(int poolTimeoutInMinute) {
         this.poolTimeoutInMinute = poolTimeoutInMinute;
+    }
+
+    protected PooledObjectCache getDataSourceCache() {
+        return dataSourceCache;
     }
 
     // get connection factory from a list of sub data sources

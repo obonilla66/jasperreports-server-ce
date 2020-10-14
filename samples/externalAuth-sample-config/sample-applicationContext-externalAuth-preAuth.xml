@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -65,6 +65,7 @@
 	should be uncommented when using webLogic server to successfully redirect the page to jsonRedirectUrl -->
 	<!-- <property name="welcomePage" value="/index.htm"/> -->
         <property name="jsonRedirectUrl" ref="authSuccessJsonRedirectUrl"/>
+        <property name="responseHeadersUpdater" ref="responseHeadersUpdater"/>
     </bean>
 
     <bean id="preAuthenticatedManager" class="com.jaspersoft.jasperserver.api.security.externalAuth.wrappers.spring.JSProviderManager">

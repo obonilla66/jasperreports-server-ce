@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -33,18 +33,10 @@
     </parent>
     <description>JasperServer Core Utilities</description>
     <dependencies>
-<!-- https://mvnrepository.com/artifact/com.sun.mail/all -->
 <dependency>
     <groupId>com.sun.mail</groupId>
-    <artifactId>all</artifactId>
-    <version>1.6.3</version>
-    <type>pom</type>
-</dependency>
-<!-- https://mvnrepository.com/artifact/javax.mail/mail -->
-<dependency>
-    <groupId>javax.mail</groupId>
-    <artifactId>mail</artifactId>
-    <version>1.4.5</version>
+    <artifactId>javax.mail</artifactId>
+    <version>1.6.2</version>
 </dependency>
         <dependency>
             <groupId>com.jaspersoft.jasperserver.api.engine</groupId>

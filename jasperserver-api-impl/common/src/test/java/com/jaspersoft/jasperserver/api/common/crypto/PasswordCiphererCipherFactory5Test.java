@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * http://www.jaspersoft.com.
+ *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.jaspersoft.jasperserver.api.common.crypto;
 
 import com.jaspersoft.jasperserver.api.security.encryption.PlainCipher;
@@ -17,8 +38,8 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.File;
 
-import static com.jaspersoft.jasperserver.crypto.conf.PasswordEncoderEnc.ENC_BLOCK_SIZE;
-import static com.jaspersoft.jasperserver.crypto.conf.PasswordEncoderEnc.ENC_TRANSFORMATION;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.PasswordEncoderEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.PasswordEncoderEnc;
 import static java.lang.System.getenv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -42,12 +63,12 @@ public class PasswordCiphererCipherFactory5Test {
             factory.setCipherClass(PasswordCipherer.class);
             factory.setConfId(PASSWORD_ENC_SECRET);
 
-            factory.setTransformationProp(ENC_TRANSFORMATION.toString());
-            factory.setBlockSizeProp(ENC_BLOCK_SIZE.toString());
+            factory.setTransformationProp(PasswordEncoderEnc.value().getEncTransformation().key());
+            factory.setBlockSizeProp(PasswordEncoderEnc.value().getEncBlockSize().key());
             factory.setSecretKeyProp("passwordEncSecret.secret.key");
 
-            factory.setTransformation((String) ENC_TRANSFORMATION.value());
-            factory.setBlockSize((Integer) ENC_BLOCK_SIZE.value());
+            factory.setTransformation(PasswordEncoderEnc.value().getEncTransformation().value());
+            factory.setBlockSize(PasswordEncoderEnc.value().getEncBlockSize().value());
             return factory;
         }
         @Bean(name = "passwordEncoder")

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -47,6 +47,7 @@ public class InputControlState implements Serializable, DeepCloneable<InputContr
     private String id;
     private String value;
     private String error;
+    private String totalCount;
     private List<InputControlOption> options;
 
     public InputControlState(){
@@ -59,6 +60,7 @@ public class InputControlState implements Serializable, DeepCloneable<InputContr
         this.id = other.getId();
         this.value = other.getValue();
         this.error = other.getError();
+        this.totalCount = other.getTotalCount();
         this.options = copyOf(other.getOptions());
     }
 
@@ -98,6 +100,15 @@ public class InputControlState implements Serializable, DeepCloneable<InputContr
         return this;
     }
 
+    public String getTotalCount() {
+        return totalCount;
+    }
+
+    public InputControlState setTotalCount(String totalCount) {
+        this.totalCount = totalCount;
+        return this;
+    }
+
     @XmlElementWrapper(name = "options")
     @XmlElement(name = "option")
     public List<InputControlOption> getOptions() {
@@ -120,6 +131,7 @@ public class InputControlState implements Serializable, DeepCloneable<InputContr
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (value != null ? !value.equals(that.value) : that.value != null) return false;
         if (error != null ? !error.equals(that.error) : that.error != null) return false;
+        if (totalCount != null ? !totalCount.equals(that.totalCount) : that.totalCount != null) return false;
         return options != null ? options.equals(that.options) : that.options == null;
     }
 
@@ -129,6 +141,7 @@ public class InputControlState implements Serializable, DeepCloneable<InputContr
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         result = 31 * result + (error != null ? error.hashCode() : 0);
+        result = 31 * result + (totalCount != null ? totalCount.hashCode() : 0);
         result = 31 * result + (options != null ? options.hashCode() : 0);
         return result;
     }
@@ -140,6 +153,7 @@ public class InputControlState implements Serializable, DeepCloneable<InputContr
                 ", id='" + id + '\'' +
                 ", value='" + value + '\'' +
                 ", error='" + error + '\'' +
+                ", totalCount='" + totalCount + '\'' +
                 ", options=" + options +
                 '}';
     }

@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,r,i){i.exports=function(e){var r=e.trim().match(/^<div\s?(?:(?:.*)=(?:['"]).*(?:['"]))*>(.*)<\/div>/);return JSON.parse(r?r[1]:"{}")}});

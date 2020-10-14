@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -47,6 +47,9 @@ class ClientDataSourceFieldTest extends BaseDTOJSONPresentableTest<ClientDataSou
     private static final String TEST_AGGREGATE_FUNCTION = "TEST_AGGREGATE_FUNCTION";
     private static final String TEST_AGGREGATE_FUNCTION_ALT = "TEST_AGGREGATE_FUNCTION_ALT";
 
+    private static final String TEST_FIELD_EXPRESSION = "TEST_FIELD_EXPRESSION";
+    private static final String TEST_FIELD_EXPRESSION_ALT = "TEST_FIELD_EXPRESSION_ALT";
+
     private static final String TEST_AGGREGATE_EXPRESSION = "TEST_AGGREGATE_EXPRESSION";
     private static final String TEST_AGGREGATE_EXPRESSION_ALT = "TEST_AGGREGATE_EXPRESSION_ALT";
 
@@ -71,6 +74,8 @@ class ClientDataSourceFieldTest extends BaseDTOJSONPresentableTest<ClientDataSou
                 createFullyConfiguredInstance().setAggregateFirstLevelFunction(TEST_AGGREGATE_FIRST_LEVEL_FUNCTION_ALT),
                 createFullyConfiguredInstance().setAggregateArg(TEST_AGGREGATE_ARG_ALT),
                 createFullyConfiguredInstance().setAggregateType(TEST_AGGREGATE_TYPE_ALT),
+                createFullyConfiguredInstance().setFieldExpression(TEST_FIELD_EXPRESSION_ALT),
+                createFullyConfiguredInstance().setFieldExpression(TEST_FIELD_EXPRESSION_ALT),
                 createFullyConfiguredInstance().setName(null),
                 createFullyConfiguredInstance().setType(null),
                 createFullyConfiguredInstance().setFormat(null),
@@ -79,7 +84,8 @@ class ClientDataSourceFieldTest extends BaseDTOJSONPresentableTest<ClientDataSou
                 createFullyConfiguredInstance().setAggregateExpression(null),
                 createFullyConfiguredInstance().setAggregateFirstLevelFunction(null),
                 createFullyConfiguredInstance().setAggregateArg(null),
-                createFullyConfiguredInstance().setAggregateType(null)
+                createFullyConfiguredInstance().setAggregateType(null),
+                createFullyConfiguredInstance().setFieldExpression(null)
         );
     }
 
@@ -94,7 +100,8 @@ class ClientDataSourceFieldTest extends BaseDTOJSONPresentableTest<ClientDataSou
                 .setAggregateExpression(TEST_AGGREGATE_EXPRESSION)
                 .setAggregateFirstLevelFunction(TEST_AGGREGATE_FIRST_LEVEL_FUNCTION)
                 .setAggregateArg(TEST_AGGREGATE_ARG)
-                .setAggregateType(TEST_AGGREGATE_TYPE);
+                .setAggregateType(TEST_AGGREGATE_TYPE)
+                .setFieldExpression(TEST_FIELD_EXPRESSION);
     }
 
     @Override

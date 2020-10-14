@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,6 +24,10 @@ import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,6 +89,7 @@ public class ReportExecution implements Serializable {
     }
 
     @XmlTransient
+    @Schema(hidden = true)
     public Map<String, Object> getConvertedParameters() {
         return convertedParameters;
     }
@@ -99,6 +104,7 @@ public class ReportExecution implements Serializable {
     }
 
     @XmlTransient
+    @Schema(hidden = true)
     public Map<String, String[]> getRawParameters() {
         lock.lock();
         try {
@@ -120,6 +126,7 @@ public class ReportExecution implements Serializable {
     }
 
     @XmlTransient
+    @Schema(hidden = true)
     public ReportExecutionOptions getOptions() {
         lock.lock();
         try {
@@ -139,6 +146,7 @@ public class ReportExecution implements Serializable {
     }
 
     @XmlTransient
+    @Schema(hidden = true)
     public ReportUnitResult getFinalReportUnitResult() {
         lock.lock();
         try {
@@ -175,6 +183,7 @@ public class ReportExecution implements Serializable {
     }
 
     @XmlTransient
+    @Schema(hidden = true)
     public ReportUnitResult getReportUnitResult() {
         lock.lock();
         try {
@@ -197,6 +206,10 @@ public class ReportExecution implements Serializable {
         }
     }
     
+    @Schema(
+    		description = "The current page", 
+    		type = "integer",
+    		example = "3")
     public Integer getCurrentPage() {
         lock.lock();
         try {
@@ -215,6 +228,7 @@ public class ReportExecution implements Serializable {
         }
     }
     
+    @Schema(description = "The request UUID", format="uuid", example = "b487a05a-4989-8b53-b2b9-b54752f998c4")
     public String getRequestId() {
         lock.lock();
         try {
@@ -235,6 +249,7 @@ public class ReportExecution implements Serializable {
     
     @XmlElement(name = "export")
     @XmlElementWrapper(name = "exports")
+    @ArraySchema(schema = @Schema(description = "Set of `ExportExecution` objects",  implementation = ExportExecution.class))
     public Set<ExportExecution> getExportsSet() {
         return !exports.isEmpty() ? new HashSet<ExportExecution>(exports.values()) : null;
     }
@@ -247,10 +262,12 @@ public class ReportExecution implements Serializable {
     }
 
     @XmlTransient
+    @Schema(hidden = true)
     public ExportsContainer getExports() {
         return exports;
     }
-
+    
+    @Schema(hidden = true)
     public ErrorDescriptor getErrorDescriptor() {
         lock.lock();
         try {
@@ -282,6 +299,7 @@ public class ReportExecution implements Serializable {
         }
     }
 
+    @Schema(description = "The requested report URI", example = "public/Samples/Reports/AllAccounts")
     public String getReportURI() {
         lock.lock();
         try {
@@ -300,6 +318,7 @@ public class ReportExecution implements Serializable {
         }
     }
 
+    @Schema(description = "The report execution status", implementation = ExecutionStatus.class)
     public ExecutionStatus getStatus() {
         lock.lock();
         try {
@@ -338,6 +357,10 @@ public class ReportExecution implements Serializable {
         }
     }
 
+    @Schema(
+    		description = "The total number of pages", 
+    		type = "integer",
+    		example = "47")
     public Integer getTotalPages() {
         lock.lock();
         try {

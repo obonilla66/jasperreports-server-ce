@@ -1,1 +1,0 @@
-define(["require","exports","module","./LoggerManager","./loggerConfig"],function(e,g,r){var o=e("./LoggerManager"),n=e("./loggerConfig"),a=new o(n);r.exports=a});

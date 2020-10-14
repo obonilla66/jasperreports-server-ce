@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.order;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * @author Andriy Godovanets
@@ -33,6 +34,7 @@ public interface ClientOrder extends DeepCloneable {
      * @return Is item sorted ascending? If false - then item is sorted descending.
      */
     @NotNull
+    @XmlElement(name = "ascending", required = false, defaultValue = "true")
     Boolean isAscending();
 
     /**

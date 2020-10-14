@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -39,11 +39,11 @@ public class InputControlOption implements Serializable, DeepCloneable<InputCont
 
     private final static long serialVersionUID = 1L;
 
-    private boolean selected;
+    private Boolean selected;
     private String label;
     private String value;
 
-    public InputControlOption(String value, String label, boolean selected) {
+    public InputControlOption(String value, String label, Boolean selected) {
         this.label = label;
         this.value = value;
         this.selected = selected;
@@ -65,10 +65,15 @@ public class InputControlOption implements Serializable, DeepCloneable<InputCont
         this.value = other.getValue();
     }
 
-    public boolean isSelected() {
+    public boolean hasSelected() {
+        return selected != null && selected;
+    }
+
+    public Boolean isSelected() {
         return selected;
     }
-    public InputControlOption setSelected(boolean selected) {
+
+    public InputControlOption setSelected(Boolean selected) {
         this.selected = selected;
         return this;
     }
@@ -106,7 +111,7 @@ public class InputControlOption implements Serializable, DeepCloneable<InputCont
 
     @Override
     public int hashCode() {
-        int result = (selected ? 1 : 0);
+        int result = selected != null ? selected.hashCode() : 0;
         result = 31 * result + (label != null ? label.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;

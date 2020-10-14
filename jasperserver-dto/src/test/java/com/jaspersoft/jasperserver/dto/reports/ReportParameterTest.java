@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -36,7 +36,15 @@ import java.util.List;
 public class ReportParameterTest extends BaseDTOPresentableTest<ReportParameter> {
 
     private static final String TEST_NAME = "TEST_NAME";
+    private static final String TEST_LIMIT = "TEST_LIMIT";
+    private static final String TEST_SELECT = "TEST_SELECT";
+    private static final String TEST_OFFSET = "TEST_OFFSET";
+    private static final String TEST_CRITERIA = "TEST_CRITERIA";
     private static final String TEST_NAME_1 = "TEST_NAME_1";
+    private static final String TEST_LIMIT_1 = "TEST_LIMIT_1";
+    private static final String TEST_SELECT_1 = "TEST_SELECT_1";
+    private static final String TEST_OFFSET_1 = "TEST_OFFSET_1";
+    private static final String TEST_CRITERIA_1 = "TEST_CRITERIA_1";
 
     private static final List<String> TEST_VALUES = Arrays.asList("TEST_VALUE_A", "TEST_VALUE_B");
     private static final List<String> TEST_VALUES_1 = Arrays.asList("TEST_VALUE_A_1", "TEST_VALUE_B_1");
@@ -50,10 +58,18 @@ public class ReportParameterTest extends BaseDTOPresentableTest<ReportParameter>
     protected List<ReportParameter> prepareInstancesWithAlternativeParameters() {
         return Arrays.asList(
                 createFullyConfiguredInstance().setName(TEST_NAME_1),
+                createFullyConfiguredInstance().setLimit(TEST_LIMIT_1),
+                createFullyConfiguredInstance().setSelect(TEST_SELECT_1),
+                createFullyConfiguredInstance().setOffset(TEST_OFFSET_1),
+                createFullyConfiguredInstance().setCriteria(TEST_CRITERIA_1),
                 createFullyConfiguredInstance().setValues(TEST_VALUES_1),
                 createFullyConfiguredInstance().setValues(TEST_VALUES_EMPTY),
                 // null values
                 createFullyConfiguredInstance().setName(null),
+                createFullyConfiguredInstance().setLimit(null),
+                createFullyConfiguredInstance().setSelect(null),
+                createFullyConfiguredInstance().setOffset(null),
+                createFullyConfiguredInstance().setCriteria(null),
                 createFullyConfiguredInstance().setValues(null)
         );
     }
@@ -62,6 +78,10 @@ public class ReportParameterTest extends BaseDTOPresentableTest<ReportParameter>
     protected ReportParameter createFullyConfiguredInstance() {
         return createInstanceWithDefaultParameters()
                 .setName(TEST_NAME)
+                .setLimit(TEST_LIMIT)
+                .setSelect(TEST_SELECT)
+                .setOffset(TEST_OFFSET)
+                .setCriteria(TEST_CRITERIA)
                 .setValues(TEST_VALUES);
     }
 

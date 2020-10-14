@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -206,6 +206,7 @@ public class DataSourceAction extends FormAction implements ApplicationContextAw
                 configuration.getResourceIdNotSupportedSymbols());
         context.getFlowScope().put("awsRegions", getAwsRegions());
         context.getFlowScope().put("isEc2Instance", awsEc2MetadataClient.isEc2Instance());
+        context.getFlowScope().put("hasSecurityCredentials", awsEc2MetadataClient.hasSecurityCredentials());
         context.getFlowScope().put("suppressEc2CredentialsWarnings", awsProperties.isSuppressEc2CredentialsWarnings());
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

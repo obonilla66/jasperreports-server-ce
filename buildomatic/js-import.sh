@@ -12,7 +12,7 @@ export JS_EXP_CMD_CLASS
 
 JS_CMD_NAME=$0
 export JS_CMD_NAME
-export ANT_ARGS="$ANT_ARGS -q -emacs -logger com.jaspersoft.buildomatic.ImportExportLogger -lib target"
+export ANT_ARGS="$ANT_ARGS -q -emacs -logger com.jaspersoft.buildomatic.ImportExportLogger -lib . -lib lib"
 $BASEDIR/js-ant "validate-database validate-keystore"
 
 if [ $? -eq 0 ];

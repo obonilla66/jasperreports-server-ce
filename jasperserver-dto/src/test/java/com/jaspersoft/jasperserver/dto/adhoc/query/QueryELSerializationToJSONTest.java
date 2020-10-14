@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,9 +21,11 @@
 
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryAggregatedField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup;
+import com.jaspersoft.jasperserver.dto.adhoc.query.order.ClientGenericOrder;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -128,6 +130,111 @@ public class QueryELSerializationToJSONTest extends QueryTest {
 
     }
 
+    @Test
+    public void ensureSelectFieldWithExpression() throws Exception {
+
+        ClientMultiLevelQuery cq = MultiLevelQueryBuilder
+                .select(new ClientQueryField().setFieldName("sales").setId("fieldName").
+                        setExpressionContainer(new ClientExpressionContainer("sum(sales)")),
+                        new ClientQueryField().setFieldName("city").setId("fieldName2"))
+                .build();
 
 
+        assertThat(json(cq), is("{\n" +
+                "  \"select\" : {\n" +
+                "    \"fields\" : [ {\n" +
+                "      \"id\" : \"fieldName\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      },\n" +
+                "      \"field\" : \"sales\"\n" +
+                "    }, {\n" +
+                "      \"id\" : \"fieldName2\",\n" +
+                "      \"field\" : \"city\"\n" +
+                "    } ]\n" +
+                "  }\n" +
+                "}"));
+    }
+
+
+
+    @Test
+    public void ensureSelectOneAggregation_groupByExpression() throws Exception {
+        ClientQuery cq = MultiLevelQueryBuilder
+                .select(Collections.<ClientQueryField>emptyList(), Arrays.asList(
+                        new ClientQueryAggregatedField().setFieldReference("sales").setAggregateFunction("Average")))
+                .groupBy(new ClientQueryGroup().setFieldName("city").setId("g1").setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .build();
+
+
+        assertThat(json(cq), is("{\n" +
+                "  \"select\" : {\n" +
+                "    \"aggregations\" : [ {\n" +
+                "      \"functionName\" : \"Average\",\n" +
+                "      \"fieldRef\" : \"sales\"\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"groupBy\" : [ {\n" +
+                "    \"group\" : {\n" +
+                "      \"id\" : \"g1\",\n" +
+                "      \"field\" : \"city\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  } ]\n" +
+                "}"
+        ));
+    }
+
+    @Test
+    public void ensureSelectOneAggregation_orderByExpression() throws Exception {
+        ClientQuery cq = MultiLevelQueryBuilder
+                .select(Collections.<ClientQueryField>emptyList(), Arrays.asList(
+                        new ClientQueryAggregatedField().setFieldReference("sales").setAggregateFunction("Average")))
+                .orderBy(new ClientGenericOrder().setFieldReference("city").setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .build();
+
+        assertThat(true, is(json(cq).contains("sum(sales)")));
+    }
+
+    @Test
+    public void ensureExpresssionsOnAll() throws Exception {
+        ClientQuery cq = MultiLevelQueryBuilder
+                .select(Arrays.asList(
+                        (new ClientQueryField().setFieldName("sales").setId("fieldName").
+                                setExpressionContainer(new ClientExpressionContainer("sum(sales)")))),
+                        Arrays.asList(
+                        new ClientQueryAggregatedField().setFieldReference("sales")
+                                .setExpressionContainer(new ClientExpressionContainer("sum(sales)"))))
+                .groupBy(new ClientQueryGroup().setFieldName("city").setId("g1").setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .build();
+
+        assertThat(json(cq), is("{\n" +
+                "  \"select\" : {\n" +
+                "    \"fields\" : [ {\n" +
+                "      \"id\" : \"fieldName\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      },\n" +
+                "      \"field\" : \"sales\"\n" +
+                "    } ],\n" +
+                "    \"aggregations\" : [ {\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      },\n" +
+                "      \"fieldRef\" : \"sales\"\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"groupBy\" : [ {\n" +
+                "    \"group\" : {\n" +
+                "      \"id\" : \"g1\",\n" +
+                "      \"field\" : \"city\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  } ]\n" +
+                "}"));
+    }
 }

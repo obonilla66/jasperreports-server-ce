@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -54,16 +54,16 @@ Usage:
 	    	[OPTIONAL]
 	    </t:putAttribute>
 	</t:insertTemplate>
-	
+
 NOTES:
 1. All attribute tags are optional
 2. All attribute tags may be included in either form:
    - <t:putAttribute name="attributeName" value="values"/>
    - <t:putAttribute name="attributeName"> values </t:putAttribute>
-3. All attribute tags MUST be closed 
+3. All attribute tags MUST be closed
 4. Attribute tag order does NOT matter
 
-  	
+
 --%>
 
 <%@ taglib prefix="t" uri="http://tiles.apache.org/tags-tiles"%>
@@ -130,6 +130,7 @@ NOTES:
     <c:if test="${footerContent == null}">
         <div <c:if test="${contentID != null}">id="${contentID}"</c:if> class="content ${contentClass}" ${contentAttributes}>
     </c:if>
+    <c:if test="${(containerTitle != null) || (headerContent != null) || (headerClass != null)|| (headerID != null)|| (headerAttributes != null)}">
 		<div <c:if test="${headerID != null}">id="${headerID}"</c:if> class="header ${headerClass}" ${headerAttributes}>
             <div class="title">
                 ${containerTitle}
@@ -149,6 +150,7 @@ NOTES:
             </c:choose>
             --%>
         </div>
+    </c:if>
     <c:if test="${toolbarContent != null}">
         <div <c:if test="${toolbarID != null}">id="${toolbarID}"</c:if> class="toolbar ${toolbarClass}" ${toolbarAttributes}>
             ${toolbarContent}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,6 +22,9 @@
 package com.jaspersoft.jasperserver.war.action;
 
 import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
+import com.jaspersoft.jasperserver.api.JSValidationException;
+import com.jaspersoft.jasperserver.api.common.domain.ValidationError;
+import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationErrorsImpl;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
@@ -29,6 +32,7 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportI
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportLoadingService;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationError;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
@@ -45,8 +49,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.MessageSource;
 import org.springframework.webflow.context.ExternalContext;
 import org.springframework.webflow.context.servlet.ServletExternalContext;
+import org.springframework.webflow.core.collection.LocalAttributeMap;
 import org.springframework.webflow.core.collection.MutableAttributeMap;
 import org.springframework.webflow.core.collection.ParameterMap;
+import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.FlowExecutionContext;
 import org.springframework.webflow.execution.RequestContext;
 
@@ -59,14 +65,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 
 /**
  * @author Vladimir Tsukur
@@ -102,6 +113,9 @@ public class ViewReportActionTest {
 
     @Mock
     private UIExceptionRouter uiExceptionRouter;
+
+    @Mock
+    private RepositoryService repositoryService;
 
     private RequestContext requestContext = mock(RequestContext.class);
 
@@ -222,6 +236,59 @@ public class ViewReportActionTest {
         String actualObject = viewReportAction.getRequestParametersAsJSON(requestContextMock);
 
         assertEquals("{\"p1\":[\"v1\"],\"p2\":[\"v1\",\"v2\"]}", actualObject);
+    }
+
+    @Test
+    public void testFormatInputControlsValidationErrorMessage() {
+        ValidationErrors validationErrors = mock(ValidationErrors.class);
+        InputControlValidationError error_1 = new InputControlValidationError("fillParameters.error.invalidValueForType",
+                new Object[]{"DateRange"}, "Specify a valid value for type DateRange.", "/Relative_Date_Equals_files/Date", "DAYY");
+
+        InputControlValidationError error_2 = new InputControlValidationError("fillParameters.error.invalidValueForType",
+                new Object[]{"DateRange"}, "Specify a valid value for type DateRange.", "/Relative_Date_Equals_files/DateTime", "MONT");
+
+        List<InputControlValidationError> list = new ArrayList<>();
+        list.add(error_1);
+        list.add(error_2);
+
+        doReturn(list).when(validationErrors).getErrors();
+        String actual = viewReportAction.formatInputControlsValidationErrorMessage(validationErrors);
+        assertEquals("jasper.report.view.controls.validation.failed: Date, DateTime",actual);
+    }
+
+    @Test
+    public void testChooseExportMode_withReportOutput() {
+        final Map<String, Object> flowScopeParams = map(
+                entry("reportOutput", "html"));
+
+        mockRequestContext(map(), flowScopeParams, map());
+        Event event = viewReportAction.chooseExportMode(requestContext);
+        assertNotNull(event);
+        assertEquals("viewReport", event.getId());
+    }
+
+    @Test
+    public void testChooseExportMode_withShowInputControlsByExport() {
+        final Map<String, Object> flowScopeParams = map(
+                entry("reportOutput", "value"),
+                entry("hasInputControls", Boolean.valueOf(true)),
+                entry("reportForceControls", Boolean.valueOf(true)));
+
+        mockRequestContext(map(), flowScopeParams, map());
+        Event event = viewReportAction.chooseExportMode(requestContext);
+        assertEquals("showInputControlsByExport", event.getId());
+    }
+
+    @Test
+    public void testChooseExportMode_withExportReport() {
+        final Map<String, Object> flowScopeParams = map(
+                entry("reportOutput", "value"),
+                entry("hasInputControls", Boolean.valueOf(false)),
+                entry("reportForceControls", Boolean.valueOf(false)));
+
+        mockRequestContext(map(), flowScopeParams, map());
+        Event event = viewReportAction.chooseExportMode(requestContext);
+        assertEquals("exportReport", event.getId());
     }
 
     private void mockRequestContext(

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -277,4 +277,115 @@ public class QueryELDeserializationFromJSONTest extends QueryTest {
         assertThat(cq.getWhere().getParameters().get("Cascading_name_single_select").getObject().toString(), is("'Adams-Steen Transportation Holdings'"));
     }
 
+
+    @Test
+    public void ensureSelectFieldWithExpression() throws Exception {
+        String jsonString = "{\n" +
+                "  \"select\" : {\n" +
+                "    \"fields\" : [ {\n" +
+                "      \"id\" : \"fieldName\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      },\n" +
+                "      \"field\" : \"sales\"\n" +
+                "    }, {\n" +
+                "      \"id\" : \"fieldName2\",\n" +
+                "      \"field\" : \"city\"\n" +
+                "    } ]\n" +
+                "  }\n" +
+                "}";
+
+        ClientMultiLevelQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+        assertThat(cq, is(instanceOf(ClientMultiLevelQuery.class)));
+        assertThat(cq.getSelect().getFields().size(), is(2));
+        assertThat(cq.getSelect().getFields().get(0).getFieldExpression(), is("sum(sales)"));
+    }
+
+
+    @Test
+    public void ensureSelectOneAggregation_groupByExpression() throws Exception {
+        String jsonString = "{\n" +
+                "  \"select\" : {\n" +
+                "    \"aggregations\" : [ {\n" +
+                "      \"functionName\" : \"Average\",\n" +
+                "      \"fieldRef\" : \"sales\"\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"groupBy\" : [ {\n" +
+                "    \"group\" : {\n" +
+                "      \"id\" : \"g1\",\n" +
+                "      \"field\" : \"city\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  } ]\n" +
+                "}";
+        ClientMultiLevelQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+        assertThat(cq.getGroupBy().getGroupAxis().get(0).getFieldExpression(), is("sum(sales)"));
+    }
+
+       @Test
+        public void ensureSelectOneAggregation_orderByExpression() throws Exception {
+            String jsonString = "{\n" +
+                "  \"select\" : {\n" +
+                "    \"aggregations\" : [ {\n" +
+                "      \"functionName\" : \"Average\",\n" +
+                "      \"fieldRef\" : \"sales\"\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"orderBy\" : [ {\n" +
+                "    \"expression\" : {\n" +
+                "      \"string\" : \"sum(sales)\"\n" +
+                "    },\n" +
+                "    \"fieldRef\" : \"city\",\n" +
+                "    \"ascending\" : true\n" +
+                "  } ]\n" +
+                "}";
+
+        ClientMultiLevelQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+        assertThat(cq.getOrderBy().get(0).getFieldExpression(), is("sum(sales)"));
+    }
+
+    @Test
+    public void ensureExpresssionsOnAll() throws Exception {
+        String jsonString = "{\n" +
+                "  \"select\" : {\n" +
+                "    \"fields\" : [ {\n" +
+                "      \"id\" : \"fieldName\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      },\n" +
+                "      \"field\" : \"sales\"\n" +
+                "    } ],\n" +
+                "    \"aggregations\" : [ {\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      },\n" +
+                "      \"fieldRef\" : \"sales\"\n" +
+                "    } ]\n" +
+                "  },\n" +
+                "  \"groupBy\" : [ {\n" +
+                "    \"group\" : {\n" +
+                "      \"id\" : \"g1\",\n" +
+                "      \"field\" : \"city\",\n" +
+                "      \"expression\" : {\n" +
+                "        \"string\" : \"sum(sales)\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  } ],\n" +
+                "  \"orderBy\" : [ {\n" +
+                "    \"expression\" : {\n" +
+                "      \"string\" : \"sum(sales)\"\n" +
+                "    },\n" +
+                "    \"fieldRef\" : \"city\",\n" +
+                "    \"ascending\" : true\n" +
+                "  } ]\n" +
+                "}";
+        ClientMultiLevelQuery cq = dtoFromJSONString(jsonString, ClientMultiLevelQuery.class);
+        assertThat(cq.getSelect().getFields().get(0).getFieldExpression(), is("sum(sales)"));
+        assertThat(cq.getGroupBy().getGroupAxis().get(0).getFieldExpression(), is("sum(sales)"));
+        assertThat(cq.getOrderBy().get(0).getFieldExpression(), is("sum(sales)"));
+
+    }
 }

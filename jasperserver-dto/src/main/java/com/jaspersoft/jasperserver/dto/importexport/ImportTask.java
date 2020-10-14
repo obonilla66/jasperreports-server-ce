@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -41,6 +41,9 @@ public class ImportTask implements DeepCloneable<ImportTask> {
     private String organization;
     private String brokenDependencies;
     private List<String> parameters;
+    private String keyAlias;
+    private String secretKey;
+    private String secretUri;
 
     public ImportTask() {
     }
@@ -51,6 +54,9 @@ public class ImportTask implements DeepCloneable<ImportTask> {
         this.organization = other.getOrganization();
         this.brokenDependencies = other.getBrokenDependencies();
         this.parameters = copyOf(other.getParameters());
+        this.keyAlias = other.getKeyAlias();
+        this.secretKey = other.getSecretKey();
+        this.secretUri = other.getSecretUri();
     }
 
     @XmlElement(name = "organization")
@@ -84,6 +90,36 @@ public class ImportTask implements DeepCloneable<ImportTask> {
         return this;
     }
 
+    @XmlElement(name = "keyAlias")
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    public ImportTask setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
+        return this;
+    }
+
+    @XmlElement(name = "secretKey")
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public ImportTask setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+        return this;
+    }
+
+    @XmlElement(name = "secretUri")
+    public String getSecretUri() {
+        return secretUri;
+    }
+
+    public ImportTask setSecretUri(String secretUri) {
+        this.secretUri = secretUri;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -92,6 +128,12 @@ public class ImportTask implements DeepCloneable<ImportTask> {
         ImportTask that = (ImportTask) o;
 
         if (getOrganization() != null ? !getOrganization().equals(that.getOrganization()) : that.getOrganization() != null)
+            return false;
+        if (keyAlias != null ? !keyAlias.equals(that.getKeyAlias()) : that.getKeyAlias() != null)
+            return false;
+        if (secretKey != null ? !secretKey.equals(that.getSecretKey()) : that.getSecretKey() != null)
+            return false;
+        if (secretUri != null ? !secretUri.equals(that.getSecretUri()) : that.getSecretUri() != null)
             return false;
         if (getBrokenDependencies() != null ? !getBrokenDependencies().equals(that.getBrokenDependencies()) : that.getBrokenDependencies() != null)
             return false;
@@ -104,6 +146,9 @@ public class ImportTask implements DeepCloneable<ImportTask> {
         int result = getOrganization() != null ? getOrganization().hashCode() : 0;
         result = 31 * result + (getBrokenDependencies() != null ? getBrokenDependencies().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
+        result = 31 * result + (keyAlias != null ? keyAlias.hashCode() : 0);
+        result = 31 * result + (secretKey != null ? secretKey.hashCode() : 0);
+        result = 31 * result + (secretUri != null ? secretUri.hashCode() : 0);
         return result;
     }
 
@@ -113,6 +158,8 @@ public class ImportTask implements DeepCloneable<ImportTask> {
                 "organization='" + organization + '\'' +
                 ", brokenDependencies='" + brokenDependencies + '\'' +
                 ", parameters=" + parameters +
+                ", keyAlias='" + keyAlias + '\'' +
+                ", secretUri='" + secretUri + '\'' +
                 '}';
     }
 

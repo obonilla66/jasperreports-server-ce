@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,4 +25,7 @@
     <parameters>
         <parameter>TEST_PARAMETER</parameter>
     </parameters>
+    <keyAlias>TEST_IMPORT_EXPORT_KEY_ALIAS</keyAlias>
+    <secretKey>TEST_IMPORT_EXPORT_SECRET_KEY</secretKey>
+    <secretUri>TEST_IMPORT_EXPORT_SECRET_URI</secretUri>
 </import>

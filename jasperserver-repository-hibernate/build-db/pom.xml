@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -130,9 +130,9 @@
                                         </fileset>
                                     </configuration>
                                     <hbm2ddl drop="true" create="false" export="${metadata.database.generate}"
-                                             outputfilename="js-drop.ddl" delimiter=";" format="true"/>
+                                             outputfilename="js-drop.ddl" delimiter=";" format="true" console="${hbm2ddl.console}"/>
                                     <hbm2ddl drop="false" create="true" export="${metadata.database.generate}"
-                                             outputfilename="js-create.ddl" delimiter=";" format="true"/>
+                                             outputfilename="js-create.ddl" delimiter=";" format="true" console="${hbm2ddl.console}"/>
                                 </hibernatetool>
                             </tasks>
                         </configuration>

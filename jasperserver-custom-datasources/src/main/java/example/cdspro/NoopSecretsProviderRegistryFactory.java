@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,14 +21,14 @@
 
 package example.cdspro;
 
-import java.util.Collections;
-import java.util.List;
-
 import net.sf.jasperreports.engine.JRPropertiesMap;
 import net.sf.jasperreports.extensions.ExtensionsRegistry;
 import net.sf.jasperreports.extensions.ExtensionsRegistryFactory;
 import net.sf.jasperreports.util.SecretsProvider;
 import net.sf.jasperreports.util.SecretsProviderFactory;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This is a factory which creates an extension registry which creates a provider factory which creates a provider which creates a secret.

@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,o,r){r.exports={headers:{"X-Suppress-Basic":"true","Cache-Control":"no-cache, no-store",Pragma:"no-cache"}}});

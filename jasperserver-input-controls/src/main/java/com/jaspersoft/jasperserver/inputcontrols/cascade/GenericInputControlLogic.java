@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -34,14 +34,7 @@ import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlV
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlValuesInformation;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlsInformation;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.EhcacheEngineService;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsContainer;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.QueryParameterDescriptor;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
@@ -50,10 +43,16 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionSer
 import com.jaspersoft.jasperserver.api.security.internalAuth.InternalAuthenticationTokenImpl;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValue;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValuesListWrapper;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManager;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValueFormattingUtils;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.InputControlValueClassResolver;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterResolver;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -61,19 +60,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver.SKIP_PROFILE_ATTRIBUTES_RESOLVING;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.InputControlValueClassResolver.getValueClass;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_LABEL;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_NO_LABEL;
 
 
 /**
@@ -88,6 +79,9 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
 
     public static final String INPUT_CONTROL_CONFIGURATION_KEY_HANDLER = "handler";
     public static final String INPUT_CONTROL_CONFIGURATION_KEY_UI_TYPE = "uiType";
+
+    private final static Log log = LogFactory.getLog(GenericInputControlLogic.class);
+
     @javax.annotation.Resource
     protected ControlLogicCacheManager controlLogicCacheManager;
     @javax.annotation.Resource
@@ -98,6 +92,10 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
     protected Map<String, Map<String, Object>> inputControlTypeConfiguration;
     @javax.annotation.Resource
     protected FilterResolver filterResolver;
+    @javax.annotation.Resource
+    protected boolean allowExtraReportParameters = false;
+    @javax.annotation.Resource
+    protected ValueFormattingUtils valueFormattingUtils;
 
     /**
      * This is the MAIN public interface method for getting controls structure in JasperServer CE
@@ -243,6 +241,60 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
                 ? cachedRepositoryService.getResource(DataType.class, inputControl.getDataType()) : null;
     }
 
+    public SelectedValuesListWrapper getSelectedValues(String containerUri, Map<String, String[]> requestParameters) throws CascadeResourceNotFoundException {
+       return getSelectedValues(getContainer(containerUri), requestParameters);
+    }
+
+    public SelectedValuesListWrapper getSelectedValues(final T container, Map<String, String[]> requestParameters) throws CascadeResourceNotFoundException {
+        StateParameters stateParameters = new StateParameters(container, null, requestParameters).invoke();
+
+        List<Map<String,List<InputControlOption>>> values = getSelectedValuesFromInputControls(container, stateParameters.getControls(),
+                stateParameters.getDataSource(), stateParameters.getTypedParameter(), stateParameters.getParameterTypes(), stateParameters.getInfos());
+
+        return getSelectedValuesListWrapper(values);
+    }
+
+    protected List<Map<String,List<InputControlOption>>> getSelectedValuesFromInputControls(T container, List<InputControl> controls, ResourceReference dataSource, Map<String, Object> executionParameters,
+            Map<String, Class<?>> parameterTypes, ReportInputControlsInformation infos) throws CascadeResourceNotFoundException {
+
+        List<Map<String,List<InputControlOption>>> values = new ArrayList<>();
+        for (InputControl inputControl : controls) {
+            InputControlHandler icHandler = getHandlerForInputControl(inputControl);
+            ReportInputControlInformation info = infos.getInputControlInformation(inputControl.getName());
+
+            final Map<String,List<InputControlOption>> value = icHandler.filterSelectedValues(inputControl, dataSource, executionParameters, parameterTypes, info);
+            if (value != null) {
+                values.add(value);
+            }
+        }
+        return values;
+    }
+
+    protected SelectedValuesListWrapper getSelectedValuesListWrapper(List<Map<String,List<InputControlOption>>> values) {
+        SelectedValuesListWrapper selectedValuesListWrapper = null;
+        List<SelectedValue> SelectedValueList = new ArrayList<>();
+        SelectedValue selectedValue;
+        for (Map<String,List<InputControlOption>> value: values) {
+            for(Map.Entry<String,List<InputControlOption>> defaultValueMap: value.entrySet()) {
+                selectedValue = createSelectedValueInstance();
+                selectedValue.setId(defaultValueMap.getKey());
+                selectedValue.setOptions(defaultValueMap.getValue());
+                SelectedValueList.add(selectedValue);
+            }
+        }
+
+        if(!SelectedValueList.isEmpty()) {
+            selectedValuesListWrapper = createSelectedValuesListWrapper();
+            selectedValuesListWrapper.setSelectedValues(SelectedValueList);
+        }
+
+        return selectedValuesListWrapper;
+    }
+
+    private SelectedValuesListWrapper createSelectedValuesListWrapper() {
+        return new SelectedValuesListWrapper();
+    }
+
     /**
      * This is the MAIN public interface method for getting values in JasperServer CE
      * Resolves the Input Controls values based on given parameters
@@ -250,51 +302,11 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
     @Override
     public final List<InputControlState> getValuesForInputControlsFromRawData(final T container, Set<String> inputControlIds, Map<String, String[]> requestParameters)
             throws CascadeResourceNotFoundException {
-        if (requestParameters == null) {
-            requestParameters = Collections.emptyMap();
-        }
+        StateParameters stateParameters = new StateParameters(container, inputControlIds, requestParameters).invoke();
 
-        if (requestParameters.containsKey(SKIP_PROFILE_ATTRIBUTES_RESOLVING)) {
-            List<?> attributes = new ArrayList<Object>() {{
-                if (container.getAttributes() != null) addAll(container.getAttributes());
-                add(SKIP_PROFILE_ATTRIBUTES_RESOLVING);
-            }};
-            container.setAttributes(attributes);
-        }
-
-        // resolve all input controls
-        List<InputControl> allControls = getAllInputControls(container);
-        final ResourceReference dataSource = getMainDataSource(container);
-        resolveCascadingOrder(allControls, dataSource);
-
-        // cast the request parameters to required types and merge them with default values
-        ReportInputControlsInformation infos = getReportInputControlsInformation(container);
-        ValidationErrors validationErrors = new ValidationErrorsImpl();
-        Map<String, Object> typedParameters = getTypedParameters(allControls, requestParameters, infos, validationErrors);
-
-        Map<String, Class<?>> parameterTypes = new HashMap<String, Class<?>>(allControls.size());
-        for (InputControl inputControl : allControls) {
-            DataType dataType = getDataType(inputControl);
-            parameterTypes.put(inputControl.getName(), InputControlValueClassResolver.getValueClass(dataType, infos.getInputControlInformation(inputControl.getName()), false));
-        }
-
-        if (requestParameters.containsKey(EhcacheEngineService.IC_REFRESH_KEY)) {
-        	typedParameters.put(EhcacheEngineService.IC_REFRESH_KEY,"true");
-        }
-
-        Boolean isDiagnostic = infos.getDiagnosticProperty();
-        if (isDiagnostic) {
-            typedParameters.put(
-                    DiagnosticSnapshotPropertyHelper.ATTRIBUTE_IS_DIAG_SNAPSHOT,
-                    String.valueOf(isDiagnostic));
-        }
-
-        List<InputControl> controls = filterSelectedInputControls(inputControlIds, allControls);
-        controls = FluentIterable.from(controls).filter(RefSets.RESOLVED_PREDICATE).toList();
-
-        List<InputControlState> states = getValuesForInputControls(container, controls,
-                dataSource, typedParameters, parameterTypes, infos);
-        addValidationErrorsToInputControlStates(states, validationErrors, allControls);
+        List<InputControlState> states = getValuesForInputControls(container, stateParameters.getControls(),
+                stateParameters.getDataSource(), stateParameters.getTypedParameter(), stateParameters.getParameterTypes(), stateParameters.getInfos());
+        addValidationErrorsToInputControlStates(states, stateParameters.getValidationErrors(), stateParameters.getAllControls());
 
         return states;
     }
@@ -411,14 +423,16 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
 
     protected List<InputControl> filterSelectedInputControls(Set<String> inputControlIds, List<InputControl> allControls) {
         List<InputControl> selectedControls = new ArrayList<InputControl>();
-        if (inputControlIds != null && !inputControlIds.isEmpty())
+        if (inputControlIds != null && !inputControlIds.isEmpty()) {
             for (InputControl control : allControls) {
                 if (inputControlIds.contains(control.getName())) {
                     selectedControls.add(control);
                 }
             }
-        else
+        }
+        else {
             selectedControls.addAll(allControls);
+        }
         return selectedControls;
     }
 
@@ -490,6 +504,11 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
         List<InputControl> controls = getAllInputControls(container);
         ReportInputControlsInformation infos = getReportInputControlsInformation(container);
         Map<String, String[]> formattedValues = new HashMap<String, String[]>(controls.size());
+        // fix for JS-34780
+        if (allowExtraReportParameters) {
+            // add all parameters as strings (even unknown), and modify values if needed based on IC logic in next block
+            formattedValues = valueFormattingUtils.formatTypedParameters(typedParameters);
+        }
 
         for (InputControl control : controls) {
             InputControlHandler icHandler = getHandlerForInputControl(control);
@@ -521,6 +540,11 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
 
         //Need to preserve order in result map
         Map<String, Object> result = new LinkedHashMap<String, Object>();
+        // fix for JS-34780
+        if (allowExtraReportParameters) {
+            // add all parameters (even unknown), and correct / remove them later on
+            result.putAll(requestParameters);
+        }
         if (inputControls != null) {
             if (requestParameters == null) requestParameters = Collections.emptyMap();
             for (InputControl inputControl : inputControls) {
@@ -545,9 +569,30 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
                         icHandler.applyNothingSelected(inputControlName, result);
                     }
                 }
+
+                // Add parameters such as limit, offset, criteria and select
+                addOtherParameters(requestParameters, result, inputControlName);
+            }
+            if(requestParameters.get("includeTotalCount") != null) {
+                result.put("includeTotalCount", requestParameters.get("includeTotalCount")[0]);
             }
         }
         return result;
+    }
+
+    private void addOtherParameters(Map<String, String[]> requestParameters, Map<String, Object> result, String inputControlName) {
+        if(requestParameters.get(inputControlName+"_limit") != null) {
+            result.put(inputControlName+"_limit", requestParameters.get(inputControlName+"_limit")[0]);
+        }
+        if(requestParameters.get(inputControlName+"_select") != null) {
+            result.put(inputControlName+"_select", requestParameters.get(inputControlName+"_select")[0]);
+        }
+        if(requestParameters.get(inputControlName+"_offset") != null) {
+            result.put(inputControlName+"_offset", requestParameters.get(inputControlName+"_offset")[0]);
+        }
+        if(requestParameters.get(inputControlName+"_criteria") != null) {
+            result.put(inputControlName+"_criteria", requestParameters.get(inputControlName+"_criteria")[0]);
+        }
     }
 
     protected InputControlHandler getHandlerForInputControl(InputControl inputControl) {
@@ -599,5 +644,106 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
     @Override
     public Map<String, String[]> formatTypedParameters(String containerUri, Map<String, Object> typedParameters) throws CascadeResourceNotFoundException {
         return formatTypedParameters(getContainer(containerUri), typedParameters);
+    }
+
+    private SelectedValue createSelectedValueInstance() {
+        return new SelectedValue();
+    }
+
+    private class StateParameters {
+        private T container;
+        private Set<String> inputControlIds;
+        private Map<String, String[]> requestParameters;
+        private List<InputControl> allControls;
+        private ResourceReference dataSource;
+        private ReportInputControlsInformation infos;
+        private ValidationErrors validationErrors;
+        private Map<String, Object> typedParameter;
+        private Map<String, Class<?>> parameterTypes;
+        private List<InputControl> controls;
+
+        public StateParameters(T container, Set<String> inputControlIds, Map<String, String[]> requestParameters) {
+            this.container = container;
+            this.inputControlIds = inputControlIds;
+            this.requestParameters = requestParameters;
+        }
+
+        public List<InputControl> getAllControls() {
+            return allControls;
+        }
+
+        public ResourceReference getDataSource() {
+            return dataSource;
+        }
+
+        public ReportInputControlsInformation getInfos() {
+            return infos;
+        }
+
+        public ValidationErrors getValidationErrors() {
+            return validationErrors;
+        }
+
+        public Map<String, Object> getTypedParameter() {
+            return typedParameter;
+        }
+
+        public Map<String, Class<?>> getParameterTypes() {
+            return parameterTypes;
+        }
+
+        public List<InputControl> getControls() {
+            return controls;
+        }
+
+        public StateParameters invoke() throws CascadeResourceNotFoundException {
+            if (requestParameters == null) {
+                requestParameters = Collections.emptyMap();
+            }
+
+            if (requestParameters.containsKey(SKIP_PROFILE_ATTRIBUTES_RESOLVING)) {
+                List<?> attributes = new ArrayList<Object>() {{
+                    if (container.getAttributes() != null) addAll(container.getAttributes());
+                    add(SKIP_PROFILE_ATTRIBUTES_RESOLVING);
+                }};
+                container.setAttributes(attributes);
+            }
+
+            // resolve all input controls
+            allControls = getAllInputControls(container);
+            dataSource = getMainDataSource(container);
+            resolveCascadingOrder(allControls, dataSource);
+
+            // cast the request parameters to required types and merge them with default values
+            infos = getReportInputControlsInformation(container);
+            validationErrors = new ValidationErrorsImpl();
+            typedParameter = getTypedParameters(allControls, requestParameters, infos, validationErrors);
+
+            parameterTypes = new HashMap<String, Class<?>>(allControls.size());
+            for (InputControl inputControl : allControls) {
+                DataType dataType = getDataType(inputControl);
+                parameterTypes.put(inputControl.getName(), InputControlValueClassResolver.getValueClass(dataType, infos.getInputControlInformation(inputControl.getName()), false));
+            }
+
+            if (requestParameters.containsKey(EhcacheEngineService.IC_REFRESH_KEY)) {
+                typedParameter.put(EhcacheEngineService.IC_REFRESH_KEY,"true");
+            }
+
+
+            if (requestParameters.containsKey(WITH_LABEL) && requestParameters.get(WITH_LABEL)[0].equals("false")) {
+                typedParameter.put(WITH_NO_LABEL,"true");
+            }
+
+            Boolean isDiagnostic = infos.getDiagnosticProperty();
+            if (isDiagnostic) {
+                typedParameter.put(
+                        DiagnosticSnapshotPropertyHelper.ATTRIBUTE_IS_DIAG_SNAPSHOT,
+                        String.valueOf(isDiagnostic));
+            }
+
+            controls = filterSelectedInputControls(inputControlIds, allControls);
+            controls = FluentIterable.from(controls).filter(RefSets.RESOLVED_PREDICATE).toList();
+            return this;
+        }
     }
 }

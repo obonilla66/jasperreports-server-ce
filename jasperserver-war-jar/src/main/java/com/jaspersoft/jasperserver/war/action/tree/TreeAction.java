@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.war.action.tree;
 
+import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
@@ -124,20 +125,20 @@ public class TreeAction extends MultiAction {
 
     	TreeDataProvider treeDataProvider = findProvider(context, providerId);
 
-        TreeNode treeNode;
+        TreeNode treeNode = null;
         if (prefetchList == null) {
             try {
                 treeNode = treeDataProvider.getNode(exContext(), uri, d);
             }  catch (AccessDeniedException e) {
                 treeNode = treeDataProvider.getNode(exContext(), configuration.getPublicFolderUri(), d);
-            }
+			}
         } else {
             try {
                 treeNode = TreeHelper.getSubtree(exContext(), treeDataProvider, uri, prefetchList, d);
             } catch (AccessDeniedException e) {
                 treeNode = TreeHelper.getSubtree(exContext(), treeDataProvider,
 						configuration.getPublicFolderUri(), prefetchList, d);
-            }
+			}
         }
 
     	String model = "";

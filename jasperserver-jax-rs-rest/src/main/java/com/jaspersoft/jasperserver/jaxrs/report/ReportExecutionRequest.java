@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,6 +22,10 @@ package com.jaspersoft.jasperserver.jaxrs.report;
 
 import com.jaspersoft.jasperserver.dto.reports.ReportParameters;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -31,7 +35,12 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @version $Id: ReportExecutionRequest.java 26599 2012-12-10 13:04:23Z ykovalchyk $
  */
 @XmlRootElement
+@Schema(name = "reportExecutionRequest", description = "Descriptor for the report execution request.")
 public class ReportExecutionRequest {
+	
+	public static final String MARKUP_TYPE_FULL = "full";
+	public static final String MARKUP_TYPE_EMBEDDABLE = "embeddable";
+
     private String reportUnitUri;
     private Boolean freshData = false;
     private Boolean saveDataSnapshot = false;
@@ -49,6 +58,7 @@ public class ReportExecutionRequest {
     private String anchor;
     private ReportParameters parameters;
 
+    @Schema(description = "Specifies the report page anchor name.")
     public String getAnchor() {
         return anchor;
     }
@@ -57,6 +67,11 @@ public class ReportExecutionRequest {
         this.anchor = anchor;
     }
 
+	@Schema(
+			description = "Specifies if the HTML output will be generated as full HTML document or as embeddable HTML content.", 
+			allowableValues = {MARKUP_TYPE_FULL, MARKUP_TYPE_EMBEDDABLE},
+			example = MARKUP_TYPE_FULL
+			)
     public String getMarkupType() {
         return markupType;
     }
@@ -65,6 +80,11 @@ public class ReportExecutionRequest {
         this.markupType = markupType;
     }
 
+	@Schema(
+			type="boolean", 
+			description = "Affects HTML export only. If true, then inline scripts are allowed, otherwise no inline script is included in the HTML output.", 
+			defaultValue = "true",
+			example = "false")
     public Boolean isAllowInlineScripts() {
         return allowInlineScripts;
     }
@@ -73,6 +93,11 @@ public class ReportExecutionRequest {
         this.allowInlineScripts = allowInlineScripts;
     }
 
+	@Schema(
+			description = "Specifies the base URL that the report will use to load static resources such as JavaScript files. "
+					+ "You can also set the `deploy.base.url` property in the `.../WEB-INF/js.config.properties` file to set "
+					+ "this value permanently. If both are set, the `baseUrl` parameter in this request takes precedence.",
+			example = "http://localhost:8080/jasperserver-pro")
     public String getBaseUrl() {
         return baseUrl;
     }
@@ -81,7 +106,13 @@ public class ReportExecutionRequest {
         this.baseUrl = baseUrl;
     }
 
-    public String getReportUnitUri() {
+	@Schema(
+			description = "Repository path (URI) of the report to run. For commercial editions with "
+					+ "organizations, the URI is relative to the logged-in user’s organization.", 
+			required=true,
+			example = "/public/Samples/Reports/AllAccounts"
+			)
+   public String getReportUnitUri() {
         return reportUnitUri;
     }
 
@@ -89,6 +120,14 @@ public class ReportExecutionRequest {
         this.reportUnitUri = reportUnitUri;
     }
 
+	@Schema(
+			type="boolean", 
+			description = "When data snapshots are enabled, specifies whether the report should get fresh data by querying "
+					+ "the data source or if false, use a previously saved data snapshot (if any). By default, if a saved "
+					+ "data snapshot exists for the report it will be used when running the report.", 
+			defaultValue = "false",
+			example = "true"
+			)
     public Boolean getFreshData() {
         return freshData;
     }
@@ -97,6 +136,13 @@ public class ReportExecutionRequest {
         this.freshData = freshData;
     }
 
+	@Schema(
+			type="boolean", 
+			description = "When data snapshots are enabled, specifies whether the data snapshot for the report should be "
+					+ "written or overwritten with the new data from this execution of the report.", 
+			defaultValue = "false",
+			example = "true"
+			)
     public Boolean getSaveDataSnapshot() {
         return saveDataSnapshot;
     }
@@ -105,6 +151,15 @@ public class ReportExecutionRequest {
         this.saveDataSnapshot = saveDataSnapshot;
     }
 
+	@Schema(
+			type="boolean", 
+			description = "In a commercial editions of the server where HighCharts are used in the report, "
+					+ "this property determines whether the JavaScript necessary for interaction is generated "
+					+ "and returned as an attachment when exporting to HTML. If false, the chart is generated as "
+					+ "a non-interactive image file (also as an attachment).", 
+			defaultValue = "true",
+			example = "false"
+			)
     public Boolean getInteractive() {
         return interactive;
     }
@@ -113,6 +168,12 @@ public class ReportExecutionRequest {
         this.interactive = interactive;
     }
 
+	@Schema(
+			type="boolean", 
+			description = "When set to true, the report is generated as a single long page. This can be used with HTML output "
+					+ "to avoid pagination. When omitted, the ignorePagination property on the JRXML, if any, is used. ", 
+			example = "false"
+			)
     public Boolean getIgnorePagination() {
         return ignorePagination;
     }
@@ -121,6 +182,16 @@ public class ReportExecutionRequest {
         this.ignorePagination = ignorePagination;
     }
 
+	@Schema(
+			type="boolean", 
+			description = "Determines whether reportExecution is synchronous or asynchronous. When set to true, "
+					+ "the response is sent immediately and the client must poll the report status and later "
+					+ "download the result when ready. By default, this property is false and the operation will "
+					+ "wait until the report execution is complete, forcing the client to wait as well, but allowing "
+					+ "the client to download the report immediately after the response.", 
+			defaultValue = "false",
+			example = "true"
+			)
     public Boolean getAsync() {
         return async;
     }
@@ -129,6 +200,12 @@ public class ReportExecutionRequest {
         this.async = async;
     }
 
+	@Schema(
+			description = "Advanced property used when requesting a report as a JasperPrint object. This property can specify "
+					+ "a JasperReports Library generic print element transformers of class "
+					+ "`net.sf.jasperreports.engine.export.GenericElementTransformer`. These transformers are pluggable as "
+					+ "JasperReports Library extensions."
+			)
     public String getTransformerKey() {
         return transformerKey;
     }
@@ -137,6 +214,15 @@ public class ReportExecutionRequest {
         this.transformerKey = transformerKey;
     }
 
+	@Schema(
+			description = "Specifies the desired output format: `pdf`, `html`, `csv`, `xls`, `xlsx`, `docx`, `pptx`, `odt`, `ods`, `rtf`, `xml`, "
+					+ "`jrprint`.\n\n"
+					+ "As of JasperReports Server 6.0, it is also possible to specify `json` if your reports are designed for data "
+					+ "export. For more information, see the JasperReports Library samples documentation.", 
+			required=true,
+			allowableValues =  {"pdf", "html", "csv", "xls", "xlsx", "docx", "pptx", "odt", "ods", "rtf", "xml", "jrprint", "json"},
+			example = "html"
+			)
     public String getOutputFormat() {
         return outputFormat;
     }
@@ -145,6 +231,15 @@ public class ReportExecutionRequest {
         this.outputFormat = outputFormat;
     }
 
+	@Schema(
+			description = "For HTML output, this property specifies the URL path to use for downloading the attachment files "
+					+ "(JavaScript and images). The full path of the default value is:\n\n"
+					+ "`{contextPath}/rest_v2/reportExecutions/{reportExecutionId}/exports/{exportExecutionId}/attachments/`\n\n" 
+					+ "You can specify a different URL path using the placeholders `{contextPath}`, `{reportExecutionId}`, and "
+					+ "`{exportExecutionId}`.", 
+			defaultValue = "attachments",
+			example = "attachments"
+			)
     public String getAttachmentsPrefix() {
         return attachmentsPrefix;
     }
@@ -153,7 +248,12 @@ public class ReportExecutionRequest {
         this.attachmentsPrefix = attachmentsPrefix;
     }
 
-    public String getPages() {
+	@Schema(
+			description = "Specifies a single page or page range to generate a partial report. The format is "
+					+ "either `{singlePageNumber}` or `{startPageNumber}-{endPageNumber}`",
+			example = "2-3"
+			)
+   public String getPages() {
         return pages;
     }
 
@@ -161,6 +261,7 @@ public class ReportExecutionRequest {
         this.pages = pages;
     }
 
+	@Schema(description = "A list of parameters and their values.", implementation = ReportParameters.class)
     public ReportParameters getParameters() {
         return parameters;
     }

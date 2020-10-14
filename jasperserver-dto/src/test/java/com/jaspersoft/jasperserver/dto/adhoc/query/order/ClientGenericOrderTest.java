@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.dto.adhoc.query.order;
 
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.basetests.BaseDTOJSONPresentableTest;
 import org.junit.jupiter.api.Test;
 
@@ -53,7 +54,9 @@ class ClientGenericOrderTest extends BaseDTOJSONPresentableTest<ClientGenericOrd
                 createFullyConfiguredInstance().setAggregation(TEST_AGGREGATION_ALT),
                 createFullyConfiguredInstance().setAscending(null),
                 createFullyConfiguredInstance().setFieldReference(null),
-                createFullyConfiguredInstance().setAggregation(null)
+                createFullyConfiguredInstance().setAggregation(null),
+                createFullyConfiguredInstance().setExpressionContainer(
+                        new ClientExpressionContainer("sum(field1)"))
         );
     }
 

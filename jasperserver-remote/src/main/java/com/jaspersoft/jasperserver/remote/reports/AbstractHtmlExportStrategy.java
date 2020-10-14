@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -253,4 +253,12 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
 		}
 		return mimeType;
 	}
+
+    protected JasperReportsContext getJasperReportsContext() {
+        return this.jasperReportsContext;
+    }
+
+    protected String getDeployBaseUrl() {
+        return this.deployBaseUrl;
+    }
 }

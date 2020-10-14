@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
@@ -38,7 +39,7 @@ import java.util.List;
 @Service
 public class ContentResourceConverter extends ResourceConverterImpl<ContentResource, ClientFile>{
 
-    @Override
+        @Override
     protected ContentResource resourceSpecificFieldsToServer(ClientFile clientObject, ContentResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         if(resultToUpdate.getFileType() != null &&
                 (!resultToUpdate.getFileType().equals(clientObject.getType().name()) &&
@@ -54,7 +55,17 @@ public class ContentResourceConverter extends ResourceConverterImpl<ContentResou
 
         if (clientObject.getContent() != null && !"".equals(clientObject.getContent())) {
             try {
-                resultToUpdate.setData(DatatypeConverter.parseBase64Binary(clientObject.getContent()));
+                byte[] data = DatatypeConverter.parseBase64Binary(clientObject.getContent());
+                
+                // If the file to create/update is of type secure file, we should encrypt the
+                // content if it is not encrypted yet
+                if (resultToUpdate.getFileType() != null
+                    && resultToUpdate.getFileType().equals(ClientFile.FileType.secureFile.name())) {
+                        data = PasswordCipherer.getInstance().encodePassword(new String(data)).getBytes();
+                }
+                
+                resultToUpdate.setData(data);
+                
             } catch (IllegalArgumentException e) {
                 throw new IllegalParameterValueException("content", "");
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,8 +21,9 @@
 package com.jaspersoft.buildomatic;
 
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.tools.ant.PropertyHelper;
 
@@ -45,8 +46,8 @@ public class JSPropertyEvaluator implements PropertyHelper.PropertyEvaluator {
 			else if (property.startsWith(DECRYPT_PREFIX)) {
 				String oStr = propertyHelper.getProject().getProperty(property.substring(DECRYPT_PREFIX.length()));
 				if (EncryptionEngine.isEncrypted(oStr)) {
-					KeystoreManager ksm = KeystoreManager.getInstance();
-					o = EncryptionEngine.decrypt(ksm.getKey(BuildEnc.ID), oStr);
+					JrsKeystore ksm = KeystoreManager.getInstance().getKeystore(null);
+					o = EncryptionEngine.decrypt(ksm.getKey(BuildEnc.getConfId()), oStr);
 				}
 				else
 					o = oStr; //not encrypted: remove decrypt: namespace

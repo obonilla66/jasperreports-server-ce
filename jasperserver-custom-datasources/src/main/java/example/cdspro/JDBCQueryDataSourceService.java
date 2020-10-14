@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,14 +23,11 @@ package example.cdspro;
 
 import net.sf.jasperreports.data.AbstractClasspathAwareDataAdapterService;
 import net.sf.jasperreports.data.jdbc.JdbcDataAdapter;
-import net.sf.jasperreports.engine.DefaultJasperReportsContext;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JRRuntimeException;
-import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.util.JRClassLoader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
@@ -48,7 +45,7 @@ public class JDBCQueryDataSourceService extends AbstractClasspathAwareDataAdapte
 
     public JDBCQueryDataSourceService(JasperReportsContext jasperReportsContext, JdbcDataAdapter jdbcDataAdapter)
     {
-        super(jasperReportsContext, jdbcDataAdapter);
+        super(new ParameterContributorContext(jasperReportsContext, null, null), jdbcDataAdapter);
     }
 
     public JDBCQueryDataSourceService(JdbcDataAdapter jdbcDataAdapter)

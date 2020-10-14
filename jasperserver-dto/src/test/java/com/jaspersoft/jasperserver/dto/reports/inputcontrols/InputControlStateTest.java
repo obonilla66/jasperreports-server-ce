@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -45,6 +45,9 @@ public class InputControlStateTest extends BaseDTOPresentableTest<InputControlSt
     private static final String TEST_ERROR = "TEST_ERROR";
     private static final String TEST_ERROR_1 = "TEST_ERROR_1";
 
+    private static final String TEST_TOTAL_COUNT = "TEST_TOTAL_COUNT";
+    private static final String TEST_TOTAL_COUNT_1 = "TEST_TOTAL_COUNT_1";
+
     private static final List<InputControlOption> TEST_OPTIONS = Collections.singletonList(new InputControlOption().setLabel("TEST_LABEL"));
     private static final List<InputControlOption> TEST_OPTIONS_1 = Collections.singletonList(new InputControlOption().setLabel("TEST_LABEL_1"));
     private static final List<InputControlOption> TEST_OPTIONS_EMPTY = new ArrayList<InputControlOption>();
@@ -57,6 +60,7 @@ public class InputControlStateTest extends BaseDTOPresentableTest<InputControlSt
                 createFullyConfiguredInstance().setId(TEST_ID_1),
                 createFullyConfiguredInstance().setValue(TEST_VALUE_1),
                 createFullyConfiguredInstance().setError(TEST_ERROR_1),
+                createFullyConfiguredInstance().setTotalCount(TEST_TOTAL_COUNT_1),
                 createFullyConfiguredInstance().setOptions(TEST_OPTIONS_1),
                 createFullyConfiguredInstance().setOptions(TEST_OPTIONS_EMPTY),
                 // null values
@@ -64,6 +68,7 @@ public class InputControlStateTest extends BaseDTOPresentableTest<InputControlSt
                 createFullyConfiguredInstance().setId(null),
                 createFullyConfiguredInstance().setValue(null),
                 createFullyConfiguredInstance().setError(null),
+                createFullyConfiguredInstance().setTotalCount(null),
                 createFullyConfiguredInstance().setOptions(null)
         );
     }
@@ -75,6 +80,7 @@ public class InputControlStateTest extends BaseDTOPresentableTest<InputControlSt
                 .setId(TEST_ID)
                 .setValue(TEST_VALUE)
                 .setError(TEST_ERROR)
+                .setTotalCount(TEST_TOTAL_COUNT)
                 .setOptions(TEST_OPTIONS);
     }
 

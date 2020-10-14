@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup.ClientAllGroup.ALL_GROUP_ID;
 import static com.jaspersoft.jasperserver.dto.utils.CustomAssertions.assertNotSameCollection;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -117,5 +118,38 @@ public class ClientMultiLevelQueryTest extends BaseDTOPresentableTest<ClientMult
         ClientMultiLevelQuery instance = createFullyConfiguredInstance();
 
         assertTrue(instance.getSelectedFields().contains(CLIENT_QUERY_FIELD));
+    }
+
+    @Test
+    public void checkFieldStringConstructorsInQuery() {
+        ClientMultiLevelQuery query = new ClientMultiLevelQuery();
+        query.setSelect(
+                new ClientSelect()
+                    .setFieldsStr(Arrays.asList(new String[] {"field1 AS f1"}))
+                    .setAggregationsStr(Arrays.asList(new String[] {"aggField1 AS agf1"}))
+        );
+        query.setGroupBy(
+                new ClientQueryGroupBy()
+                    .setGroupsStr(Arrays.asList(new String[] {
+                            ALL_GROUP_ID,
+                            "group1 AS g1"
+                    }))
+        );
+        query.setOrderByStr(Arrays.asList(new String[] {
+            "f1 DESC", "f2 ASC"
+        }));
+
+        ClientQueryField f1 = new ClientQueryField().setFieldName("field1").setId("f1");
+        assertTrue(query.getSelectedFields().contains(f1));
+
+        ClientQueryGroup.ClientAllGroup allGroup = new ClientQueryGroup.ClientAllGroup();
+        assertTrue(query.getGroups().contains(allGroup));
+        ClientQueryGroup g1 = new ClientQueryGroup().setFieldName("group1").setId("g1");
+        assertTrue(query.getGroups().contains(g1));
+
+        ClientGenericOrder o1 = new ClientGenericOrder().setFieldReference("f1").setAscending(false);
+        assertTrue(query.getOrderBy().contains(o1));
+        ClientGenericOrder o2 = new ClientGenericOrder().setFieldReference("f2").setAscending(true);
+        assertTrue(query.getOrderBy().contains(o2));
     }
 }

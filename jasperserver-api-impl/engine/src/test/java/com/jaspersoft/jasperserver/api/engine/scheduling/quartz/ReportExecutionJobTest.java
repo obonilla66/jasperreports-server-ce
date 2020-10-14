@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -43,8 +43,10 @@ import org.quartz.SchedulerContext;
 import org.quartz.Trigger;
 import org.springframework.context.ApplicationContext;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -129,5 +131,17 @@ public class ReportExecutionJobTest {
 
         reportExecutionJob.execute(jobExecutionContextMock);
         verify(loggingContextProviderMock, times(1)).flushContext();
+    }
+
+    @Test
+    public void getBaseFileNameWithTimeStamp() throws Exception{
+        when(reportJobMock.getBaseOutputFilename()).thenReturn("TestFileName");
+        when(reportJobRepositoryDestinationMock.isSequentialFilenames()).thenReturn(true);
+        String stringDate="20200505202020.222";
+        String pattern="yyyyMMddHHmmss.SSS";
+        Date date1=new SimpleDateFormat(pattern).parse(stringDate);
+        when(jobExecutionContextMock.getFireTime()).thenReturn(date1);
+        when(reportJobRepositoryDestinationMock.getTimestampPattern()).thenReturn(pattern);
+        assertEquals("TestFileName-"+stringDate,reportExecutionJob.getBaseFileName());
     }
 }

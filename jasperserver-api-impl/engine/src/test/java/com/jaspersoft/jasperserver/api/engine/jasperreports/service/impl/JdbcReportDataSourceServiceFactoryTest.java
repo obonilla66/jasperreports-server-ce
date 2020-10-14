@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -43,6 +43,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+
 /**
  * Tests for {@link JdbcReportDataSourceServiceFactory}
  *
@@ -57,6 +61,26 @@ public class JdbcReportDataSourceServiceFactoryTest {
 
     @Mock
     private PooledJdbcDataSourceFactory pooledJdbcDataSourceFactory;
+
+    @Test
+    public void deleteGoogleBigQueryTempFiles()  {
+        String path = new File("target/test-classes").getAbsolutePath().toString();
+        File location = Paths.get(path, "location").toFile();
+        location.mkdir();
+        System.setProperty("java.io.tmpdir",path+"/"+location.getName()+"/");
+        try {
+            File googleBigQueryFile = new File(path+"/"+location.getName()+"/gbq_test.txt");
+            googleBigQueryFile.createNewFile();
+            File nonGoogleBigQueryFile = new File(path+"/"+location.getName()+"/other_test.txt");
+            nonGoogleBigQueryFile.createNewFile();
+            assertEquals(2, location.listFiles().length);
+            JdbcReportDataSourceServiceFactory factory = new JdbcReportDataSourceServiceFactory();
+            assertEquals(1, location.listFiles().length);
+            assertEquals("other_test.txt", location.listFiles()[0].getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test
     public void ensureDefaultTimezoneUsedForEmptyString() {

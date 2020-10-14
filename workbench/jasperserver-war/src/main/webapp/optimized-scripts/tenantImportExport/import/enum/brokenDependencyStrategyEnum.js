@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,i,n){n.exports={FAIL:"fail",SKIP:"skip",INCLUDE:"include"}});

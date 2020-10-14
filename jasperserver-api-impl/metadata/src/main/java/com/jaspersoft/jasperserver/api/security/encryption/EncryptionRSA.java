@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,7 +22,7 @@ package com.jaspersoft.jasperserver.api.security.encryption;
 
 import com.jaspersoft.jasperserver.core.util.StringUtil;
 import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
-import com.jaspersoft.jasperserver.crypto.conf.DeprecatedHttpParameterEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.DeprecatedHttpParameterEnc;
 import org.apache.commons.lang.NotImplementedException;
 
 import javax.crypto.Cipher;
@@ -52,7 +52,7 @@ public class EncryptionRSA extends BaseCipher implements Encryption {
     private static final Pattern SPLIT_BY_WHITESPACE = Pattern.compile("\\s");
     private static final Pattern SPLIT_BY_AMPERSAND = Pattern.compile("&");
     private static final Pattern SPLIT_BY_EQUALITY = Pattern.compile("=");
-    public static final int RADIX_16 = DeprecatedHttpParameterEnc.DEFAULT_RADIX_16;
+    public static final int RADIX_16 = DeprecatedHttpParameterEnc.value().DEFAULT_RADIX_16;
 
     private RSAPrivateCrtKey key;
     private String cipherTransformation;

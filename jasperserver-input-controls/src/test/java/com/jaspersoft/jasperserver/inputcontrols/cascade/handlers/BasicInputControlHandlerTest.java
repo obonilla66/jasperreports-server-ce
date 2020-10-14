@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -32,11 +32,13 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConve
 import com.jaspersoft.jasperserver.dto.common.validations.DateTimeFormatValidationRule;
 import com.jaspersoft.jasperserver.dto.common.validations.MandatoryValidationRule;
 import com.jaspersoft.jasperserver.dto.common.validations.ValidationRule;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
 import com.jaspersoft.jasperserver.dto.resources.ClientDataType;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedRepositoryService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,20 +48,31 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.MessageSource;
 
+
+import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Arrays;
 
+import static org.mockito.Mockito.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.spy;
 
 /**
  * <p></p>
@@ -257,5 +270,97 @@ public class BasicInputControlHandlerTest extends InputControlHandlerBaseTest {
                 inputControlHandler.getState(control, null, typedParamsMap, getParameterTypes(testCaseName), info);
 
         assertControlState(testCaseName, envelope);
+    }
+
+    @Test
+    public void setTotalCount_withValidCount() {
+        InputControlState inputControlState = new InputControlState();
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("includeTotalCount", "true");
+
+        handler.setTotalCount(inputControlState, parameters);
+        assertEquals("1", inputControlState.getTotalCount());
+    }
+
+    @Test
+    public void setTotalCount_withNullCount() {
+        InputControlState inputControlState = new InputControlState();
+
+        Map<String, Object> parameters = new HashMap<>();
+
+        handler.setTotalCount(inputControlState, parameters);
+        assertEquals(null, inputControlState.getTotalCount());
+    }
+
+
+    @Test
+    public void fillStateValue_withValidParameterValue() throws CascadeResourceNotFoundException {
+        InputControlState state = new InputControlState();
+        InputControl inputControl = mock(InputControl.class);
+        DataConverterService dataConverterService = mock(DataConverterService.class);
+        when(inputControl.getName()).thenReturn("Country");
+        ResourceReference resourceReference = mock(ResourceReference.class);
+        handler.setDataConverterService(dataConverterService);
+
+        when(dataConverterService.formatSingleValue(any(Object.class), any(InputControl.class), nullable(ReportInputControlInformation.class))).thenReturn("USA");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("Country", "USA");
+        handler.fillStateValue(state, inputControl, null, parameters, null, null);
+        assertEquals("USA", state.getValue());
+    }
+
+    @Test
+    public void fillStateValue_withNoParameterValue() throws CascadeResourceNotFoundException {
+        InputControlState state = new InputControlState();
+        InputControl inputControl = mock(InputControl.class);
+        DataConverterService dataConverterService = mock(DataConverterService.class);
+        when(inputControl.getName()).thenReturn("Country");
+        ResourceReference resourceReference = mock(ResourceReference.class);
+        handler.setDataConverterService(dataConverterService);
+
+        Map<String, Object> parameters = new HashMap<>();
+
+        handler.fillStateValue(state, inputControl, null, parameters, null, null);
+        assertEquals(1, parameters.size());
+        assertEquals(null, parameters.get("Country"));
+    }
+
+    @Test
+    public void fillSelectedValue_defaultSingleValue() throws CascadeResourceNotFoundException {
+        BasicInputControlHandler inputControlHandler = spy(new BasicInputControlHandler());
+        DataConverterService dataConverterService = mock(DataConverterService.class);
+        ReportInputControlInformation info = mock(ReportInputControlInformation.class);
+        InputControl inputControl = mock(InputControl.class);
+
+        Map<String, List<InputControlOption>> result = new HashMap<>();
+        result.put("Country", Arrays.asList(new InputControlOption[]{new InputControlOption().setValue("USA").setLabel("USA").setSelected(null)}));
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("Country", "USA");
+
+        inputControlHandler.setDataConverterService(dataConverterService);
+        when(inputControl.getName()).thenReturn("Country");
+        when(dataConverterService.formatSingleValue(parameters.get(inputControl.getName()), inputControl, info)).thenReturn("USA");
+        assertThat(result, is(inputControlHandler.filterSelectedValues(inputControl, null, parameters, null, info)));
+    }
+
+    @Test
+    public void fillSelectedValue_defaultNullValue() throws CascadeResourceNotFoundException {
+        BasicInputControlHandler inputControlHandler = spy(new BasicInputControlHandler());
+        DataConverterService dataConverterService = mock(DataConverterService.class);
+        ReportInputControlInformation info = mock(ReportInputControlInformation.class);
+        InputControl inputControl = mock(InputControl.class);
+
+        Map<String, List<InputControlOption>> result = new HashMap<>();
+        result.put("Country", Arrays.asList(new InputControlOption[]{new InputControlOption().setValue("USA").setLabel("USA").setSelected(null)}));
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("Country", null);
+
+        inputControlHandler.setDataConverterService(dataConverterService);
+        when(inputControl.getName()).thenReturn("Country");
+        when(dataConverterService.formatSingleValue(parameters.get(inputControl.getName()), inputControl, info)).thenReturn(null);
+        when(dataConverterService.convertSingleValue(null, inputControl, info)).thenReturn(InputControlHandler.NULL_SUBSTITUTION_VALUE);
+        inputControlHandler.filterSelectedValues(inputControl, null, parameters, null, info);
+        assertEquals(InputControlHandler.NULL_SUBSTITUTION_VALUE, parameters.get("Country"));
     }
 }

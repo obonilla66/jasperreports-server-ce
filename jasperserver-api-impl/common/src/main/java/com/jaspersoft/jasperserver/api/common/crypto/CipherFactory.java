@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,10 +24,10 @@ package com.jaspersoft.jasperserver.api.common.crypto;
 
 import com.jaspersoft.jasperserver.api.security.encryption.PlainCipher;
 import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
+import com.jaspersoft.jasperserver.crypto.KeyProperties;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
-import com.jaspersoft.jasperserver.crypto.properties.KeyAlias;
-import com.jaspersoft.jasperserver.crypto.properties.KeyUUID;
+import com.jaspersoft.jasperserver.crypto.conf.EncConf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanInstantiationException;
@@ -58,6 +58,7 @@ public class CipherFactory extends EncryptionConfiguration implements FactoryBea
 
     @Autowired
     private KeystoreManager keystoreManager;
+    private JrsKeystore keystore;
 
     private Key key;
 
@@ -90,14 +91,13 @@ public class CipherFactory extends EncryptionConfiguration implements FactoryBea
 
     private String resolveValue(final String value, final String propKey, final String defaultValue) {
         return value == null
-                ? (propKey != null) ? keystoreManager.getEncryptionProperty(propKey).orElse(value) : defaultValue
+                ? (propKey != null) ? keystore.getEncryptionProperty(propKey).orElse(value) : defaultValue
                 : value;
     }
 
     private Integer resolveValue(final Integer value, final String propKey, final Integer defaultValue) {
         return value == null
-                ? (propKey != null) ? keystoreManager
-                .getEncryptionProperty(propKey).map(Integer::parseInt).orElse(value) : defaultValue
+                ? (propKey != null) ? keystore.getEncryptionProperty(propKey).map(Integer::parseInt).orElse(value) : defaultValue
                 : value;
     }
 
@@ -109,17 +109,19 @@ public class CipherFactory extends EncryptionConfiguration implements FactoryBea
     private EncryptionProperties encryptionProperties;
 
     private void init(final Key key) throws Exception {
-//        keyBytes = keystoreManager.getEncryptionProperty(keyBytesProp);
-        KeystoreProperties keystoreProperties = null;
+        this.keystore = keystoreManager.getKeystore(null);
+        KeyProperties keystoreProperties = null;
 
         if (confId != null) {
-            final EncryptionProperties enc = keystoreManager.getEncryptionProperties(confId);
+            final EncryptionProperties enc = keystore.getEncryptionProperties(confId);
             this.encryptionProperties = new EncryptionProperties(
                     resolveValue(this.blockSize, blockSizeProp, enc.getBlockSize()),
                     resolveValue(this.initializationVector, initializationVectorProp, enc.getInitializationVector()),
                     resolveValue(this.transformation, transformationProp, enc.getCipherTransformation()),
-                    resolveValue(this.keySize, keySizeProp, enc.getKeyProperties().getKeySize()),
-                    resolveValue(this.keyAlgorithm, keyAlgorithmProp, enc.getKeyProperties().getKeyAlg()),
+                    new KeyProperties(
+                            resolveValue(this.keyAlgorithm, keyAlgorithmProp, enc.getKeyProperties().getKeyAlg()),
+                            resolveValue(this.keySize, keySizeProp, enc.getKeyProperties().getKeySize())
+                    ),
                     resolveValue(this.secretKey, secretKeyProp, enc.getSecretKey())
             );
         } else {
@@ -133,8 +135,10 @@ public class CipherFactory extends EncryptionConfiguration implements FactoryBea
                     blockSize,
                     resolveValue(this.initializationVector, initializationVectorProp, null),
                     resolveValue(this.transformation, transformationProp, null),
-                    keySize,
-                    resolveValue(this.keyAlgorithm, keyAlgorithmProp, null),
+                    new KeyProperties(
+                            resolveValue(this.keyAlgorithm, keyAlgorithmProp, null),
+                            keySize
+                    ),
                     resolveValue(this.secretKey, secretKeyProp, null)
             );
         }
@@ -161,15 +165,15 @@ public class CipherFactory extends EncryptionConfiguration implements FactoryBea
                 }
 
             } else if (keyAlias != null) {
-                this.key = keystoreManager.getKey(keyAlias, keyPass);
+                this.key = keystore.getKey(new KeyProperties(keyAlias, keyPass));
                 this.keyUuid = keyUuid;
 
             } else if (confId != null) {
-                this.key = keystoreManager.getKey(confId);
+                this.key = keystore.getKey(confId);
 
                 try {
-                    keystoreProperties = this.keystoreManager.getKeystoreProperties(confId);
-                    String storeKeyUuid = keystoreProperties != null ? keystoreProperties.getKeyUuid() : null;
+                    keystoreProperties = this.keystore.getKeyProperties(confId);
+                    String storeKeyUuid = keystoreProperties != null ? keystoreProperties.getKeyUuid().toString() : null;
                     this.keyUuid = storeKeyUuid != null ? storeKeyUuid : keyUuid;
                 } catch (Exception e) {
                     this.keyUuid = keyUuid;

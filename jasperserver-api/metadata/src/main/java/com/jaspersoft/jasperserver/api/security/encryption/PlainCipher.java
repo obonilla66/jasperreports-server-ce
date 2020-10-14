@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.api.security.encryption;
 
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
 
 import javax.crypto.SecretKey;
@@ -40,7 +41,7 @@ public interface PlainCipher {
     Key getKey();
 
     default SecretKey generateSecret(String keyAlg, int keySize) {
-        return KeystoreManager.generateSecret(keyAlg, keySize);
+        return JrsKeystore.generateSecret(keyAlg, keySize);
     }
 
     default SecretKey generateSecret(String keyAlg) {
@@ -61,11 +62,11 @@ public interface PlainCipher {
     }
 
     default SecretKey generateSecret() {
-        return KeystoreManager.generateSecret(getKeyAlgorithm(), getKeySize());
+        return JrsKeystore.generateSecret(getKeyAlgorithm(), getKeySize());
     }
 
     default KeyPair generateKeyPair(String keyAlg, int keySize) {
-        return KeystoreManager.generateKeyPair(keyAlg, keySize);
+        return JrsKeystore.generateKeyPair(keyAlg, keySize);
     }
 
     default KeyPair generateKeyPair() {

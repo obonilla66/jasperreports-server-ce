@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -27,6 +27,8 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchRes
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,9 +59,10 @@ public class DomainWhitelistProviderImpl implements DomainWhitelistProvider {
     }
 
     @Override
-    public Pattern getWhitelistPattern(Object principal) {
+    public Pattern getWhitelistPattern() {
         ExecutionContextImpl context = new ExecutionContextImpl();
-
+        Authentication authenticationToken = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authenticationToken.getPrincipal();
         AttributesSearchCriteria searchCriteria = new AttributesSearchCriteria.Builder()
                 .setNames(new HashSet<String>(additionalWhitelistAttributes))
                 .setEffective(true).build();

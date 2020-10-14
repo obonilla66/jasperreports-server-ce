@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,10 +20,15 @@
  */
 package com.jaspersoft.jasperserver.api.security.externalAuth.cas;
 
+import com.jaspersoft.jasperserver.api.common.util.spring.UsernamePasswordAuthenticationParameterConfiguration;
+import com.jaspersoft.jasperserver.api.common.util.AuthFilterConstants;
 import com.jaspersoft.jasperserver.api.security.UsernamePasswordAuthenticationFilterWarningWrapper;
+import com.jaspersoft.jasperserver.api.security.encryption.EncryptionRequestUtils;
 import com.jaspersoft.jasperserver.api.security.externalAuth.ExternalDataSynchronizer;
+import java.util.Map;
 import org.jasig.cas.client.session.SessionMappingStorage;
 import org.jasig.cas.client.session.SingleSignOutFilter;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.cas.authentication.CasAuthenticationToken;
 import org.springframework.security.cas.web.CasAuthenticationFilter;
@@ -31,9 +36,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
-
+import org.springframework.security.authentication.AuthenticationManager;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -47,6 +54,11 @@ public class JSCasProcessingFilter extends CasAuthenticationFilter {
 
 	private String usernameParameter;
 	private String passwordParameter;
+	private ThreadLocal<FilterChain> filterThread = new ThreadLocal<FilterChain>();
+
+	private UsernamePasswordAuthenticationParameterConfiguration parameterConfiguration;
+	private static final String USERNAME_PARAM = "usernameParameter";
+	private static final String PASSWORD_PARAM = "passwordParameter";
 
 	@Override
     public Authentication attemptAuthentication(final HttpServletRequest request, final HttpServletResponse response)
@@ -60,16 +72,37 @@ public class JSCasProcessingFilter extends CasAuthenticationFilter {
 			return this.getAuthenticationManager().authenticate(authRequest);
 		}
 		else {
-			String username = obtainUsername(request);
-			password = obtainPassword(request);
-
+			String username = null;
+			if(usernameParameter != null && request.getParameter(usernameParameter) != null){
+				username = request.getParameter(usernameParameter);
+				password = request.getParameter(passwordParameter);
+			}
+			if(username == null){
+				for(Map<String, String> authParam : parameterConfiguration.getAuthParameters()){
+					username = EncryptionRequestUtils.getValue(request, authParam.get(USERNAME_PARAM));
+					if(username != null){
+						password = EncryptionRequestUtils.getValue(request, authParam.get(PASSWORD_PARAM));
+						break;
+					}
+				}
+			}
 			UsernamePasswordAuthenticationToken authRequest =
 					new UsernamePasswordAuthenticationToken(username != null ? username.trim() : "", password != null ? password : "");
 
 			// Allow subclasses to set the "details" property
 			setDetails(request, authRequest);
 
-			return this.getAuthenticationManager().authenticate(authRequest);
+			Authentication authentication =  this.getAuthenticationManager().authenticate(authRequest);
+			if( authentication != null && request.getHeader(AuthFilterConstants.X_REMOTE_DOMAIN)!=null)  {
+				request.setAttribute(AuthFilterConstants.AUTH_FLOW_CONST, "true");
+				FilterChain chain = filterThread.get();
+				try {
+					chain.doFilter(request, response);
+				} catch (ServletException e) {
+					throw new InternalAuthenticationServiceException(e.getMessage());
+				}
+			}
+			return authentication;
 		}
 	}
 
@@ -123,4 +156,24 @@ public class JSCasProcessingFilter extends CasAuthenticationFilter {
 	protected void setDetails(HttpServletRequest request, UsernamePasswordAuthenticationToken authRequest) {
 		authRequest.setDetails(authenticationDetailsSource.buildDetails(request));
 	}
-}
+
+	@Override
+	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException,
+			ServletException {
+		filterThread.set(chain);
+		super.doFilter(req, res, chain);
+	}
+	public UsernamePasswordAuthenticationParameterConfiguration getParameterConfiguration() {
+		return parameterConfiguration;
+	}
+
+	public void setParameterConfiguration(
+			UsernamePasswordAuthenticationParameterConfiguration parameterConfiguration) {
+		this.parameterConfiguration = parameterConfiguration;
+	}
+
+
+	@Override
+	protected AuthenticationManager getAuthenticationManager() {
+		return super.getAuthenticationManager();
+	}}

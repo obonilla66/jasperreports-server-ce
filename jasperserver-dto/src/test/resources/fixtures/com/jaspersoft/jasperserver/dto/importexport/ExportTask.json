@@ -17,5 +17,8 @@
   "organization":"TEST_ORGANIZATION",
   "resourceTypes":[
     "TEST_RESOURCE_TYPE"
-  ]
+  ],
+  "keyAlias":"TEST_IMPORT_EXPORT_KEY_ALIAS",
+  "secretKey":"TEST_IMPORT_EXPORT_SECRET_KEY",
+  "secretUri":"TEST_IMPORT_EXPORT_SECRET_URI"
 }

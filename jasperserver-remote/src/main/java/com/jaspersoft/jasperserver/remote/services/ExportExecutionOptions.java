@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,6 +23,9 @@ package com.jaspersoft.jasperserver.remote.services;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
 /**
  * <p></p>
  *
@@ -30,8 +33,12 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * @version $Id: ExportExecutionOptions.java 26599 2012-12-10 13:04:23Z ykovalchyk $
  */
 @XmlRootElement(name = "export")
+@Schema(name = "export")
 public class ExportExecutionOptions {
 
+	public static final String MARKUP_TYPE_FULL = "full";
+	public static final String MARKUP_TYPE_EMBEDDABLE = "embeddable";
+	
     private String outputFormat;
     private String attachmentsPrefix;
     private ReportOutputPages pages;
@@ -40,7 +47,14 @@ public class ExportExecutionOptions {
     private boolean allowInlineScripts = true;
     private String markupType;
     private Boolean ignorePagination;
+    private Boolean clearContextCache = false;
 
+	@Schema(
+			type="boolean", 
+			description = "When set to true, the export output is generated as a single long page. This can be used with HTML output "
+					+ "to avoid pagination. When omitted, the ignorePagination property on the JRXML, if any, is used. ", 
+			example = "false"
+			)
     public Boolean getIgnorePagination() {
         return ignorePagination;
     }
@@ -56,6 +70,16 @@ public class ExportExecutionOptions {
         return this;
     }
 
+    public Boolean getClearContextCache() {
+        return clearContextCache;
+    }
+
+    public ExportExecutionOptions setClearContextCache(Boolean clearContextCache) {
+        this.clearContextCache = clearContextCache;
+        return this;
+    }
+
+    @Schema(description = "Specifies the page anchor name.")
     public String getAnchor() {
         return anchor;
     }
@@ -65,6 +89,11 @@ public class ExportExecutionOptions {
         return this;
     }
 
+	@Schema(
+		description = "Specifies if the HTML output will be generated as full HTML document or as embeddable HTML content.", 
+		allowableValues = {MARKUP_TYPE_FULL, MARKUP_TYPE_EMBEDDABLE},
+		example = MARKUP_TYPE_FULL
+	)
     public String getMarkupType() {
         return markupType;
     }
@@ -74,6 +103,12 @@ public class ExportExecutionOptions {
         return this;
     }
 
+	@Schema(
+		type="boolean", 
+		description = "Affects HTML export only. If true, then inline scripts are allowed, otherwise no inline script is included in the HTML output.", 
+		defaultValue = "true",
+		example = "false"
+	)
     public boolean isAllowInlineScripts() {
         return allowInlineScripts;
     }
@@ -83,7 +118,13 @@ public class ExportExecutionOptions {
         return this;
     }
 
-    public String getBaseUrl() {
+	@Schema(
+		description = "Specifies the base URL that the export will use to load static resources such as JavaScript files. "
+				+ "You can also set the `deploy.base.url` property in the `.../WEB-INF/js.config.properties` file to set "
+				+ "this value permanently. If both are set, the `baseUrl` parameter in this request takes precedence.",
+		example = "http://localhost:8080/jasperserver-pro"
+	)
+	public String getBaseUrl() {
         return baseUrl;
     }
 
@@ -97,6 +138,15 @@ public class ExportExecutionOptions {
         return this;
     }
 
+	@Schema(
+		description = "For HTML output, this property specifies the URL path to use for downloading the attachment files "
+				+ "(JavaScript and images). The full path of the default value is:\n\n"
+				+ "`{contextPath}/rest_v2/reportExecutions/{reportExecutionId}/exports/{exportExecutionId}/attachments/`\n\n" 
+				+ "You can specify a different URL path using the placeholders `{contextPath}`, `{reportExecutionId}`, and "
+				+ "`{exportExecutionId}`.", 
+		defaultValue = "attachments",
+		example = "attachments"
+	)
     public String getAttachmentsPrefix() {
         return attachmentsPrefix;
     }
@@ -107,10 +157,24 @@ public class ExportExecutionOptions {
     }
 
     @XmlJavaTypeAdapter(ReportOutputPagesToStringXmlAdapter.class)
+	@Schema(
+		description = "Specifies a single page or page range to generate a partial report. The format is "
+				+ "either `{singlePageNumber}` or `{startPageNumber}-{endPageNumber}`",
+		implementation = ReportOutputPages.class
+	)
     public ReportOutputPages getPages(){
         return pages;
     }
 
+	@Schema(
+		description = "Specifies the desired output format: `pdf`, `html`, `csv`, `xls`, `xlsx`, `docx`, `pptx`, `odt`, `ods`, "
+				+ "`rtf`, `xml`, `jrprint`.\n\n"
+				+ "As of JasperReports Server 6.0, it is also possible to specify `json` if your reports are designed for data "
+				+ "export. For more information, see the JasperReports Library samples documentation.", 
+		required=true,
+		allowableValues =  {"pdf", "html", "csv", "xls", "xlsx", "docx", "pptx", "odt", "ods", "rtf", "xml", "jrprint", "json"},
+		example = "html"
+	)
     public String getOutputFormat() {
         return outputFormat;
     }

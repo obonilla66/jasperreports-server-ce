@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -30,14 +30,13 @@ import com.jaspersoft.jasperserver.api.common.util.CharacterEncodingProvider;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.TenantQualified;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
+import com.jaspersoft.jasperserver.crypto.KeyProperties;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
 import com.jaspersoft.jasperserver.export.modules.Attributes;
 import com.jaspersoft.jasperserver.export.modules.ModuleRegister;
-import com.jaspersoft.jasperserver.export.modules.auth.AuthorityModuleConfiguration;
 import com.jaspersoft.jasperserver.export.util.CommandOut;
 import com.jaspersoft.jasperserver.export.util.EncryptionParams;
-import org.springframework.beans.BeanInstantiationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -75,6 +74,7 @@ public class BaseExporterImporter {
 	protected PlainCipher cipher;
 	protected CipherFactory cipherFactory;
 	protected KeystoreManager keystoreManager;
+	protected JrsKeystore keystore;
 	protected DefaultKeystorePasswdProvider defaultKeystorePasswdProvider;
     private String jsVersion;
     public final String VERSION_ATTR = "jsVersion";
@@ -233,6 +233,8 @@ public class BaseExporterImporter {
 
 	public void setKeystoreManager(KeystoreManager keystoreManager) {
 		this.keystoreManager = keystoreManager;
+		keystore = keystoreManager.getKeystore(null);
+
 	}
 
 	public void setDefaultKeystorePasswdProvider(DefaultKeystorePasswdProvider defaultKeystorePasswdProvider) {
@@ -262,6 +264,7 @@ public class BaseExporterImporter {
 		final String sourceVersion = (String) contextAttributes.getAttribute("sourceJsVersion");
 
 		CipherFactory cipherFactory = getCipherFactory();
+		PlainCipher fallbackCipher = null;
 		final CipherFactory fallbackFactory = cipherFactory.getFallbackFactory();
 
 		// Fallback to older decipher for 7.2 to ease upgrade
@@ -273,6 +276,7 @@ public class BaseExporterImporter {
 
 			if (major < 7 || (major == 7 && minor <= 2)) {
 				cipherFactory = fallbackFactory;
+				fallbackCipher = cipherFactory.getObject();
 			}
 		}
 		String uuidAlias = properties.getProperty(ENCRYPTION_KEYALIAS_ATTR);
@@ -282,7 +286,9 @@ public class BaseExporterImporter {
 		try {
 			this.keystoreManager.reload();
 
-			if (secretKeyParam.isPresent() && !secretKeyParam.get().isEmpty()) {
+			if (fallbackCipher != null) {
+				cipher = fallbackCipher;
+			} else if (secretKeyParam.isPresent() && !secretKeyParam.get().isEmpty()) {
 				byte[] bytes = parse(secretKeyParam.get());
 
 				SecretKey key = new SecretKeySpec(bytes, params.getKeyAlg().orElse(this.cipher.getKeyAlgorithm()));
@@ -292,13 +298,13 @@ public class BaseExporterImporter {
 
 			} else if (keyAliasParam.isPresent() && !keyAliasParam.get().isEmpty()) {
 				try {
-					KeystoreProperties keystoreProperties = this.keystoreManager.getKeystoreProperties(keyAliasParam.get());
-					String importKeyAlias = keystoreProperties.getKeyAlis() != null ? keystoreProperties.getKeyAlis() : keyAliasParam.get();
+					KeyProperties keystoreProperties = this.keystore.getKeyProperties(keyAliasParam.get());
+					String importKeyAlias = keystoreProperties.getKeyAlias() != null ? keystoreProperties.getKeyAlias() : keyAliasParam.get();
 					String importKeyPasswd = resolvePassword(keyPasswdParam, keystoreProperties.getKeyPasswd());
 
 					final CipherFactory factory = cipherFactory.fork(importKeyAlias, importKeyPasswd);
 					if (keystoreProperties.getKeyUuid() != null) {
-						factory.setKeyUuid(keystoreProperties.getKeyUuid());
+						factory.setKeyUuid(keystoreProperties.getKeyUuid().toString());
 					}
 					cipher = factory.getObject();
 
@@ -310,18 +316,14 @@ public class BaseExporterImporter {
 
 			} else if (uuidAlias != null && !uuidAlias.isEmpty()
 					&& !uuidAlias.equalsIgnoreCase(this.cipher.getKeyUuid())
-					&& this.keystoreManager.containsAlias(uuidAlias)) {
-				KeystoreProperties keystoreProperties = this.keystoreManager.getKeystoreProperties(uuidAlias);
-				String importKeyAlias = keystoreProperties.getKeyAlis() != null ? keystoreProperties.getKeyAlis() : uuidAlias;
+					&& this.keystore.containsAlias(uuidAlias)) {
+				KeyProperties keystoreProperties = this.keystore.getKeyProperties(uuidAlias);
+				String importKeyAlias = keystoreProperties.getKeyAlias() != null ? keystoreProperties.getKeyAlias() : uuidAlias;
 				String importKeyPasswd = resolvePassword(keyPasswdParam, keystoreProperties.getKeyPasswd());
 
 				cipher = cipherFactory
 						.fork(importKeyAlias, importKeyPasswd != null ? importKeyPasswd : "")
 						.getObject();
-
-			} else if (cipherFactory == fallbackFactory) {
-				cipher = cipherFactory.getObject();
-
 			} else {
 				cipher = this.cipher;
 			}

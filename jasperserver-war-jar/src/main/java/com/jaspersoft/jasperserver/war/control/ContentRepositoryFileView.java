@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -114,7 +114,10 @@ public class ContentRepositoryFileView extends AbstractView
 	        	if (JRTypeSniffer.getImageTypeValue(readData) == ImageTypeEnum.UNKNOWN
 	        			&& RendererUtil.getInstance(DefaultJasperReportsContext.getInstance()).isSvgData(readData)) {
 					response.setContentType(RendererUtil.SVG_MIME_TYPE);
-	        	}
+	        	} else {
+					response.setContentType(JRTypeSniffer.getImageTypeValue(readData).getMimeType());
+					response.setHeader("Content-Disposition", "attachment");
+				}
 			}
 
 			if (fileData.hasData()) {

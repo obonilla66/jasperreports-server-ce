@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -192,11 +192,12 @@ public class ImporterImpl extends BaseExporterImporter implements Importer {
         	contextAttributes.setAttribute(DiagnosticSnapshotPropertyHelper.ATTRIBUTE_IS_DIAG_SNAPSHOT, Boolean.TRUE.toString());
         }
 
-		final PlainCipher cipher = getCipher(new EncryptionParams(this.task.getParameters()), contextAttributes, properties);
+		final EncryptionParams encParams = new EncryptionParams(this.task.getParameters());
+		final PlainCipher cipher = getCipher(encParams, contextAttributes, properties);
         String encryptedValue = properties.getProperty(ENCRYPTION_ATTR);
         if (encryptedValue != null )  {
-			String value = cipher.decode(encryptedValue);
-			if (!Boolean.parseBoolean(value)) {
+			boolean isCorrectKey = Boolean.parseBoolean(cipher.decode(encryptedValue));
+			if (!isCorrectKey && encParams.getFailOnWrongKey().orElse(true)) {
 				log.error("Import failed as resources cannot be decoded");
 				throw new ImportFailedException("Import failed as resources cannot be decoded", IMPORT_FAILED_DECODE_ERROR_CODE, new String[] {});
 			}

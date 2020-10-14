@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -63,6 +63,9 @@ public class ReportExecutionHelper {
             }
             if (outputResource.getOutputFinal() != null) {
                 responseBuilder.header("output-final", outputResource.getOutputFinal());
+            }
+            if (outputResource.getOutputTimestamp() != null) {
+                responseBuilder.header("output-timestamp", outputResource.getOutputTimestamp());
             }
             final String pages = outputResource.getPages();
             if (pages != null && !pages.isEmpty()) {

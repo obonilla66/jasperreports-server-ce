@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.inputcontrols.cascade;
 import com.jaspersoft.jasperserver.api.JasperServerAPI;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValuesListWrapper;
 
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,21 @@ public interface InputControlsLogicService {
     List<InputControlState> getValuesForInputControls(
             String containerUri, Set<String> inputControlIds, Map<String, String[]> parameters, boolean freshData)
                 throws CascadeResourceNotFoundException;
+
+
+    /**
+     * Get the default parameter values for all the Input Controls
+     * using the reportUnit URI.
+     *
+     * @param containerUri   input controls container URI
+     * @param freshData     cache isn't used if freshData is true, otherwise cached data are used.
+     * @throws CascadeResourceNotFoundException
+     *          Thrown when resource is not found.
+     *
+     * @see {@link ControlLogic#getSelectedValues}
+     */
+    SelectedValuesListWrapper getInputControlsSelectedValues(String containerUri, boolean freshData, boolean withLabel) throws CascadeResourceNotFoundException;
+
 
     /**
      * Parse string parameter values and convert it to the type of {@link net.sf.jasperreports.engine.JRParameter}.

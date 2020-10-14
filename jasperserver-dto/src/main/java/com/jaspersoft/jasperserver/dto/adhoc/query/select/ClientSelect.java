@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
@@ -107,6 +108,12 @@ public class ClientSelect implements ClientQueryClause, DeepCloneable<ClientSele
         return this;
     }
 
+    public ClientSelect setFieldsStr(List<String> fields) {
+        this.fields = (fields == null) ? new ArrayList<>() :
+                fields.stream().map(s -> new ClientQueryField(s)).collect(Collectors.toList());
+        return this;
+    }
+
     @XmlElementWrapper(name = "distinctFields")
     @XmlElement(name = "distinctField")
     public List<ClientQueryField> getDistinctFields() {
@@ -126,6 +133,12 @@ public class ClientSelect implements ClientQueryClause, DeepCloneable<ClientSele
 
     public ClientSelect setAggregations(List<ClientQueryAggregatedField> aggregations) {
         this.aggregations = (aggregations != null) ? aggregations : new ArrayList<ClientQueryAggregatedField>();
+        return this;
+    }
+
+    public ClientSelect setAggregationsStr(List<String> aggregations) {
+        this.aggregations = (aggregations == null) ? new ArrayList<>() :
+                aggregations.stream().map(s -> new ClientQueryAggregatedField(s)).collect(Collectors.toList());
         return this;
     }
 

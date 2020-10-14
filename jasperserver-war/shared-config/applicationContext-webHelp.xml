@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -44,6 +44,12 @@
                 <entry key="repo" value="900"/>
                 <entry key="dashboard" value="1000"/>
                 <entry key="domain2" value="1100"/>
+                <entry key="domain_metadata" value="1101"/>
+                <entry key="domain_joins" value="1111"/>
+                <entry key="domain_filters" value="1121"/>
+                <entry key="domain_presentation" value="1131"/>
+                <entry key="domain_security" value="1141"/>
+                <entry key="domain_locales" value="1151"/>
             </map>
         </property>
     </bean>

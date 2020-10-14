@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,9 +21,13 @@
 package com.jaspersoft.jasperserver.api.security.externalAuth.preauth;
 
 import com.jaspersoft.jasperserver.api.common.crypto.CipherI;
+import com.jaspersoft.jasperserver.api.security.ResponseHeaderUpdater;
+import com.jaspersoft.jasperserver.api.common.util.AuthFilterConstants;
 import com.jaspersoft.jasperserver.api.security.externalAuth.ExternalDataSynchronizer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.owasp.csrfguard.CsrfGuard;
+import org.owasp.csrfguard.util.RandomGenerator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,9 +54,11 @@ public class BasePreAuthenticatedProcessingFilter extends AbstractPreAuthenticat
 	private static final String REQUEST_PREAUTH_TOKEN = "REQUEST_PREAUTH_TOKEN";
 	private static final String AUTHENTICATED_PREAUTH_TOKEN = "AUTHENTICATED_PREAUTH_TOKEN";
 	private Logger log = LogManager.getLogger(this.getClass());
-
+	private ResponseHeaderUpdater responseHeadersUpdater;
+	private ThreadLocal<FilterChain> filterThread = new ThreadLocal<FilterChain>();
 	private String principalParameter = "pp";
 	private Boolean tokenInRequestParam = null;
+	public static final String XSS_NONCE_ATTRIB_NAME = "XSS_NONCE";
 
 	private CipherI tokenDecryptor;
 
@@ -137,6 +143,7 @@ public class BasePreAuthenticatedProcessingFilter extends AbstractPreAuthenticat
         }
 
         request.setAttribute(REQUEST_PREAUTH_TOKEN, getPreAuthenticatedPrincipal((HttpServletRequest) request));
+		filterThread.set(chain);
         super.doFilter(request, response, chain);
     }
 
@@ -195,6 +202,20 @@ public class BasePreAuthenticatedProcessingFilter extends AbstractPreAuthenticat
 	 */
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, Authentication authResult) throws IOException, ServletException {
+		if (responseHeadersUpdater != null) {
+			responseHeadersUpdater.changeHeaders(response, request);
+		}
+		HttpSession session = request.getSession(false);
+		if (session != null && session.getAttribute(XSS_NONCE_ATTRIB_NAME)==null) {
+			CsrfGuard csrfGuard = CsrfGuard.getInstance();
+			String tokenValue = RandomGenerator.generateRandomId(csrfGuard.getPrng(), csrfGuard.getTokenLength());
+			session.setAttribute(XSS_NONCE_ATTRIB_NAME, "nonce-" + tokenValue);
+		}
+		FilterChain chain = filterThread.get();
+		if(request.getHeader(AuthFilterConstants.X_REMOTE_DOMAIN)!=null) {
+			request.setAttribute(AuthFilterConstants.AUTH_FLOW_CONST, "true");
+			chain.doFilter(request, response);
+		}
 		super.successfulAuthentication(request, response, authResult);
 		externalDataSynchronizer.synchronize();
         final String contextPath = request.getContextPath();
@@ -211,6 +232,10 @@ public class BasePreAuthenticatedProcessingFilter extends AbstractPreAuthenticat
 
         HttpSession sess = request.getSession();
 		sess.setAttribute(AUTHENTICATED_PREAUTH_TOKEN, request.getAttribute(REQUEST_PREAUTH_TOKEN));
+	}
+
+	public void setResponseHeadersUpdater(ResponseHeaderUpdater responseHeadersUpdater) {
+		this.responseHeadersUpdater = responseHeadersUpdater;
 	}
 
     protected boolean isJsonResponseRequested(HttpServletRequest request){

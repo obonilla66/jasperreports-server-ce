@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,8 +21,10 @@
 package com.jaspersoft.jasperserver.jaxrs.importexport;
 
 import com.jaspersoft.jasperserver.dto.importexport.ExportTask;
+import com.jaspersoft.jasperserver.export.BaseExporterImporter;
 import com.jaspersoft.jasperserver.export.service.ImportExportService;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.export.util.EncryptionParams;
 import com.jaspersoft.jasperserver.remote.services.async.ExportRunnable;
 import com.jaspersoft.jasperserver.remote.services.async.ImportExportTask;
 import com.jaspersoft.jasperserver.remote.services.async.TasksManager;
@@ -45,13 +47,17 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.jaspersoft.jasperserver.export.service.ImportExportService.SECRET_KEY;
+import static com.jaspersoft.jasperserver.export.util.EncryptionParams.KEY_ALIAS_PARAMETER;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+
 /**
  * @author: Zakhar.Tomchenco
  */
 @Component
 @Path("/export")
 @Scope("prototype")
-public class ExportJaxrsService  {
+public class ExportJaxrsService extends CommonImportExportService {
 
     @Resource
     private ImportExportService synchImportExportService;
@@ -74,12 +80,14 @@ public class ExportJaxrsService  {
             }
         }
 
+        if (data.getKeyAlias() != null) params.put(KEY_ALIAS_PARAMETER, data.getKeyAlias());
+
         ExportRunnable exportRunnable = new ExportRunnable(params, data.getUris(), data.getScheduledJobs(),
                 data.getRoles(), data.getUsers(), data.getResourceTypes(), LocaleContextHolder.getLocale());
         exportRunnable.setService(synchImportExportService);
         exportRunnable.setMessageSource(messageSource);
         exportRunnable.setOrganizationId(data.getOrganization());
-        basicTaskManager.startTask(new ImportExportTask<InputStream>(exportRunnable));
+        basicTaskManager.startTask(new ImportExportTask<>(exportRunnable));
 
         return Response.ok(exportRunnable.getState()).build();
     }

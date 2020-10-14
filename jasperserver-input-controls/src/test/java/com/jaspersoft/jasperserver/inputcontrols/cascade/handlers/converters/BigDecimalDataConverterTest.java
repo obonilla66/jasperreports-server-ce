@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,19 +21,29 @@
 
 package com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 public class BigDecimalDataConverterTest {
 
+    BigDecimalDataConverter bigD;
+
+    @Before
+    public void setup() {
+        bigD = new BigDecimalDataConverter();
+    }
+
     @Test
     public void valueToString_rawData() throws ParseException {
-        BigDecimalDataConverter bigD = new BigDecimalDataConverter();
         assertNull(bigD.stringToValue(null));
         assertNull(bigD.stringToValue(""));
         assertEquals(new BigDecimal("100"), bigD.stringToValue("100"));
@@ -41,5 +51,14 @@ public class BigDecimalDataConverterTest {
         assertEquals(new BigDecimal("-100"), bigD.stringToValue("-100.00"));
         assertEquals(new BigDecimal("0"), bigD.stringToValue("00.00"));
         assertEquals(new BigDecimal("1001.001").stripTrailingZeros(), bigD.stringToValue("1001.001"));
+    }
+
+    @Test
+    public void stringToValue() throws ParseException {
+        Assert.assertEquals(bigD.stringToValue(null), null);
+
+        BigDecimal expected = BigDecimal.valueOf(10.2);
+        BigDecimal actual = bigD.stringToValue("10.2");
+        assertThat(expected, is(actual));
     }
 }

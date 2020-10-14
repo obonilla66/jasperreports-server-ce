@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(t,e,o){o.exports=function(t){return t.contextPath+"/rest_v2/organizations?{{= id != 'organizations' ? 'rootTenantId=' + encodeURIComponent(id) : ''}}&offset={{= offset }}&limit={{= limit }}&maxDepth=1"}});

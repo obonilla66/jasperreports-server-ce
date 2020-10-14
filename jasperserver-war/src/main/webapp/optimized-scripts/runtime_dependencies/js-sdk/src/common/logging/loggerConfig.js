@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,r,o){o.exports={enabled:!0,level:"error",appenders:["console"]}});

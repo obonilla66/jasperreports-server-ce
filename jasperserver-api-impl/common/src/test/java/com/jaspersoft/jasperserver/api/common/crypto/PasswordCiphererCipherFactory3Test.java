@@ -1,8 +1,29 @@
+/*
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * http://www.jaspersoft.com.
+ *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.jaspersoft.jasperserver.api.common.crypto;
 
 import com.jaspersoft.jasperserver.api.security.encryption.PlainCipher;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.DeprecatedPasswordEncoderEnc;
+
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -18,7 +39,10 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.File;
 
-import static com.jaspersoft.jasperserver.crypto.conf.PasswordEncoderEnc.*;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.ImportExportEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.PasswordEncoderEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.DeprecatedPasswordEncoderEnc;
 import static java.lang.System.getenv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,7 +64,7 @@ public class PasswordCiphererCipherFactory3Test {
         public CipherFactory passwordEncoderFactory() throws Exception {
             CipherFactory factory = new CipherFactory();
             factory.setCipherClass(PasswordCipherer.class);
-            factory.setConfId(DeprecatedPasswordEncoderEnc.ID);
+            factory.setConfId(DeprecatedPasswordEncoderEnc.value().getConfId());
             factory.setSecretKey("0xC8 0x43 0x29 0x49 0xAE 0x25 0x2F 0xA1 0xC1 0xF2 0xC8 0xD9 0x31 0x01 0x2C 0x52 0x54 0x0B 0x5E 0xEA 0x9E 0x37 0xA8 0x61");
             return factory;
         }

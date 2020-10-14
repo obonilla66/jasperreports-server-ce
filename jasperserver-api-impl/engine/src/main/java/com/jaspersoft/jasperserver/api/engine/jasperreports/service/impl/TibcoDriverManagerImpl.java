@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -37,8 +37,8 @@ public class TibcoDriverManagerImpl implements TibcoDriverManager {
 
     private static final Log log = LogFactory.getLog(TibcoDriverManagerImpl.class);
     private static TibcoDriverManagerImpl instance;
-    private static String[] SUPPORTED_TIBCO_DS = new String[]{"db2", "hive", "impala", "mongodb", "oracle", "redshift", "salesforce", "sqlserver","autorest"};
-
+    private static String[] SUPPORTED_TIBCO_DS = new String[]{"db2", "hive", "impala", "mongodb", "oracle", "redshift", "salesforce", "sqlserver","autorest", "googlebigquery"};
+    public static final String GOOGLE_BIGQUERY_PROGRESS_DRIVER_CLASS = "tibcosoftware.jdbc.googlebigquery.GoogleBigQueryDriver";
 
     private TibcoDriverManagerImpl() {
         // call of javax.ws.rs.ext.RuntimeDelegate.setInstance() isn't needed here,
@@ -83,6 +83,7 @@ public class TibcoDriverManagerImpl implements TibcoDriverManager {
         registerDriver("tibcosoftware.jdbc.salesforce.SalesforceDriver");
         registerDriver("tibcosoftware.jdbc.sforce.SForceDriver");
         registerDriver("tibcosoftware.jdbc.autorest.AutoRESTDriver");
+        registerDriver(GOOGLE_BIGQUERY_PROGRESS_DRIVER_CLASS);
         deregisterTibcosoftwareincDrivers();
     }
 

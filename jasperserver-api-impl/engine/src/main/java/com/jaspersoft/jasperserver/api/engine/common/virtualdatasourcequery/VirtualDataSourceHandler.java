@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -62,7 +62,16 @@ public class VirtualDataSourceHandler {
     private ProfileAttributesResolver profileAttributesResolver;
     private CustomReportDataSourceServiceFactory customReportDataSourceServiceFactory;
     private static String dataSourceSchemaSeparator = "_";
+    private Map<String, Map<String, String>> optionsToSelectSchema;
 
+
+    public Map<String, Map<String, String>> getOptionsToSelectSchema() {
+        return optionsToSelectSchema;
+    }
+
+    public void setOptionsToSelectSchema(Map<String, Map<String, String>> optionsToSelectSchema) {
+        this.optionsToSelectSchema = optionsToSelectSchema;
+    }
     /*
      * get the separator between data source id and schema name
      */
@@ -185,15 +194,25 @@ public class VirtualDataSourceHandler {
     /*
      * get the schema list for specific sub data source
      */
-    private Set<String> findSchemas(Set<String> virtualSchemaList, String dataSourceName) {
-        if (virtualSchemaList == null) return null;
+    protected Set<String> findSchemas(Set<String> virtualSchemaList, String dataSourceName) {
+        if (virtualSchemaList == null) {
+            return null;
+        }
+
+        //JS-57553 return null for datasources with no schema attached with the datasource name.
+        if(virtualSchemaList.contains(dataSourceName)) {
+            return null;
+        }
+
         Set<String> schemaList = new LinkedHashSet<String>();
         String schemaPrefix = (dataSourceName + getDataSourceSchemaSeparator()).toLowerCase();
         int beginIndex = schemaPrefix.length();
         // loop through all the schema in virtual data source
         for (String schemaName : virtualSchemaList) {
             // only search for schema with specific data source id
-            if (schemaName.toLowerCase().startsWith(schemaPrefix)) schemaList.add(schemaName.substring(beginIndex));
+            if (schemaName.toLowerCase().startsWith(schemaPrefix)) {
+                schemaList.add(schemaName.substring(beginIndex));
+            }
         }
         return schemaList;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,7 +25,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeSer
 import com.jaspersoft.jasperserver.api.security.externalAuth.ExternalUserDetails;
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -71,7 +71,7 @@ public class ExternalProfileAttributeProcessor extends AbstractExternalUserProce
 				String attrValue = pair.getValue();
 				if (attrName.endsWith(ENC_PROFILE_ATTRIB_SUFFIX)) {
 					if (secret == null)
-						secret = KeystoreManager.getInstance().getKey(BuildEnc.ID);
+						secret = KeystoreManager.getInstance().getKeystore(null).getKey(BuildEnc.getConfId());
 					attrValue = EncryptionEngine.encrypt(secret, attrValue);
 				}
 

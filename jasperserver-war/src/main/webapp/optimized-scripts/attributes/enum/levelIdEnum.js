@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,n,r){r.exports=["tenantId","id","userName"]});

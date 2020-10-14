@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -54,7 +54,6 @@
 	</t:putAttribute>
 
 	<t:putAttribute name="bodyContent" >
-
 		<div id="saveValues" class="panel dialog saveValues overlay moveable centered_horz centered_vert hidden" >
 			<div  class="content hasFooter " >
 				<div  class="header mover" >

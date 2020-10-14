@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,36 +20,17 @@
  */
 package com.jaspersoft.jasperserver.api.metadata.common.service;
 
-import com.jaspersoft.jasperserver.api.ErrorDescriptorHolder;
 import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
-
-import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorCode.DATASOURCE_CONNECTION_FIELD;
 
 /**
  * @author Alexei Skorodumov askorodu@tibco.com
  */
-public class JSDataSourceConnectionFailedException extends JSException implements ErrorDescriptorHolder<JSDataSourceConnectionFailedException> {
-    private ErrorDescriptor errorDescriptor;
-
+public class JSDataSourceConnectionFailedException extends JSException {
     public JSDataSourceConnectionFailedException(Throwable cause) {
         this(cause.getMessage(), cause);
     }
 
     public JSDataSourceConnectionFailedException(String message, Throwable cause) {
         super(message, cause);
-        this.errorDescriptor = DATASOURCE_CONNECTION_FIELD.createDescriptor();
-    }
-
-
-    @Override
-    public ErrorDescriptor getErrorDescriptor() {
-        return errorDescriptor;
-    }
-
-    @Override
-    public JSDataSourceConnectionFailedException setErrorDescriptor(ErrorDescriptor errorDescriptor) {
-        this.errorDescriptor = errorDescriptor;
-        return this;
     }
 }

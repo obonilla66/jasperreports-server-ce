@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -70,16 +70,19 @@
             <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
         <entry key="serverAddress">
-            <value><![CDATA[^([\p{L}\p{M}\p{N}_.:,/\-]|#{ attributePlaceholderPatternUI })+$]]></value>
+            <value><![CDATA[^([\p{L}\p{N}]+[\p{L}\p{M}\p{N}_.:,/\-]+[\p{L}\p{N}]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
         <entry key="projectId">
             <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
+        <entry key="datasetId">
+            <value><![CDATA[^([\p{L}\p{N}]+[\p{L}\p{N}\_]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
         <entry key="oAuthServiceAcctEmail">
-            <value><![CDATA[^([\p{L}\p{M}\p{N}_.@,\-]|#{ attributePlaceholderPatternUI })+$]]></value>
+            <value><![CDATA[^([\p{L}]+[\p{L}\p{N}\-]+[\p{L}\p{N}]+[@]+[\p{L}]+[\p{L}\p{N}\-\.]+(\.(\p{L}){2,63})|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
         <entry key="oAuthPvtKeyPath">
-            <value><![CDATA[^([\p{L}\p{M}\p{N}_.:,/\-]|#{ attributePlaceholderPatternUI })+$]]></value>
+            <value><![CDATA[^(\/)([\p{L}\p{M}\p{N}_.:,/\-]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
         <entry key="authMech">
             <value><![CDATA[^([0|1|2]{1}|#{ attributePlaceholderPatternUI })$]]></value>
@@ -93,10 +96,21 @@
         <entry key="schemaName">
             <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
+        <entry key="domain">
+            <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="dataSource">
+            <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
         <entry key="informixServerName">
             <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
         <entry key="dynamicUrlPartPattern" value-ref="dynamicJdbcUrlPartPattern"/>
+        <entry key="dynamicServerAddressPattern" value-ref="dynamicServerURLAddressPattern"/>
+        <entry key="dynamicServiceAcctEmailPattern" value-ref="dynamicOAuthServiceAcctEmailPattern"/>
+        <entry key="dynamicPvtKeyPathPattern" value-ref="dynamicOAuthPvtKeyPathPattern"/>
+        <entry key="dynamicDatasetPattern" value-ref="dynamicOAuthDatasetPattern"/>
+        <entry key="dynamicServerAddressPattern" value-ref="dynamicServerURLAddressPattern"/>
         <!-- Non-field helper patterns -->
         <entry key="forbidWhitespacesPattern">
             <value><![CDATA[^([^\s]|#{ attributePlaceholderPatternUI })*$]]></value>
@@ -114,6 +128,26 @@
         <constructor-arg type="java.lang.String">
             <!-- /^jdbc:ingres://([\w.]*):([\w.]*)/([\w.]*)/ -->
             <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}\s\_.,\-}{])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicOAuthServiceAcctEmailPattern" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}_.@,\-])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicOAuthPvtKeyPathPattern" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((\/)(?:#{ attributePlaceholderPatternUI }|[\p{L}\\p{M}\p{N}_.:,/\-])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicOAuthDatasetPattern" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{N}]+[\p{L}\p{N}\_])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicServerURLAddressPattern" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{N}]+[\p{L}\p{M}\p{N}_.:,/\-]+[\p{L}\p{N}])+)]]></value>
         </constructor-arg>
     </bean>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.JasperServerAPI;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsContainer;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValuesListWrapper;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler;
 
 import java.util.List;
@@ -70,6 +71,33 @@ public interface ControlLogic<T extends InputControlsContainer> {
     public List<ReportInputControl> getInputControlsStructure(T container, Set<String> inputControlIds)
             throws CascadeResourceNotFoundException;
 
+    /**
+     * Get the default parameter values for all the Input Controls
+     * using the container URI.
+     *
+     * @param containerUri     input controls container URI
+     * @param requestParameters map with control values where key is control name
+     *                           and value is serialized to array of strings control values
+     * @return SelectedValuesListWrapper - data object which represents
+     *                                  collection of selected values for each input control.
+     * @throws CascadeResourceNotFoundException
+     *          Thrown when resource is not found.
+     */
+    public SelectedValuesListWrapper getSelectedValues(String containerUri, Map<String, String[]> requestParameters) throws CascadeResourceNotFoundException;
+
+    /**
+     * Get the default parameter values for all the Input Controls
+     * using the container.
+     *
+     * @param container       input controls container
+     * @param requestParameters map with control values where key is control name
+     *                           and value is serialized to array of strings control values
+     * @return SelectedValuesListWrapper - data object which represents
+     *                                  collection of selected values for each input control.
+     * @throws CascadeResourceNotFoundException
+     *          Thrown when resource is not found.
+     */
+    public SelectedValuesListWrapper getSelectedValues(T container, Map<String, String[]> requestParameters) throws CascadeResourceNotFoundException;
     /**
      * Resolve cascade values using request values for controls, which ids were specified.
      * It performs query and returns states only for specified control ids.

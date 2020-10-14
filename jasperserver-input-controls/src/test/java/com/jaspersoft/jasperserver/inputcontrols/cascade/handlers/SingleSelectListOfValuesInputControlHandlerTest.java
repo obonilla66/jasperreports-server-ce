@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -87,7 +87,7 @@ public class SingleSelectListOfValuesInputControlHandlerTest {
      * We should not send ~NOTHING~ substitution anymore - this will be treated as number format validation error
      * @throws CascadeResourceNotFoundException
      */
-    @Test
+/*    @Test
     public void convertParameterValueFromRawDataNothingInputNotMandatoryReturnValue() throws CascadeResourceNotFoundException {
 
         String[] rawData = new String[] {InputControlHandler.NOTHING_SUBSTITUTION_VALUE};
@@ -108,7 +108,7 @@ public class SingleSelectListOfValuesInputControlHandlerTest {
         assertNotNull(exception);
         assertEquals("fillParameters.error.invalidValueForType", exception.getValidationError().getErrorCode());
         assertNull(exception.getValidationError().getInvalidValue());
-    }
+    }*/
 
     @Test
     public void getValuesIntegerNotMandatory() throws CascadeResourceNotFoundException {

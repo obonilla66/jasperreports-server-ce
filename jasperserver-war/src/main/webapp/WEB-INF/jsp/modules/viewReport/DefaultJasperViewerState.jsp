@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -63,41 +63,38 @@
 
 <%
     //  TODO how about moving export menu items into actionModel-viewReport.xml? generatedOptions can be used there
-    Boolean isEmptyReport = (Boolean) request.getAttribute("emptyReport");
     MessageSource messageSource = (MessageSource) request.getAttribute("messageSource");
 
     StringBuilder exportersList = new StringBuilder("[");
     boolean firstItem = true;
-    if (!isEmptyReport) {
-        Map<String, ExporterConfigurationBean> configuredExporters = (Map<String, ExporterConfigurationBean>) request.getAttribute("configuredExporters");
-        for (Map.Entry<String, ExporterConfigurationBean> configuredExporter : configuredExporters.entrySet()) {
-            if (!firstItem) {
-                exportersList.append(",");
-            } else {
-                firstItem = false;
-            }
-            ExporterConfigurationBean exporter = configuredExporter.getValue();
-            String exporterKey = configuredExporter.getKey();
-            ReportUnit reportUnit = (ReportUnit) request.getAttribute("reportUnitObject");
-            String exportFilename = null;
-            if (exporter.getCurrentExporter() != null && reportUnit != null) {
-                exportFilename = exporter.getCurrentExporter().getDownloadFilename(
-                        request, reportUnit.getName());
-            }
-
-            String descriptionMessage = JavaScriptUtils.javaScriptEscape(
-                    messageSource.getMessage(exporter.getDescriptionKey(), null, LocaleContextHolder.getLocale()));
-
-            exportersList.append("{\"type\": \"simpleAction\",");
-            exportersList.append("\"text\": \"" + descriptionMessage + "\",");
-            exportersList.append("\"action\": \"Report.exportReport\",");
-            exportersList.append("\"actionArgs\": [\"" + exporterKey + "\"");
-            if (StringUtils.isNotEmpty(exportFilename)) {
-                String url = request.getContextPath() + "/flow.html/flowFile/" + exportFilename;
-                exportersList.append(", \"" + url + "\"");
-            }
-            exportersList.append("]}");
+    Map<String, ExporterConfigurationBean> configuredExporters = (Map<String, ExporterConfigurationBean>) request.getAttribute("configuredExporters");
+    for (Map.Entry<String, ExporterConfigurationBean> configuredExporter : configuredExporters.entrySet()) {
+        if (!firstItem) {
+            exportersList.append(",");
+        } else {
+            firstItem = false;
         }
+        ExporterConfigurationBean exporter = configuredExporter.getValue();
+        String exporterKey = configuredExporter.getKey();
+        ReportUnit reportUnit = (ReportUnit) request.getAttribute("reportUnitObject");
+        String exportFilename = null;
+        if (exporter.getCurrentExporter() != null && reportUnit != null) {
+            exportFilename = exporter.getCurrentExporter().getDownloadFilename(
+                    request, reportUnit.getName());
+        }
+
+        String descriptionMessage = JavaScriptUtils.javaScriptEscape(
+                messageSource.getMessage(exporter.getDescriptionKey(), null, LocaleContextHolder.getLocale()));
+
+        exportersList.append("{\"type\": \"simpleAction\",");
+        exportersList.append("\"text\": \"" + descriptionMessage + "\",");
+        exportersList.append("\"action\": \"Report.exportReport\",");
+        exportersList.append("\"actionArgs\": [\"" + exporterKey + "\"");
+        if (StringUtils.isNotEmpty(exportFilename)) {
+            String url = request.getContextPath() + "/flow.html/flowFile/" + exportFilename;
+            exportersList.append(", \"" + url + "\"");
+        }
+        exportersList.append("]}");
     }
     exportersList.append("]");
     pageContext.setAttribute("exportersList", exportersList.toString());

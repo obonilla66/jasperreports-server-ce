@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,8 +22,9 @@ package com.jaspersoft.buildomatic.crypto;
 
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
 import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.DiagnosticDataEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.DiagnosticDataEnc;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
@@ -51,9 +52,9 @@ public class EncryptZipTask extends Task implements DiagnosticAntTask {
             EncryptionProperties encryptionProperties = diagnosticCryptoUtil.getEncryptionProperties(encProps);
             Key key = null;
             if (genkey) {
-                key = KeystoreManager.generateSecret(encryptionProperties.getKeyProperties());
+                key = JrsKeystore.generateSecret(encryptionProperties.getKeyProperties());
             } else {
-                key = KeystoreManager.getInstance().getKey(DiagnosticDataEnc.ID);
+                key = KeystoreManager.getInstance().getKeystore(null).getKey(DiagnosticDataEnc.getConfId());
             }
 
             if (!inF.exists()) {

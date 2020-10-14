@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -43,7 +43,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -65,7 +64,6 @@ import java.util.Map;
 public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSourceServiceFactory implements CustomDelegatedDataSourceServiceFactory, CustomJdbcReportDataSourceProvider {
 
 	private static final Log log = LogFactory.getLog(MongoDbJDBCReportDataSourceServiceFactory.class);
-    private RepositoryService repositoryService;
 
     private String schemaDefinitionDirectory;
     private PooledObjectCache jdbcSchemaCache = new PooledObjectCache();
@@ -256,7 +254,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
             // To prevent that we take an original version from repository and update it with the resource.
 
 
-                CustomReportDataSource dsFromRepo = (CustomReportDataSource) repositoryService.getResource(null, customReportDataSource.getURI());
+                CustomReportDataSource dsFromRepo = (CustomReportDataSource) getRepositoryService().getResource(null, customReportDataSource.getURI());
                 if (dsFromRepo != null) {
                     customReportDataSource = replaceProperties(dsFromRepo, customReportDataSource);
                 }
@@ -268,7 +266,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
             attr.add(RepositoryService.IS_OVERWRITING);
             context.setAttributes(attr);
 
-            repositoryService.saveResource(context, customReportDataSource);
+            getRepositoryService().saveResource(context, customReportDataSource);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -289,7 +287,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
             if (resourceReference.isLocal()) {
                 fileResource = (FileResource) resourceReference.getLocalResource();
             } else {
-                fileResource = (FileResource) repositoryService.getResource(null, resourceReference.getReferenceURI(), com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource.class);
+                fileResource = (FileResource) getRepositoryService().getResource(null, resourceReference.getReferenceURI(), com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource.class);
             }
             String schemaKey = fileResource.getURIString() + "_" + fileResource.getCreationDate() + "_" + fileResource.getUpdateDate();
             debug("Create MongoDB JBDC Key = " + schemaKey);
@@ -314,7 +312,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
             if (fileResource.hasData()) {
                 data = fileResource.getDataStream();
             } else {
-                FileResourceData resourceData = repositoryService.getResourceData(null, fileResource.getURIString());
+                FileResourceData resourceData = getRepositoryService().getResourceData(null, fileResource.getURIString());
                 data = resourceData.getDataStream();
             }
 
@@ -339,14 +337,6 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
             releaseExpiredPools(now);
         }
 
-    }
-
-    public RepositoryService getRepositoryService() {
-        return repositoryService;
-    }
-
-    public void setRepositoryService(RepositoryService repositoryService) {
-        this.repositoryService = repositoryService;
     }
 
     public String getSchemaDefinitionDirectory() {
@@ -420,19 +410,6 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
         if (log.isDebugEnabled()) log.debug(debugMessage, throwable);
     }
 
-    class FileNameFilterImpl implements FilenameFilter {
-
-        private String schemaPrefix;
-
-        public FileNameFilterImpl(String schemaPrefix) {
-            this.schemaPrefix = schemaPrefix.toLowerCase();
-        }
-
-        public boolean accept(File dir, String name) {
-            return (name.toLowerCase().startsWith(schemaPrefix));
-        }
-    }
-
     class CleanupThread extends Thread {
 
         private List expiredItems;
@@ -455,19 +432,6 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
         }
 
 
-    }
-
-    public void cleanup(String filePrefix, String schemaDefinitionDirectory) {
-        File schemaDirectory = new File(schemaDefinitionDirectory);
-        File[] deleteFileList = schemaDirectory.listFiles(new FileNameFilterImpl(filePrefix));
-        if (deleteFileList == null) return;
-        for (File deleteFile : deleteFileList) {
-            try {
-                deleteFile.delete();
-            } catch (Exception ex) {
-                debug("Fail to delete Mongodb JDBC schema: " + deleteFile.getAbsolutePath(), ex);
-            }
-        }
     }
 
     private String getPropertyValue(String url, String propertyKey) {

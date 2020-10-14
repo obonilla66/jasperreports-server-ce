@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -184,6 +184,7 @@
         <value>HiveQL</value>
         <value>MongoDbQuery</value>
         <value>cql</value>
+        <value>jasperQL</value>
     </util:list>
 
     <alias name="${bean.permissionsRecipientIdentityResolver}" alias="concretePermissionsRecipientIdentityResolver"/>
@@ -243,8 +244,8 @@
 		<value>jsonQLDataSource</value>  <!-- Full domain support JSON QL custom data source -->
         <value>jdbcQueryDataSource2</value> <!-- Full domain support jdbc query custom data source -->
         <value>jdbcQueryDataSource</value>  <!-- Simple single table remote XML custom data source -->
-        <value>xlsDataSource</value> <!-- Full domain support XLS custom data source -->
-        <value>xlsxDataSource</value> <!-- Full domain support XLSX custom data source -->
+        <!--<value>xlsDataSource</value>  Full domain support XLS custom data source -->
+        <!--<value>xlsxDataSource</value> Full domain support XLSX custom data source -->
         <value>textDataSource</value> <!-- Full domain support TEXT/ CSV custom data source -->
         <value>JsonSeriesDataSource</value> <!-- Simple single table remote XML custom data source -->
         <value>xmlaQueryDataSource</value> <!-- Simple single table XMLA Query custom data source -->

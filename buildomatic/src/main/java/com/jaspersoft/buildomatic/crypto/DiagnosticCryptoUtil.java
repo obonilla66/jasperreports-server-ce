@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,10 +21,12 @@
 package com.jaspersoft.buildomatic.crypto;
 
 import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
+import com.jaspersoft.jasperserver.crypto.KeyProperties;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
-import com.jaspersoft.jasperserver.crypto.conf.DiagnosticDataEnc;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.DiagnosticDataEnc;
+
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.tools.ant.Task;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -47,6 +49,8 @@ public class DiagnosticCryptoUtil {
     public static final String KEY_IS_PLAIN_TEXT = "key.is.plain.text";
 
     private DiagnosticAntTask callerAntTask;
+
+    private Configurations configs = new Configurations();
 
     DiagnosticCryptoUtil(DiagnosticAntTask callerAntTask) {
         this.callerAntTask = callerAntTask;
@@ -97,19 +101,24 @@ public class DiagnosticCryptoUtil {
     EncryptionProperties getEncryptionProperties(String encProps) throws Exception {
         File masterProperties = new File(encProps);
         if (masterProperties.exists()) {
-            return DiagnosticDataEnc.resolve(new PropertiesConfiguration(masterProperties), null);
+            return DiagnosticDataEnc.value()
+                    .from(configs.properties(masterProperties), null)
+                    .toEncProps();
         } else {
             callerAntTask.logMessage("Encryption properties file is missing or no file path specified. Using preconfigured defaults!");
-            return KeystoreManager.getInstance().getEncryptionProperties(DiagnosticDataEnc.ID);
+            return KeystoreManager.getInstance().getKeystore(null).getEncryptionProperties(DiagnosticDataEnc.getConfId());
         }
     }
 
-    KeystoreProperties getKeystoreProperties(String encProps) throws Exception {
-        KeystoreProperties keystoreProperties = null;
+    KeyProperties getKeyProperties(String encProps) throws Exception {
+        KeyProperties keystoreProperties = null;
         File properties = new File(encProps);
         if (properties.exists()) {
-            PropertiesConfiguration propertiesConfiguration =  new PropertiesConfiguration(properties);
-            keystoreProperties = new KeystoreProperties(propertiesConfiguration.getString(DiagnosticDataEnc.KEYALIAS.toString()), propertiesConfiguration.getString(DiagnosticDataEnc.KEYPASSWD.toString()));
+            Configuration propertiesConfiguration = configs.properties(properties);
+            keystoreProperties = KeyProperties.builder()
+                    .keyAlias(propertiesConfiguration.getString(DiagnosticDataEnc.value().getAlias().value()))
+                    .keyPasswd(propertiesConfiguration.getString(DiagnosticDataEnc.value().getPasswd().toString()))
+            .build();
         }
         return keystoreProperties;
     }

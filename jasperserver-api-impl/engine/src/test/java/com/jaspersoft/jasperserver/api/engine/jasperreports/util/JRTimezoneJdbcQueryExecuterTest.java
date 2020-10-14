@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,37 +21,63 @@
 
 package com.jaspersoft.jasperserver.api.engine.jasperreports.util;
 
-import net.sf.jasperreports.engine.JRDataset;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JasperReportsContext;
-import net.sf.jasperreports.engine.fill.JRFillObjectFactory;
-import net.sf.jasperreports.engine.fill.JRFillParameter;
+import static com.jaspersoft.jasperserver.api.engine.jasperreports.util.JRTimezoneJdbcQueryExecuterFactory.SET_LOCAL_TIME_ZONE_IN_SQL;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.sql.Connection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.sql.ProfileAttributeTimeZoneQueryProviderImpl;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.sql.TimeZoneQueryProviderImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.client.ProfileAttributeImpl;
+import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchResult;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
+import com.jaspersoft.jasperserver.api.metadata.user.service.impl.AttributesSearchResultImpl;
 
-import static org.junit.Assert.assertEquals;
+import net.sf.jasperreports.engine.JRDataset;
+import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.engine.fill.JRFillObjectFactory;
+import net.sf.jasperreports.engine.fill.JRFillParameter;
 
 public class JRTimezoneJdbcQueryExecuterTest {
+    @Mock
+    private JasperReportsContext jasperReportsContext;
+    @Mock
+    private JRDataset jrDataset;
+    @Mock
+    private JRFillObjectFactory jrFillObjectFactory;
+    @Mock
+    private JRParameter jrParameter;
+    @Mock
+    private Connection connection;
 
+    private TimeZone timeZone;
+    
     @Mock
-    JasperReportsContext jasperReportsContext;
+    private ProfileAttributeService profileAttributeService;
     @Mock
-    JRDataset jrDataset;
-    @Mock
-    JRFillObjectFactory jrFillObjectFactory;
-    @Mock
-    JRParameter jrParameter;
-    @Mock
-    Connection connection;
-    @Mock
-    TimeZone timeZone;
+    private ResourceFactory resourceFactory;
 
     private JRFakeFillParameter reportParametersMapFake;
     private JRFakeFillParameter reportConnectionFake;
@@ -61,9 +87,10 @@ public class JRTimezoneJdbcQueryExecuterTest {
     private Map params;
 
     @Before
-    public void setup(){
+    public void setup() {
         MockitoAnnotations.initMocks(this);
         params = new HashMap();
+        timeZone = TimeZone.getTimeZone("America/New_York");
 
         reportParametersMapFake = new JRFakeFillParameter(jrParameter, jrFillObjectFactory);
         reportParametersMapFake.setValue(new HashMap<>());
@@ -77,9 +104,11 @@ public class JRTimezoneJdbcQueryExecuterTest {
         databaseTimezoneFake.setValue(timeZone);
         params.put(JRTimezoneJdbcQueryExecuterFactory.PARAMETER_TIMEZONE, databaseTimezoneFake);
 
-        jrTimezoneJdbcQueryExecuter = new JRTimezoneJdbcQueryExecuter(jasperReportsContext, jrDataset, params);
+        jrTimezoneJdbcQueryExecuter = spy(new JRTimezoneJdbcQueryExecuter(jasperReportsContext, jrDataset, params));
+        doReturn(resourceFactory).when(jrTimezoneJdbcQueryExecuter).getObjectMappingFactory();
+        doNothing().when(jrTimezoneJdbcQueryExecuter).validateSQL();
     }
-
+    
     @Test
     public void timezoneAdjustValueIsTakenFromParams() {
         JRTimezoneJdbcQueryExecuter.TimezoneAdjustInfo timezoneAdjust = jrTimezoneJdbcQueryExecuter.getTimezoneAdjustInfo();
@@ -105,7 +134,64 @@ public class JRTimezoneJdbcQueryExecuterTest {
         assertEquals(timeZoneAlternative, timezoneAdjust.timezone);
     }
 
-    private static class JRFakeFillParameter extends JRFillParameter{
+    private PreparedStatement tzQueryProviderSetup(TimeZoneQueryProviderImpl tzqp) throws Exception {
+        final String productName = "postgresql";
+        Map<String, String> p2q = new HashMap<>();
+        p2q.put(productName, "SET LOCAL TIMEZONE='{TimeZone}'");
+        tzqp.setProductNameToQuery(p2q);
+        tzqp.setTimeZonePlaceholder("{TimeZone}");
+        
+        final String alterQuery = "SET LOCAL TIMEZONE='America/New_York'";
+        final DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
+        final PreparedStatement alterTimeZoneStatement = mock(PreparedStatement.class);
+        doReturn(tzqp).when(jrTimezoneJdbcQueryExecuter).getTimeZoneQueryProvider();
+        doReturn(databaseMetaData).when(connection).getMetaData();
+        doReturn(productName).when(databaseMetaData).getDatabaseProductName();
+        doReturn(alterTimeZoneStatement).when(connection).prepareStatement(eq(alterQuery));
+        return alterTimeZoneStatement;
+    }
+
+    @Test
+    public void createDatasource_default_shouldNotApplyTimeZone() throws Exception {
+        TimeZoneQueryProviderImpl timeZoneQueryProvider = new TimeZoneQueryProviderImpl();
+        timeZoneQueryProvider.setDefaultSetTimeZoneInSQL(false);
+        PreparedStatement alterTimeZoneStatement = tzQueryProviderSetup(timeZoneQueryProvider);
+
+        jrTimezoneJdbcQueryExecuter.createDatasource();
+
+        verify(alterTimeZoneStatement, never()).execute();
+    }
+
+    @Test
+    public void createDatasource_springconfig_shouldApplyTimeZone() throws Exception {
+        TimeZoneQueryProviderImpl timeZoneQueryProvider = new TimeZoneQueryProviderImpl();
+        timeZoneQueryProvider.setDefaultSetTimeZoneInSQL(true);
+        PreparedStatement alterTimeZoneStatement = tzQueryProviderSetup(timeZoneQueryProvider);
+
+        jrTimezoneJdbcQueryExecuter.createDatasource();
+
+        verify(alterTimeZoneStatement).execute();
+    }
+
+    @Test
+    public void createDatasource_profileattribute_shouldApplyTimeZone() throws Exception {
+        final ProfileAttribute profileAttribute = new ProfileAttributeImpl();
+        profileAttribute.setAttrName(SET_LOCAL_TIME_ZONE_IN_SQL);
+        profileAttribute.setAttrValue(Boolean.toString(true));
+        final AttributesSearchResult<ProfileAttribute> searchResult = new AttributesSearchResultImpl<>();
+        searchResult.setList(Collections.singletonList(profileAttribute));
+        ProfileAttributeTimeZoneQueryProviderImpl timeZoneQueryProvider = new ProfileAttributeTimeZoneQueryProviderImpl();
+        PreparedStatement alterTimeZoneStatement = tzQueryProviderSetup(timeZoneQueryProvider);
+
+        doReturn(searchResult).when(profileAttributeService).getProfileAttributesForPrincipal(any(), any(), any());
+        timeZoneQueryProvider.setProfileAttributeService(profileAttributeService);
+
+        jrTimezoneJdbcQueryExecuter.createDatasource();
+
+        verify(alterTimeZoneStatement).execute();
+    }
+
+    private static class JRFakeFillParameter extends JRFillParameter {
         protected JRFakeFillParameter(JRParameter parameter, JRFillObjectFactory factory) {
             super(parameter, factory);
         }

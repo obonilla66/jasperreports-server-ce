@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 import static com.jaspersoft.jasperserver.api.security.SecurityConfiguration.isInputValidationOn;
 import static com.jaspersoft.jasperserver.api.security.SecurityConfiguration.isSQLValidationOn;
 import static com.jaspersoft.jasperserver.api.security.validators.Validator.Props.*;
+import static java.lang.String.format;
 
 /**
  * Wrapper around OWASP ESAPI Validator.
@@ -95,6 +96,10 @@ public class Validator {
             = Pattern.compile("(?is)^\\s*(select|call)\\b((?!\\binto\\b).)*;?\\s*$");
     private static final Pattern SQL_VALIDATION_PATTERN
             = Pattern.compile("(?is)^\\s*(select|call)\\b((?!\\binto\\b)[^;])*;?\\s*$");
+
+    private static final String UNSUCCESSFUL_SQL_VALIDATION_PATTERN_SEMI = "Validation unsuccessful. Failed evaluating default rule 'Validator.SQL_VALIDATION_PATTERN' checking query with semicolon ';', no matches found ";
+    private static final String UNSUCCESSFUL_SQL_VALIDATION_PATTERN = "Validation unsuccessful. Failed evaluating default rule 'Validator.SQL_VALIDATION_PATTERN', no matches found ";
+    private static final String UNSUCCESSFUL_SQL_VALIDATION_VIA_META_QUERY = "Validation unsuccessful. Failed evaluating default rule 'Validator.SQL_VALIDATION_VIA_META_QUERY_PATTERN', no matches found";
 
     private static MessageSource messages;
     private static ProfileAttributesResolver profileAttributesResolver;
@@ -492,18 +497,17 @@ public class Validator {
         List<ValidatorRule> validationRuleList = getRulesForParameter(SQL_QUERY_EXECUTOR_RULE_KEY);
         boolean validationRulesUsed = false;
 
-        if (validationRuleList != null) {
-			for (ValidatorRule rule : validationRuleList) {
-				boolean isInputNonEmptyStrings = StringUtil.checkAllInputStringsNonEmpty(queryOrParamString, rule.getContext(), rule.getValueValidationKey());
+        for (ValidatorRule rule : validationRuleList) {
+            boolean isInputNonEmptyStrings = StringUtil.checkAllInputStringsNonEmpty(queryOrParamString, rule.getContext(), rule.getValueValidationKey());
 
-				if (isInputNonEmptyStrings && rule.getMaxLength() > 0) {
-                    validationRulesUsed = true;
-					boolean isSQLValid = ESAPI.validator().isValidInput(rule.getContext(), queryOrParamString, rule.getValueValidationKey(), rule.getMaxLength(), false);
-					if (!isSQLValid) {
-					    throw newSecurityException(queryOrParamString);
-					}
-				}
-			}
+            if (isInputNonEmptyStrings && rule.getMaxLength() > 0) {
+                validationRulesUsed = true;
+                boolean isSQLValid = ESAPI.validator().isValidInput(rule.getContext(), queryOrParamString, rule.getValueValidationKey(), rule.getMaxLength(), false);
+                if (!isSQLValid) {
+                    log.error(format("Validation unsuccessful. Failed evaluating rule '%s' ", rule.getValueValidationKey()));
+                    throw newSecurityException(queryOrParamString);
+                }
+            }
         }
 
         if (!validationRulesUsed) { // customer has no its own validation rules, then use default validation regexps
@@ -511,6 +515,7 @@ public class Validator {
             if (SecurityConfiguration.isSqlValidationViaMetadataOn() && queryOrParamString.contains(";")) {
                 Matcher matcher = SQL_VALIDATION_VIA_META_QUERY_PATTERN.matcher(queryOrParamString);
                 if (!matcher.matches()) {
+                    log.error(UNSUCCESSFUL_SQL_VALIDATION_VIA_META_QUERY);
                     throw newSecurityException(queryOrParamString);
                 }
 
@@ -522,14 +527,17 @@ public class Validator {
                 } catch (SQLFeatureNotSupportedException e) {
                     matcher = SQL_VALIDATION_PATTERN.matcher(queryOrParamString);
                     if (!matcher.matches()) {
+                        log.error(UNSUCCESSFUL_SQL_VALIDATION_PATTERN_SEMI, e);
                         throw newSecurityException(queryOrParamString);
                     }
                 } catch (SQLException e) {
+                    log.error(UNSUCCESSFUL_SQL_VALIDATION_PATTERN_SEMI, e);
                     throw newSecurityException(queryOrParamString);
                 }
             } else {
                 Matcher matcher = SQL_VALIDATION_PATTERN.matcher(queryOrParamString);
                 if (!matcher.matches()) {
+                    log.error(UNSUCCESSFUL_SQL_VALIDATION_PATTERN);
                     throw newSecurityException(queryOrParamString);
                 }
             }

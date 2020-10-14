@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,i,r){r.exports=JSON.stringify({key:"value"})});

@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -249,9 +249,9 @@
 
 	<!--
 		This is doing the same thing as check-master-list, but it's resolving classes by finding Groovy sources
-		in the implicit classpath "bin/groovy". 
+		in the implicit classpath "bin/groovy".
 		We don't have to force the Groovy scripts to follow the same build/run pattern as Java if this behavior
-		does the same thing with a lot less overhead (no compile, jar steps, no extra classpath). 
+		does the same thing with a lot less overhead (no compile, jar steps, no extra classpath).
 		We wouldn't need the build-master-list-common target.
 		I said it was weird to put stuff under bin/groovy but I take that back; we can keep it in its own directory
 		because it doesn't use the same compile/run flow that Java does.
@@ -270,7 +270,7 @@
                     depsFolder="${js-path}/deps"
                     resultFolder="${js-path}/target/deps"/>
     </target>
-	
+
     <target name="check-war-deps-pro"
             depends="setup-groovy"
             description="Check current list of WAR dependencies with master list">
@@ -531,6 +531,7 @@
                 value="${webAppName}"/>
 
         <!-- check if we can skip the assembly of export files -->
+        <parallel>
         <if>
             <not>
                 <equals arg1="${SKIP_EXPORT_FILES}" arg2="true"/>
@@ -539,8 +540,10 @@
                 <runtarget target="assemble-export-files-ce"/>
             </then>
         </if>
-    	<!-- generate list of third-party JARs and check against "master" list -->
-        <runtarget target="check-war-deps-ce"/>
+        </parallel>
+
+        <!-- generate list of third-party JARs and check against "master" list -->
+        <runtarget target="check-war-deps-ce"/> <!--Can't be run in parallel without ensuring ${ieLib} folder has been processed first-->
     </target>
 
     <target name="build-pro"
@@ -584,7 +587,7 @@
         </if>
 
         <runtarget target="copy-pro-war"/>
-
+        <parallel>
         <!-- check if we can skip the assembly of export files -->
         <if>
             <not>
@@ -595,7 +598,8 @@
             </then>
         </if>
     	<!-- generate list of third-party JARs and check against "master" list -->
-        
+        <runtarget target="check-war-deps-pro"/>
+        </parallel>
     </target>
 
     <target name="enable-unit-tests">
@@ -716,7 +720,6 @@
             <arg value="clean"/>
             <arg value="install"/>
             <arg value="-Denv=${env}"/>
-            <arg value="-DskipITSuite=true"/>
         </runmaven>
     </target>
 
@@ -744,31 +747,50 @@
         </delete>
 
         <echo>Running integration tests</echo>
-        <parallel>
+        <!--<parallel>-->
             <if>
                 <equals arg1="${dbType}" arg2="postgresql"/>
                 <then>
                     <sequential>
                         <runtarget target="re-init-js-db-it-pro"/>
+                        <runtarget target="re-init-js-db-it-pro-rest"/>
 
-                        <runmaven dir="${js-pro-path}/integration-tests">
-                            <arg value="clean"/>
-                            <arg value="install"/>
-                            <arg value="-Denv=${env}"/>
-                            <arg value="-Ddatabase=${dbType}"/>
-                            <arg value="${OFFLINE_ARG}"/>
-                        </runmaven>
+                    <runmaven dir="${js-pro-path}/integration-tests">
+                        <arg value="clean"/>
+                        <arg value="install"/>
+                        <arg value="-Denv=${env}"/>
+                        <arg value="-Ddatabase=${dbType}"/>
+                        <arg value="${OFFLINE_ARG}"/>
+                    </runmaven>
+                        <parallel>
+                            <runmaven dir="${js-pro-path}/integration-tests/adhoc-integration-test">
+                                <arg value="clean"/>
+                                <arg value="install"/>
+                                <arg value="-Denv=${env}"/>
+                                <arg value="-Ddatabase=${dbType}"/>
+                                <arg value="${OFFLINE_ARG}"/>
+                                <arg value="-Pintegration-tests-profile"/>
+                            </runmaven>
+                            <runmaven dir="${js-pro-path}/integration-tests/rest-integration-test">
+                                <arg value="clean"/>
+                                <arg value="install"/>
+                                <arg value="-Denv=${env}"/>
+                                <arg value="-Ddatabase=${dbType}"/>
+                                <arg value="${OFFLINE_ARG}"/>
+                                <arg value="-Pintegration-tests-profile"/>
+                            </runmaven>
+                        </parallel>
                     </sequential>
-                </then>
-            </if>
+            </then>
+        </if>
 
-            <runmaven dir="${js-pro-path}/production-tests">
+      <!--      <runmaven dir="${js-pro-path}/production-tests">
                 <arg value="help:active-profiles"/>
-                <arg value="clean"/>
-                <arg value="install"/>
-                <arg value="-Denv=${env}"/>
-            </runmaven>
-        </parallel>
+                             <arg value="clean"/>
+                             <arg value="install"/>
+                             <arg value="-Denv=${env}"/>
+                         </runmaven>-->
+        <!--</parallel>-->
 
     </target>
 
@@ -1049,28 +1071,15 @@
     <target name="build-util"
            depends="init-source-paths"
            description="Build buildomatic tasks and extensions. See buildomatic/src/main/resources/tasks.properties">
-        <property name="util-target" value="${basedir}/target/classes"/>
+        <property name="util-target" value="${basedir}/target"/>
 
         <delete dir="${util-target}"/>
- 
-        <mkdir dir="${util-target}"/>
-        <javac srcdir="${basedir}/src/main/java" destdir="${util-target}" debug="true" >
-            <classpath>
-                <fileset dir="${js-path}/buildomatic/target">
-                    <exclude name="buildomatic.jar"/>
-                    <include name="*.jar"/>
-                </fileset>
-                <fileset dir="${js-path}/jasperserver-war/target/jasperserver/WEB-INF/lib">
-                    <exclude name="commons-configuration*.jar"/>
-                    <exclude name="ant*.jar"/>
-                    <include name="*.jar"/>
-                </fileset>
-            </classpath>
-        </javac>
-        <jar destfile="${basedir}/target/buildomatic.jar">
-            <fileset dir="${basedir}/src/main/resources"/>
-            <fileset dir="${util-target}"/>
-        </jar>
+
+        <runmaven dir="${js-path}/buildomatic">
+            <arg value="clean"/>
+            <arg value="install"/>
+            <arg value="clean"/> <!-- clean up right after-->
+        </runmaven>
     </target>
 
     <!-- targets for checking maven and java setup -->
@@ -1194,7 +1203,7 @@
         </runmaven>
     </target>
 
-    <target name="drop-js-db-it"
+    <target name="drop-js-db-it" depends="drop-js-db-it-rest"
            description="drop jasperserver repository db for IT">
         <echo message="Dropping database. js.it.dbName = ${js.it.dbName}"/>
         <runSQL jdbcUrl="${admin.jdbcUrl}" print="true" onerror="continue">
@@ -1252,6 +1261,56 @@
             depends="init-source-paths, __cc-code-coverage-validate"
             description="Validate Code Coverage">
     </target>
+
+    <target name="drop-js-db-it-rest"
+            description="drop jasperserver repository db for IT">
+        <echo message="Dropping database. js.it.dbName = ${js.it.dbName}"/>
+        <runSQL jdbcUrl="${admin.jdbcUrl}" print="true" onerror="continue">
+            ${js.it.rest.drop}
+        </runSQL>
+    </target>
+
+    <target name="create-js-db-it-rest"
+            description="create jasperserver repository db for IT">
+        <echo message="Creating database, js.it.rest.dbName = ${js.it.rest.dbName}, ${js.it.rest.create}"/>
+        <runSQL jdbcUrl="${admin.jdbcUrl}" print="true" onerror="abort">
+            ${js.it.rest.create}
+        </runSQL>
+    </target>
+
+    <target name="init-js-db-it-pro-rest"
+            description="run ddl on pro jasperserver db for integration testing">
+        <if>
+            <isset property="stopIfError" />
+            <then>
+                <var name="runSqlOnError" value="abort" />
+            </then>
+            <else>
+                <var name="runSqlOnError" value="${runSqlDefaultOnError}" />
+            </else>
+        </if>
+
+        <echo message="Connecting to ${js.it.rest.dbName} ..."/>
+        <runSQL jdbcUrl="${js.it.rest.jdbcUrl}" print="true" onerror="${runSqlOnError}">
+            <fileset dir="${currentSqlDir}">
+                <include name="js-pro-create.ddl"/>
+                <include name="quartz.ddl"/>
+            </fileset>
+        </runSQL>
+    </target>
+
+    <target name="re-create-js-db-it-pro-rest"
+            depends="create-js-db-it-rest"
+            description="Prepares IT database">
+    </target>
+
+    <target name="re-init-js-db-it-pro-rest"
+            depends="re-create-js-db-it-pro-rest,init-js-db-it-pro-rest"
+            description="Prepares IT database">
+    </target>
+
+
+
 
 
     <target name="maven-check-cve-ce">
@@ -1320,7 +1379,7 @@
     </target>
 
 	<target name="check-cve-ce" depends="init-source-paths,get-cve-dependencies ,copy-extra-jars" description="CVE check analysis">
-	          <dependency-check  assemblyAnalyzerEnabled="false" 
+	          <dependency-check  assemblyAnalyzerEnabled="false"
                                      projectname="Jasperserver-ce"
 	                             reportformat="HTML"
 	                             reportoutputdirectory="${js-path}/target"
@@ -1334,7 +1393,7 @@
 	    	</fileset>
 	    </dependency-check>
 	</target>
-		
+
 	<target name="check-cve-pro" depends="init-source-paths,get-cve-dependencies,copy-extra-jars" description="CVE check analysis">
 	    <dependency-check assemblyAnalyzerEnabled="false"
                               projectname="Jasperserver-pro"

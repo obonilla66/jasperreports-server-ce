@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.war;
 
+import com.jaspersoft.jasperserver.api.security.ResponseHeaderUpdater;
 import com.jaspersoft.jasperserver.api.security.encryption.EncryptionRequestUtils;
 import org.apache.commons.lang.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +53,11 @@ public class RESTLoginAuthenticationFilter implements Filter {
     private AuthenticationManager authenticationManager;
     private String userNameParam = "j_username";
     private String userPwdParam = "j_password";
+
+
+
     private boolean postOnly = true;
+    private ResponseHeaderUpdater responseHeadersUpdater;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -61,10 +66,11 @@ public class RESTLoginAuthenticationFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-
+        if (responseHeadersUpdater != null) {
+            responseHeadersUpdater.changeHeaders(httpResponse, httpRequest);
+        }
         String pathInfo = httpRequest.getPathInfo();
         if (pathInfo != null && pathInfo.equalsIgnoreCase(LOGIN_PATH_INFO)) {
             if (!"post".equalsIgnoreCase(httpRequest.getMethod()) && this.postOnly) {
@@ -123,6 +129,7 @@ public class RESTLoginAuthenticationFilter implements Filter {
         pw.print(msg);
     }
 
+
     @Override
     public void destroy() {
 
@@ -134,6 +141,10 @@ public class RESTLoginAuthenticationFilter implements Filter {
 
     public void setAuthenticationManager(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
+    }
+
+    public void setResponseHeadersUpdater(ResponseHeaderUpdater responseHeadersUpdater) {
+        this.responseHeadersUpdater = responseHeadersUpdater;
     }
 
     public String getUserNameParam() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -28,6 +28,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsConta
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValuesListWrapper;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManager;
 import org.springframework.stereotype.Service;
 
@@ -124,6 +125,28 @@ public class InputControlsLogicServiceImpl implements InputControlsLogicService 
         }
     }
 
+    public SelectedValuesListWrapper getInputControlsSelectedValues(String reportUnitUri, boolean freshData, boolean withLabel) throws CascadeResourceNotFoundException {
+        final Map<String, String[]> parameters = new HashMap<>();
+
+        setCacheParameter(freshData, parameters);
+        parameters.put("withLabel", new String[]{String.valueOf(withLabel)});
+        try {
+        return callControlLogic(reportUnitUri, new ControLogicCaller<SelectedValuesListWrapper>() {
+            @Override
+            public SelectedValuesListWrapper callByContainerUri(ControlLogic<InputControlsContainer> controlLogic, String containerUri) throws CascadeResourceNotFoundException, InputControlsValidationException {
+                return controlLogic.getSelectedValues(containerUri, parameters);
+            }
+            @Override
+            public SelectedValuesListWrapper callByContainer(ControlLogic<InputControlsContainer> controlLogic, InputControlsContainer container) throws CascadeResourceNotFoundException, InputControlsValidationException {
+                return controlLogic.getSelectedValues(container, parameters);
+            }
+            });
+        } catch (InputControlsValidationException e) {
+            //Should not happen
+            throw new RuntimeException(e);
+        }
+    }
+
     public List<ReportInputControl> getInputControlsWithValues(String reportUnitUri, Set<String> inputControlIds, Map<String, String[]> rawParameters) throws CascadeResourceNotFoundException {
         List<ReportInputControl> result = getInputControlsStructure(reportUnitUri, inputControlIds);
         if (result != null && !result.isEmpty()) {
@@ -183,10 +206,7 @@ public class InputControlsLogicServiceImpl implements InputControlsLogicService 
             Map<String, String[]> originalParameters, boolean freshData) throws CascadeResourceNotFoundException {
         final Map<String, String[]> parameters = originalParameters != null ? new HashMap<String, String[]>(originalParameters) : new HashMap<String, String[]>();
         List<InputControlState> states;
-        if(freshData){
-            controlLogicCacheManager.clearCache();
-            parameters.put(EhcacheEngineService.IC_REFRESH_KEY, new String[]{"true"});
-        }
+        setCacheParameter(freshData, parameters);
         defaultEvaluationEventsHandler.beforeEvaluation(containerUri, parameters, securityContextProvider.getContextUser());
         try {
             states = callControlLogic(containerUri, new ControLogicCaller<List<InputControlState>>() {
@@ -206,6 +226,13 @@ public class InputControlsLogicServiceImpl implements InputControlsLogicService 
         }
         defaultEvaluationEventsHandler.afterEvaluation(containerUri, parameters, states, securityContextProvider.getContextUser());
         return states;
+    }
+
+    public void setCacheParameter(boolean freshData, Map<String, String[]> parameters) {
+        if(freshData){
+            controlLogicCacheManager.clearCache();
+            parameters.put(EhcacheEngineService.IC_REFRESH_KEY, new String[]{"true"});
+        }
     }
 
     protected void reorderControlsInternal(String containerUri, int[] reorderMapping) throws CascadeResourceNotFoundException{
@@ -262,4 +289,10 @@ public class InputControlsLogicServiceImpl implements InputControlsLogicService 
 
         T callByContainer(ControlLogic<InputControlsContainer> controlLogic, InputControlsContainer container) throws CascadeResourceNotFoundException, InputControlsValidationException;
     }
+
+
+    public void setControlLogicCacheManager(ControlLogicCacheManager controlLogicCacheManager) {
+        this.controlLogicCacheManager = controlLogicCacheManager;
+    }
+
 }

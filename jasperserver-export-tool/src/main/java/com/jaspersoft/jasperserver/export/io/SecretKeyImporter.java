@@ -1,9 +1,30 @@
+/*
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * http://www.jaspersoft.com.
+ *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.jaspersoft.jasperserver.export.io;
 
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeyProperties;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
 import com.jaspersoft.jasperserver.crypto.properties.KeyAlgorithm;
 import com.jaspersoft.jasperserver.export.ImportInputMetadata;
 import com.jaspersoft.jasperserver.export.ImportTask;
@@ -28,7 +49,7 @@ import static java.lang.System.getenv;
 
 public class SecretKeyImporter implements Importer {
     protected static final CommandOut commandOut = CommandOut.getInstance();
-    public static final String OK = "Key is successfully stored.";
+    public static final String OK = "Key is successfully stored";
 
     protected ImportTask task;
 
@@ -46,6 +67,7 @@ public class SecretKeyImporter implements Importer {
         final EncryptionParams params = new EncryptionParams(task.getParameters());
 
         KeystoreManager keystoreMng = KeystoreManager.getInstance();
+        JrsKeystore keystore = keystoreMng.getKeystore(null);
 
         byte[] bytes;
 
@@ -92,20 +114,31 @@ public class SecretKeyImporter implements Importer {
         }
 
         String keyPasswd = params.getKeyPasswd().orElseGet(() -> {
-            final KeystoreProperties keystoreProperties = keystoreMng.getKeystoreProperties(keyAlias.get());
-            return keystoreProperties == null || keystoreProperties.getKeyPasswd() == null ? "" : keystoreProperties.getKeyPasswd();
+            try {
+                final KeyProperties keystoreProperties = keystore.getKeyProperties(keyAlias.get());
+                return keystoreProperties.getKeyPasswd() == null ? params.getKeyStorePasswd().orElse("") : keystoreProperties.getKeyPasswd();
+            } catch (Exception e) {
+                return params.getKeyStorePasswd().orElse("") ;
+            }
         });
         String keyAlg = params.getKeyAlg().get();
 
-        final KeystoreProperties keystoreProperties = new KeystoreProperties(keyAlias.get(), keyPasswd);
+        final KeyProperties keyProperties = new KeyProperties(keyAlias.get(), keyPasswd);
+        keyProperties.setKeyAlg(keyAlg);
+        params.getKeyVisible().ifPresent(keyProperties::setKeyVisible);
+        params.getKeyLabel().ifPresent(keyProperties::setKeyLabel);
+        params.getKeyOrganisation().ifPresent(keyProperties::setKeyOrganization);
+
         if (bytes.length > 0 && (keyAlg.equals(KeyAlgorithm.AES) || keyAlg.equals(KeyAlgorithm.RSA) || keyAlg.equals(KeyAlgorithm.DES_EDE))) {
             Key key = new SecretKeySpec(bytes, keyAlg);
-            keystoreMng.setKey(key, keystoreProperties);
+            keystore.setKey(key, keyProperties);
 
             commandOut.info(OK);
         } else if (params.hasGenKey() && keyAlg.equals(KeyAlgorithm.AES)) {
             try {
-                keystoreMng.generateSecret(new KeyProperties(keyAlg, keySize), keystoreProperties, false);
+                keyProperties.setKeyAlg(keyAlg);
+                keyProperties.setKeySize(keySize);
+                keystore.generateSecret(keyProperties, false);
 
             } catch (Exception e) {
                 throw new ImportFailedException(e.getMessage());
@@ -114,7 +147,9 @@ public class SecretKeyImporter implements Importer {
             commandOut.info(OK);
         } else if (params.hasGenKey() && keyAlg.equals(KeyAlgorithm.RSA)) {
             try {
-                keystoreMng.generateKeyPair(new KeyProperties(keyAlg, keySize), keystoreProperties, false);
+                keyProperties.setKeyAlg(keyAlg);
+                keyProperties.setKeySize(keySize);
+                keystore.generateKeyPair(keyProperties, false);
 
             } catch (Exception e) {
                 throw new ImportFailedException(e.getMessage());

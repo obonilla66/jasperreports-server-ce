@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * http://www.jaspersoft.com.
+ *
+ * Unless you have purchased a commercial license agreement from Jaspersoft,
+ * the following license terms apply:
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.jaspersoft.jasperserver.api.common.crypto;
 
 import com.jaspersoft.jasperserver.api.security.encryption.PlainCipher;
@@ -18,7 +39,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 
-import static com.jaspersoft.jasperserver.crypto.conf.PasswordEncoderEnc.*;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.PasswordEncoderEnc;
 import static java.lang.System.getenv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -42,10 +63,10 @@ public class PasswordCiphererCipherFactory4Test {
             factory.setCipherClass(PasswordCipherer.class);
             factory.setConfId(PASSWORD_ENC_SECRET);
 
-            factory.setTransformation((String) ENC_TRANSFORMATION.value());
-            factory.setBlockSize((Integer) ENC_BLOCK_SIZE.value());
-            factory.setKeyAlgorithm((String) KEYALG.value());
-            factory.setKeySize((Integer) KEYSIZE.value());
+            factory.setTransformation(PasswordEncoderEnc.value().getEncTransformation().value());
+            factory.setBlockSize(PasswordEncoderEnc.value().getEncBlockSize().value());
+            factory.setKeyAlgorithm(PasswordEncoderEnc.value().getKeyAlgorithm().value());
+            factory.setKeySize(PasswordEncoderEnc.value().getKeySize().value());
             return factory;
         }
         @Bean(name = "passwordEncoder")
@@ -100,7 +121,7 @@ public class PasswordCiphererCipherFactory4Test {
 
     @Test
     public void shouldDecodePasswordWithUnknownIV() throws Exception {
-        final CipherFactory factory = cipherFactory.fork(new SecretKeySpec(Hexer.parse(KEY), (String) KEYALG.value()));
+        final CipherFactory factory = cipherFactory.fork(new SecretKeySpec(Hexer.parse(KEY), PasswordEncoderEnc.value().getKeyAlgorithm().value()));
         final PlainCipher cipher = factory.getObject();
 
         assertEquals("jasperadmin", cipher.decode(SOME_JASPERADMIN));

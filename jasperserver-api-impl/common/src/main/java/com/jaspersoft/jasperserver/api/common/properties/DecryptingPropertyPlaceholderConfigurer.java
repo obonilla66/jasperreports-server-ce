@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,13 +23,14 @@ package com.jaspersoft.jasperserver.api.common.properties;
 
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
+
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 
 public class DecryptingPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {
 	private static final Map<String, String> springImportedProperties = new Hashtable<String, String>();
@@ -63,7 +64,7 @@ public class DecryptingPropertyPlaceholderConfigurer extends PropertyPlaceholder
 		originalValue = originalValue.trim();
 		if (EncryptionEngine.isEncrypted(originalValue)) {
 			KeystoreManager ksManager = KeystoreManager.getInstance();
-			originalValue = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), originalValue);
+			originalValue = EncryptionEngine.decrypt(ksManager.getKeystore(null).getKey(BuildEnc.getConfId()), originalValue);
 		}
 
 		return originalValue;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -38,8 +38,12 @@ public class JRTimezoneJdbcQueryExecuterFactory extends JRJdbcQueryExecuterFacto
 {
 
 	public static final String PARAMETER_TIMEZONE = "DATABASE_TIMEZONE";
+	public static final String SET_LOCAL_TIME_ZONE_IN_SQL = "SET_LOCAL_TIME_ZONE_IN_SQL";
 
-	private final static Object[] BUILTIN_PARAMETERS = {PARAMETER_TIMEZONE,  TimeZone.class};
+	private final static Object[] BUILTIN_PARAMETERS = {
+			PARAMETER_TIMEZONE,  TimeZone.class,
+			SET_LOCAL_TIME_ZONE_IN_SQL, Boolean.class
+	};
 
 	public Object[] getBuiltinParameters()
 	{

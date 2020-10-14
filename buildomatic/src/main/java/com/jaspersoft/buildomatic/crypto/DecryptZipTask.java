@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,21 +21,18 @@
 
 package com.jaspersoft.buildomatic.crypto;
 
-import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
-import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
-import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import com.jaspersoft.jasperserver.crypto.conf.DiagnosticDataEnc;
+import com.jaspersoft.jasperserver.crypto.*;
+
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.DiagnosticDataEnc;
+
+import com.jaspersoft.jasperserver.crypto.conf.EncConf;
 import com.jaspersoft.jasperserver.dto.logcapture.CollectorSettings;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.JAXBException;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,8 +72,9 @@ public class DecryptZipTask extends Task implements com.jaspersoft.buildomatic.c
 
         try {
             KeystoreManager mng = KeystoreManager.getInstance();
+            JrsKeystore keystore = mng.getKeystore(null);
             EncryptionProperties encryptionProperties = diagnosticCryptoUtil.getEncryptionProperties(encProps);
-            KeystoreProperties keystoreProperties = diagnosticCryptoUtil.getKeystoreProperties(encProps);
+            KeyProperties keystoreProperties = diagnosticCryptoUtil.getKeyProperties(encProps);
 
             Key key = null;
             if (secretKey != null && secretKey.trim().startsWith("0x")) {
@@ -85,31 +83,35 @@ public class DecryptZipTask extends Task implements com.jaspersoft.buildomatic.c
 
             } else if (keyAlias != null && !keyAlias.isEmpty()) {
                 try {
-                    keystoreProperties = mng.getKeystoreProperties(keyAlias);
-                    if (keystoreProperties.getKeyAlis() == null) {
-                        key = mng.getKey(keyAlias, keyPass);
+                    keystoreProperties = keystore.getKeyProperties(keyAlias);
+                    if (keystoreProperties.getKeyAlias() == null) {
+                        key = keystore.getKey(keyAlias);
                     } else {
-                        key = mng.getKey(keystoreProperties.getKeyAlis()
-                                , keyPass == null ? keystoreProperties.getKeyPasswd() : keyPass);
+                        final KeyProperties props = KeyProperties.builder()
+                                .keyAlias(keystoreProperties.getKeyAlias())
+                                .keyPasswd(keyPass == null ? keystoreProperties.getKeyPasswd() : keyPass).build();
+                        key = keystore.getKey(props);
                     }
                 } catch (Exception e) {
-                    key = mng.getKey(keyAlias, keyPass);
+                    key = keystore.getKey(EncConf.from(KeyProperties.builder().keyAlias(keyAlias).keyPasswd(keyPass).build()));
                 }
 
             } else if (keystoreProperties != null) {
-                String keyalias = keystoreProperties.getKeyAlis();
+                String keyalias = keystoreProperties.getKeyAlias();
                 String keypasswd = keystoreProperties.getKeyPasswd();
                 if (keyalias != null && keypasswd != null) {
-                    key = mng.getKey(keyalias, keypasswd);
+                    key = keystore.getKey(EncConf.from(KeyProperties.builder().keyAlias(keyalias).keyPasswd(keypasswd).build()));
                 }
             }
             else if(settings != null && settings.getKeyalias() != null) {
-                keystoreProperties = mng.getKeystoreProperties(settings.getKeyalias());
-                if (keystoreProperties.getKeyAlis() != null) {
-                    key = mng.getKey(keystoreProperties.getKeyAlis(), keystoreProperties.getKeyPasswd());
+                keystoreProperties = keystore.getKeyProperties(settings.getKeyalias());
+                if (keystoreProperties.getKeyAlias() != null) {
+                    key = keystore.getKey(
+                            EncConf.from(
+                                    KeyProperties.builder().keyAlias(keystoreProperties.getKeyAlias()).keyPasswd(keystoreProperties.getKeyPasswd()).build()));
                 }
             } else {
-                key = mng.getKey(DiagnosticDataEnc.ID);
+                key = keystore.getKey(DiagnosticDataEnc.getConfId());
             }
 
             if (key == null) {
@@ -120,7 +122,7 @@ public class DecryptZipTask extends Task implements com.jaspersoft.buildomatic.c
                 if (files != null) {
                     for (File file : files) {
                         if (file.getName().contains("log") && file.getName().contains(JS_ENCRYPTED)) {
-                            final Key currentKey = resolveKey(file, mng, key, settings);
+                            final Key currentKey = resolveKey(file, keystore, key, settings);
 
                             File outF = diagnosticCryptoUtil.createDecryptedOutputFile(file);
                             EncryptionEngine.decryptFile(file, outF, currentKey, encryptionProperties);
@@ -130,7 +132,7 @@ public class DecryptZipTask extends Task implements com.jaspersoft.buildomatic.c
                     throw new IllegalArgumentException("No files to decrypt found in directory: " + inF.getName());
                 }
             } else {
-                final Key currentKey = resolveKey(inF, mng, key, settings);
+                final Key currentKey = resolveKey(inF, keystore, key, settings);
 
                 File outF = diagnosticCryptoUtil.createDecryptedOutputFile(inF);
                 EncryptionEngine.decryptFile(inF, outF, currentKey, encryptionProperties);
@@ -140,7 +142,7 @@ public class DecryptZipTask extends Task implements com.jaspersoft.buildomatic.c
         }
     }
 
-    private Key resolveKey(File file, KeystoreManager mng, Key defaultKey, CollectorSettings settings) {
+    private Key resolveKey(File file, JrsKeystore mng, Key defaultKey, CollectorSettings settings) {
         if(secretKey != null && !secretKey.isEmpty()) return defaultKey;
 
         final String fileKeyAlias = getKeyAlias(file);
@@ -149,12 +151,14 @@ public class DecryptZipTask extends Task implements com.jaspersoft.buildomatic.c
         final String settingsKeyAlias = settings != null ? settings.getKeyalias() : null;
         if(fileKeyAlias.equalsIgnoreCase(settingsKeyAlias)) return defaultKey;
 
-        final KeystoreProperties props = mng.getKeystoreProperties(fileKeyAlias);
-        if(props.getKeyAlis() == null) return defaultKey;
+        final KeyProperties props = mng.getKeyProperties(fileKeyAlias);
+        if(props.getKeyAlias() == null) return defaultKey;
 
-        System.out.println(props.getKeyAlis());
+        System.out.println(props.getKeyAlias());
 
-        return mng.getKey(props.getKeyAlis(), props.getKeyPasswd() != null ? props.getKeyPasswd() : "");
+        return mng.getKey(EncConf.from(KeyProperties.builder()
+                .keyAlias(props.getKeyAlias())
+                .keyPasswd(props.getKeyPasswd() != null ? props.getKeyPasswd() : "").build()));
     }
 
     private String getKeyAlias(File inF) {

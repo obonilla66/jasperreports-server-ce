@@ -1,8 +1,0 @@
-{
-  "limit": 100,
-  "createOtherBucket": true,
-  "limitAllLevels": true,
-  "path": [
-    "TEST_PATH"
-  ]
-}

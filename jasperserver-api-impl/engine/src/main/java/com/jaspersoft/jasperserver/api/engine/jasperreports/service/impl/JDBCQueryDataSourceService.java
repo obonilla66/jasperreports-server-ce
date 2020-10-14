@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,20 +21,18 @@
 
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
-import net.sf.jasperreports.data.jdbc.JdbcDataAdapterService;
-import net.sf.jasperreports.data.jdbc.JdbcDataAdapter;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.JRRuntimeException;
-import net.sf.jasperreports.engine.JasperReportsContext;
-import net.sf.jasperreports.engine.util.JRClassLoader;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
+
+import net.sf.jasperreports.data.jdbc.JdbcDataAdapter;
+import net.sf.jasperreports.data.jdbc.JdbcDataAdapterService;
+import net.sf.jasperreports.engine.JRRuntimeException;
+import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.engine.ParameterContributorContext;
+import net.sf.jasperreports.engine.util.JRClassLoader;
 
 /**
  * Create JDBC connection from data adapter properties
@@ -43,7 +41,7 @@ public class JDBCQueryDataSourceService extends JdbcDataAdapterService {
 
 	public JDBCQueryDataSourceService(JasperReportsContext jasperReportsContext, JdbcDataAdapter jdbcDataAdapter)
 	{
-		super(jasperReportsContext, jdbcDataAdapter);
+		super(new ParameterContributorContext(jasperReportsContext, null, null), jdbcDataAdapter);
 	}
 
     public Connection getConnection() throws SQLException{

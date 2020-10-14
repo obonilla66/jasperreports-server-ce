@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -30,14 +30,16 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 
 @XmlRootElement(name = "error")
-public class InputControlValidationError extends ValidationErrorImpl{
+public class InputControlValidationError extends ValidationErrorImpl {
 
     private String inputControlUri;
 
     private String invalidValue;
+    private Object[] args;
 
     public InputControlValidationError(String errorCode, Object[] arguments, String defaultMessage, String inputControlUri, String invalidValue) {
         super(errorCode, arguments, defaultMessage, null);
+        this.args = arguments;
         this.inputControlUri =  inputControlUri;
         this.invalidValue = invalidValue;
     }
@@ -57,4 +59,13 @@ public class InputControlValidationError extends ValidationErrorImpl{
     public void setInvalidValue(String invalidValue) {
         this.invalidValue = invalidValue;
     }
+
+    public Object[] getArgs() {
+        return args;
+    }
+
+    public void setArgs(Object[] args) {
+        this.args = args;
+    }
+
 }

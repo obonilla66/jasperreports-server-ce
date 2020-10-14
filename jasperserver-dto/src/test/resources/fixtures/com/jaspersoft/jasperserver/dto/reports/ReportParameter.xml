@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,10 @@
   -->
 
 <reportParameter name="TEST_NAME">
+    <limit>TEST_LIMIT</limit>
+    <offset>TEST_OFFSET</offset>
+    <select>TEST_SELECT</select>
+    <criteria>TEST_CRITERIA</criteria>
     <value>TEST_VALUE_A</value>
     <value>TEST_VALUE_B</value>
 </reportParameter>

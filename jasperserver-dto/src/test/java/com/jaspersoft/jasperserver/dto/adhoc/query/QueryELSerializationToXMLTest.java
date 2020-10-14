@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,12 +22,14 @@
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryAggregatedField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup;
+import com.jaspersoft.jasperserver.dto.adhoc.query.order.ClientGenericOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -263,6 +265,155 @@ public class QueryELSerializationToXMLTest extends QueryTest {
 
     }
 
+    @Test
+    public void ensureSelectFieldWithExpression() throws Exception {
+
+        ClientMultiLevelQuery cq = MultiLevelQueryBuilder
+                .select(new ClientQueryField().setFieldName("sales").setId("fieldName").
+                                setExpressionContainer(new ClientExpressionContainer("sum(sales)")),
+                        new ClientQueryField().setFieldName("city").setId("fieldName2"))
+                .build();
+
+
+        assertThat(xml(cq), is("<multiLevelQuery>\n" +
+                "    <select>\n" +
+                "        <fields>\n" +
+                "            <field>\n" +
+                "                <expression>\n" +
+                "                    <string>sum(sales)</string>\n" +
+                "                </expression>\n" +
+                "                <field>sales</field>\n" +
+                "                <id>fieldName</id>\n" +
+                "            </field>\n" +
+                "            <field>\n" +
+                "                <field>city</field>\n" +
+                "                <id>fieldName2</id>\n" +
+                "            </field>\n" +
+                "        </fields>\n" +
+                "    </select>\n" +
+                "</multiLevelQuery>"));
+    }
+
+
+
+    @Test
+    public void ensureSelectOneAggregation_groupByExpression() throws Exception {
+        ClientQuery cq = MultiLevelQueryBuilder
+                .select(Collections.<ClientQueryField>emptyList(), Arrays.asList(
+                        new ClientQueryAggregatedField().setFieldReference("sales").setAggregateFunction("Average")))
+                .groupBy(new ClientQueryGroup().setFieldName("city").setId("g1").setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .build();
+
+
+        assertThat(xml(cq), is("<multiLevelQuery>\n" +
+                "    <select>\n" +
+                "        <aggregations>\n" +
+                "            <aggregation>\n" +
+                "                <functionName>Average</functionName>\n" +
+                "                <fieldRef>sales</fieldRef>\n" +
+                "            </aggregation>\n" +
+                "        </aggregations>\n" +
+                "        <fields/>\n" +
+                "    </select>\n" +
+                "    <groupBy>\n" +
+                "        <group>\n" +
+                "            <expression>\n" +
+                "                <string>sum(sales)</string>\n" +
+                "            </expression>\n" +
+                "            <field>city</field>\n" +
+                "            <id>g1</id>\n" +
+                "        </group>\n" +
+                "    </groupBy>\n" +
+                "</multiLevelQuery>"
+        ));
+    }
+
+    @Test
+    public void ensureSelectOneAggregation_orderByExpression() throws Exception {
+        ClientQuery cq = MultiLevelQueryBuilder
+                .select(Collections.<ClientQueryField>emptyList(), Arrays.asList(
+                        new ClientQueryAggregatedField().setFieldReference("sales").setAggregateFunction("Average")))
+                .orderBy(new ClientGenericOrder().setFieldReference("city").setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .build();
+
+
+        assertThat(xml(cq), is("<multiLevelQuery>\n" +
+                "    <select>\n" +
+                "        <aggregations>\n" +
+                "            <aggregation>\n" +
+                "                <functionName>Average</functionName>\n" +
+                "                <fieldRef>sales</fieldRef>\n" +
+                "            </aggregation>\n" +
+                "        </aggregations>\n" +
+                "        <fields/>\n" +
+                "    </select>\n" +
+                "    <orderBy>\n" +
+                "        <field>\n" +
+                "            <ascending>true</ascending>\n" +
+                "            <expression>\n" +
+                "                <string>sum(sales)</string>\n" +
+                "            </expression>\n" +
+                "            <fieldRef>city</fieldRef>\n" +
+                "        </field>\n" +
+                "    </orderBy>\n" +
+                "</multiLevelQuery>"
+        ));
+    }
+
+    @Test
+    public void ensureExpresssionsOnAll() throws Exception {
+        ClientQuery cq = MultiLevelQueryBuilder
+                .select(Arrays.asList(
+                        (new ClientQueryField().setFieldName("sales").setId("fieldName").
+                                setExpressionContainer(new ClientExpressionContainer("sum(sales)")))),
+                        Arrays.asList(
+                                new ClientQueryAggregatedField().setFieldReference("sales")
+                                        .setExpressionContainer(new ClientExpressionContainer("sum(sales)"))))
+                .groupBy(new ClientQueryGroup().setFieldName("city").setId("g1").setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .orderBy(new ClientGenericOrder().setFieldReference("city")
+                        .setExpressionContainer(new ClientExpressionContainer("sum(sales)")))
+                .build();
+
+        assertThat(xml(cq), is("<multiLevelQuery>\n" +
+                "    <select>\n" +
+                "        <aggregations>\n" +
+                "            <aggregation>\n" +
+                "                <expression>\n" +
+                "                    <string>sum(sales)</string>\n" +
+                "                </expression>\n" +
+                "                <fieldRef>sales</fieldRef>\n" +
+                "            </aggregation>\n" +
+                "        </aggregations>\n" +
+                "        <fields>\n" +
+                "            <field>\n" +
+                "                <expression>\n" +
+                "                    <string>sum(sales)</string>\n" +
+                "                </expression>\n" +
+                "                <field>sales</field>\n" +
+                "                <id>fieldName</id>\n" +
+                "            </field>\n" +
+                "        </fields>\n" +
+                "    </select>\n" +
+                "    <groupBy>\n" +
+                "        <group>\n" +
+                "            <expression>\n" +
+                "                <string>sum(sales)</string>\n" +
+                "            </expression>\n" +
+                "            <field>city</field>\n" +
+                "            <id>g1</id>\n" +
+                "        </group>\n" +
+                "    </groupBy>\n" +
+                "    <orderBy>\n" +
+                "        <field>\n" +
+                "            <ascending>true</ascending>\n" +
+                "            <expression>\n" +
+                "                <string>sum(sales)</string>\n" +
+                "            </expression>\n" +
+                "            <fieldRef>city</fieldRef>\n" +
+                "        </field>\n" +
+                "    </orderBy>\n" +
+                "</multiLevelQuery>"));
+    }
 
     @Test
     @Ignore

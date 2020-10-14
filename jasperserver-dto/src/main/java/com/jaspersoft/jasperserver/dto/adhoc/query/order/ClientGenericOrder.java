@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,29 +21,48 @@
 package com.jaspersoft.jasperserver.dto.adhoc.query.order;
 
 
+import com.jaspersoft.jasperserver.dto.adhoc.query.ClientField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientFieldReference;
+import com.jaspersoft.jasperserver.dto.adhoc.query.IExpressionContainer;
+import com.jaspersoft.jasperserver.dto.adhoc.query.QueryPatternsUtil;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckGenericOrderFieldReference;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
  */
 @CheckGenericOrderFieldReference
-public class ClientGenericOrder implements ClientOrder, ClientFieldReference {
+public class ClientGenericOrder implements ClientOrder, ClientFieldReference, ClientField, IExpressionContainer {
     public static final Boolean IS_AGGREGATION_DEFAULT = false;
 
-    private Boolean isAscending;
+    private Boolean isAscending = true;
     private Boolean isAggregationLevel = IS_AGGREGATION_DEFAULT;
-
+    private String type;
     private String fieldRef;
 
+    private ClientExpressionContainer expressionContainer;
 
     public ClientGenericOrder() {
         // no op
+    }
+
+    public ClientGenericOrder(String orderExpression) {
+        QueryPatternsUtil.NameExpressionOrder nameExpressionOrder = QueryPatternsUtil.parseNameExpressionOrder(orderExpression);
+        this.fieldRef = nameExpressionOrder.name;
+
+        if (nameExpressionOrder.expression != null) {
+            this.expressionContainer = new ClientExpressionContainer(nameExpressionOrder.expression);
+
+        }
+        if ("DESC".equals(nameExpressionOrder.order)) {
+            isAscending = false;
+        }
     }
 
     public ClientGenericOrder(ClientGenericOrder sorting) {
@@ -53,6 +72,7 @@ public class ClientGenericOrder implements ClientOrder, ClientFieldReference {
                 .setAscending(sorting.isAscending())
                 .setFieldReference(sorting.getFieldReference())
                 .setAggregation(sorting.isAggregationLevel());
+        expressionContainer = copyOf(sorting.getExpressionContainer());
     }
 
     @Override
@@ -106,6 +126,38 @@ public class ClientGenericOrder implements ClientOrder, ClientFieldReference {
     }
 
     @Override
+    @XmlTransient
+    public String getFieldExpression() {
+        if (expressionContainer == null) return null;
+        return expressionContainer.getString();
+    }
+
+    @Override
+    @XmlTransient
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        return fieldRef;
+    }
+
+
+    @Override
+    @XmlElement(name = "expression")
+    public ClientExpressionContainer getExpressionContainer() {
+        return expressionContainer;
+    }
+
+    @Override
+    public ClientGenericOrder setExpressionContainer(ClientExpressionContainer expressionContainer) {
+        this.expressionContainer = expressionContainer;
+        return this;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ClientGenericOrder)) return false;
@@ -115,6 +167,9 @@ public class ClientGenericOrder implements ClientOrder, ClientFieldReference {
         if (isAscending != null ? !isAscending.equals(that.isAscending) : that.isAscending != null) return false;
         if (isAggregationLevel != null ? !isAggregationLevel.equals(that.isAggregationLevel) : that.isAggregationLevel != null)
             return false;
+        if (expressionContainer != null ? !expressionContainer.equals(that.expressionContainer) : that.expressionContainer != null) {
+            return false;
+        }
         return fieldRef != null ? fieldRef.equals(that.fieldRef) : that.fieldRef == null;
     }
 
@@ -123,6 +178,7 @@ public class ClientGenericOrder implements ClientOrder, ClientFieldReference {
         int result = isAscending != null ? isAscending.hashCode() : 0;
         result = 31 * result + (isAggregationLevel != null ? isAggregationLevel.hashCode() : 0);
         result = 31 * result + (fieldRef != null ? fieldRef.hashCode() : 0);
+        result = 31 * result + (expressionContainer != null ? expressionContainer.hashCode() : 0);
         return result;
     }
 
@@ -132,6 +188,7 @@ public class ClientGenericOrder implements ClientOrder, ClientFieldReference {
         sb.append("isAscending=").append(isAscending);
         sb.append(", isAggregationLevel=").append(isAggregationLevel);
         sb.append(", fieldReference='").append(fieldRef).append('\'');
+        sb.append(", expression=").append(expressionContainer);
         sb.append('}');
         return sb.toString();
     }

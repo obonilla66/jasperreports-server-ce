@@ -13,8 +13,14 @@ ALTER TABLE JIAwsDatasource ALTER COLUMN secretKey TYPE varchar(255);
 -- drop foreign key from JIAccessEvent to JIResource and JIUser
 
     alter table JIAccessEvent
-       drop constraint FK7caj87u72rymu6805gtek03y8;
+       drop constraint if exists FK7caj87u72rymu6805gtek03y8;
 
     alter table JIAccessEvent
-       drop constraint FK8lqavxfshc29dnw97io0t6wbf;
+       drop constraint if exists FK8lqavxfshc29dnw97io0t6wbf;
+
+    alter table JIAccessEvent
+       drop constraint if exists FK47FB3CD732282198;
+
+    alter table JIAccessEvent
+       drop constraint if exists FK47FB3CD7F254B53E;
 

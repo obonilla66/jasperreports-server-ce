@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -129,17 +129,69 @@
                     <property name="translatorName" value="mongodb-jdbc"/>
                     <property name="translatorFactoryClass" value="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.translator.jdbc.mongodb.MongoDBExecutionFactory"/>
                 </bean>
+                <bean class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig">
+                    <property name="productName" value="googlebigquery"/>
+                    <property name="translatorName" value="googlebigquery-jdbc"/>
+                    <property name="translatorFactoryClass" value="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.translator.jdbc.googlebigquery.GoogleBigQueryExecutionFactory"/>
+                </bean>
+                <bean class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig">
+                    <property name="productName" value="elastic"/>
+                    <property name="translatorName" value="elasticsearch-jdbc"/>
+                    <property name="translatorFactoryClass" value="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.translator.jdbc.elasticsearch.ElasticsearchExecutionFactory"/>
+                </bean>
             </list>
         </property>
 
-        <!--  workaround for bug JRS-11028 -->
-        <!-- skip system table when using postgres driver version 9.4-1210.jdbc41 -->
+
+        <!-- The property customSelectedSchemas is used to provide the configuration for adding schemas explicitly based on database or datasource name.
+ the entry key "usernameAsSchema" will allow to use 'username' as the schema, and if some specific schemas(which is accessible by the datasource user) needs to be included, the entry "schemasToBeIncluded" can be used to include those schema names there. Also, if the username is not used as schema then comment out the "usernameAsSchema" entry.
+ -->
+        <property name="customSelectedSchemas">
+            <map>
+                <entry key="oracle">
+                    <map>
+                        <entry key="usernameAsSchema">
+                            <set value-type="java.lang.String">
+                                <value></value> <!-- username will be used as schema here -->
+                            </set>
+                        </entry>
+                        <!-- if only specific schema(s) needs to included for this DB then
+                        uncomment the below entry and add the schemas to be included-->
+                        <!--<entry key="schemasToBeIncluded">
+                            <set value-type="java.lang.String">
+                                <value>[schema1]</value>
+                                <value>[schema2]</value>
+                            </set>
+                        </entry>-->
+                    </map>
+                </entry>
+            </map>
+        </property>
+
         <property name="importPropertyMap">
             <map>
+                <!--  workaround for bug JRS-11028 -->
+                <!-- skip system table when using postgres driver version 9.4-1210.jdbc41 -->
                 <entry key="postgresql">
                         <map>
                             <entry key="importer.tableTypes" value="TABLE,VIEW,SYNONYM"/>
                         </map>
+                </entry>
+                <entry key="elasticsearch-jdbc">
+                    <map>
+                        <entry key="importer.tableTypes" value="BASE TABLE"/>
+                    </map>
+                </entry>
+
+                <!-- ImportKeys and ImportForeignKeys properties can be set to "false" when it takes longer time to open/edit a VDS based domain.
+                Below properties will avoid fetching datasource primary and foreign keys to create a VDS instance,
+                note: This entry will affect auto-joins feature of the domain. -->
+
+                <entry key="default">
+                    <map>
+                        <entry key="importer.importForeignKeys" value="true"/>
+                        <entry key="importer.importKeys" value="true"/>
+                    </map>
                 </entry>
             </map>
         </property>

@@ -11,8 +11,9 @@ package com.jaspersoft.buildomatic.loader;
 
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
 import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 import mondrian.resource.MondrianResource;
 import mondrian.olap.Util;
 import mondrian.rolap.RolapUtil;
@@ -206,9 +207,10 @@ public class MondrianFoodMartLoader {
 				if (EncryptionEngine.isEncrypted(password)) {
 					//decrypt password
 					KeystoreManager ksManager = KeystoreManager.getInstance();
+					JrsKeystore ks = ksManager.getKeystore(null);
 
-					password = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), password,
-                            ksManager.getEncryptionProperties(BuildEnc.ID));
+					password = EncryptionEngine.decrypt(ks.getKey(BuildEnc.getConfId()), password,
+                            ks.getEncryptionProperties(BuildEnc.getConfId()));
 				}
             } else if (arg.startsWith("-outputJdbcSchema=")) {
                 schema = arg.substring("-outputJdbcSchema=".length());

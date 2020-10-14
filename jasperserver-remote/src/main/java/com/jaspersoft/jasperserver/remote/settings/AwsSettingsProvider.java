@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -51,6 +51,7 @@ public class AwsSettingsProvider implements SettingsProvider {
         final HashMap<String, Object> settings = new HashMap<String, Object>();
         settings.put("awsRegions", new ArrayList<String>(awsRegions));
         settings.put("isEc2Instance", awsEc2MetadataClient.isEc2Instance());
+        settings.put("hasSecurityCredentials", awsEc2MetadataClient.hasSecurityCredentials());
         settings.put("suppressEc2CredentialsWarnings", awsProperties.isSuppressEc2CredentialsWarnings());
         settings.put("productTypeIsEc2",instanceProductTypeResolverBean.isEC2());
         settings.put("productTypeIsJrsAmi",instanceProductTypeResolverBean.isJrsAmi());

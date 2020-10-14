@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -26,6 +26,7 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientAdd;
 import com.jaspersoft.jasperserver.dto.basetests.BaseDTOJSONPresentableTest;
+import com.jaspersoft.jasperserver.dto.resources.ClientQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,6 +34,7 @@ import org.mockito.Mockito;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -142,5 +144,16 @@ class ClientQueryAggregatedFieldTest extends BaseDTOJSONPresentableTest<ClientQu
 
         verify(mockObject).accept(clientELVisitor);
         verify(clientELVisitor).visit(instance);
+    }
+
+    @org.junit.Test
+    public void nullTest() {
+        Exception ex = null;
+        try {
+            ClientQueryAggregatedField clientQueryAggregatedField = new ClientQueryAggregatedField((ClientQueryAggregatedField) null);
+        } catch (Exception ex2) {
+            ex = ex2;
+        }
+        assertTrue(ex != null);
     }
 }

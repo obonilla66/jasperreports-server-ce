@@ -7,5 +7,6 @@
   "aggregateExpression": "TEST_AGGREGATE_EXPRESSION",
   "aggregateFirstLevelFunction": "TEST_AGGREGATE_FIRST_LEVEL_FUNCTION",
   "aggregateArg": "TEST_AGGREGATE_ARG",
-  "aggregateType": "TEST_AGGREGATE_TYPE"
+  "aggregateType": "TEST_AGGREGATE_TYPE",
+  "fieldExpression": "TEST_FIELD_EXPRESSION"
 }

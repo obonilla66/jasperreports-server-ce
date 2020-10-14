@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.services.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationError;
@@ -36,11 +37,14 @@ import com.jaspersoft.jasperserver.api.engine.common.service.VirtualizerFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.common.JSReportExecutionRequestCancelledException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.PaginationParameters;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CopyDestinationExistsException;
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceNotFoundException;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.xml.domain.impl.Argument;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
+import com.jaspersoft.jasperserver.dto.resources.ClientDataType;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
@@ -49,21 +53,30 @@ import com.jaspersoft.jasperserver.remote.ServiceException;
 import com.jaspersoft.jasperserver.remote.exception.*;
 import com.jaspersoft.jasperserver.remote.reports.HtmlExportStrategy;
 import com.jaspersoft.jasperserver.remote.services.*;
+import com.jaspersoft.jasperserver.remote.services.impl.reportinfo.ReportInfo;
 import com.jaspersoft.jasperserver.remote.utils.AuditHelper;
+import com.jaspersoft.jasperserver.war.action.JSController;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
-import net.sf.jasperreports.engine.JRExporterParameter;
-import net.sf.jasperreports.engine.JRPrintAnchorIndex;
-import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.GenericElementReportTransformer;
 import net.sf.jasperreports.engine.util.JRSaver;
+import net.sf.jasperreports.web.JRInteractiveException;
+import net.sf.jasperreports.web.WebReportContext;
+import net.sf.jasperreports.web.actions.AbstractAction;
+import net.sf.jasperreports.web.actions.Action;
+import net.sf.jasperreports.web.actions.MultiAction;
 import net.sf.jasperreports.web.servlets.AsyncJasperPrintAccessor;
 import net.sf.jasperreports.web.servlets.JasperPrintAccessor;
 import net.sf.jasperreports.web.servlets.ReportExecutionStatus;
 import net.sf.jasperreports.web.servlets.ReportPageStatus;
+import net.sf.jasperreports.web.util.JacksonUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -73,6 +86,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -132,6 +146,9 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
 
     @Resource
     private RunReportServiceCacheFactoryBean cacheFactoryBean;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private final ConcurrentHashMap<String,Integer> CACHE_KEYS = new ConcurrentHashMap<String, Integer>();
      
@@ -528,6 +545,7 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
             }
             JasperPrint jasperPrint;
             boolean isOutputFinal = true;
+            long outputTimestamp = 0l;
             if (exportEndPage != null) {
                 // convert page number to pageIndex (0-based)
                 exportEndPage = exportEndPage - 1;
@@ -539,6 +557,7 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
                 // then current thread waits till requested page is generated.
                 final ReportPageStatus reportPageStatus = jasperPrintAccessor.pageStatus(exportEndPage, null);
                 isOutputFinal = reportPageStatus.isPageFinal();
+                outputTimestamp = reportPageStatus.getTimestamp();
                 jasperPrint = jasperPrintAccessor.getJasperPrint();
             } else {
                 jasperPrint = jasperPrintAccessor.getFinalJasperPrint();
@@ -570,6 +589,7 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
                                 exportExecution, exportExecution.getOptions().getPages());
                     }
                     exportExecution.getOutputResource().setOutputFinal(isOutputFinal);
+                    exportExecution.getOutputResource().setOutputTimestamp(outputTimestamp);
                     exportExecution.setStatus(ExecutionStatus.ready);
                 }
             }
@@ -628,6 +648,208 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
     }
 
     @Override
+    public Response getReportInfo(String reportExecutionId) {
+        ReportExecution reportExecution = getREfromCache(reportExecutionId);
+        if (reportExecution == null) {
+            throw new ResourceNotFoundException(reportExecutionId);
+        }
+
+        JasperPrintAccessor jasperPrintAccessor = reportExecution.getReportUnitResult().getJasperPrintAccessor();
+        JasperPrint jasperPrint = jasperPrintAccessor.getFinalJasperPrint();
+
+        ReportInfo reportInfo = new ReportInfo();
+
+        List<PrintBookmark> bookmarks = jasperPrint.getBookmarks();
+        if (bookmarks != null && bookmarks.size() > 0) {
+            reportInfo.setBookmarks(bookmarks);
+        }
+
+        PrintParts parts = jasperPrint.getParts();
+        if (parts != null && parts.hasParts()) {
+            reportInfo.setParts(parts, jasperPrint.getName());
+        }
+
+        return Response.ok(reportInfo).build();
+    }
+
+    @Override
+    public Response getReportExecutionPageStatus(String reportExecutionId, String pages) {
+        ReportOutputPages outputPages = ReportOutputPages.valueOf(pages);
+        Response.ResponseBuilder response;
+
+        if (outputPages == null || (outputPages.getPage() == null && outputPages.getStartPage() == null && outputPages.getEndPage() == null)) {
+            response = Response.noContent();
+        } else {
+            if (outputPages.getPage() != null) {
+                outputPages.setStartPage(outputPages.getPage()).setEndPage(outputPages.getPage());
+            }
+
+            Map<String, String> result = new HashMap<>();
+
+            ReportExecution reportExecution = getREfromCache(reportExecutionId);
+            if (reportExecution == null) {
+                throw new ResourceNotFoundException(reportExecutionId);
+            }
+
+            ReportUnitResult reportUnitResult = reportExecution.getReportUnitResult();
+            JasperPrintAccessor jasperPrintAccessor = reportUnitResult != null ?
+                    reportUnitResult.getJasperPrintAccessor() : null;
+            if (jasperPrintAccessor == null) {
+                response = Response.ok(result);
+                return response.build();
+            }
+
+            ReportExecutionStatus reportStatus = jasperPrintAccessor.getReportStatus();
+
+            if (reportStatus.getStatus() == ReportExecutionStatus.Status.ERROR) {
+                throw new JRRuntimeException("Error occurred during report generation", reportStatus.getError());
+            }
+
+            boolean exists = true;
+            boolean pageFinal = true;
+            long pageTimestamp = 0l;
+            for (int idx = outputPages.getStartPage() - 1; idx <= outputPages.getEndPage() - 1; ++idx) {
+                ReportPageStatus pageStatus = jasperPrintAccessor.pageStatus(idx, null);
+                if (!pageStatus.pageExists()) {
+                    exists = false;
+                    break;
+                }
+                pageFinal = pageFinal && pageStatus.isPageFinal();
+                pageTimestamp = Math.max(pageTimestamp, pageStatus.getTimestamp());
+            }
+
+            if (exists) {
+                result.put("pageFinal", Boolean.toString(pageFinal));
+                result.put("pageTimestamp", Long.toString(pageTimestamp));
+
+                ExecutionStatus executionStatus = executionStatus(reportStatus);
+                result.put("reportStatus", executionStatus.toString());
+
+                response = Response.ok(result);
+            } else {
+                response = Response.status(Response.Status.NOT_FOUND);
+            }
+        }
+
+        return response.build();
+    }
+
+    private ExecutionStatus executionStatus(ReportExecutionStatus reportStatus) {
+        ExecutionStatus executionStatus;
+        switch(reportStatus.getStatus()) {
+            case CANCELED:
+                executionStatus = ExecutionStatus.cancelled;
+                break;
+            case ERROR: {
+                executionStatus = ExecutionStatus.failed;
+            }
+            break;
+            case FINISHED: {
+                executionStatus = ExecutionStatus.ready;
+            }
+            break;
+            case RUNNING: {
+                executionStatus = ExecutionStatus.execution;
+            }
+            break;
+            default: {
+                executionStatus = ExecutionStatus.queued;
+            }
+        }
+
+        return executionStatus;
+    }
+
+    @Override
+    public Response runReportAction(String reportExecutionId, String actionData) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        Response.Status resultStatus = Response.Status.OK;
+
+        if (reportExecutionId != null && actionData != null) {
+            ReportExecution reportExecution = getREfromCache(reportExecutionId);
+            if (reportExecution == null) {
+                throw new ResourceNotFoundException(reportExecutionId);
+            }
+            ReportContext reportContext = reportExecution.getReportUnitResult().getReportContext();
+            JasperReportsContext currentJasperReportsContext = reportExecutor.getJasperReportsContext(reportExecution.getOptions().isInteractive());
+
+            Action action = getAction(actionData, currentJasperReportsContext, reportContext);
+            JSController controller = new JSController(currentJasperReportsContext);
+
+            if (reportContext.getParameterValue(WebReportContext.REPORT_CONTEXT_PARAMETER_JASPER_PRINT_ACCESSOR) == null) {
+                ReportUnitResult reportUnitResult = reportExecution.getReportUnitResult();
+                if (reportUnitResult != null) {
+                    reportContext.setParameterValue(WebReportContext.REPORT_CONTEXT_PARAMETER_JASPER_PRINT_ACCESSOR, reportUnitResult.getJasperPrintAccessor());
+                }
+            }
+
+            try {
+                // clear search stuff before performing an action
+                if (action.requiresRefill()) {
+                    reportContext.setParameterValue("net.sf.jasperreports.search.term.highlighter", null);
+                }
+
+                controller.runAction(reportContext, action);
+                result.put("contextid", reportExecutionId);
+
+                // FIXMEJIVE: actions shoud return their own ActionResult that would contribute with JSON object to the output
+                JsonNode actionResult = (JsonNode) reportContext.getParameterValue("net.sf.jasperreports.web.actions.result.json");
+                if (actionResult != null) {
+                    result.put("actionResult", actionResult);
+                    reportContext.setParameterValue("net.sf.jasperreports.web.actions.result.json", null);
+                }
+
+                if (action.requiresRefill()) {
+                    startReportExecution(reportExecution);
+                }
+
+            } catch (JRInteractiveException e) {
+                resultStatus = Response.Status.INTERNAL_SERVER_ERROR;
+                result = new LinkedHashMap<>();
+                result.put("msg", "The server encountered an error!");
+                result.put("devmsg", e.getMessage());
+            } catch (CopyDestinationExistsException e) {
+                resultStatus = Response.Status.FORBIDDEN;
+                result = new LinkedHashMap<>();
+                result.put("msg", e.getMessage());
+                result.put("code", "resource.already.exists");
+            } catch (JSResourceNotFoundException e) {
+                resultStatus = Response.Status.FORBIDDEN;
+                result = new LinkedHashMap<>();
+                result.put("msg", "Folder not found");
+                result.put("code", "folder.not.found");
+            } catch (AccessDeniedException e) {
+                resultStatus = Response.Status.FORBIDDEN;
+                result = new LinkedHashMap<>();
+                result.put("msg", e.getMessage());
+                result.put("code", "access.denied");
+            }
+        } else {
+            resultStatus = Response.Status.BAD_REQUEST;
+        }
+
+        return Response.status(resultStatus).entity(Collections.singletonMap("result", result)).build();
+    }
+
+    private Action getAction(String jsonData, JasperReportsContext jasperReportsContext, ReportContext reportContext) {
+        Action result = null;
+        List<AbstractAction> actions = JacksonUtil.getInstance(jasperReportsContext).loadAsList(jsonData, AbstractAction.class);
+        if (actions != null) {
+            if (actions.size() == 1) {
+                result = actions.get(0);
+                AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
+                beanFactory.autowireBeanProperties(result, AutowireCapableBeanFactory.AUTOWIRE_NO, false);
+                beanFactory.initializeBean(result, result.getClass().getName());
+            } else if (actions.size() > 1) {
+                result = new MultiAction(actions);
+            }
+
+            ((AbstractAction) result).init(jasperReportsContext, reportContext);
+        }
+        return result;
+    }
+
+    @Override
     public ReportOutputResource getReportOutputFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters,
             ReportExecutionOptions executionOptions, ExportExecutionOptions exportOptions) throws ErrorDescriptorException {
         final ReportExecution execution = getReportExecutionFromRawParameters(reportUnitURI, rawParameters, executionOptions, exportOptions);
@@ -663,13 +885,20 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
                 Arrays.sort(newValues);
                 Arrays.sort(oldValues);
 
+                ClientDataType type = null;
+                for (ReportInputControl it : inputControlsForReport){
+                    if (it.getId().equals(key)){
+                        type = it.getDataType() ;
+                    }
+                }
+
                 if (newValues.length == 0 && oldValues.length == 1 && NOTHING_SUBSTITUTION_VALUE.equals(oldValues[0])) {
                     // correct case, do nothing
                 } else if (newValues.length == 1 && oldValues.length == 1 && NOTHING_SUBSTITUTION_VALUE.equals(newValues[0]) && NULL_SUBSTITUTION_VALUE.equals(oldValues[0])) {
                     // correct case, do nothing
                 } else if (newValues.length == oldValues.length){
                     for (int i = 0; i<oldValues.length; i++){
-                        if (!((newValues[i] != null && newValues[i].equals(oldValues[i])) || (newValues[i] == null && oldValues[i] == null))){
+                        if (!isSameValue(newValues[i], oldValues[i], type)){
                             verifyCascade(inputControlsForReport, rawInputParameters.keySet(), key, oldValues[i]);
                         }
                     }
@@ -680,6 +909,18 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
                 verifyCascade(inputControlsForReport, rawInputParameters.keySet(), key, null);
             }
         }
+    }
+
+    private boolean isSameValue(String newValue, String oldValue, ClientDataType type){
+        if (type != null){
+            if (type.getType().equals(ClientDataType.TypeOfDataType.date) ||
+                    type.getType().equals(ClientDataType.TypeOfDataType.datetime) ||
+                    type.getType().equals(ClientDataType.TypeOfDataType.time)) {
+                return true;
+            }
+        }
+
+        return newValue != null && newValue.equals(oldValue) || newValue == null && oldValue== null;
     }
 
     private void verifyCascade(List<ReportInputControl> inputControls, Set<String> specifiedValues,  String offendedControl, String offendedValue) throws InputControlsValidationException{

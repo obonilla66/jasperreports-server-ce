@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -75,6 +75,9 @@ public class ExportTaskTest extends BaseDTOPresentableTest<ExportTask> {
     private static final String TEST_ORGANIZATION = "TEST_ORGANIZATION";
     private static final String TEST_ORGANIZATION_1 = "TEST_ORGANIZATION_1";
 
+    private static final String TEST_IMPORT_EXPORT_KEY_ALIAS = "TEST_IMPORT_EXPORT_KEY_ALIAS";
+    private static final String TEST_IMPORT_EXPORT_KEY_ALIAS_ALT = "TEST_IMPORT_EXPORT_KEY_ALIAS_ALT";
+
     @Override
     protected void assertFieldsHaveUniqueReferences(ExportTask expected, ExportTask actual) {
         assertNotSame(expected.getParameters(), actual.getParameters());
@@ -105,6 +108,7 @@ public class ExportTaskTest extends BaseDTOPresentableTest<ExportTask> {
                 createFullyConfiguredInstance().setResourceTypes(TEST_RESOURCE_TYPES_1),
                 createFullyConfiguredInstance().setResourceTypes(TEST_RESOURCE_TYPES_EMPTY),
                 createFullyConfiguredInstance().setOrganization(TEST_ORGANIZATION_1),
+                createFullyConfiguredInstance().setKeyAlias(TEST_IMPORT_EXPORT_KEY_ALIAS_ALT),
                 // null values
                 createFullyConfiguredInstance().setParameters(null),
                 createFullyConfiguredInstance().setUris(null),
@@ -125,7 +129,8 @@ public class ExportTaskTest extends BaseDTOPresentableTest<ExportTask> {
                 .setRoles(TEST_ROLES_TO_EXPORT)
                 .setUsers(TEST_USERS_TO_EXPORT)
                 .setResourceTypes(TEST_RESOURCE_TYPES)
-                .setOrganization(TEST_ORGANIZATION);
+                .setOrganization(TEST_ORGANIZATION)
+                .setKeyAlias(TEST_IMPORT_EXPORT_KEY_ALIAS);
     }
 
     @Override

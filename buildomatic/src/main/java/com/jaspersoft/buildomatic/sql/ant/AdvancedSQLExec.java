@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,8 +23,9 @@ package com.jaspersoft.buildomatic.sql.ant;
 
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
 import com.jaspersoft.jasperserver.crypto.EncryptionProperties;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.JDBCTask;
@@ -170,8 +171,8 @@ public class AdvancedSQLExec extends SQLExec {
 			String passwd = getPassword();
 			if (EncryptionEngine.isEncrypted(passwd)) {
 				//decrypt password
-				KeystoreManager ksManager = KeystoreManager.getInstance();
-				passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), passwd);
+				JrsKeystore ksManager = KeystoreManager.getInstance().getKeystore(null);
+				passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.getConfId()), passwd);
 			}
             info.put("password", passwd);
 

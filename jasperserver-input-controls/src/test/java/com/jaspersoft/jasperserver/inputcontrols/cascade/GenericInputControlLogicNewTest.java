@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -30,6 +30,8 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.SrcSets;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.*;
+import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
@@ -37,6 +39,10 @@ import com.jaspersoft.jasperserver.inputcontrols.action.EngineServiceCascadeTest
 import com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManager;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValueFormattingUtils;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverter;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterServiceImpl;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.TimeZoneConverter;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,48 +50,34 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.SimpleBeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver.SKIP_PROFILE_ATTRIBUTES_RESOLVING;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.CASCADE_ACCOUNT_TYPE;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.CASCADE_COUNTRY;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.CASCADE_INDUSTRY;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.CASCADE_NAME;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.CASCADE_STATE;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.entry;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.list;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.map;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.set;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.createCalendarFormatProvider;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.createEngineService;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.createFilterResolver;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.createMessageSource;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.createParameterTypeLookup;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.initFilterResolver;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.injectDependencyToPrivateField;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.setUpApplicationContext;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.*;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.*;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link com.jaspersoft.jasperserver.inputcontrols.cascade.GenericInputControlLogic}
@@ -96,6 +88,7 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GenericInputControlLogicNewTest  {
+
     @InjectMocks
     private GenericInputControlLogic genericInputControlLogic;
 
@@ -110,6 +103,12 @@ public class GenericInputControlLogicNewTest  {
 
     @Mock
     private FilterResolver filterResolver;
+
+    private DataConverterServiceImpl dataConverterService = new DataConverterServiceImpl();
+
+    private GenericTypeProcessorRegistry genericTypeProcessorRegistry = new GenericTypeProcessorRegistry();
+
+    private ValueFormattingUtils valueFormattingUtils = new ValueFormattingUtils();
 
     private ParametersHelper ph;
 
@@ -519,8 +518,8 @@ public class GenericInputControlLogicNewTest  {
         InputControlState accountType = new InputControlState();
         List<InputControlOption> accountTypeOptions = new ArrayList<InputControlOption>();
         accountTypeOptions.add(new InputControlOption("Consulting", "Consulting", true));
-        accountTypeOptions.add(new InputControlOption("Distribution", "Distribution"));
-        accountTypeOptions.add(new InputControlOption("Manufactoring", "Manufactoring"));
+        accountTypeOptions.add(new InputControlOption("Distribution", "Distribution", false));
+        accountTypeOptions.add(new InputControlOption("Manufactoring", "Manufactoring", false));
         accountType.setOptions(accountTypeOptions);
         accountType.setId(CASCADE_ACCOUNT_TYPE);
         accountType.setUri(ph.getInputControlUriString(CASCADE_ACCOUNT_TYPE));
@@ -529,10 +528,10 @@ public class GenericInputControlLogicNewTest  {
         InputControlState industry = new InputControlState();
         List<InputControlOption> industryOptions = new ArrayList<InputControlOption>();
         industryOptions.add(new InputControlOption("Engineering", "Engineering", true));
-        industryOptions.add(new InputControlOption("Machinery", "Machinery"));
-        industryOptions.add(new InputControlOption("Construction", "Construction"));
-        industryOptions.add(new InputControlOption("Communications", "Communications"));
-        industryOptions.add(new InputControlOption("Telecommunications", "Telecommunications"));
+        industryOptions.add(new InputControlOption("Machinery", "Machinery", false));
+        industryOptions.add(new InputControlOption("Construction", "Construction", false));
+        industryOptions.add(new InputControlOption("Communications", "Communications", false));
+        industryOptions.add(new InputControlOption("Telecommunications", "Telecommunications", false));
         industry.setOptions(industryOptions);
         industry.setId(CASCADE_INDUSTRY);
         industry.setUri(ph.getInputControlUriString(CASCADE_INDUSTRY));
@@ -541,12 +540,12 @@ public class GenericInputControlLogicNewTest  {
         InputControlState name = new InputControlState();
         List<InputControlOption> nameOptions = new ArrayList<InputControlOption>();
         nameOptions.add(new InputControlOption("EngBureau, Ltd", "EngBureau, Ltd", true));
-        nameOptions.add(new InputControlOption("BestEngineering, Inc", "BestEngineering, Inc"));
-        nameOptions.add(new InputControlOption("SuperSoft, LLC", "SuperSoft, LLC"));
-        nameOptions.add(new InputControlOption("Detwiler-Biltoft Transportation Corp", "Detwiler-Biltoft Transportation Corp"));
-        nameOptions.add(new InputControlOption("F & M Detwiler Transportation Corp", "F & M Detwiler Transportation Corp"));
-        nameOptions.add(new InputControlOption("D & D Barrera Transportation, Ltd", "D & D Barrera Transportation, Ltd"));
-        nameOptions.add(new InputControlOption("Infinity Communication Calls, Ltd", "Infinity Communication Calls, Ltd"));
+        nameOptions.add(new InputControlOption("BestEngineering, Inc", "BestEngineering, Inc", false));
+        nameOptions.add(new InputControlOption("SuperSoft, LLC", "SuperSoft, LLC", false));
+        nameOptions.add(new InputControlOption("Detwiler-Biltoft Transportation Corp", "Detwiler-Biltoft Transportation Corp", false));
+        nameOptions.add(new InputControlOption("F & M Detwiler Transportation Corp", "F & M Detwiler Transportation Corp", false));
+        nameOptions.add(new InputControlOption("D & D Barrera Transportation, Ltd", "D & D Barrera Transportation, Ltd", false));
+        nameOptions.add(new InputControlOption("Infinity Communication Calls, Ltd", "Infinity Communication Calls, Ltd", false));
         name.setOptions(nameOptions);
         name.setId(CASCADE_NAME);
         name.setUri(ph.getInputControlUriString(CASCADE_NAME));
@@ -671,6 +670,21 @@ public class GenericInputControlLogicNewTest  {
         assertQueryEnvelopes(expectedOptions, envelopes);
     }
 
+    @Test
+    public void getSelectedValuesListWrapper_withValidValues() {
+        List<Map<String,List<String>>> values = new ArrayList<>();
+        Map<String,List<String>> state = new HashMap<>();
+        List<String> fieldList = new ArrayList<>();
+        fieldList.add("USA");
+        state.put("Country", fieldList);
+
+        values.add(state);
+        SelectedValuesListWrapper selectedValuesListWrapper = genericInputControlLogic.getSelectedValuesListWrapper(values);
+        String actualValue = selectedValuesListWrapper.getSelectedValues().get(0).getId();
+        assertEquals("Country", actualValue);
+
+    }
+
     /**
      *
      * @throws com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException
@@ -743,6 +757,79 @@ public class GenericInputControlLogicNewTest  {
         verify(reportUnit).setAttributes(eq(singletonList(SKIP_PROFILE_ATTRIBUTES_RESOLVING)));
     }
 
+    /**
+     * See JS-34780
+     * @throws CascadeResourceNotFoundException
+     */
+    @Test
+    public void checkExtraParametersHandling() throws CascadeResourceNotFoundException {
+
+        Map<Class<?>, Object> dataConverters = new HashMap<>();
+        dataConverters.put(TimeZone.getDefault().getClass(), new TimeZoneConverter());
+        Map<Class<?>, Map<Class<?>, Object>> processors = new HashMap<>();
+        processors.put(DataConverter.class, dataConverters);
+        injectDependencyToPrivateField(genericTypeProcessorRegistry, "processors", processors);
+        injectDependencyToPrivateField(dataConverterService, "genericTypeProcessorRegistry", genericTypeProcessorRegistry);
+        injectDependencyToPrivateField(valueFormattingUtils, "dataConverterService", dataConverterService);
+        genericInputControlLogic.valueFormattingUtils = valueFormattingUtils;
+
+        String reportTZParam = "REPORT_TIME_ZONE";
+        String timeZoneID = "America/Los_Angeles";
+
+        InputControlsContainer container = nullable(InputControlsContainer.class);
+        Map<String, Object> params = new HashMap<>();
+        params.put(reportTZParam, TimeZone.getTimeZone(timeZoneID));
+
+        Map<String, String[]> formattedValues = genericInputControlLogic.formatTypedParameters(container, params);
+        // extra params are ignored by default
+        assertEquals(0, formattedValues.size());
+
+        genericInputControlLogic.allowExtraReportParameters = true;
+
+        formattedValues = genericInputControlLogic.formatTypedParameters(container, params);
+        // Now extra params are kept
+        assertEquals(1, formattedValues.size());
+        assertEquals(timeZoneID, formattedValues.get(reportTZParam)[0]);
+
+        genericInputControlLogic.allowExtraReportParameters = false;
+
+    }
+
+    @Test
+    public void testValueFormattingUtils() {
+
+        BeanDefinitionRegistry bdr = new SimpleBeanDefinitionRegistry();
+        ClassPathBeanDefinitionScanner s = new ClassPathBeanDefinitionScanner(bdr);
+
+        String targetPackage = DataConverter.class.getPackage().getName();
+        TypeFilter tf = new AssignableTypeFilter(DataConverter.class);
+        s.addIncludeFilter(tf);
+        s.scan(targetPackage);
+        String[] beans = bdr.getBeanDefinitionNames();
+
+        ApplicationContext context = mock(ApplicationContext.class);
+        doReturn(beans).when(context).getBeanNamesForType(DataConverter.class);
+
+        when(context.getBean(anyString(), any(Class.class)))
+                .thenAnswer(invocation ->
+                        Class.forName(bdr.getBeanDefinition(invocation.getArgument(0)).getBeanClassName())
+                                .newInstance());
+
+        injectDependencyToPrivateField(genericTypeProcessorRegistry, "context", context);
+        injectDependencyToPrivateField(dataConverterService, "genericTypeProcessorRegistry", genericTypeProcessorRegistry);
+        injectDependencyToPrivateField(valueFormattingUtils, "dataConverterService", dataConverterService);
+
+        assertEquals("1", valueFormattingUtils.formatSingleValue(new Integer(1)));
+        assertEquals(Boolean.TRUE.toString(), valueFormattingUtils.formatSingleValue(Boolean.TRUE));
+
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("Customers", new String[] { "Customer1", "Customer2" });
+        Map<String, String[]> result = valueFormattingUtils.formatTypedParameters(parameters);
+        assertEquals("Customer1", result.get("Customers")[0] );
+        assertEquals("Customer2", result.get("Customers")[1]);
+
+    }
+
     private void assertQueryEnvelopes(List<List<String>> expectedEnvelopeOptions, List<InputControlState> actualEnvelopes) {
         assertEquals(expectedEnvelopeOptions.size(), actualEnvelopes.size());
 
@@ -760,7 +847,7 @@ public class GenericInputControlLogicNewTest  {
     private List<String> convertOptionsList(List<InputControlOption> optionsList) {
         List<String> options = new ArrayList<String>();
         for (InputControlOption option : optionsList) {
-            if (option.isSelected()) {
+            if (option.isSelected() != null && option.isSelected()) {
                 options.add(option.getValue() + "|true");
             } else {
                 options.add(option.getValue());

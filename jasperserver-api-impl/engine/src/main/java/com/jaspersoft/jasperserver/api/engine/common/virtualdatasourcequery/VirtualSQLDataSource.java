@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -38,6 +38,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map;
+import java.util.TreeMap;
+
 
 /**
  * @author Ivan Chan (ichan@jaspersoft.com)
@@ -203,22 +206,41 @@ public class VirtualSQLDataSource implements javax.sql.DataSource {
      *         returned from {@link DatabaseMetaData#getTableTypes}, to include; <code>null</code> returns all types
      * @return
      */
-    public static Set<String> discoverNonEmptySchemas(Connection conn, Set<String> databaseObjectTypesFilter) throws SQLException {
+    public static Set<String> discoverNonEmptySchemas(Connection conn, Set<String> databaseObjectTypesFilter, Map<String, Map<String, Set>> customSelectedSchemas, String dataSourceName) throws SQLException {
+
         DatabaseMetaData dbMetaData = conn.getMetaData();
         try {
-            Set<String> set = new LinkedHashSet<String>();
-           Set<String> schemaList = getResult(dbMetaData.getSchemas(), TABLE_SCHEM);
-           String[] types = databaseObjectTypesFilter.toArray(new String[databaseObjectTypesFilter.size()]);
+            Set<String> schemaRefSet;
+            Set<String> schemaSet = new LinkedHashSet<>();
+            boolean checkEmptyTables;
+            String dsProductName = dbMetaData.getDatabaseProductName();
+            String dsUserName = conn.getMetaData().getUserName();
 
-            for (String schema : schemaList) {
+            //get the schemas added explicitly to be included instead of all schemas.
+            checkEmptyTables = getCustomSelectedSchemas(dsProductName , dsUserName, dataSourceName, customSelectedSchemas, schemaSet);
+
+            //return if the username have to be the schema name
+            if(!schemaSet.isEmpty()) {
+                if(!checkEmptyTables) {
+                    return schemaSet;
+                }
+            }
+
+            schemaRefSet = getResult(dbMetaData.getSchemas(), TABLE_SCHEM, schemaSet);
+            String[] types = databaseObjectTypesFilter.toArray(new String[databaseObjectTypesFilter.size()]);
+
+            for (String schema : schemaRefSet) {
                 ResultSet rs2 = null;
                 try {
 
                     rs2 = conn.getMetaData().getTables(null, schema, null, types);
                     if (rs2.next()) {
-                        if (includeCurrentSchema(conn, schema)) set.add(schema);
+                        if (includeCurrentSchema(conn, schema)) {
+                            schemaSet.add(schema);
+                        }
+                    } else {
+                        log.debug(schema + " schema contains no table.  Ignore in VDS");
                     }
-                    else log.debug(schema + " schema contains no table.  Ignore in VDS");
 
                     /***  take too long to check empty tables
                     Set<String> tableList = getResult(conn.getMetaData().getTables(null, schema, null, types), TABLE_NAME);
@@ -251,13 +273,85 @@ public class VirtualSQLDataSource implements javax.sql.DataSource {
                     if (rs2 != null) rs2.close();
                 }
             }
-            return set;
+            return schemaSet;
         } catch (SQLException ex) {
             log.error("Cannot get schemas", ex);
             throw ex;
         }
     }
 
+    /**
+     * get the schemas to be included from the user as part of the datasource
+     * @param productName
+     * @param userName
+     * @param customSelectedSchemas
+     * @param schemaSet
+     * @return
+     */
+    protected static boolean getCustomSelectedSchemas(String productName, String userName, String dataSourceName,  Map<String, Map<String, Set>> customSelectedSchemas, Set<String> schemaSet) {
+        boolean hasAdditionalSchemas = false;
+
+        Map<String, Map<String, Set>> customSchemasCaseIgnored = new TreeMap<>(
+                String.CASE_INSENSITIVE_ORDER);
+
+        if(customSelectedSchemas !=  null && !customSelectedSchemas.isEmpty()) {
+            customSchemasCaseIgnored.putAll(customSelectedSchemas);
+        }
+
+        Map<String, Set> selectedSchemas = getSelectedSchemas(productName, dataSourceName, customSchemasCaseIgnored);
+
+
+        if(selectedSchemas != null && !selectedSchemas.isEmpty()) {
+            /**
+             * JS-35409 Oracle DB tend to return all the available schemas in DB,
+             * inorder to avoid returning all the schemas, we can use username as the schema.
+             */
+            if(selectedSchemas.get("usernameAsSchema") != null) {
+                schemaSet.add(userName);
+            }
+            if(selectedSchemas.get("schemasToBeIncluded") != null) {
+                hasAdditionalSchemas = true;
+                Set<String> additionalSchemas = selectedSchemas.get("schemasToBeIncluded");
+                if(!additionalSchemas.isEmpty() && !schemaSet.isEmpty()) {
+                    schemaSet.remove(userName);
+                    schemaSet.add(userName.toLowerCase());
+                }
+
+                for(String schema : additionalSchemas) {
+                    schemaSet.add(schema.toLowerCase());
+                }
+            }
+        }
+
+        return hasAdditionalSchemas;
+    }
+
+
+    private static Map<String, Set> getSelectedSchemas(String productName, String dataSourceName, Map<String, Map<String, Set>> customSchemasCaseIgnored) {
+        final Map<String, Set> selectedSchemas = customSchemasCaseIgnored.get(productName);
+
+        //fetch the schemas based on dataSourceName
+        if(dataSourceName != null) {
+            if(selectedSchemas == null || selectedSchemas.isEmpty()) {
+                return customSchemasCaseIgnored.get(dataSourceName);
+            } else if (customSchemasCaseIgnored.get(dataSourceName) != null && !customSchemasCaseIgnored.get(dataSourceName).isEmpty()){
+                Map<String, Set> dsNameBasedSchemas = customSchemasCaseIgnored.get(dataSourceName);
+
+                //merge all the schemas which is fetched using both datasourceName and productName
+                dsNameBasedSchemas.forEach(
+                        (key, value) -> selectedSchemas.merge( key, value, (v1, v2)  -> v1.addAll(v2) ? v1 : v2)
+                );
+            }
+        }
+        return selectedSchemas;
+    }
+
+    /**
+     *
+     * @param conn
+     * @param schema
+     * @return
+     */
     protected static boolean includeCurrentSchema(Connection conn, String schema) {
         try {
             String connectionURL = conn.getMetaData().getURL().toLowerCase();
@@ -279,16 +373,33 @@ public class VirtualSQLDataSource implements javax.sql.DataSource {
         return true;
     }
 
-    private static Set<String> getResult(ResultSet rs, String columnName) {
-        Set<String> result = new HashSet<String>();
+    private static Set<String> getResult(ResultSet rs, String columnName, Set<String> schemaSet) {
+        Set<String> result = new HashSet<>();
+        Set<String> configSchemas = new HashSet<>();
         try {
         while (rs.next()) {
+            // filter all schemas to have the explicitly schemas to be included
+            if(!schemaSet.isEmpty()) {
+                if(schemaSet.contains(rs.getString(columnName).toLowerCase())) {
+                    configSchemas.add(rs.getString(columnName));
+                }
+            }
             result.add(rs.getString(columnName));
+
+
         }
         } catch (Exception ex) {};
         try { rs.close();
         } catch (Exception ex) {};
-        return result;
+
+        schemaSet.clear();
+
+        //if explicitly included schemas are not available in the list of schemas of the DS,
+        // then lets select all the schemas
+        if(configSchemas.isEmpty()) {
+            return result;
+        }
+        return configSchemas;
     }
 
     // find catalogs from database metadata

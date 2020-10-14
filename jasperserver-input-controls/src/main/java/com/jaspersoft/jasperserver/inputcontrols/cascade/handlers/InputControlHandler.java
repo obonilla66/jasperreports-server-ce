@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.JasperServerAPI;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.ControlLogic;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.StringDataConverter;
@@ -32,6 +33,7 @@ import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationE
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,6 +72,30 @@ public interface InputControlHandler {
      * @see {@link BasicInputControlHandler#fillStateValue}
      */
     public static final String NOTHING_SUBSTITUTION_VALUE = "~NOTHING~";
+
+    /**
+     * Value to represent the selection of default values.
+     *
+     * @see {@link SingleSelectListInputControlHandler#setIncomingValue}
+     */
+    public static final String SELECTED_VALUES = "selectedValues";
+
+    /**
+     * Value to represent the selection of all the available values.
+     *
+     * @see {@link SingleSelectListInputControlHandler#isAllValues}
+     */
+    public static final String ALL_VALUES = "allValues";
+
+    /**
+     * Value to represent the totalCount field in inputControlState.
+     *
+     * @see {@link SingleSelectListInputControlHandler#setStateTotalCount}
+     */
+    public static final String TOTAL_COUNT = "totalCount";
+
+    public static final String WITH_LABEL = "withLabel";
+    public static final String WITH_NO_LABEL = "withNoLabel";
 
     /**
      * Label substitution for empty selection in multiselect controls and for empty value in single-value controls
@@ -171,4 +197,19 @@ public interface InputControlHandler {
      * @return {@code Set} of ids of master dependencies of control
      */
     public Set<String> getMasterDependencies(InputControl control, ResourceReference dataSource) throws CascadeResourceNotFoundException;
+
+    /**
+     * Returns map of selected value list for given input controls.
+     *
+     * @param inputControl input control for which state going top be received.
+     * @param dataSource data source from which values for state will be loaded (if necessary)
+     * @param parameters map of other parameters with their values which possibly could take effect for getting state for given control.
+     * @param parameterTypes
+     * @param info {@link com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation} for given input control
+     * @return Returns map of selected value list for given input controls.
+     * @throws CascadeResourceNotFoundException in case if some necessary resource is not found.
+     *
+     * @see {@link InputControlsLogicService#getValuesForInputControls}
+     */
+    public Map<String,List<InputControlOption>> filterSelectedValues(InputControl inputControl, ResourceReference dataSource, Map<String, Object> parameters, Map<String, Class<?>> parameterTypes, ReportInputControlInformation info) throws CascadeResourceNotFoundException;
 }

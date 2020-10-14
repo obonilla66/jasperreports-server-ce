@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -54,7 +54,7 @@ public class RequestInfoProvider {
             result = request.getContextPath();
         }
 
-        if (result.charAt(result.length() - 1) != '/') {
+        if (result.length() == 0 || result.charAt(result.length() - 1) != '/') {
             result += "/";
         }
 

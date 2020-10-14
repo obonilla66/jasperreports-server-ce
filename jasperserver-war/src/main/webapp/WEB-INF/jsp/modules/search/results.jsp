@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -82,10 +82,21 @@
 
     </t:putAttribute>
     <t:putAttribute name="bodyContent">
+        <t:insertTemplate template="/WEB-INF/jsp/templates/pageHeader.jsp">
+            <c:choose>
+                <c:when test="${mode == 'library'}">
+                    <t:putAttribute name="pageHeaderIconClass" value="repoLibrary" cascade="false"/>
+                </c:when>
+                <c:otherwise>
+                    <t:putAttribute name="pageHeaderIconClass" value="repoBrowse" cascade="false"/>
+                </c:otherwise>
+            </c:choose>
+            <t:putAttribute name="pageHeaderText" value="${primaryContainerTitle}" cascade="false"/>
+        </t:insertTemplate>
         <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
             <t:putAttribute name="containerID" value="results"/>
             <t:putAttribute name="containerClass" value="column decorated primary"/>
-            <t:putAttribute name="containerTitle" value="${primaryContainerTitle}"/>
+            <%--
             <t:putAttribute name="headerContent">
                     <t:insertTemplate template="/WEB-INF/jsp/templates/control_searchLockup.jsp">
 				        <t:putAttribute name="containerID" value="secondarySearchBox"/>
@@ -95,19 +106,27 @@
 				        <t:putAttribute name="inputID" value="secondarySearchInput"/>
 				    </t:insertTemplate>
 
-                <!--
+
                 <form id="secondarySearchBox" class="searchLockup">
                     <label for="secondarySearchInput" class="offLeft"><spring:message code="button.search" javaScriptEscape="true"/></label>
                     <input class="" id="secondarySearchInput"/>
                     <b class="right"><button class="button searchClear"></button></b>
                     <button class="button search up"></button>
                 </form>
-                -->
+
 
                 <ul id="sortMode" class=""></ul>
-            </t:putAttribute>
+            </t:putAttribute> --%>
             <t:putAttribute name="subHeaderContent">
                 <div class="toolbar">
+                <t:insertTemplate template="/WEB-INF/jsp/templates/control_searchLockup.jsp">
+                    <t:putAttribute name="containerID" value="secondarySearchBox"/>
+                    <t:putAttribute name="containerAttr">
+                        <c:if test="${mode == 'search'}">data-tab-index="3" data-component-type="search"</c:if>
+                    </t:putAttribute>
+                    <t:putAttribute name="inputID" value="secondarySearchInput"/>
+                </t:insertTemplate>
+                <ul id="sortMode" class=""></ul>
                     <ul class="list buttonSet">
                     	<li class="node open">
                    			 <ul class="list buttonSet">
@@ -165,7 +184,13 @@
                 <ol id="resultsList" class="" tabIndex="0" data-tab-index="4" data-component-type="list" js-navtype="dynamiclist"></ol>
                 <t:insertTemplate template="/WEB-INF/jsp/templates/nothingToDisplay.jsp">
                     <t:putAttribute name="bodyContent">
-                        <p class="message">${nothingToDisplayMsg}</p>
+                        <div class="header ">
+                        <div class="title"></div>
+                        </div>
+                        <p id="nothingToDisplayMessage" class="message">
+                        <span class="jr-mInstructor-icon jr-mIcon jr-mIconXLarge jr-message jr"></span>
+                        <span class="message-text">${nothingToDisplayMsg}</span>
+                        </p>
                     </t:putAttribute>
                 </t:insertTemplate>
             </t:putAttribute>
@@ -177,6 +202,7 @@
             <t:putAttribute name="containerElements">
                 <div class="sizer horizontal"></div>
                 <button class="button minimize"></button>
+                <div class="icon minimize"></div>
             </t:putAttribute>
             <t:putAttribute name="containerTitle"><spring:message code="SEARCH_FILTERS" javaScriptEscape="true"/></t:putAttribute>
             <%--
@@ -184,7 +210,39 @@
              --%>
             <t:putAttribute name="bodyID" value="filtersPanelContent"/>
             <t:putAttribute name="bodyContent">
-           		<div id="filtersPanel"></div>
+           		<div id="filtersPanel">
+                    <div class="panel open"> <!-- new element -->
+                        <div class="header">
+                            <button class="buttonIconToggle"></button>
+                            <div class="title"><spring:message code="SEARCH_ACCESS_HEADING" javaScriptEscape="true"/></div>
+                        </div>
+                            <div class="subcontainer ui-resizable"></div>
+                    </div>
+
+                    <div class="panel open"> <!-- new element -->
+                        <div class="header">
+                            <button class="buttonIconToggle"></button>
+                            <div class="title"><spring:message code="SEARCH_FILE_TYPE_HEADING" javaScriptEscape="true"/></div>
+                        </div>
+                            <div class="subcontainer ui-resizable"></div>
+                    </div>
+
+                    <div class="panel open"> <!-- new element -->
+                        <div class="header">
+                            <button class="buttonIconToggle"></button>
+                            <div class="title"><spring:message code="SEARCH_TIME_HEADING" javaScriptEscape="true"/></div>
+                        </div>
+                            <div class="subcontainer ui-resizable"></div>
+                    </div>
+
+                    <div class="panel open"> <!-- new element -->
+                        <div class="header">
+                            <button class="buttonIconToggle"></button>
+                            <div class="title"><spring:message code="SEARCH_SCHEDULE_HEADING" javaScriptEscape="true"/></div>
+                        </div>
+                            <div class="subcontainer ui-resizable"></div>
+                    </div>
+                </div>
             </t:putAttribute>
         </t:insertTemplate>
 
@@ -194,6 +252,7 @@
                 <t:putAttribute name="containerElements">
                     <div class="sizer horizontal"></div>
                     <button class="button minimize"></button>
+                    <div class="icon minimize"></div>
                 </t:putAttribute>
             <t:putAttribute name="containerTitle"><spring:message code="SEARCH_FOLDERS" javaScriptEscape="true"/></t:putAttribute>
             <t:putAttribute name="swipeScroll" value="${isIPad}"/>

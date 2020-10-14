@@ -99,7 +99,7 @@ SET JS_ANT_TARGET="validate-keystore"
 
 CALL :log "Running %JS_ANT_TARGET% Ant task"
 CALL :log
-CALL %ANT_RUN% -nouserlib -f build.xml %JS_ANT_TARGET% %JS_ANT_OPTIONS% && set temp= 2>&1 | "%~dp0/bin/wtee" -a %JS_LOG_FILE%
+CALL %ANT_RUN% -nouserlib -lib . -lib lib -f build.xml %JS_ANT_TARGET% %JS_ANT_OPTIONS% && set temp= 2>&1 | "%~dp0/bin/wtee" -a %JS_LOG_FILE%
 
 IF %ERRORLEVEL% == 0 ( GOTO :runExport )
 IF not %ERRORLEVEL% == 0 ( GOTO :runAntFailed )

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,4 +35,7 @@ public interface JasperServerHttpConstants {
     // HEADERS
     String HEADER_ACCEPT_TIMEZONE = "Accept-Timezone";
     String HEADER_RESPONSE_TIMEZONE = "Timezone";
+
+    String USERNAME_PARAM = "usernameParameter";
+    String PASSWORD_PARAM = "passwordParameter";
 }

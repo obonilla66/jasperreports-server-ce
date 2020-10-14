@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -38,6 +38,9 @@ import com.jaspersoft.jasperserver.remote.services.BatchRepositoryService;
 import com.jaspersoft.jasperserver.remote.services.SingleRepositoryService;
 import com.jaspersoft.jasperserver.search.mode.AccessType;
 import com.jaspersoft.jasperserver.search.service.RepositorySearchResult;
+import org.apache.commons.lang.CharEncoding;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -65,7 +68,9 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,6 +100,8 @@ public class RepositoryJaxrsService {
     private HttpHeaders httpHeaders;
     @Context
     private ContainerRequest request;
+
+    private static Logger log = LogManager.getLogger(RepositoryJaxrsService.class);
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, ResourceMediaType.FOLDER_XML, ResourceMediaType.FOLDER_JSON})
@@ -223,6 +230,7 @@ public class RepositoryJaxrsService {
             @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
         Response response = null;
         String uri = Folder.SEPARATOR + _uri.replaceAll("/$", "");
+        sourceUri = decodeHeaderContentLocation(sourceUri);
         final Map<String, String[]> parameterMap = httpServletRequest.getParameterMap();
         if(mediaType != null && MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE)){
             final ClientResource result = resourceDetailsJaxrsService.createResourceViaForm(
@@ -342,6 +350,7 @@ public class RepositoryJaxrsService {
             @QueryParam("renameTo") String renameTo,
             @Context final HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
         String uri = Folder.SEPARATOR + _uri.replaceAll("/$", "");
+        sourceUri = decodeHeaderContentLocation(sourceUri);
         ClientResource resourceLookup = null;
         Response response = null;
         final Map<String, String[]> parameterMap = httpServletRequest.getParameterMap();
@@ -384,4 +393,15 @@ public class RepositoryJaxrsService {
         }
         return response;
     }
+
+    protected String decodeHeaderContentLocation(String contentLocation) {
+        if (contentLocation == null) return null;
+        try {
+            return URLDecoder.decode(contentLocation, CharEncoding.UTF_8);
+        } catch (UnsupportedEncodingException ex) {
+            log.debug("Cannot decode content lcation using UTF8 [" + contentLocation + "]");
+            return contentLocation;
+        }
+    }
+
 }

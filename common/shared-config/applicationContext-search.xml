@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -291,7 +291,7 @@
             <property name="defaultOption" value="resourceTypeFilter-all"/>
             <property name="roleAccessList" ref="${bean.resourceTypeFilter.RoleAccessList}"/>
             <property name="options" ref="${bean.resourceTypeFilterOptions}"/>
-            <property name="showCount" value="4"/>
+            <property name="showCount" value="-1"/>
         </bean>
         <bean class="com.jaspersoft.jasperserver.search.common.CustomFilter">
             <property name="searchSecurityResolver" ref="${bean.searchSecurityResolver}"/>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -42,6 +42,7 @@ public interface ImportExportService {
     String ERROR_CODE_IMPORT_ROOT_INTO_ORGANIZATION = "import.root.into.organization.not.allowed";
     String ERROR_CODE_UPDATE_NOT_PENDING_PHASE = "update.not.pending.phase";
     String ERROR_CODE_RESTART_ALIVE_TASK = "restart.alive.task";
+    String ERROR_INVALID_KEY = "invalid.key";
 
     String ROOT_TENANT_ID = "rootTenantId"; //Tenant id we import into
     String MERGE_ORGANIZATION = "merge-organization";

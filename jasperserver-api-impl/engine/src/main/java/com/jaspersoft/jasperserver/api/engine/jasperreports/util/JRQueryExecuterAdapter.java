@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 import org.apache.commons.collections.OrderedMap;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.logging.Log;
@@ -76,6 +77,7 @@ import net.sf.jasperreports.engine.util.JRQueryExecuterUtils;
  * @version $Id$
  */
 public class JRQueryExecuterAdapter {
+	public static final String JASPER_QL = "jasperQL";
 	
 	private static final Log log = LogFactory.getLog(JRQueryExecuterAdapter.class);
 	
@@ -96,24 +98,24 @@ public class JRQueryExecuterAdapter {
     public static OrderedMap executeQuery(final Query query,
 			final String keyColumn, final Class keyColumnClass, final String[] resultColumns,
 			Map parameterValues) {
-		return executeQuery(query, keyColumn, keyColumnClass, resultColumns, parameterValues, null, null, true);
+		return executeQuery(query, keyColumn, keyColumnClass, resultColumns, parameterValues, null, null, true, null);
 	}
 
     public static OrderedMap executeQuery(final Query query,
                                           final String keyColumn, final String[] resultColumns,
                                           Map parameterValues, List additionalParameters) {
-        return executeQuery(query, keyColumn, resultColumns, parameterValues, null, additionalParameters, true);
+        return executeQuery(query, keyColumn, resultColumns, parameterValues, null, additionalParameters, true, null);
     }
 
 	public static OrderedMap executeQuery(final Query query, 
 			final String keyColumn, final String[] resultColumns, 
-			Map parameterValues, Map<String, Class<?>> parameterTypes, List additionalParameters, boolean formatValueColumns) {
-        return executeQuery(query, keyColumn, Object.class, resultColumns, parameterValues, parameterTypes, additionalParameters, formatValueColumns);
+			Map parameterValues, Map<String, Class<?>> parameterTypes, List additionalParameters, boolean formatValueColumns, ReportDataSource dataSource) {
+        return executeQuery(query, keyColumn, Object.class, resultColumns, parameterValues, parameterTypes, additionalParameters, formatValueColumns, dataSource);
     }
 
     public static OrderedMap executeQuery(final Query query,
 			final String keyColumn, Class keyColumnClass, final String[] resultColumns,
-			Map parameterValues, Map<String, Class<?>> parameterTypes, List additionalParameters, boolean formatValueColumns) {
+			Map parameterValues, Map<String, Class<?>> parameterTypes, List additionalParameters, boolean formatValueColumns, ReportDataSource dataSource) {
 
 
 		try {
@@ -130,9 +132,13 @@ public class JRQueryExecuterAdapter {
 				JRParameter parameter = dsParameters[i];
 				parametersMap.put(parameter.getName(), parameter);
 			}
-			
+
 			JRQueryExecuter executer = queryExecuterFactory.createQueryExecuter(dataset, parametersMap);
+
 			try {
+
+				setExecuterRefereneceDS(query, dataSource, executer);
+
 				JRDataSource ds = executer.createDatasource();
 				OrderedMap values = new LinkedMap();
 				while (ds.next()) {
@@ -158,7 +164,20 @@ public class JRQueryExecuterAdapter {
 
 	}
 
-    private static Object convertVisibleColumnsValues(Object[] visibleColumnsValues, boolean formatValueColumns) {
+	/**
+	 * If the language is JASPER_QL(JSS) then set the reference datasource for the executor
+	 * @param query
+	 * @param dataSource
+	 * @param executer
+	 */
+	public static void setExecuterRefereneceDS(Query query, ReportDataSource dataSource, JRQueryExecuter executer) {
+		if(query.getLanguage().equals(JASPER_QL)) {
+			JRJaperQLExecuter jasperQLExecuter = (JRJaperQLExecuter) executer;
+			jasperQLExecuter.setDataSource(dataSource);
+		}
+	}
+
+	private static Object convertVisibleColumnsValues(Object[] visibleColumnsValues, boolean formatValueColumns) {
         if (!formatValueColumns) {
             return visibleColumnsValues;
         } else {

@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -210,6 +210,12 @@
     <test name="ImportEncryptedResourceTest">
         <classes>
             <class name="com.jaspersoft.jasperserver.test.ImportEncryptedResourceTest" />
+        </classes>
+    </test>
+
+    <test name="ImportEncryptionKeyTest">
+        <classes>
+            <class name="com.jaspersoft.jasperserver.test.ImportEncryptionKeyTest"/>
         </classes>
     </test>
 

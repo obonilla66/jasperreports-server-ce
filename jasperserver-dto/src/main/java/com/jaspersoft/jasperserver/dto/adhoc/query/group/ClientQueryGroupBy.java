@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query.group;
 
+import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup;
 import com.jaspersoft.jasperserver.dto.adhoc.query.group.axis.ClientGroupAxis;
 import com.jaspersoft.jasperserver.dto.adhoc.query.group.axis.ClientGroupAxisEnum;
@@ -31,6 +32,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
@@ -88,6 +90,18 @@ public class ClientQueryGroupBy implements ClientGroupBy<ClientGroupAxis> {
 
     public ClientQueryGroupBy setGroups(List<? extends ClientQueryGroup> groups) {
         this.groups = groups != null ? (List<ClientQueryGroup>) groups : new ArrayList<ClientQueryGroup>();
+        return this;
+    }
+
+    public ClientQueryGroupBy setGroupsStr(List<String> groups) {
+        this.groups = (groups == null) ? new ArrayList<>() :
+                groups.stream().map(s -> {
+                    ClientQueryGroup g = new ClientQueryGroup(s);
+                    if (ClientQueryGroup.ClientAllGroup.ALL_GROUP_ID.equals(g.getFieldName())) {
+                        g = new ClientQueryGroup.ClientAllGroup();
+                    }
+                    return g;
+                }).collect(Collectors.toList());
         return this;
     }
 

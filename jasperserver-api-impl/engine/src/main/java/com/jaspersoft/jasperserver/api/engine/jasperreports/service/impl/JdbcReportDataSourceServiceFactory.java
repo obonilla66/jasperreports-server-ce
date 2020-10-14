@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,7 +23,14 @@ package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectCache;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectEntry;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import com.jaspersoft.jasperserver.api.JSException;
@@ -33,6 +40,9 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportData
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceNotFoundException;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -44,6 +54,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
@@ -52,8 +65,12 @@ import java.util.TimeZone;
 public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServiceFactory {
 
     private static final Log log = LogFactory.getLog(JdbcReportDataSourceServiceFactory.class);
-
-
+    private static final String GOOGLE_BIG_QUERY_SIMBA_DRIVER_NAME = "com.simba.googlebigquery.jdbc41.Driver";
+	private static final String GOOGLE_BIG_QUERY_PROGRESS_PRIVATE_KEY = "ServiceAccountPrivateKey";
+	private static final String GOOGLE_BIG_QUERY_SIMBA_PRIVATE_KEY = "OAuthPvtKeyPath";
+	private static final String GOOGLE_BIG_QUERY_PROGRESS_SERVICE_ACCOUNT = "ServiceAccountEmail";
+	private static final String GOOGLE_BIG_QUERY_PROGRESS_PROJECT = "Project";
+	private static final String GOOGLE_BIG_QUERY_PROGRESS_DATASET = "Dataset";
 	protected static class PooledDataSourcesCache {
 
         protected static class DataSourceEntry extends PooledObjectEntry {
@@ -122,9 +139,14 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
     private Map<String, String> driverNoAuthMethMap = new HashMap<String, String>(); // protect from NPE
     private boolean defaultReadOnly = true;
 	private boolean defaultAutoCommit = false;
+	private String privateKeyTempDir;
+	private RepositoryService repositoryService;
+	private MessageSource messageSource;
 
 	public JdbcReportDataSourceServiceFactory () {
 		poolDataSources = new PooledDataSourcesCache();
+		//clean up google big query progress JDBC schema in temp folder after re-starting tomcat
+		cleanup("gbq_", System.getProperty("java.io.tmpdir"));
 	}
 
     protected TimeZone getTimeZoneByDataSourceTimeZone(String dataSourceTimeZone) {
@@ -167,12 +189,86 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 				connectionUrl = connectionUrl + (connectionUrl.endsWith(";") ? "authmech=" : ";authmech=") + authMech;
 			}
 		}
+		if(driverClass.equals(TibcoDriverManagerImpl.GOOGLE_BIGQUERY_PROGRESS_DRIVER_CLASS) || driverClass.equals(GOOGLE_BIG_QUERY_SIMBA_DRIVER_NAME)) {
+			String privateKeyResourcePath ="";
+			String connParams[] = connectionUrl.split(";");
+			String configFileName = "gbq_";
+			for(String param : connParams){
+				if(param.startsWith(GOOGLE_BIG_QUERY_PROGRESS_PRIVATE_KEY) || param.startsWith(GOOGLE_BIG_QUERY_SIMBA_PRIVATE_KEY)){
+          			privateKeyResourcePath = param.split("=")[1];
+				}
+				if (param.startsWith(GOOGLE_BIG_QUERY_PROGRESS_PROJECT) || param.startsWith(GOOGLE_BIG_QUERY_PROGRESS_DATASET) || param.startsWith(GOOGLE_BIG_QUERY_PROGRESS_SERVICE_ACCOUNT)) {
+					configFileName = configFileName + param.split("=")[1] + "-";
+				}
+			}
+			configFileName = configFileName.replace(".","-");
+			if (configFileName.endsWith("-")) {
+				configFileName = configFileName.substring(0, configFileName.lastIndexOf("-"));
+			}
+			String privateKeyFilePath = saveResourceToDisk(privateKeyResourcePath);
+			if (privateKeyFilePath != null)
+				connectionUrl = connectionUrl.replace(privateKeyResourcePath, privateKeyFilePath);
+			    connectionUrl = connectionUrl+";schemaMap="+getPrivateKeyTempDir()+"\\"+configFileName+".config";
+		}
 		connectionUrl = getRuntimeConnectionURL(connectionUrl);
 		jdbcDataSource.setConnectionUrl(connectionUrl);
 		jdbcDataSource.setUsername(userName);
 		jdbcDataSource.setPassword(password);
 		return jdbcDataSource;
 	}
+
+	private String saveResourceToDisk(String privateKeyPath){
+		if(privateKeyPath.contains(getPrivateKeyTempDir())){
+			return privateKeyPath;
+		}
+    long now = System.currentTimeMillis();
+		String absoluteFileLocation = null;
+    try {
+      FileResource fileResource = (FileResource) repositoryService.getResource(null, privateKeyPath, com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource.class);
+      if(fileResource==null)
+        throw new JSResourceNotFoundException(messageSource.getMessage("service.account.private.key.path.does.not.exist", null, LocaleContextHolder.getLocale() ));
+      String key = fileResource.getURIString() + "_" + fileResource.getCreationDate() + "_" + fileResource.getUpdateDate();
+      String privateKeyPrefix = "gbq_"+ GOOGLE_BIG_QUERY_PROGRESS_PRIVATE_KEY + "-" + key.hashCode();
+			File outputLocation = new File(privateKeyTempDir, privateKeyPrefix + ".json");
+      // if file exists, return existing private key path
+      if (outputLocation.exists()) {
+        return outputLocation.getAbsolutePath();
+      }
+      String decodedData = null;
+      try {
+        // get file data
+        String encodedData = new String(
+            repositoryService.getResourceData(null, fileResource.getURIString()).getData());
+        // decode if encrypted
+        decodedData = PasswordCipherer.getInstance().decodePassword(encodedData);
+      } catch (JSResourceNotFoundException e) {
+        log.error(messageSource.getMessage("failed.read.private.key.from.repository", null, LocaleContextHolder.getLocale() ));
+      } catch (DataAccessResourceFailureException e) {
+				log.warn(messageSource.getMessage("failed.to.decrypt.private.key", null, LocaleContextHolder.getLocale() ));
+			} catch (Exception e) {
+				log.error(e.getMessage());
+			}
+
+      try {
+        FileOutputStream output = new FileOutputStream(outputLocation);
+        output.write(decodedData.getBytes(), 0, decodedData.length());
+        output.close();
+        outputLocation.deleteOnExit();
+        return outputLocation.getAbsolutePath();
+      } catch (IOException e) {
+        log.error(e.getMessage());
+      }
+
+    } catch(JSResourceNotFoundException ex){
+			log.error(ex.getMessage());
+			throw ex;
+		} catch(Exception ex){
+    	log.error(ex.getMessage());
+		} finally {
+      releaseExpiredPools(now);
+    }
+		return absoluteFileLocation;
+  }
 
     protected JdbcDataSourceService getDataDataServiceInstance(DataSource dataSource, TimeZone timezone) {
         return new JdbcDataSourceService(dataSource, timezone);
@@ -292,7 +388,7 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 
 		public int hashCode() {
 			return hash;
-		}
+		} 
 
 		public String toString() {
 			return "driver=\"" + driverClass + "\", url=\"" 
@@ -363,5 +459,51 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 
 	public void setProfileAttributesResolver(ProfileAttributesResolver profileAttributesResolver) {
 		this.profileAttributesResolver = profileAttributesResolver;
+	}
+
+	public RepositoryService getRepositoryService() {
+		return repositoryService;
+	}
+
+	public void setRepositoryService(RepositoryService repositoryService) {
+		this.repositoryService = repositoryService;
+	}
+
+	public String getPrivateKeyTempDir() {
+		return privateKeyTempDir;
+	}
+
+	public void setPrivateKeyTempDir(String privateKeyTempDir) {
+		this.privateKeyTempDir = privateKeyTempDir;
+	}
+
+	public void setMessageSource(MessageSource messageSource) {
+		this.messageSource = messageSource;
+	}
+
+	public void cleanup(String filePrefix, String schemaDefinitionDirectory) {
+		File schemaDirectory = new File(schemaDefinitionDirectory);
+		File[] deleteFileList = schemaDirectory.listFiles(new FileNameFilterImpl(filePrefix));
+		if (deleteFileList == null) return;
+		for (File deleteFile : deleteFileList) {
+			try {
+				deleteFile.delete();
+			} catch (Exception ex) {
+				log.debug("Fail to delete JDBC schema: " + deleteFile.getAbsolutePath(), ex);
+			}
+		}
+	}
+
+	class FileNameFilterImpl implements FilenameFilter {
+
+		private String schemaPrefix;
+
+		public FileNameFilterImpl(String schemaPrefix) {
+			this.schemaPrefix = schemaPrefix.toLowerCase();
+		}
+
+		public boolean accept(File dir, String name) {
+			return (name.toLowerCase().startsWith(schemaPrefix));
+		}
 	}
 }

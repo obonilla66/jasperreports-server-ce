@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -45,17 +45,16 @@
         <jsp:include page="rolesState.jsp"/>
     </t:putAttribute>
     <t:putAttribute name="bodyContent">
+        <t:insertTemplate template="/WEB-INF/jsp/templates/pageHeader.jsp">
+            <t:putAttribute name="pageHeaderIconClass" value="manageRoles" cascade="false"/>
+            <t:putAttribute name="pageHeaderText">
+                <spring:message code="MT_MANAGE_ROLES" javaScriptEscape="true"/>
+            </t:putAttribute>
+        </t:insertTemplate>
         <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
             <t:putAttribute name="containerID" value="roles"/>
             <t:putAttribute name="containerClass" value="column decorated primary showingToolBar"/>
-            <t:putAttribute name="containerTitle">
-                <spring:message code="jsp.roleManager.roles" javaScriptEscape="true"/>
-            </t:putAttribute>
-            <t:putAttribute name="headerContent" >
-                <t:insertTemplate template="/WEB-INF/jsp/templates/control_searchLockup.jsp">
-                    <t:putAttribute name="containerID" value="secondarySearchBox"/>
-                    <t:putAttribute name="inputID" value="secondarySearchInput"/>
-                </t:insertTemplate>
+            <t:putAttribute name="subHeaderContent" >
                 <div class="toolbar">
                     <ul class="list buttonSet">
                         <li class="node open">
@@ -70,7 +69,30 @@
                             </ul>
                         </li>
                     </ul>
+                <t:insertTemplate template="/WEB-INF/jsp/templates/control_searchLockup.jsp">
+                    <t:putAttribute name="containerID" value="secondarySearchBox"/>
+                    <t:putAttribute name="inputID" value="secondarySearchInput"/>
+                </t:insertTemplate>
                 </div>
+                <t:insertTemplate template="/WEB-INF/jsp/modules/manage/manageColumnTitle.jsp">
+                    <c:choose>
+                        <c:when test="${isProVersion == true}">
+                            <t:putAttribute name="columnClass" value="twoColumn"/>
+                        </c:when>
+                        <c:otherwise>
+                            <t:putAttribute name="columnClass" value="oneColumn"/>
+                        </c:otherwise>
+                    </c:choose>
+
+                    <t:putAttribute name="firstColumnTitle">
+                        <spring:message code="jsp.roleManager.roleEditor.roleName" javaScriptEscape="true"/>
+                    </t:putAttribute>
+                    <c:if test="${isProVersion == true}">
+                        <t:putAttribute name="secondColumnTitle">
+                            <spring:message code="jsp.roleManager.roleEditor.organization" javaScriptEscape="true"/>
+                        </t:putAttribute>
+                    </c:if>
+                </t:insertTemplate>
             </t:putAttribute>
             <t:putAttribute name="bodyID" value="listContainer"/>
             <t:putAttribute name="bodyContent">
@@ -87,6 +109,7 @@
             <t:putAttribute name="containerElements">
                 <div class="sizer horizontal"></div>
                 <button class="button minimize"></button>
+                <div class="icon minimize"></div>
             </t:putAttribute>
             <t:putAttribute name="containerTitle">
                 <spring:message code="jsp.roleManager.organizations" javaScriptEscape="true"/>
@@ -104,6 +127,7 @@
             <t:putAttribute name="containerElements">
                 <div class="sizer horizontal"></div>
                 <button class="button minimize"></button>
+                <div class="icon minimize"></div>
             </t:putAttribute>
             <t:putAttribute name="containerTitle"><spring:message code="jsp.userAndRoleManager.properties" javaScriptEscape="true"/></t:putAttribute>
             <t:putAttribute name="bodyClass" value=""/>
@@ -111,7 +135,12 @@
             <t:putAttribute name="bodyContent">
                 <t:insertTemplate template="/WEB-INF/jsp/templates/nothingToDisplay.jsp">
                     <t:putAttribute name="bodyContent">
-                        <p class="message"><spring:message code="jsp.roleManager.properties.nothingToDisplay" javaScriptEscape="true"/></p>
+                        <div class="content ">
+                        <div id="nothingToDisplayMessage" class="message">
+                        <span class="jr-mInstructor-icon jr-mIcon jr-mIconXLarge jr-message jr"></span>
+                        <span class="message-text crosstab chart"><spring:message code="jsp.roleManager.properties.nothingToDisplay" javaScriptEscape="true"/></span>
+                        </div>
+                        </div>
                     </t:putAttribute>
                 </t:insertTemplate>
                 <fieldset class="group">

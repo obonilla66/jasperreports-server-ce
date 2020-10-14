@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -34,6 +34,7 @@ import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorPar
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.AXIS_NAME;
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.AXIS_TYPE;
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.AVAILABLE_TRANSFORMATION_PATHS;
+import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.INVALID_FIELD_EXPRESSION;
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.INVALID_TRANSFORMATION_PATH;
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.DATASOURCE_TYPE;
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorParam.DATASOURCE_URI;
@@ -130,6 +131,8 @@ public enum QueryExecutionsErrorCode implements ErrorDescriptorTemplate {
     //NOT Supported for now. But used in validation annotations and some tests check it.
     QUERY_CALCULATED_FIELD_EXPRESSION_NOT_VALID(Codes.QUERY_CALCULATED_FIELD_EXPRESSION_NOT_VALID,
             paramNames(EXPRESSION_TYPE)),
+    QUERY_FIELD_EXPRESSION_NOT_VALID(Codes.QUERY_FIELD_EXPRESSION_NOT_VALID,
+            paramNames(PROPERTY_PATH, EXPRESSION_NAME)),
     QUERY_AGGREGATE_EXPRESSION_NOT_VALID(Codes.QUERY_AGGREGATE_EXPRESSION_NOT_VALID,
             paramNames(PROPERTY_PATH, EXPRESSION_NAME)),
     QUERY_AGGREGATION_FUNCTION_NAME_NOT_VALID(Codes.QUERY_AGGREGATION_FUNCTION_NAME_NOT_VALID,
@@ -165,6 +168,9 @@ public enum QueryExecutionsErrorCode implements ErrorDescriptorTemplate {
     QUERY_FIELD_AGGREGATE_EXPRESSION_PARSE_ERROR(Codes.QUERY_FIELD_AGGREGATE_EXPRESSION_PARSE_ERROR,
             paramNames(AGGREGATE_FIELD_ID, INVALID_AGGREGATION_EXPRESSION,
             ERROR_MESSAGE)),
+    QUERY_FIELD_EXPRESSION_PARSE_ERROR(Codes.QUERY_FIELD_EXPRESSION_PARSE_ERROR,
+            paramNames(FIELD_ID, INVALID_FIELD_EXPRESSION,
+                    ERROR_MESSAGE)),
     QUERY_ORDERBY_LEVEL_REFERENCE_NOT_VALID(Codes.QUERY_ORDERBY_LEVEL_REFERENCE_NOT_VALID,
             paramNames(PROPERTY_PATH)),
     QUERY_LIMT_OUT_OF_RANGE(Codes.QUERY_LIMT_OUT_OF_RANGE,
@@ -345,6 +351,7 @@ public enum QueryExecutionsErrorCode implements ErrorDescriptorTemplate {
         String QUERY_AGGREGATION_EXPRESSION_NOT_VALID = "query.aggregation.expression.not.valid";
         String QUERY_CALCULATED_FIELD_EXPRESSION_NOT_VALID = "query.calculated.field.expression.not.valid";
         String QUERY_AGGREGATE_EXPRESSION_NOT_VALID = "query.aggregate.expression.not.valid";
+        String QUERY_FIELD_EXPRESSION_NOT_VALID = "query.field.expression.not.valid";
         String QUERY_AGGREGATION_FUNCTION_NAME_NOT_VALID = "query.aggregation.function.name.not.valid";
         String QUERY_GROUPBY_ALLGROUP_NOT_FIRST = "query.groupBy.allGroup.not.first";
         String QUERY_GROUPBY_CATEGORIZER_NOT_VALID = "query.groupBy.categorizer.not.valid";
@@ -365,6 +372,7 @@ public enum QueryExecutionsErrorCode implements ErrorDescriptorTemplate {
         String QUERY_TIMEBALANCE_CANNOT_BE_APPLIED = "query.timebalance.cannot.be.applied";
         String QUERY_TIMEBALANCE_MULTIPLE_DATE_FIELD = "query.timebalance.multiple.datefield";
         String QUERY_FIELD_AGGREGATE_FUNCTION_IS_UNKNOWN = "query.field.aggregate.function.is.unknown";
+        String QUERY_FIELD_EXPRESSION_PARSE_ERROR = "query.field.expression.parse.error";
         String QUERY_FIELD_AGGREGATE_EXPRESSION_PARSE_ERROR = "query.field.aggregate.expression.parse.error";
         String QUERY_WHERE_PARAMETERS_NAME_IS_NOT_VALID = "query.where.parameters.name.is.not.valid";
         //Is not documented yet.

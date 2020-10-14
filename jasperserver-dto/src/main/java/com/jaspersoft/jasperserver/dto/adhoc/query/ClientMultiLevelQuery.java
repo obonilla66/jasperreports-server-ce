@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -98,6 +99,11 @@ public class ClientMultiLevelQuery extends ClientQuery {
 
     public ClientMultiLevelQuery setOrderBy(List<ClientGenericOrder> orderBy) {
         this.orderBy = orderBy;
+        return this;
+    }
+
+    public ClientMultiLevelQuery setOrderByStr(List<String> orderBy) {
+        this.orderBy = orderBy.stream().map(s -> new ClientGenericOrder(s)).collect(Collectors.toList());
         return this;
     }
 

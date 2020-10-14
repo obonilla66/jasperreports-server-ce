@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.activemq.util.ByteArrayInputStream;
+
 import net.sf.jasperreports.engine.util.ObjectUtils;
 import net.sf.jasperreports.engine.util.ObjectUtils.HashCode;
 
@@ -35,6 +37,7 @@ import net.sf.jasperreports.engine.util.ObjectUtils.HashCode;
 public class JarFileEntry {
 	private final JarFile jar;
 	private final JarEntry jarEntry;
+	private byte[] overrideData;
 	
 	protected JarFileEntry(JarFile jar, JarEntry jarEntry) {
 		this.jar = jar;
@@ -73,7 +76,8 @@ public class JarFileEntry {
 	}
 	
 	public InputStream getInputStream() throws IOException {
-		return jar.getInputStream(jarEntry);
+		return overrideData == null ? jar.getInputStream(jarEntry)
+				: new ByteArrayInputStream(overrideData);
 	}
 	
 	public JarFile getJarFile() {
@@ -83,4 +87,13 @@ public class JarFileEntry {
 	public JarEntry getEntry() {
 		return jarEntry;
 	}
+
+	public byte[] getOverrideData() {
+		return overrideData;
+	}
+
+	public void setOverrideData(byte[] overrideData) {
+		this.overrideData = overrideData;
+	}
+	
 }

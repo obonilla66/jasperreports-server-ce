@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,6 +23,8 @@ package com.jaspersoft.jasperserver.remote.services;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,11 +34,17 @@ import java.util.regex.Pattern;
  * @author Yaroslav.Kovalchyk
  * @version $Id: ReportOutputPages.java 26599 2012-12-10 13:04:23Z ykovalchyk $
  */
+@Schema(name = "pages")
 public class ReportOutputPages {
     private Integer page;
     private Integer startPage;
     private Integer endPage;
 
+	@Schema(
+		description = "Specifies a single page to generate a partial report output.",
+		type = "integer",
+		example = "1"
+	)
     public Integer getPage() {
         return page;
     }
@@ -46,6 +54,11 @@ public class ReportOutputPages {
         return this;
     }
 
+	@Schema(
+		description = "Specifies the start page number of a page range required to generate a partial report.",
+		type = "integer",
+		example = "3"
+	)
     public Integer getStartPage() {
         return startPage;
     }
@@ -55,6 +68,11 @@ public class ReportOutputPages {
         return this;
     }
 
+	@Schema(
+			description = "Specifies the end page of a page range required to generate a partial report.",
+			type = "integer",
+			example = "5"
+		)
     public Integer getEndPage() {
         return endPage;
     }

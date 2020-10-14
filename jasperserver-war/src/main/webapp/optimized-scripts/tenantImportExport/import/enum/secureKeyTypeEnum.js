@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,i,o){o.exports={VALUE:"keyUseValue",FILE:"keyUseFile"}});

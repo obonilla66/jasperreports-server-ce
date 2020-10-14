@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,6 +21,9 @@
 package com.jaspersoft.jasperserver.dto.reports;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -54,6 +57,7 @@ public class ReportParameters implements DeepCloneable<ReportParameters> {
     }
 
     @XmlElement(name = "reportParameter")
+    @ArraySchema(schema = @Schema(name = "reportParameter", description = "The list of report parameters.", implementation = ReportParameter.class))
     public List<ReportParameter> getReportParameters() {
         return reportParameters;
     }
@@ -64,14 +68,50 @@ public class ReportParameters implements DeepCloneable<ReportParameters> {
     }
 
     // TODO: should this be serializable?
+    @Schema(
+			description = "The raw parameters.", 
+			hidden = true
+			)
     public Map<String, String[]> getRawParameters(){
-        Map<String, String[]> rawParameters = new HashMap<String, String[]>();
+        String SELECT = "_select";
+        String LIMIT = "_limit";
+        String OFFSET = "_offset";
+        String CRITERIA = "_criteria";
+
+        Map<String, String[]> rawParameters = new HashMap<>();
+
         if(reportParameters != null){
             for(ReportParameter currentParameter : reportParameters){
-                rawParameters.put(
-                        currentParameter.getName(),
-                        currentParameter.getValues().toArray(new String[currentParameter.getValues().size()])
-                );
+                if(currentParameter.getValues().size() > 0) {
+                    rawParameters.put(
+                            currentParameter.getName(),
+                            currentParameter.getValues().toArray(new String[currentParameter.getValues().size()])
+                    );
+                }
+                if(currentParameter.getSelect() != null) {
+                    rawParameters.put(
+                            currentParameter.getName()+SELECT,
+                            new String[]{currentParameter.getSelect()}
+                            );
+                }
+                if(currentParameter.getLimit() != null) {
+                    rawParameters.put(
+                            currentParameter.getName()+LIMIT,
+                            new String[]{currentParameter.getLimit()}
+                    );
+                }
+                if(currentParameter.getOffset() != null) {
+                    rawParameters.put(
+                            currentParameter.getName()+OFFSET,
+                            new String[]{currentParameter.getOffset()}
+                    );
+                }
+                if(currentParameter.getCriteria() != null) {
+                    rawParameters.put(
+                            currentParameter.getName()+CRITERIA,
+                            new String[]{currentParameter.getCriteria()}
+                    );
+                }
             }
         }
         return rawParameters;

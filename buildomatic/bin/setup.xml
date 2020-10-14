@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,18 +25,13 @@
     <componentdef classname="com.jaspersoft.buildomatic.JSPropertyEvaluator"
                   name="jsPropertyEvaluator">
         <classpath>
-            <pathelement location="${basedir}/target/buildomatic.jar" />
-            <pathelement location="${basedir}/target/jasperserver-dto.jar" />
-            <pathelement location="${basedir}/target/commons-lang3-3.0.jar" />
-            <pathelement location="${basedir}/target/js-crypto-2.0.2.jar" />
-            <pathelement location="${basedir}/target/bcprov-jdk15on-1.64.jar" />
-            <pathelement location="${basedir}/target/bcpkix-jdk15on-1.64.jar" />
-            <pathelement location="${basedir}/target/log4j-1.2-api-2.11.2.jar" />
-            <pathelement location="${basedir}/target/log4j-api-2.11.2.jar" />
-            <pathelement location="${basedir}/target/log4j-core-2.11.2.jar" />
-            <pathelement location="${basedir}/target/log4j-jcl-2.11.2.jar" />
-            <pathelement location="${basedir}/target/commons-codec-1.10.jar" />
-            <pathelement location="${basedir}/target/commons-configuration-1.10.jar" />
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+                <exclude name="jacocoant*.jar"/>
+                <exclude name="jackson-annotations-*.jar"/>
+                <exclude name="jackson-core-*.jar"/>
+                <exclude name="jackson-databind-*.jar"/>
+            </fileset>
         </classpath>
     </componentdef>
     <propertyhelper>
@@ -49,20 +44,13 @@
     <!-- define custom java tasks -->
     <taskdef resource="tasks.properties" onerror="report">
         <classpath>
-            <pathelement location="${basedir}/target/buildomatic.jar" />
-            <pathelement location="${basedir}/target/jasperserver-dto.jar" />
-			<pathelement location="${basedir}/target/js-crypto-2.0.2.jar" />
-            <pathelement location="${basedir}/target/bcprov-jdk15on-1.64.jar" />
-            <pathelement location="${basedir}/target/bcpkix-jdk15on-1.64.jar" />
-            <pathelement location="${basedir}/target/commons-codec-1.10.jar" />
-            <pathelement location="${basedir}/target/commons-configuration-1.10.jar" />
-            <pathelement location="${basedir}/target/commons-lang-2.5.jar" />
-            <pathelement location="${basedir}/target/commons-collections-3.2.2.jar" />
-            <pathelement location="${basedir}/target/commons-logging-api-1.1.jar" />
-            <pathelement location="${basedir}/target/log4j-1.2-api-2.11.2.jar" />
-            <pathelement location="${basedir}/target/log4j-api-2.11.2.jar" />
-            <pathelement location="${basedir}/target/log4j-core-2.11.2.jar" />
-            <pathelement location="${basedir}/target/log4j-jcl-2.11.2.jar" />
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+                <exclude name="jacocoant*.jar"/>
+                <exclude name="jackson-annotations-*.jar"/>
+                <exclude name="jackson-core-*.jar"/>
+                <exclude name="jackson-databind-*.jar"/>
+            </fileset>
         </classpath>
     </taskdef>
 
@@ -374,12 +362,26 @@
                     <then>
                         <create-ks ks="${ks}" ksp="${ksp}" propsFile="${masterPropsSource}"
                                    confirmArg="y"
-                                   confirmMessage="A new encryption key and a new keystore are about to be created. Any previously created key and keystore will become invalid and the corresponding passwords unusable. If you think this JasperReports Server instance already has a keystore configured by another OS user, stop this process and configure the path in keystore.init.properties file, then run this command again. See the JasperReports Server Security Guide for details. Do you want to continue? (%s/N)"/>
+                                   confirmMessage="A new encryption key and a new keystore are about to be created. Any previously created key and keystore will become invalid and the corresponding passwords unusable. If you think this JasperReports Server instance already has a keystore configured by another OS user, stop this process and configure the path in keystore.init.properties file, then run this command again. See the JasperReports Server Security Guide for details. Do you want to continue? (%s/N)">
+                            <!--classpath>
+                                <fileset dir="${basedir}/lib">
+                                    <include name="js-crypto-*.jar"/>
+                                    <exclude name="jacocoant*.jar"/>
+                                </fileset>
+                            </classpath-->
+                        </create-ks>
                     </then>
                     <else>
                         <echo message=""/>
                         <create-ks ks="${ks}" ksp="${ksp}" propsFile="${masterPropsSource}"
-                                   warningMessage="WARNING: A new encryption key and a new keystore are about to be created."/>
+                                   warningMessage="WARNING: A new encryption key and a new keystore are about to be created.">
+                            <!--classpath>
+                                <fileset dir="${basedir}/lib">
+                                    <include name="*.jar"/>
+                                    <exclude name="jacocoant*.jar"/>
+                                </fileset>
+                            </classpath-->
+                        </create-ks>
                     </else>
                 </if>
                 <if>
@@ -901,23 +903,28 @@
                     <if>
                         <available file="${buildBase}/keystore.init.properties"/>
                         <then>
+                            <copy toDir="${currentConf}">
+                                <fileset dir="${buildBase}" includes="keystore.init.properties"/>
+                            </copy>
                             <copy toDir="${currentConf}/webapp/WEB-INF/classes">
                                 <fileset dir="${buildBase}" includes="keystore.init.properties"/>
                             </copy>
-                            <if>
-                               <available file="${buildBase}/conf_source/iePro" type="dir"/>
-                                <then>
-                                    <copy toDir="${buildBase}/conf_source/iePro">
-                                        <fileset dir="${buildBase}" includes="keystore.init.properties"/>
-                                    </copy>
-                                </then>
-                                <else>
-                                    <copy toDir="${buildBase}/conf_source/ieCe">
-                                        <fileset dir="${buildBase}" includes="keystore.init.properties"/>
-                                    </copy>
-                                </else>
-                            </if>
                         </then>
+                    </if>
+                    <if>
+                        <available file="${templateDir}/keystore-configuration.xml"/>
+                        <then>
+                            <copy file="${templateDir}/keystore-configuration.xml" toFile="${currentConf}/keystore-configuration.xml" overwrite="true"/>
+                        </then>
+                    </if>
+                    <if>
+                        <available file="${templateDir}/webapp/WEB-INF/classes/keystore-configuration.xml"/>
+                        <then>
+                            <copy file="${templateDir}/webapp/WEB-INF/classes/keystore-configuration.xml" toFile="${currentConf}/webapp/WEB-INF/classes/keystore-configuration.xml" overwrite="true"/>
+                        </then>
+                        <else>
+                            <copy file="${templateDir}/keystore-configuration.xml" toFile="${currentConf}/webapp/WEB-INF/classes/keystore-configuration.xml" overwrite="true" failonerror="false"/>
+                        </else>
                     </if>
                 </else>
             </if>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -1036,9 +1036,9 @@ public class ReportExecutionJob implements Job {
     protected String getBaseFileName() {
         String baseFilename = jobDetails.getBaseOutputFilename();
         if (jobDetails.getContentRepositoryDestination().isSequentialFilenames()) {
-            Date scheduledTime = jobContext.getScheduledFireTime();
+            Date fireTime = jobContext.getFireTime();
             SimpleDateFormat format = getTimestampFormat();
-            baseFilename = jobDetails.getBaseOutputFilename() + REPOSITORY_FILENAME_SEQUENCE_SEPARATOR + format.format(scheduledTime);
+            baseFilename = jobDetails.getBaseOutputFilename() + REPOSITORY_FILENAME_SEQUENCE_SEPARATOR + format.format(fireTime);
         } else {
             baseFilename = jobDetails.getBaseOutputFilename();
         }

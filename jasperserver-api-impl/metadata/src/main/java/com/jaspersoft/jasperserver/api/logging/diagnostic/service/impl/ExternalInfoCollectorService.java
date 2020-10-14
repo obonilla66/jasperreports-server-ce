@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -164,7 +164,11 @@ public class ExternalInfoCollectorService implements Diagnostic {
             })
             .addDiagnosticAttribute(DiagnosticAttributeBuilder.EXT_RUNTIMEBOOTCLASSPATH, new DiagnosticCallback<String>() {
                 public String getDiagnosticAttributeValue() {
-                    return runtimeBean.getBootClassPath();
+                    try {
+                        return runtimeBean.getBootClassPath();
+                    } catch (Exception ex) {
+                        return ex.getMessage();
+                    }
                 }
             })
             .addDiagnosticAttribute(DiagnosticAttributeBuilder.EXT_RUNTIMECLASSPATH, new DiagnosticCallback<String>() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,17 +20,17 @@
  */
 package example.cdspro;
 
-import java.util.Map;
-
+import com.jaspersoft.mongodb.adapter.MongoDbDataAdapter;
+import com.jaspersoft.mongodb.connection.MongoDbConnection;
 import net.sf.jasperreports.data.AbstractDataAdapterService;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
-import com.jaspersoft.mongodb.adapter.MongoDbDataAdapter;
+import net.sf.jasperreports.engine.ParameterContributorContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.jaspersoft.mongodb.connection.MongoDbConnection;
+import java.util.Map;
 
 /**
  * @author Teodor Danciu (teodord@users.sourceforge.net)
@@ -46,7 +46,7 @@ public class MongoDbDataAdapterService extends AbstractDataAdapterService {
 
 
     public MongoDbDataAdapterService(JasperReportsContext jasperReportsContext, MongoDbDataAdapter dataAdapter) {
-        super(jasperReportsContext, dataAdapter);
+        super(new ParameterContributorContext(jasperReportsContext, null, null), dataAdapter);
         this.dataAdapter=dataAdapter;
     }
 

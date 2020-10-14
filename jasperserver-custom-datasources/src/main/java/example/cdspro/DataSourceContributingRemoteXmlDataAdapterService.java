@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,17 +21,17 @@
 
 package example.cdspro;
 
-import java.util.Map;
-
 import net.sf.jasperreports.data.xml.RemoteXmlDataAdapter;
 import net.sf.jasperreports.data.xml.RemoteXmlDataAdapterService;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.engine.ParameterContributorContext;
 import net.sf.jasperreports.engine.data.JaxenXmlDataSource;
-
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Map;
 
 /**
  * Downloads remote resource, parses it, creates a datasource and contributes it to the datasource parameters.
@@ -39,7 +39,7 @@ import org.apache.commons.lang.StringUtils;
 public class DataSourceContributingRemoteXmlDataAdapterService extends RemoteXmlDataAdapterService {
 
     public DataSourceContributingRemoteXmlDataAdapterService(JasperReportsContext jasperReportsContext, RemoteXmlDataAdapter remoteXmlDataAdapter) {
-        super(jasperReportsContext, remoteXmlDataAdapter);
+        super(new ParameterContributorContext(jasperReportsContext, null, null), remoteXmlDataAdapter);
     }
 
     @Override

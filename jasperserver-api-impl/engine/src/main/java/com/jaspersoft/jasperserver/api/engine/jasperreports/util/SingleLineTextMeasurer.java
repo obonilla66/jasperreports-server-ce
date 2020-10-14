@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -89,6 +89,7 @@ public class SingleLineTextMeasurer implements JRTextMeasurer {
 		protected float textHeight = 0;
 		protected float firstLineLeading = 0;
 		protected boolean isLeftToRight = true;
+		protected boolean isParagraphCut;
 		protected String textSuffix = null;
 		protected float textWidth;
 
@@ -114,6 +115,10 @@ public class SingleLineTextMeasurer implements JRTextMeasurer {
 		public float getLeadingOffset() {
 			return firstLineLeading - firstLineMaxFontSize
 					* getLineSpacingFactor();
+		}
+
+		public boolean isParagraphCut() {
+			return isParagraphCut;
 		}
 
 		public String getTextSuffix() {
@@ -158,7 +163,7 @@ public class SingleLineTextMeasurer implements JRTextMeasurer {
 	 * 
 	 */
 	protected void initialize(JRStyledText styledText,
-			int availableStretchHeight, boolean canOverflow) {
+			int availableStretchHeight, boolean indentFirstLine, boolean canOverflow) {
 		width = textElement.getWidth();
 		height = textElement.getHeight();
 
@@ -241,9 +246,9 @@ public class SingleLineTextMeasurer implements JRTextMeasurer {
 	 */
 	public JRMeasuredText measure(JRStyledText styledText,
 			int remainingTextStart, int availableStretchHeight,
-			boolean canOverflow) {
+			boolean indentFirstLine, boolean canOverflow) {
 		/*   */
-		initialize(styledText, availableStretchHeight, canOverflow);
+		initialize(styledText, availableStretchHeight, indentFirstLine, canOverflow);
 
 		AttributedCharacterIterator allParagraphs = styledText
 				.getAttributedString().getIterator();

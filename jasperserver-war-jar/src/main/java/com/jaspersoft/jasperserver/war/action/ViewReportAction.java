@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -53,6 +53,7 @@ import net.sf.jasperreports.engine.JRRuntimeException;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.ReportContext;
+import net.sf.jasperreports.engine.export.GenericElementJsonHandler;
 import net.sf.jasperreports.engine.fill.JRFillInterruptedException;
 import net.sf.jasperreports.web.JRInteractiveException;
 import net.sf.jasperreports.web.JRInteractiveRuntimeException;
@@ -182,6 +183,10 @@ public class ViewReportAction extends ReportParametersAction
         this.jasperReportsContext = jasperReportsContext;
     }
 
+	public JasperReportsContext getJasperReportsContext() {
+		return jasperReportsContext;
+	}
+
     protected void createInputControlsAuditEvent() {
         auditContext.doInAuditContext(new AuditContext.AuditContextCallback() {
             public void execute() {
@@ -264,7 +269,7 @@ public class ViewReportAction extends ReportParametersAction
 
 		setReportLocale(context);
 		setAsyncReport(context);
-		
+
 		boolean parseRequest = toParseRequest(context);
 		flowScope.put(getFlowAttributeUseClientTimezone(), Boolean.valueOf(!parseRequest));
 
@@ -288,7 +293,7 @@ public class ViewReportAction extends ReportParametersAction
 	            	JSException jsException = JSExceptionUtils.extractCause(e, JSProfileAttributeException.class);
 	    			if (jsException != null) {
 	    				throw jsException;
-	    			}  else { 
+	    			}  else {
 	    				throw new RuntimeException(e);
 	    			}
 	    		} else{
@@ -411,9 +416,9 @@ public class ViewReportAction extends ReportParametersAction
 	}
 
     public Event chooseExportMode(RequestContext context) {
-        String reportOutput = context.getFlowScope().getString("reportOutput");
-        Boolean reportForceControls = context.getFlowScope().getBoolean("reportForceControls");
-        Boolean hasInputControls = context.getFlowScope().getBoolean("hasInputControls");
+        String reportOutput = (String)context.getFlowScope().get("reportOutput");
+        Boolean reportForceControls = (Boolean)context.getFlowScope().get("reportForceControls");
+        Boolean hasInputControls = (Boolean)context.getFlowScope().get("hasInputControls");
         //Hack to fix bug #31084: looking for some parameter which indicates that controls dialog should not be shown
         //in this case it is "action" request parameter which normally should not be there, it it's present - do not show dialog.
         //More correct fix will be to export report using not HTTP API but direct export
@@ -449,17 +454,17 @@ public class ViewReportAction extends ReportParametersAction
 
 		return success();
 	}
-	
+
 	protected void waitForFinalReport(RequestContext context, ReportUnitResult result) {
 		if (waitForFinalReportTime <= 0) {
 			return;
 		}
-		
+
 		JasperPrintAccessor printAccessor = result.getJasperPrintAccessor();
 		if (!(printAccessor instanceof AsyncJasperPrintAccessor)) {//use an interface instead?
 			return;
 		}
-		
+
 		Boolean waitResult = (Boolean) context.getFlowScope().get(FLOW_ATTRIBUTE_WAIT_FOR_FINAL_REPORT_RESULT, Boolean.class);
 		// only waiting for the first and if the previous waits were not in vain
 		if (waitResult == null || waitResult) {
@@ -468,7 +473,7 @@ public class ViewReportAction extends ReportParametersAction
 			if (log.isDebugEnabled()) {
 				log.debug("waited for final report " + (System.currentTimeMillis() - t0) + ", done " + done);
 			}
-			
+
 			context.getFlowScope().put(FLOW_ATTRIBUTE_WAIT_FOR_FINAL_REPORT_RESULT, done);
 		}
 	}
@@ -498,7 +503,7 @@ public class ViewReportAction extends ReportParametersAction
 				}
 			}
 		} else {
-			// checking whether the page exists, waiting until the page has been generated 
+			// checking whether the page exists, waiting until the page has been generated
 			ReportPageStatus pageStatus = printAccessor.pageStatus(pageIndex - 1, null);
 			if (pageStatus.pageExists()) {
 				if (log.isDebugEnabled()) {
@@ -527,7 +532,13 @@ public class ViewReportAction extends ReportParametersAction
                 getMessages().getMessage("jasper.report.view.empty", null, LocaleContextHolder.getLocale()));
 
         try {
-            parameterValues = getReportParameterValuesFromRequest(context);
+        	ReportUnit reportUnit = getReportUnit(context);
+        	if (reportUnit != null && reportUnit.getDataSource() != null) {
+				getJasperReportsContext().setProperty("DUMMY_REPORT",
+						Boolean.toString(reportLoadingService.isDummyReport(getExecutionContext(context), reportUnit.getDataSource())));
+			}
+
+			parameterValues = getReportParameterValuesFromRequest(context);
             if (context!=null&&context.getAttributes()!=null)
             	context.getAttributes().remove(IC_REFRESH_KEY);
         } catch (JSValidationException e) {
@@ -535,7 +546,6 @@ public class ViewReportAction extends ReportParametersAction
             context.getFlashScope().put(ATTRIBUTE_EMPTY_REPORT_MESSAGE, validationMessage);
             return createEmptyReportUnitResult(getReportURI(context));
         }
-
         ReportContext reportContext = getReportContext(context);
         int initialStackSize = 0;
 		CommandStack commandStack = (CommandStack)reportContext.getParameterValue(AbstractAction.PARAM_COMMAND_STACK);
@@ -583,7 +593,7 @@ public class ViewReportAction extends ReportParametersAction
 		return result;
 	}
 
-    private String formatInputControlsValidationErrorMessage(ValidationErrors validationErrors) {
+    protected String formatInputControlsValidationErrorMessage(ValidationErrors validationErrors) {
         List<InputControlValidationError> errors = validationErrors.getErrors();
 
         StringBuilder builder = new StringBuilder();
@@ -611,7 +621,7 @@ public class ViewReportAction extends ReportParametersAction
     protected Map<String, String[]> getInputControlsState(RequestContext context) {
         return  (Map<String, String[]>) context.getFlowScope().get(getAttributeSavedInputsState(), Map.class, Collections.EMPTY_MAP);
     }
-    
+
     private void undoAction(ReportContext webReportContext, int initialStackSize) {
 		CommandStack commandStack = (CommandStack)webReportContext.getParameterValue(AbstractAction.PARAM_COMMAND_STACK);
 		if (commandStack != null) {
@@ -626,11 +636,11 @@ public class ViewReportAction extends ReportParametersAction
     		// dashboard executions are not async because there's no toolbar/etc
     		return false;
     	}
-    	
+
     	Boolean asyncAttribute = context.getFlowScope().getBoolean(getAttributeAsyncReport());
     	return asyncAttribute == null ? defaultAsyncReport : asyncAttribute.booleanValue();
     }
-    
+
 	private Action getAction(ReportContext webReportContext, JasperReportsContext jrContext)
 	{
 		String jsonData = (String) webReportContext.getParameterValue("jr_action");	//FIXME use constant
@@ -643,7 +653,7 @@ public class ViewReportAction extends ReportParametersAction
 			} else if (actions.size() > 1){
 				result = new MultiAction(actions);
 			}
-			
+
 			((AbstractAction)result).init(jrContext, webReportContext);
 		}
 		return result;
@@ -706,17 +716,17 @@ public class ViewReportAction extends ReportParametersAction
 		String jasperPrintName = getJasperPrintId(context);
 		if (jasperPrintName != null) {
 			ServletExternalContext externalContext = (ServletExternalContext) context.getExternalContext();
-			
+
 			ReportUnitResult result = (ReportUnitResult)getJasperPrintAccessor().getObject(
                     (HttpServletRequest) externalContext.getNativeRequest(), jasperPrintName);
 			if (result != null) {
 				// cancel the report execution if still in progress
 				cancelReportExecution(context, result);
-				
+
 				if (virtualizerFactory != null) {
 					virtualizerFactory.disposeReport(result);
 				}
-				
+
 				ReportContext reportContext = result.getReportContext();
 				if (reportContext != null) {
 					JasperPrintAccessor reportContextJRPrint = (JasperPrintAccessor) reportContext.getParameterValue(
@@ -724,7 +734,7 @@ public class ViewReportAction extends ReportParametersAction
 					//testing for object identity
 					if (reportContextJRPrint == result.getJasperPrintAccessor()) {
 						//it's safer to remove the JasperPrint object from the context
-						//to reduce the risk of the object not getting garbage collected  
+						//to reduce the risk of the object not getting garbage collected
 						reportContext.removeParameterValue(WebReportContext.REPORT_CONTEXT_PARAMETER_JASPER_PRINT_ACCESSOR);
 					}
 				}
@@ -736,13 +746,13 @@ public class ViewReportAction extends ReportParametersAction
 	protected void removeCurrentReportContext(RequestContext context) {
 		getReportContextAccessor().removeContext(context);
 	}
-	
+
 	protected ReportUnitResult getCurrentReportResult(RequestContext context) {
 		ReportUnitResult result = null;
 		String jasperPrintName = getJasperPrintId(context);
 		if (jasperPrintName != null) {
 			ServletExternalContext externalContext = (ServletExternalContext) context.getExternalContext();
-			
+
 			result = (ReportUnitResult)getJasperPrintAccessor().getObject(
                     (HttpServletRequest) externalContext.getNativeRequest(), jasperPrintName);
 		}
@@ -752,7 +762,7 @@ public class ViewReportAction extends ReportParametersAction
 	protected void cancelReportExecution(RequestContext context, ReportUnitResult result)
 	{
 		JasperPrintAccessor printAccessor = result.getJasperPrintAccessor();
-		if (printAccessor != null 
+		if (printAccessor != null
 				&& printAccessor.getReportStatus().getStatus() == ReportExecutionStatus.Status.RUNNING)
 		{
 			String requestId = getReportRequestId(context);
@@ -769,7 +779,7 @@ public class ViewReportAction extends ReportParametersAction
 				{
 					log.debug("Canceling request " + requestId);
 				}
-				
+
 				boolean canceled = getEngine().cancelExecution(requestId);
 				if (canceled)
 				{
@@ -782,19 +792,19 @@ public class ViewReportAction extends ReportParametersAction
 	protected String getJasperPrintId(RequestContext context) {
 		return context.getFlowScope().getString(getFlowAttributeJasperPrintName());
 	}
-	
+
 	protected void setJasperPrintId(RequestContext context, String jasperPrintId) {
         context.getFlowScope().put(getFlowAttributeJasperPrintName(), jasperPrintId);
 	}
-	
+
 	protected String getReportRequestId(RequestContext context) {
         return context.getFlowScope().getString(getFlowAttributeReportRequestId());
 	}
-	
+
 	protected void setReportRequestId(RequestContext context, String requestId) {
         context.getFlowScope().put(getFlowAttributeReportRequestId(), requestId);
 	}
-	
+
 	public Event navigate(RequestContext context) {
 		Integer pageIndex = (Integer) context.getRequestParameters().getNumber(getRequestParameterPageIndex(), Integer.class);
         MutableAttributeMap flowScope = context.getFlowScope();
@@ -819,7 +829,7 @@ public class ViewReportAction extends ReportParametersAction
 		getReportContextAccessor().initFlowScope(context);
         ReportContext reportContext = getReportContext(context);
 		reportContext.setParameterValue(WebUtil.REQUEST_PARAMETER_REPORT_URI, getReportURI(context));
-        reportContext.setParameterValue("net.sf.jasperreports.engine.export.clear.json.cache", Boolean.TRUE);
+        reportContext.setParameterValue(GenericElementJsonHandler.PARAMETER_CLEAR_CONTEXT_CACHE, Boolean.TRUE);
 		return success();
 	}
 
@@ -876,12 +886,12 @@ public class ViewReportAction extends ReportParametersAction
 		//leave the report context if input controls were shown, it might be still needed
 		Boolean directExport = context.getFlowScope().getBoolean(ATTRIBUTE_DIRECT_EXPORT);
 		Boolean inputControlsExport = context.getFlowScope().getBoolean(ATTRIBUTE_INPUT_CONTROLS_EXPORT);
-		
-		if ((directExport != null && directExport) 
+
+		if ((directExport != null && directExport)
 				|| (inputControlsExport != null && inputControlsExport)) {
 			removeCurrentJasperPrint(context);
 		}
-		
+
 		if (directExport != null && directExport) {
 			removeCurrentReportContext(context);
 		}
@@ -1198,6 +1208,7 @@ public class ViewReportAction extends ReportParametersAction
 	public void setWaitForFinalReportTime(int waitForFinalReportTime) {
 		this.waitForFinalReportTime = waitForFinalReportTime;
 	}
+
 
 	public Event initInputControls(RequestContext context) {
 		context.getAttributes().put(IC_REFRESH_KEY,Boolean.TRUE);

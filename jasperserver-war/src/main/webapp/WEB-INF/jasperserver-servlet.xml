@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -102,7 +102,6 @@
                 <prop key="/heartbeatInfo.html">jsCommContr</prop>
 				<prop key="/reportimage">reportImageController</prop>
 				<prop key="/reportresource/**">reportResourceController</prop>
-				<prop key="/jrpxml">xmlExportController</prop>
 
 				<!-- report execution cancel -->
 				<prop key="/viewReportCancel.html">reportExecutionController</prop>
@@ -420,14 +419,6 @@
         <property name="reportJobDefaults" ref="reportJobDefaults"/>
         <property name="repository" ref="${bean.repositoryService}"/>
         <property name="profileAttributeService" ref="profileAttributeService"/>
-    </bean>
-
-    <bean id="xmlExportController" class="com.jaspersoft.jasperserver.war.control.XmlExportController">
-    	<property name="jasperPrintAccessor" ref="jasperPrintAccessor"/>
-    	<property name="jasperPrintNameParameter" value="jrprint"/>
-    	<property name="pageParameter" value="page"/>
-    	<property name="hyperlinkProducerFactory" ref="swfReportHyperlinkProducerFactory"/>
-    	<property name="jasperReportsContext" ref="${bean.jasperReportsContext}"/>
     </bean>
 
     <bean id="systemErrorController" class="com.jaspersoft.jasperserver.war.control.SystemErrorController">

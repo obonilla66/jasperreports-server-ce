@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,17 +21,16 @@
 
 package example.cdspro;
 
+import net.sf.jasperreports.engine.JRField;
+import net.sf.jasperreports.engine.data.AbstractXmlDataSource;
+import net.sf.jasperreports.engine.design.JRDesignField;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import net.sf.jasperreports.engine.JRField;
-import net.sf.jasperreports.engine.data.AbstractXmlDataSource;
-import net.sf.jasperreports.engine.design.JRDesignField;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 /**
  * Builds a list of JR fields. Fields in resulting list are ordered in the order they are added to the builder.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -28,7 +28,6 @@ import com.jaspersoft.jasperserver.remote.exception.NoResultException;
 import com.jaspersoft.jasperserver.remote.exception.NotReadyResultException;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -39,8 +38,6 @@ import java.io.File;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -49,16 +46,16 @@ import java.util.concurrent.Future;
 /*
 *  @author inesterenko
 */
-public class ImportExportTask<T> implements Task {
+public class ImportExportTask<T, U extends T> implements Task<T> {
 
     protected final static Log log = LogFactory.getLog(Task.class);
 
     protected String uuid;
-    protected final BaseImportExportTaskRunnable<T> taskRunner;
+    protected final BaseImportExportTaskRunnable<U> taskRunner;
     //protected Thread thread;
     private Future<?> future;
 
-    public ImportExportTask(BaseImportExportTaskRunnable<T> taskRunner) {
+    public ImportExportTask(BaseImportExportTaskRunnable<U> taskRunner) {
         this.taskRunner = taskRunner;
     }
 
@@ -99,8 +96,8 @@ public class ImportExportTask<T> implements Task {
     }
 
     @Override
-    public T getResult() throws NotReadyResultException, NoResultException {
-        return (T)taskRunner.getResult();
+    public U getResult() throws NotReadyResultException, NoResultException {
+        return (U)taskRunner.getResult();
     }
 
     @Override
@@ -160,24 +157,11 @@ public class ImportExportTask<T> implements Task {
         return taskRunner.getTaskCompletionDate();
     }
 
-    @Override
-    public void updateTask(List parameters, String organizationId, String brokenDependenciesStrategy) {
+    public void updateTask(Map<String, String> parameters, String organizationId, String brokenDependenciesStrategy) {
         State state = getState();
         if (Task.PENDING.equals(state.getPhase())) {
 
-            Map<String, Boolean> parametersMap = new HashMap<String, Boolean>();
-            if (parameters != null) {
-                for (Object obj : parameters) {
-                    if (obj instanceof String) {
-                        String name = (String) obj;
-                        if (StringUtils.isNotBlank(name)) {
-                            parametersMap.put(name, true);
-                        }
-                    }
-                }
-            }
-
-            taskRunner.setParameters(parametersMap.isEmpty() ? null : parametersMap);
+            taskRunner.setParameters(parameters == null || parameters.isEmpty() ? null : parameters);
             taskRunner.setOrganizationId(organizationId);
             taskRunner.setBrokenDependenciesStrategy(brokenDependenciesStrategy);
         } else {

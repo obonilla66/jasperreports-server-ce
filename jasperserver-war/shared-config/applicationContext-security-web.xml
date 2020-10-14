@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -48,8 +48,8 @@
             <list>
                 <security:filter-chain pattern="/xmla" filters="httpSessionContextIntegrationFilter,${bean.loggingFilter},${bean.basicProcessingFilter},JIAuthenticationSynchronizer,anonymousProcessingFilter,basicAuthExceptionTranslationFilter,filterInvocationInterceptor"/>
                 <security:filter-chain pattern="/services/**" filters="httpSessionContextIntegrationFilter,${bean.loggingFilter},delegatingCASSingleSignOutFilter,delegatingPreAuthenticatedFilter,${bean.portletAuthenticationProcessingFilter},delegatingBasicProcessingFilter,${bean.passwordExpirationProcessingFilter},JIAuthenticationSynchronizer,anonymousProcessingFilter,wsBasicAuthExceptionTranslationFilter,filterInvocationInterceptor"/>
-                <security:filter-chain pattern="/rest_v2/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,textOnlyResponseWebAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationRestProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRestRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,restExceptionTranslationFilter,filterInvocationInterceptor"/>
-                <security:filter-chain pattern="/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,multipartRequestWrapperFilter,webAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,delegatingExceptionTranslationFilter,filterInvocationInterceptor,iPadSupportFilter"/>
+                <security:filter-chain pattern="/rest_v2/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,textOnlyResponseWebAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationRestProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRestRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,restExceptionTranslationFilter,filterInvocationInterceptor"/>
+                <security:filter-chain pattern="/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,multipartRequestWrapperFilter,webAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,delegatingExceptionTranslationFilter,filterInvocationInterceptor,iPadSupportFilter"/>
             </list>
         </constructor-arg>
         <property name="firewall">
@@ -95,6 +95,10 @@
         <property name="locales">
             <ref bean="userLocalesList"/>
         </property>
+        <property name="usernamePasswordAuthenticationParameterConfiguration">
+            <ref bean="usernamePasswordAuthenticationParameter"/>
+        </property>
+
     </bean>
 
     <!-- Basic Authentication -->
@@ -155,6 +159,7 @@
         <property name="defaultFilter">
             <bean class="com.jaspersoft.jasperserver.war.NullFilter"/>
         </property>
+        <property name="responseHeadersUpdater" ref="responseHeadersUpdater"/>
     </bean>
 
     <bean id="delegatingAuthenticationProcessingFilter"
@@ -203,6 +208,7 @@
         <property name="sessionRegistry" ref="sessionRegistry"/>
         <property name="jsonRedirectUrl" ref="authSuccessJsonRedirectUrl"/>
         <property name="redirectStrategy" ref="authProcessUrlRedirect" />
+        <property name="responseHeadersUpdater" ref="responseHeadersUpdater"/>
     </bean>
     <bean id="authSuccessJsonRedirectUrl" class="java.lang.String">
         <constructor-arg type="java.lang.String" value="/scripts/visualize/auth/loginSuccess.json"/>
@@ -229,12 +235,16 @@
         <property name="userNameParam" value="j_username"/>
         <property name="userPwdParam" value="j_password"/>
         <property name="postOnly" value="false"/>
+        <property name="responseHeadersUpdater" ref="responseHeadersUpdater"/>
     </bean>
 
     <bean id="requestParameterAuthenticationFilter"
           class="com.jaspersoft.jasperserver.war.util.RequestParameterAuthenticationFilter">
         <property name="authenticationManager">
             <ref bean="authenticationManager"/>
+        </property>
+        <property name="parameterConfiguration">
+            <ref bean="usernamePasswordAuthenticationParameter"/>
         </property>
         <property name="authenticationFailureUrl">
             <value>/login.html?error=1</value>
@@ -251,6 +261,9 @@
           class="com.jaspersoft.jasperserver.war.util.RequestParameterAuthenticationFilter">
         <property name="authenticationManager">
             <ref bean="authenticationManager"/>
+        </property>
+        <property name="parameterConfiguration">
+            <ref bean="usernamePasswordAuthenticationParameter"/>
         </property>
         <property name="excludeUrls">
             <list>
@@ -437,9 +450,9 @@
                 <security:intercept-url pattern="/xmla" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/services/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/reportimage/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
-                <security:intercept-url pattern="/jrpxml/*" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/heartbeatInfo.html" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/thumbnails/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
+                <security:intercept-url pattern="/rest_v2/keys/**" access="ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/discovery/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/jobs/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/permissions/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
@@ -490,6 +503,21 @@
         <property name="order" value="1000000000"/>
         <property name="securityMetadataSourceDefinition" value="filterInvocationInterceptorTheLowestRules"/>
         <property name="valueType" value="securityMetadataSource"/>
+    </bean>
+
+    <bean id="usernamePasswordAuthenticationParameter" class="com.jaspersoft.jasperserver.api.common.util.spring.UsernamePasswordAuthenticationParameterConfiguration">
+        <property name="authParameters">
+            <list>
+                <map key-type="java.lang.String" value-type="java.lang.String">
+                  <entry key="usernameParameter" value="j_username"/>
+                  <entry key="passwordParameter" value="j_password"/>
+                </map>
+                <!--<map key-type="java.lang.String" value-type="java.lang.String">
+                  <entry key="usernameParameter" value="username"/>
+                  <entry key="passwordParameter" value="password"/>
+                </map>-->
+            </list>
+        </property>
     </bean>
 
     <security:filter-security-metadata-source id="filterInvocationInterceptorTheLowestRules" request-matcher="ant" use-expressions="false">
@@ -557,5 +585,54 @@
         <entry key="optimizedJavascriptPath" value="#{javascriptOptimizationSettings.optimizedJavascriptPath}"/>
         <entry key="runtimeHash" value="#{javascriptOptimizationSettings.runtimeHash}"/>
     </util:map>
+
+	<bean id="responseHeadersUpdater" class="com.jaspersoft.jasperserver.api.security.ResponseHeaderUpdater">
+        <property name="cookieHeaders">
+            <util:map value-type="java.util.List">
+                <entry key="Set-Cookie">
+                    <util:list id="cookie-list">
+                        <value>SameSite=None</value>
+                        <value>Secure</value>
+                    </util:list>
+                </entry>
+            </util:map>
+        </property>
+    </bean>
+
+    <bean id="corsAuthRedirectionFilter" class="com.jaspersoft.jasperserver.api.security.csrf.CorsAuthRedirectionFilter"/>
+
+    <bean id = "corsProcessor" class = "com.jaspersoft.jasperserver.api.security.csrf.JSCorsProcessor">
+        <property name="headerUrlPatterns">
+            <util:map value-type="java.util.List">
+                <entry key="Vary">
+                    <util:list>
+                        <value>(/runtime/[0-9ABCDEF]*)*/rest_v2/bundles(/.+|\?.*&amp;?expanded=true)</value>
+                        <value>(/runtime/[0-9ABCDEF]*)*/rest_v2/settings/.*</value>
+                    </util:list>
+                </entry>
+            </util:map>
+        </property>
+        <property name="headerValues">
+            <util:map value-type="java.util.List">
+                <entry key="Vary">
+                    <util:list>
+                        <value>Accept-Language</value>
+                    </util:list>
+                </entry>
+            </util:map>
+        </property>
+    </bean>
+
+    <bean id="corsDelegatingFilter"
+          class="com.jaspersoft.jasperserver.api.security.externalAuth.JSDelegatingFilterProxy">
+        <property name="targetBeanName" value="corsFilter"/>
+        <property name="defaultFilter">
+            <bean class="org.springframework.web.filter.CorsFilter">
+            <constructor-arg>
+            <bean id="urlCors" class="org.springframework.web.cors.UrlBasedCorsConfigurationSource"/>
+            </constructor-arg>
+            </bean>
+        </property>
+    </bean>
 
 </beans>

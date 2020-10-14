@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,6 +23,9 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientIdentifiable;
+import com.jaspersoft.jasperserver.dto.adhoc.query.IExpressionContainer;
+import com.jaspersoft.jasperserver.dto.adhoc.query.QueryPatternsUtil;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.validation.NotEmpty;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
@@ -30,11 +33,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
  */
-public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>, DeepCloneable<ClientQueryGroup> {
+public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>, IExpressionContainer, DeepCloneable<ClientQueryGroup> {
 
     private String id;
     // TODO Andriy G: remove field type. It doesn't affect the query resultset
@@ -42,9 +46,18 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
     private String categorizer;
     private String fieldName;
     private Boolean includeAll;
+    private ClientExpressionContainer expressionContainer;
 
     public ClientQueryGroup() {
         // no op
+    }
+
+    public ClientQueryGroup(String group) {
+        QueryPatternsUtil.NameAliasExpression nameAliasExpression = QueryPatternsUtil.parseNameAliasExpression(group);
+        this.fieldName = nameAliasExpression.name;
+        this.id = nameAliasExpression.alias;
+        if (nameAliasExpression.expression != null)
+            this.expressionContainer = new ClientExpressionContainer(nameAliasExpression.expression);
     }
 
     public ClientQueryGroup(ClientQueryGroup source) {
@@ -55,6 +68,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
         categorizer = source.getCategorizer();
         fieldName = source.getFieldName();
         includeAll = source.getIncludeAll();
+        expressionContainer = copyOf(source.getExpressionContainer());
     }
 
     @Override
@@ -118,6 +132,26 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
     public String getType() {
         return type;
     }
+
+    @Override
+    @XmlTransient
+    public String getFieldExpression() {
+        if (expressionContainer == null) return null;
+        return expressionContainer.getString();
+    }
+
+    @Override
+    @XmlElement(name = "expression")
+    public ClientExpressionContainer getExpressionContainer() {
+        return expressionContainer;
+    }
+
+    @Override
+    public ClientQueryGroup setExpressionContainer(ClientExpressionContainer expressionContainer) {
+        this.expressionContainer = expressionContainer;
+        return this;
+    }
+
 
     /**
      * @return Control over inclusion extra rows to the query result that represent rolled up aggregations
@@ -186,6 +220,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
             sb.append(", id='").append(getId()).append('\'');
             sb.append(", type='").append(getType()).append('\'');
             sb.append(", fieldName='").append(getFieldName()).append('\'');
+            sb.append(", expression=").append(getExpressionContainer());
             sb.append(", includeAll=").append(getIncludeAll());
             sb.append('}');
             return sb.toString();
@@ -205,6 +240,9 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
             return false;
         if (getFieldName() != null ? !getFieldName().equals(that.getFieldName()) : that.getFieldName() != null)
             return false;
+        if (expressionContainer != null ? !expressionContainer.equals(that.expressionContainer) : that.expressionContainer != null) {
+            return false;
+        }
         return getIncludeAll() != null ? getIncludeAll().equals(that.getIncludeAll()) : that.getIncludeAll() == null;
 
     }
@@ -216,6 +254,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
         result = 31 * result + (getCategorizer() != null ? getCategorizer().hashCode() : 0);
         result = 31 * result + (getFieldName() != null ? getFieldName().hashCode() : 0);
         result = 31 * result + (getIncludeAll() != null ? getIncludeAll().hashCode() : 0);
+        result = 31 * result + (expressionContainer != null ? expressionContainer.hashCode() : 0);
         return result;
     }
 
@@ -226,6 +265,7 @@ public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>
         sb.append(", id='").append(id).append('\'');
         sb.append(", type='").append(type).append('\'');
         sb.append(", fieldName='").append(fieldName).append('\'');
+        sb.append(", expression=").append(expressionContainer);
         sb.append(", includeAll=").append(includeAll);
         sb.append('}');
         return sb.toString();

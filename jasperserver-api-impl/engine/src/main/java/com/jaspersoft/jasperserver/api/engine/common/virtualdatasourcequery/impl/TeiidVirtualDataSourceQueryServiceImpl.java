@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -40,6 +40,8 @@ import com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teii
 import com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.AwsDataSourceService;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.JdbcDataSourceService;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.TibcoDriverManagerImpl;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectEntry;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
@@ -91,9 +93,13 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
     private TransactionManagerConfigurationImpl transactionManagerConfiguration;
     private boolean useSubDSTableList = false;
     private Map<String, Map<String, String>> importPropertyMap;
+    private Map<String, Map<String, Set>> customSelectedSchemas;
     private boolean printVDB = true;
     private boolean printDDL = true;
     private Map<String, TeiidDataSource> dataSourceServiceToTeiidConnectorMap;
+    private static String DEFAULT = "default";
+
+
     /**
      * A connector to be used with custom datasources which provide {@link CustomDomainMetaData}.
      * Can be <code>null</code>.
@@ -128,6 +134,15 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
     */
     public Map<String, Map<String, String>> getImportPropertyMap() {
         return importPropertyMap;
+    }
+
+
+    public Map<String, Map<String, Set>> getCustomSelectedSchemas() {
+        return customSelectedSchemas;
+    }
+
+    public void setCustomSelectedSchemas(Map<String, Map<String, Set>> customSelectedSchemas) {
+        this.customSelectedSchemas = customSelectedSchemas;
     }
 
     /**
@@ -382,34 +397,16 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
                 String translatorName = connectionFactoryProviderTranslatorMap.get(subDataSourceIDs.get(i));
                 // set connection name
                 String connectionName =  subDataSourceIDs.get(i);
-                // try to get the complete schemas list from each sub data source
-                Set availableSchemaList = null;
-                try {
-                    Connection subDataSourceConnection = getDataSource(subDataSources.get(i)).getConnection();
-                    availableSchemaList = VirtualSQLDataSource.discoverNonEmptySchemas(subDataSourceConnection, databaseObjectTypesFilter);
-                    subDataSourceConnection.close();
-                } catch(SQLException ex) {
-                    debug("Unable to read the schema list from data source!");
-        //            throw new VirtualDataSourceException(ex);
-                } catch (Exception ex) {
-                    debug("Unable to read the schema list from data source!");
-        //            throw new VirtualDataSourceException("Teiid:  cannot get the schema list for sub data source, " + subDataSources.get(i), ex);
-                }
 
-                if ((availableSchemaList == null) || (availableSchemaList.size() == 0)) {
-                    // if schema list is not available, add the whole data source
-                    modelMetaDataList.add(addModel(null, dataSourceNames.get(i), subDataSourceIDs.get(i), translatorName, connectionName, subDataSources.get(i)));
-                }
-                else {
-                    // only add selected schema into virtual data source model metadata list
-                    for (Object schemaName : availableSchemaList) {
+                Set<String> selectedSchemasSet = getSubDataSourceSchemas(subDataSources.get(i), connectionName);
+                if (selectedSchemasSet != null && !selectedSchemasSet.isEmpty()) {
+                    for (String schemaName : selectedSchemasSet) {
                         String virtualSchemaName = dataSourceNames.get(i) +  VirtualDataSourceHandler.getDataSourceSchemaSeparator() + schemaName;
-                        // do not add excluded schema into modelMetaDataList
                         if ((virtualDataSourceConfig != null) && virtualDataSourceConfig.isSchemaExcluded(virtualSchemaName)) continue;
-                        // only add selected schema into modelMetaDataList
-                        if (!isSelectedSchema((String)schemaName, subDataSources.get(i))) continue;
-                        modelMetaDataList.add(addModel((String)schemaName, dataSourceNames.get(i), subDataSourceIDs.get(i), translatorName, connectionName, subDataSources.get(i)));
+                        modelMetaDataList.add(addModel((String) schemaName, dataSourceNames.get(i), subDataSourceIDs.get(i), translatorName, connectionName, subDataSources.get(i)));
                     }
+                } else {
+                        modelMetaDataList.add(addModel(null, dataSourceNames.get(i), subDataSourceIDs.get(i), translatorName, connectionName, subDataSources.get(i)));
                 }
             }
             // add additional data source which comes from spring injection
@@ -433,6 +430,68 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
         } catch (Exception ex) {
             throw ex;
         }
+    }
+
+    /*Model name is created using (modelName + VirtualDataSourceHandler.getDataSourceSchemaSeparator() + schema) but
+      the schema of google big query contains (project id + schema name). Project ID contains a dot which is not allowed 
+      to create a model in VDS.So substring the text before the dot for the Google Big Query */
+    private String modifiedSchema(com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource dataSource, String schema) {
+        String driverClass = getDriverClass(dataSource);
+        if (driverClass!=null && driverClass.equals(TibcoDriverManagerImpl.GOOGLE_BIGQUERY_PROGRESS_DRIVER_CLASS)) {
+            schema = schema.substring(schema.indexOf(46) + 1);
+        }
+        return schema;
+    }
+
+    private String getDriverClass(com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource subDataSource){
+        String driverClass = null;
+        try {
+            if (subDataSource instanceof JdbcDataSourceImpl) {
+                JdbcDataSource jdbcJataSource = (JdbcDataSourceImpl) subDataSource;
+                driverClass = jdbcJataSource.getDriverClass();
+            }
+        } catch (Exception ex) {
+            debug("ERROR: Unable to get the driver class!");
+        }
+
+        return driverClass;
+    }
+    protected Set<String> getSubDataSourceSchemas(com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource subDataSource, String subDataSourceId) {
+        Set<String> selectedSchemasSet = getSchemaSet(subDataSource);
+        String dataSourceName = getDataSourceName(subDataSource);
+        String driverClass = getDriverClass(subDataSource);
+        if (selectedSchemasSet != null && !selectedSchemasSet.isEmpty() && driverClass!=null && !driverClass.equals(TibcoDriverManagerImpl.GOOGLE_BIGQUERY_PROGRESS_DRIVER_CLASS)) {
+            return selectedSchemasSet;
+        } else {
+            // try to get the complete schemas list from each sub data source
+            Set<String> availableSchemaList = null;
+            try {
+                PooledVirtualSchemaEntry availableSchemaListEntry = (PooledVirtualSchemaEntry) getDataSourceCache().get(subDataSourceId + "_SCHEMA", System.currentTimeMillis());
+                if (availableSchemaListEntry != null) {
+                    availableSchemaList = availableSchemaListEntry.getAvailSchemas();
+                } else {
+                    Connection subDataSourceConnection = getDataSource(subDataSource).getConnection();
+
+                    availableSchemaList = VirtualSQLDataSource.discoverNonEmptySchemas(subDataSourceConnection, databaseObjectTypesFilter, customSelectedSchemas, dataSourceName);
+                    getDataSourceCache().put(subDataSourceId + "_SCHEMA", new PooledVirtualSchemaEntry(subDataSourceId + "_SCHEMA", availableSchemaList), System.currentTimeMillis());
+                    subDataSourceConnection.close();
+                }
+            } catch (SQLException ex) {
+                debug("Unable to read the schema list from data source!");
+                //            throw new VirtualDataSourceException(ex);
+            } catch (Exception ex) {
+                debug("Unable to read the schema list from data source!");
+                //            throw new VirtualDataSourceException("Teiid:  cannot get the schema list for sub data source, " + subDataSources.get(i), ex);
+            }
+            return availableSchemaList;
+        }
+    }
+
+    private String getDataSourceName(com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource subDataSource) {
+        if(subDataSource != null) {
+            return subDataSource.getDataSourceName();
+        }
+        return null;
     }
 
     // put additional data source information into vds key in order to guarantee each DSs combination gets its unique key
@@ -509,6 +568,7 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
     }
 
     protected boolean isSelectedSchema(String schemaName, com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource reportDataSource) {
+        schemaName = modifiedSchema(reportDataSource, schemaName);
         Set<String> schemaSet = getSchemaSet(reportDataSource);
         if (schemaSet == null || schemaSet.isEmpty()) {
             return true;
@@ -613,40 +673,28 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
     // add model to virtual data source
     private ModelMetaData addModel(String schema, String modelName, String connectorName, String translatorName, String connectionName,
             com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource dataSource) {
+        String schemaText = null;
+        String schemaType = "native";
         ModelMetaData model = new ModelMetaData();
 		model.setModelType(Model.Type.PHYSICAL);
+
         Properties importProperties = new Properties();
-        debug("Adding Model - SCHEMA = [" + schema + "], MODELNAME = [" + modelName + "], CONNECTORNAME = [" + connectionName + "], CONNECTIONNAME = [" + connectionName + "]");
-        importProperties.setProperty("importer.useFullSchemaName", Boolean.FALSE.toString());
-        debug("TEIID IMPORT PROPERTY [import.userFullSchemaName, " + Boolean.FALSE.toString() + "]");
-        importProperties.setProperty("importer.trimColumnNames", Boolean.TRUE.toString());
-        debug("TEIID IMPORT PROPERTY [import.trimColumnNames, " + Boolean.TRUE.toString() + "]");
-        // SET PROPERTIES FOR AWS DATA SOURCE
-        try {
-            if ((dataSource instanceof JdbcDataSourceImpl) && (((JdbcDataSourceImpl) dataSource).getReportDataSource() instanceof AwsReportDataSource)) {
-                importProperties.setProperty("importer.importKeys", Boolean.FALSE.toString());
-                debug("TEIID IMPORT PROPERTY [importer.importKeys, " + Boolean.FALSE.toString() + "]");
-                importProperties.setProperty("importer.importForeignKeys", Boolean.FALSE.toString());
-                debug("TEIID IMPORT PROPERTY [importer.importForeignKeys, " + Boolean.FALSE.toString() + "]");
-            }
-        } catch (Exception ex) {
-            debug("Fail to detect AWS Data source.");
-        }
+        setDefaultImportProperties(schema, modelName, connectionName, dataSource, importProperties);
+
         if (schema != null) {
-            model.setName(modelName + VirtualDataSourceHandler.getDataSourceSchemaSeparator() + schema);
+            String newSchema = modifiedSchema(dataSource, schema);
+            model.setName(modelName + VirtualDataSourceHandler.getDataSourceSchemaSeparator() + newSchema);
             importProperties.setProperty("importer.schemaPattern", schema);
             debug("TEIID IMPORT PROPERTY [import.schemaPattern, " + schema + "]");
         } else {
             model.setName(modelName);
         }
-        // import property from spring injection
 
+        // import property from spring injection
         importProperties = collectImportProperties(modelName, importProperties);
         // import properties for specific translator
         importProperties = collectImportProperties(translatorName, importProperties);
         model.setProperties(importProperties);
-        String schemaText = null;
-        String schemaType = "native";
         try {
             if (dataSource instanceof CustomDataSource) {
                 TeiidDataSource teiidDataSource = getTeiidDataSource(dataSource);
@@ -666,11 +714,44 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
 		return model;
 	}
 
-    private Properties collectImportProperties(String name, Properties importProperties) {
+    protected void setDefaultImportProperties(String schema, String modelName, String connectionName, com.jaspersoft.jasperserver.api.common.virtualdatasourcequery.DataSource dataSource, Properties importProperties) {
+        debug("Adding Model - SCHEMA = [" + schema + "], MODELNAME = [" + modelName + "], CONNECTORNAME = [" + connectionName + "], CONNECTIONNAME = [" + connectionName + "]");
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.FALSE.toString());
+        debug("TEIID IMPORT PROPERTY [import.userFullSchemaName, " + Boolean.FALSE.toString() + "]");
+        importProperties.setProperty("importer.trimColumnNames", Boolean.TRUE.toString());
+        debug("TEIID IMPORT PROPERTY [import.trimColumnNames, " + Boolean.TRUE.toString() + "]");
+        // SET PROPERTIES FOR AWS DATA SOURCE
+        try {
+            if ((dataSource instanceof JdbcDataSourceImpl) && (((JdbcDataSourceImpl) dataSource).getReportDataSource() instanceof AwsReportDataSource)) {
+                importProperties.setProperty("importer.importKeys", Boolean.FALSE.toString());
+                debug("TEIID IMPORT PROPERTY [importer.importKeys, " + Boolean.FALSE.toString() + "]");
+                importProperties.setProperty("importer.importForeignKeys", Boolean.FALSE.toString());
+                debug("TEIID IMPORT PROPERTY [importer.importForeignKeys, " + Boolean.FALSE.toString() + "]");
+            }
+        } catch (Exception ex) {
+            debug("Fail to detect AWS Data source.");
+        }
+    }
+
+    protected Properties collectImportProperties(String name, Properties importProperties) {
         if (importPropertyMap != null) {
             Map<String, String> propertyMapForDataSourceModel = importPropertyMap.get(name);
-            if (propertyMapForDataSourceModel != null) {
-                for (Map.Entry<String, String> entry : propertyMapForDataSourceModel.entrySet()) {
+
+            //get the default import properties if any
+            Map<String, String> propertyMap = importPropertyMap.get(DEFAULT);
+
+            if(propertyMap != null) {
+                if(propertyMapForDataSourceModel != null) {
+                    propertyMap.putAll(propertyMapForDataSourceModel);
+                }
+            } else {
+                if(propertyMapForDataSourceModel != null) {
+                    propertyMap = propertyMapForDataSourceModel;
+                }
+            }
+
+            if (propertyMap != null) {
+                for (Map.Entry<String, String> entry : propertyMap.entrySet()) {
                     importProperties.setProperty(entry.getKey(), entry.getValue());
                     debug("TEIID IMPORT PROPERTY [" + entry.getKey() + ", " + entry.getValue() + "]");
                 }
@@ -794,5 +875,24 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
     public void setDatabaseObjectTypesFilter(Set<String> databaseObjectTypesFilter) {
         this.databaseObjectTypesFilter = databaseObjectTypesFilter;
     }
+
+    class PooledVirtualSchemaEntry extends PooledObjectEntry {
+
+        Set<String> availSchemas = null;
+
+        public PooledVirtualSchemaEntry(Object key, Set<String> availSchemas) {
+            super(key);
+            this.availSchemas = availSchemas;
+        }
+
+        Set<String> getAvailSchemas() {
+            return availSchemas;
+        }
+
+        public void release() throws Exception {
+        }
+    }
+
+
 
 }

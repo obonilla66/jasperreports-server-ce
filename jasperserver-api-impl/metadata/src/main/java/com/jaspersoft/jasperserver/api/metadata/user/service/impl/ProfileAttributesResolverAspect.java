@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -45,9 +45,15 @@ public class ProfileAttributesResolverAspect {
     }
 
     public ReportDataSourceService resolveDataSourceAttributes(ProceedingJoinPoint call) throws Throwable {
+        // clone args
+        Object[] args = new Object[call.getArgs().length];
+        System.arraycopy(call.getArgs(), 0, args, 0, call.getArgs().length);
         ReportDataSource reportDataSource = (ReportDataSource) call.getArgs()[0];
         ReportDataSource mergedReportDataSource = profileAttributesResolver.mergeResource(reportDataSource);
-        return (ReportDataSourceService) call.proceed(new Object[]{mergedReportDataSource});
+        // replace first element with resolved data source
+        args[0]=mergedReportDataSource;
+        // proceed with the call.
+        return (ReportDataSourceService) call.proceed(args);
     }
 
     public Object resolveAwsCredentialAttributes(ProceedingJoinPoint call) throws Throwable {
@@ -66,7 +72,11 @@ public class ProfileAttributesResolverAspect {
             };
             return call.proceed(resolvedArguments);
         } catch (Exception ex) {
-            throw new JSShowOnlyErrorMessage(ex.getMessage());
+            if(ex.getClass().isAssignableFrom(JSShowOnlyErrorMessage.class)){
+                throw ex; // rethrow show only error message exception as it is
+            } else {
+                throw new JSShowOnlyErrorMessage(ex.getMessage());
+            }
         }
     }
 }

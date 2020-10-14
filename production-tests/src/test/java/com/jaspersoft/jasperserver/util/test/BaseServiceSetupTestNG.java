@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -55,8 +55,9 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
 import com.jaspersoft.jasperserver.common.test.MockServletContextLoader;
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 import com.jaspersoft.jasperserver.export.CommandBean;
 import com.jaspersoft.jasperserver.export.Parameters;
 import com.jaspersoft.jasperserver.export.ParametersImpl;
@@ -110,6 +111,7 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
     protected static final String PARAM_IMPORT_DIR = "input-dir";
     protected static final String PARAM_IMPORT_ZIP = "input-zip";
     protected static final String PARAM_EXPORT_ZIP = "output-zip";
+    protected static final String PARAM_INPUT_KEY = "input-key";
     protected static final String PARAM_EVERYTHING = "everything";
     protected static final String OUTPUT_ZIP_FILE_START = "js-catalog";
     protected static final String OUTPUT_ZIP_MINIMAL = "minimal";
@@ -236,6 +238,9 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
         return applicationContext.getBean(beanName);
     }
 
+    protected JrsKeystore getKeystore() {
+        return this.keystoreManager.getKeystore(null);
+    }
     protected void performExport(Parameters params) {
         CommandBean exporter = (CommandBean) getBean(EXPORT_COMMAND_BEAN_NAME);
         exporter.process(params);
@@ -477,7 +482,7 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
         String passwd = getJdbcProps().getProperty(prefix + ".jdbc.password");
         if (EncryptionEngine.isEncrypted(passwd)) {
             KeystoreManager ksManager = KeystoreManager.getInstance();
-            passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), passwd);
+            passwd = EncryptionEngine.decrypt(ksManager.getKeystore(null).getKey(BuildEnc.getConfId()), passwd);
         }
         ds.setPassword(passwd);
 

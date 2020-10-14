@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -38,8 +38,10 @@ import java.security.cert.CertificateException;
 import java.util.Enumeration;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.UUID;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
  * @author schubar
@@ -108,22 +110,21 @@ public class SecretKeyInput extends BaseImportInput {
                     throw new IOException("Failed to import a key. Keystore is empty.");
                 }
 
-                final String firstAlias = aliases.nextElement();
-
                 final String keyAlias;
                 String keyPasswd;
                 if (parameters.getKeyAlias().isPresent()) {
                     keyAlias = parameters.getKeyAlias().get();
                     keyPasswd = parameters.getKeyPasswd().orElseThrow(() -> new RuntimeException("Key password was not specified"));
                 } else {
-                    keyAlias = firstAlias;
+                    keyAlias = pickUuidOrVeryFirst(aliases);
                     parameters.setKeyAlias(keyAlias);
-                    keyPasswd = keyStorePasswd;
-                    parameters.setKeyPasswd(keyStorePasswd);
+                    keyPasswd = parameters.getKeyPasswd().orElse(keyStorePasswd);
+                    parameters.getKeyPasswd().ifPresent(parameters::setKeyPasswd);
                 }
 
                 try {
                     Key key = keystore.getKey(keyAlias, keyPasswd.toCharArray());
+                    if (key == null) throw new RuntimeException("ERROR: Specified key couldn't be recovered from the keystore.");
                     if (!parameters.getKeyAlg().isPresent()) {
                         parameters.setKeyAlg(key.getAlgorithm());
                     } else {
@@ -145,5 +146,21 @@ public class SecretKeyInput extends BaseImportInput {
     @Override
     public void propertiesRead(Properties properties) {
 
+    }
+
+    private String pickUuidOrVeryFirst(final Enumeration<String> aliases) {
+        String first = null;
+        String alias = null;
+        while (aliases.hasMoreElements()) {
+            try {
+                UUID.fromString(alias = aliases.nextElement());
+                return alias;
+            } catch (Exception e) {
+                if (first == null && alias != null) first = alias;
+                // keep looking for uuid
+            }
+        }
+
+        return first;
     }
 }

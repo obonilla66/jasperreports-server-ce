@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,8 +23,11 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientField;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ClientIdentifiable;
+import com.jaspersoft.jasperserver.dto.adhoc.query.IExpressionContainer;
+import com.jaspersoft.jasperserver.dto.adhoc.query.QueryPatternsUtil;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ast.ClientQueryExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ast.ClientQueryVisitor;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.validation.NotEmpty;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
@@ -32,28 +35,42 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
+import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
  */
-public class ClientQueryField implements ClientField, ClientIdentifiable<String>, ClientQueryExpression, DeepCloneable<ClientQueryField> {
+public class ClientQueryField implements ClientField, ClientIdentifiable<String>, ClientQueryExpression,
+        IExpressionContainer,  DeepCloneable<ClientQueryField> {
     private String id;
     private String type;
     private boolean measure;
     @NotEmpty
     private String field;
+    private ClientExpressionContainer expressionContainer;
 
     public ClientQueryField() {
         // no op
     }
 
+    public ClientQueryField(String field) {
+        QueryPatternsUtil.NameAliasExpression nameAliasExpression = QueryPatternsUtil.parseNameAliasExpression(field);
+        this.field = nameAliasExpression.name;
+        this.id = nameAliasExpression.alias;
+        if (nameAliasExpression.expression != null) {
+            this.expressionContainer = new ClientExpressionContainer(nameAliasExpression.expression);
+
+        }
+    }
+
+
     public ClientQueryField(ClientQueryField source) {
         checkNotNull(source);
-
         id = source.getId();
         type = source.getType();
         measure = source.isMeasure();
         field = source.getFieldName();
+        expressionContainer = copyOf(source.getExpressionContainer());
     }
 
     @Override
@@ -113,6 +130,25 @@ public class ClientQueryField implements ClientField, ClientIdentifiable<String>
     }
 
     @Override
+    @XmlTransient
+    public String getFieldExpression() {
+        if (expressionContainer == null) return null;
+        return expressionContainer.getString();
+    }
+
+    @Override
+    @XmlElement(name = "expression")
+    public ClientExpressionContainer getExpressionContainer() {
+        return expressionContainer;
+    }
+
+    @Override
+    public ClientQueryField setExpressionContainer(ClientExpressionContainer expressionContainer) {
+        this.expressionContainer = expressionContainer;
+        return this;
+    }
+
+    @Override
     public void accept(ClientQueryVisitor visitor) {
         visitor.visit(this);
     }
@@ -127,6 +163,9 @@ public class ClientQueryField implements ClientField, ClientIdentifiable<String>
         if (isMeasure() != that.isMeasure()) return false;
         if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
         if (getType() != null ? !getType().equals(that.getType()) : that.getType() != null) return false;
+        if (expressionContainer != null ? !expressionContainer.equals(that.expressionContainer) : that.expressionContainer != null) {
+            return false;
+        }
         return getFieldName() != null ? getFieldName().equals(that.getFieldName()) : that.getFieldName() == null;
 
     }
@@ -137,6 +176,7 @@ public class ClientQueryField implements ClientField, ClientIdentifiable<String>
         result = 31 * result + (getType() != null ? getType().hashCode() : 0);
         result = 31 * result + (isMeasure() ? 1 : 0);
         result = 31 * result + (getFieldName() != null ? getFieldName().hashCode() : 0);
+        result = 31 * result + (expressionContainer != null ? expressionContainer.hashCode() : 0);
         return result;
     }
 
@@ -147,6 +187,7 @@ public class ClientQueryField implements ClientField, ClientIdentifiable<String>
                 ", type='" + type + '\'' +
                 ", measure=" + measure +
                 ", field='" + field + '\'' +
+                ", expression=" + expressionContainer +
                 '}';
     }
 

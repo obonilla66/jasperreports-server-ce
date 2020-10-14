@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -38,4 +38,11 @@ public interface ClientField {
      */
     String getType();
 
+
+    /**
+     * Aggregate string
+     *
+     * @return expression
+     */
+    String getFieldExpression();
 }

@@ -16,7 +16,8 @@
   "orderBy": [
     {
       "level": {
-        "aggregation": true
+        "aggregation": true,
+        "ascending": true
       }
     },
     {

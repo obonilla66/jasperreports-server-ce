@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,9 +21,7 @@
 
 package com.jaspersoft.jasperserver.test;
 
-import com.jaspersoft.jasperserver.api.common.crypto.CipherFactory;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
-import com.jaspersoft.jasperserver.export.BaseExporterImporter;
+import com.jaspersoft.jasperserver.crypto.KeyProperties;
 import com.jaspersoft.jasperserver.export.Parameters;
 import com.jaspersoft.jasperserver.export.util.EncryptionParams;
 import com.jaspersoft.jasperserver.util.test.BaseServiceSetupTestNG;
@@ -73,8 +71,8 @@ public class ExportResourcesFullTestNG extends BaseServiceSetupTestNG {
 
     	Parameters params = createParameters().addParameterValue(PARAM_EXPORT_ZIP,
                                                       TEST_BASE_DIR + FILE_SEPARATOR + outputZipFile);
-        KeystoreProperties keystoreProperties = keystoreManager.getKeystoreProperties(cipherFactory.getConfId());
-        String keyAlias = keystoreProperties.getKeyAlis();
+        KeyProperties keystoreProperties = keystoreManager.getKeystore(null).getKeyProperties(cipherFactory.getConfId());
+        String keyAlias = keystoreProperties.getKeyAlias();
         String keyPwd = keystoreProperties.getKeyPasswd();
     	params.addParameterValue(EncryptionParams.KEY_ALIAS_PARAMETER, keyAlias);
     	params.addParameterValue(EncryptionParams.KEY_PASSWD_PARAMETER, keyPwd);

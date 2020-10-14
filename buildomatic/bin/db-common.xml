@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -27,8 +27,8 @@
 
     <!-- properties to specify current upgrade source and target version values -->
     <!-- these are used to help specify the sql update script to be executed    -->
-    <property name="defaultUpgradeFromVersion" value="7.2" />
-    <property name="defaultUpgradeToVersion" value="7.5" />
+    <property name="defaultUpgradeFromVersion" value="7.5" />
+    <property name="defaultUpgradeToVersion" value="7.8" />
 
     <!-- failonerror="false"  -->
     <target name="drop-js-db"
@@ -601,86 +601,6 @@
         </if>
    </target>
 
-   <property name="7.2-standard-upgrade-message" value="${line.separator}NOTE: encryption algorithms .${line.separator}${line.separator}"/>
-   <target name="upgrade-7.2-7.5-pro"
-            description="upgrade from 7.2 to 7.5">
-
-        <echo> </echo>
-        <echo> currentSqlDir = ${currentSqlDir} </echo>
-        <echo> dbType = ${dbType} </echo>
-        <echo> </echo>
-
-        <if>
-            <not>
-                <or>
-                    <available file="${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-pro.sql"/>
-                    <available file="${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-pro.plsql"/>
-                </or>
-            </not>
-            <then>
-                <echo> </echo>
-                <echo>======================================================================</echo>
-                <echo> Error: The upgrade script: upgrade-${dbType}-7.2.0-7.5.0-pro.sql     </echo>
-                <echo> Error: or the script upgrade-${dbType}-7.2.0-7.5.0-pro.plsql         </echo>
-                <echo> Error: are not currently available.                                  </echo>
-                <echo> Error: Check release notes for availability on your database type    </echo>
-                <echo>======================================================================</echo>
-                <echo> </echo>
-                <fail> Error: The upgrade script: upgrade-${dbType}-7.2.0-7.5.0-pro.sql
-                    or upgrade-${dbType}-7.2.0-7.5.0-pro.plsql was not found</fail>
-            </then>
-        </if>
-
-        <local name="upgradeWarningMessage"/>
-        <local name="upgradeCanceledMessage"/>
-        <property name="upgradeWarningMessage" value="This operation may not be rolled back. Enter 'y' to continue or 'n' to cancel the upgrade operation. Default is 'n'"/>
-        <property name="upgradeCanceledMessage" value="Upgrade procedure was canceled"/>
-        <if>
-            <available file="${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-pro.plsql"/>
-            <then>
-                <sequential>
-                    <echo>run script: ${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-pro.plsql </echo>
-                    <input message="${upgradeWarningMessage}"  validargs="y,n" defaultvalue="n" addproperty="continue" />
-                    <if>
-                        <equals arg1="${continue}" arg2="y" />
-                        <then>
-                            <runPLSQL jdbcUrl="${js.jdbcUrl}" print="true">
-                                <fileset dir="${currentSqlDir}">
-                                    <include name="upgrade-${dbType}-7.2.0-7.5.0-pro.plsql"/>
-                                </fileset>
-                            </runPLSQL>
-                        </then>
-                        <else>
-                            <fail message="${upgradeCanceledMessage}"/>
-                        </else>
-                    </if>
-                </sequential>
-            </then>
-        </if>
-
-        <if>
-            <available file="${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-pro.sql"/>
-            <then>
-                <sequential>
-                    <echo>run script: ${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-pro.sql </echo>
-                    <input message="${upgradeWarningMessage}" validargs="y,n" defaultvalue="n" addproperty="continue" />
-                    <if>
-                        <equals arg1="${continue}" arg2="y" />
-                        <then>
-                            <runSQL jdbcUrl="${js.jdbcUrl}" print="true">
-                                <fileset dir="${currentSqlDir}">
-                                    <include name="upgrade-${dbType}-7.2.0-7.5.0-pro.sql"/>
-                                </fileset>
-                            </runSQL>
-                        </then>
-                        <else>
-                            <fail message="${upgradeCanceledMessage}"/>
-                        </else>
-                    </if>
-                </sequential>
-            </then>
-        </if>
-   </target>
 
    <target name="upgrade-6.3-6.4-pro"
             description="upgrade from 6.3 to 6.4">
@@ -1027,33 +947,29 @@
     <target name="upgrade-7.2-7.5-ce"
             description="upgrade from 7.2 to 7.5">
 
-        <echo> </echo>
-        <echo> currentSqlDir = ${currentSqlDir} </echo>
-        <echo> dbType = ${dbType} </echo>
-        <echo> </echo>
+        <upgradeDB fromVersion="7.2" toVersion="7.5" edition="ce"/>
+    </target>
 
-        <if>
-            <not>
-                <available file="${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-ce.sql"/>
-            </not>
-            <then>
-                <echo> </echo>
-                <echo>======================================================================</echo>
-                <echo> Error: The upgrade script: upgrade-${dbType}-7.2.0-7.5.0-ce.sql      </echo>
-                <echo> Error: is not currently available.                                   </echo>
-                <echo> Error: Check release notes for availability on your database type    </echo>
-                <echo>======================================================================</echo>
-                <echo> </echo>
-                <fail>Error: The upgrade script: upgrade-${dbType}-7.2.0-7.5.0-ce.sql was not found</fail>
-            </then>
-        </if>
+    <target name="upgrade-7.5-7.8-ce"
+            description="upgrade from 7.5 to 7.8">
 
-        <echo>run script: ${currentSqlDir}/upgrade-${dbType}-7.2.0-7.5.0-ce.sql </echo>
-        <runSQL jdbcUrl="${js.jdbcUrl}" print="true">
-            <fileset dir="${currentSqlDir}">
-                <include name="upgrade-${dbType}-7.2.0-7.5.0-ce.sql"/>
-            </fileset>
-        </runSQL>
+        <upgradeDB fromVersion="7.5" toVersion="7.8" edition="ce"/>
+    </target>
+
+	<!-- these upgrades prompt by default, but if you want to script this, you can override it.
+	     Just add a -DpromptUpgrade=false flag when you call js-ant
+	  -->
+	<property name="promptUpgrade" value="true"/>
+    <target name="upgrade-7.2-7.5-pro"
+            description="upgrade from 7.2 to 7.5">
+
+        <upgradeDB fromVersion="7.2" toVersion="7.5" edition="pro" prompt="${promptUpgrade}"/>
+    </target>
+
+    <target name="upgrade-7.5-7.8-pro"
+            description="upgrade from 7.5 to 7.8">
+
+        <upgradeDB fromVersion="7.5" toVersion="7.8" edition="pro" prompt="${promptUpgrade}"/>
     </target>
 
     <target name="upgrade-for-overlay-pro"
@@ -1112,11 +1028,106 @@
         </if>
     </target>
 
+	<!--
+		Use a macrodef to run upgrade scripts instead of copy/pasting stuff with each new release.
+		
+		fromVersion: JRS version without the last digit; for example "7.5" (upgrade scripts always have three digits, but the last is always "0")
+		toVersion: see above
+		edition: "ce" or "pro"
+		prompt: "true" if you want to ask "are you sure???" before running it
+	-->
+    <macrodef name="upgradeDB">
+        <attribute name="fromVersion" />
+        <attribute name="toVersion" />
+        <attribute name="edition" />
+    	<attribute name="prompt" default="false"/>
+        <attribute name="upgradeWarningMessage" default="This operation may not be rolled back. Enter 'y' to continue or 'n' to cancel the upgrade operation. Default is 'n'"/>
+        <attribute name="upgradeCanceledMessage" default="Upgrade procedure was canceled"/>
+
+    	<sequential>
+            <echo> </echo>
+            <echo> currentSqlDir = ${currentSqlDir} </echo>
+            <echo> dbType = ${dbType} </echo>
+            <echo> </echo>
+    		
+    		<!-- Prompt before running, if requested -->
+            <if>
+                <equals arg1="@{prompt}" arg2="true" />
+                <then>
+                    <sequential>
+                    	<local name="continue"/>
+                        <input message="@{upgradeWarningMessage}"  validargs="y,n" defaultvalue="n" addproperty="continue" />
+                        <if>
+                            <equals arg1="${continue}" arg2="n" />
+                            <then>
+                                <fail message="@{upgradeCanceledMessage}"/>
+                            </then>
+                        </if>
+                    </sequential>
+                </then>
+            </if>
+
+    		<!-- Look for a "plsql" file first and run it; otherwise, look for a "sql" file 
+
+				 NOTE: you might know that Oracle has procedural SQL syntax called PL/SQL,
+    			 but in this case it really means procedural SQL in general.
+    			 The only difference between the runSQL and runPLSQL macros is that JDBC statements are delimited by "/", not ";".
+    			 This allows you to send a multiline SQL, which may include one or more ";", to the server in one chunk.
+    		  --> 
+			<var name="sqlFile" value="upgrade-${dbType}-@{fromVersion}.0-@{toVersion}.0-@{edition}.sql"/>
+    		<var name="plsqlFile" value="upgrade-${dbType}-@{fromVersion}.0-@{toVersion}.0-@{edition}.plsql"/>
+			<var name="sqlPath" value="${currentSqlDir}/${sqlFile}"/>
+    		<var name="plsqlPath" value="${currentSqlDir}/${plsqlFile}"/>
+            <if>
+                <not>
+                    <or>
+                        <available file="${sqlPath}"/>
+                        <available file="${plsqlPath}"/>
+                    </or>
+                </not>
+                <then>
+                    <echo> </echo>
+                    <echo>=================================================================================</echo>
+                    <echo> Error: Neither of the following paths could be found:</echo>
+                    <echo> Error: ${plsqlPath}    </echo>
+                    <echo> Error: ${sqlPath}    </echo>
+                    <echo> Error: Check release notes for availability on your database type               </echo>
+                    <echo>=================================================================================</echo>
+                    <echo> </echo>
+                    <fail>Error: The upgrade script: ${sqlFile} or ${plsqlFile} was not found</fail>
+                </then>
+            </if>
+
+            <if>
+                <available file="${plsqlPath}"/>
+                <then>
+                    <echo>run script: ${plsqlPath}</echo>
+                    <runPLSQL jdbcUrl="${js.jdbcUrl}" print="true">
+                        <fileset dir="${currentSqlDir}">
+                            <include name="${plsqlFile}"/>
+                        </fileset>
+                    </runPLSQL>
+                </then>
+            </if>
+            <if>
+                <available file="${sqlPath}"/>
+                <then>
+                    <echo>run script: ${sqlPath}</echo>
+                    <runSQL jdbcUrl="${js.jdbcUrl}" print="true">
+                        <fileset dir="${currentSqlDir}">
+                            <include name="${sqlFile}"/>
+                        </fileset>
+                    </runSQL>
+                </then>
+            </if>
+    	</sequential>
+    </macrodef>
+
     <!-- =================================================================== -->
     <!-- load-foodmart-db                                                    -->
     <!--   Runs the java program MondrianFoodMartLoader.java. Source found   -->
     <!--   under the buildomatic/src folder. The classes for this program    -->
-    <!--   are packaged into a jar: buildomatic/target/buildomatic.jar       -->
+    <!--   are packaged into a jar: buildomatic/lib/buildomatic.jar       -->
     <!--   Database neutral data is provided as input using the the file     -->
     <!--   buildomatic/install_resources/sql/FoodMartCreateData.zip          -->
     <!-- =================================================================== -->
@@ -1145,7 +1156,7 @@
             <arg value="-outputInitFile=${currentDbDir}/supermart-update.sql"/>
 
             <classpath>
-                <fileset dir="${basedir}/target" includes="*.jar"/>
+                <fileset dir="${basedir}/lib" includes="*.jar"/>
                 <fileset dir="${currentDbJDBCDir}" includes="${jdbcJar}"/>
                 <!-- classpath jar for lib dir --> 
                 <pathelement location="${iecpjar}"/>

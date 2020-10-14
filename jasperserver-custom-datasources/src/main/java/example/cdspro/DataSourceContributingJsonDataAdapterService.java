@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,7 +24,6 @@ package example.cdspro;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import net.sf.jasperreports.data.json.JsonDataAdapter;
 import net.sf.jasperreports.data.json.JsonDataAdapterService;
@@ -32,6 +31,7 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.engine.ParameterContributorContext;
 import net.sf.jasperreports.engine.data.JaxenXmlDataSource;
 import net.sf.jasperreports.engine.data.JsonQLDataSource;
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +49,7 @@ public class DataSourceContributingJsonDataAdapterService extends JsonDataAdapte
     RepositoryService repositoryService;
 
     public DataSourceContributingJsonDataAdapterService(JasperReportsContext jasperReportsContext, JsonDataAdapter jsonDataAdapter, RepositoryService repositoryService) {
-        super(jasperReportsContext, jsonDataAdapter);
+        super(new ParameterContributorContext(jasperReportsContext, null, null), jsonDataAdapter);
         this.repositoryService = repositoryService;
     }
 

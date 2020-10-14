@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -577,6 +577,10 @@
                 <value>keystore</value>
                 <value>storepass</value>
                 <value>genkey</value>
+                <value>visible</value>
+                <value>keylabel</value>
+                <value>keyorganisation</value>
+                <value>fail-on-wrong-key</value>
             </list>
         </constructor-arg>
     </bean>

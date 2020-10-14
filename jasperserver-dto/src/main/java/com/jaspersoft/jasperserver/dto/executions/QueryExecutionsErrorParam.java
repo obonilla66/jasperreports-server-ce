@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -49,6 +49,7 @@ public interface QueryExecutionsErrorParam {
     String FIELD_ID = "fieldID";
     String INVALID_AGGREGATION_FUNCTION = "invalidAggregationFunction";
     String INVALID_AGGREGATION_EXPRESSION = "invalidAggregationExpression";
+    String INVALID_FIELD_EXPRESSION = "invalidFieldExpression";
     String ERROR_MESSAGE = "errorMessage";
     String MIN_QUERY_LIMIT = "minQueryLimit";
     String MAX_QUERY_LIMIT = "maxQueryLimit";

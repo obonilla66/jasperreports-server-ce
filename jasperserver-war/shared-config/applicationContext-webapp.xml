@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -273,7 +273,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
       <entry key="mysql">
         <util:map>
             <entry key="label" value="MySQL"/>
-            <entry key="jdbcUrl" value="jdbc:mysql://$[dbHost]:$[dbPort]/$[dbName]?tinyInt1isBit=false"/>
+            <entry key="jdbcUrl" value="jdbc:mysql://$[dbHost]:$[dbPort]/$[dbName]?tinyInt1isBit=false&amp;allowPublicKeyRetrieval=true"/>
             <entry key="jdbcDriverClass" value="org.mariadb.jdbc.Driver"/>
             <entry key="defaultValues">
                 <util:map>
@@ -411,11 +411,24 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                 </entry>
             </util:map>
         </entry>
+        <entry key="neo4j_simba">
+          <util:map>
+            <entry key="label" value="Neo4j"/>
+            <entry key="jdbcUrl" value="jdbc:neo4j://$[dbHost]:$[dbPort]"/>
+            <entry key="jdbcDriverClass" value="com.simba.neo4j.jdbc42.Driver"/>
+            <entry key="defaultValues">
+              <util:map>
+                <entry key="dbHost" value="localhost"/>
+                <entry key="dbPort" value="7687"/>
+              </util:map>
+            </entry>
+          </util:map>
+        </entry>
         <entry key="cassandra_simba">
             <util:map>
                 <entry key="label" value="Cassandra"/>
                 <entry key="jdbcUrl" value="jdbc:cassandra://$[dbHost]:$[dbPort];DefaultKeyspace=$[defaultKeySpace]"/>
-                <entry key="jdbcDriverClass" value="com.simba.cassandra.jdbc4.Driver"/>
+                <entry key="jdbcDriverClass" value="com.simba.cassandra.jdbc42.Driver"/>
                 <entry key="defaultValues">
                     <util:map>
                         <entry key="dbHost" value="localhost"/>
@@ -452,7 +465,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                 </entry>
             </util:map>
         </entry>
-        <!-- entry key="googlebigquery_simba">
+        <!--<entry key="googlebigquery_simba">
             <util:map>
                 <entry key="label" value="Google BigQuery"/>
                 <entry key="jdbcUrl" value="jdbc:bigquery://$[serverAddress]:$[dbPort];OAuthType=0;QueryDialect=SQL;Timeout=60;ProjectId=$[projectId];OAuthServiceAcctEmail=$[oAuthServiceAcctEmail];OAuthPvtKeyPath=$[oAuthPvtKeyPath]"/>
@@ -467,7 +480,23 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                     </util:map>
                 </entry>
             </util:map>
-        </entry -->
+        </entry>-->
+        <entry key="googlebigquery_progress">
+          <util:map>
+            <entry key="label" value="Google BigQuery"/>
+            <entry key="jdbcUrl"
+              value="jdbc:tibcosoftware:googlebigquery:AuthenticationMethod=serviceaccount;Project=$[projectId];Dataset=$[datasetId];ServiceAccountEmail=$[oAuthServiceAcctEmail];ServiceAccountPrivateKey=$[oAuthPvtKeyPath];CreateMap=forceNew;TransactionMode=ignore"/>
+            <entry key="jdbcDriverClass" value="tibcosoftware.jdbc.googlebigquery.GoogleBigQueryDriver"/>
+            <entry key="defaultValues">
+              <util:map>
+                <entry key="projectId" value=""/>
+                <entry key="datasetId" value=""/>
+                <entry key="oAuthServiceAcctEmail" value=""/>
+                <entry key="oAuthPvtKeyPath" value=""/>
+              </util:map>
+            </entry>
+          </util:map>
+        </entry>
         <entry key="salesforce">
             <util:map>
                 <entry key="label" value="Salesforce"/>
@@ -497,7 +526,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
             </util:map>
         </entry  -->
 
-      <entry key="redshift">
+        <entry key="redshift">
           <util:map>
               <entry key="label" value="Redshift"/>
               <entry key="jdbcUrl" value="jdbc:tibcosoftware:redshift://$[dbHost]:$[dbPort];databaseName=$[dbName];TransactionMode=ignore"/>
@@ -613,6 +642,34 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
               </entry>
           </util:map>
       </entry>
+      <entry key="tibco_data_virtualization">
+        <util:map>
+          <entry key="label" value="Tibco Data Virtualization"/>
+          <entry key="jdbcUrl" value="jdbc:compositesw:dbapi@$[dbHost]:$[dbPort]?domain=$[domain]&amp;dataSource=$[dataSource]&amp;unsupportedMode=silent"/>
+          <entry key="jdbcDriverClass" value="cs.jdbc.driver.CompositeDriver"/>
+          <entry key="defaultValues">
+            <util:map>
+              <entry key="dbHost" value="localhost"/>
+              <entry key="dbPort" value="9401"/>
+              <entry key="domain" value="composite"/>
+              <entry key="dataSource" value="system"/>
+            </util:map>
+          </entry>
+        </util:map>
+      </entry>
+      <!--<entry key="elastic_search">
+        <util:map>
+          <entry key="label" value="Elasticsearch"/>
+          <entry key="jdbcUrl" value="jdbc:es://$[serverAddress]:$[dbPort]"/>
+          <entry key="jdbcDriverClass" value="org.elasticsearch.xpack.sql.jdbc.EsDriver"/>
+          <entry key="defaultValues">
+            <util:map>
+              <entry key="serverAddress" value=""/>
+              <entry key="dbPort" value="9200"/>
+            </util:map>
+          </entry>
+        </util:map>
+      </entry>-->
    </util:map>
 
   <bean id="jdbcConnectionMap" parent="${bean.jdbcConnectionMap}"></bean>

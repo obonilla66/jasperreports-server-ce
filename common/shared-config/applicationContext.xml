@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -615,36 +615,39 @@
         </property>
         <property name="autoCommitUnsupportedDrivers">
             <set>
-                <value>com.simba.cassandra.jdbc4.Driver</value>
+                <value>com.simba.cassandra.jdbc42.Driver</value>
                 <value>com.simba.impala.jdbc.Driver</value>
                 <value>com.simba.spark.jdbc.Driver</value>
                 <value>com.simba.googlebigquery.jdbc41.Driver</value>
+                <value>tibcosoftware.jdbc.googlebigquery.GoogleBigQueryDriver</value>
             </set>
         </property>
         <property name="driverNoAuthMethMap">
             <map>
-                <entry key="com.simba.cassandra.jdbc4.Driver" value="0"/>
+                <entry key="com.simba.cassandra.jdbc42.Driver" value="0"/>
                 <entry key="com.simba.impala.jdbc.Driver" value="0"/>
                 <entry key="com.simba.spark.jdbc.Driver" value="2"/>
             </map>
         </property>
         <property name="driverAuthMethMap">
             <map>
-                <entry key="com.simba.cassandra.jdbc4.Driver" value="1"/>
+                <entry key="com.simba.cassandra.jdbc42.Driver" value="1"/>
                 <entry key="com.simba.impala.jdbc.Driver" value="3"/>
                 <entry key="com.simba.spark.jdbc.Driver" value="3"/>
             </map>
         </property>
         <property name="poolTimeout" value="900"/>
         <property name="profileAttributesResolver" ref="profileAttributesResolver"/>
+        <property name="privateKeyTempDir" value="#{ systemProperties['java.io.tmpdir'] }"/>
+        <property name="repositoryService">
+          <ref bean="${bean.repositoryService}"/>
+        </property>
+        <property name="messageSource" ref="messageSource"/>
     </bean>
 
     <bean id="mongoDbJDBCReportDataSourceServiceFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.MongoDbJDBCReportDataSourceServiceFactory" parent="jdbcDataSourceServiceFactory">
         <property name="mongoDBJDBCSchemaDefinitionTimeoutInMinute" value="1440"/>
         <property name="schemaDefinitionDirectory" value="#{ systemProperties['java.io.tmpdir'] }"/>
-        <property name="repositoryService">
-            <ref bean="${bean.repositoryService}"/>
-        </property>
     </bean>
 
     <bean id="customJDBCReportDataSourceServiceFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomJDBCReportDataSourceServiceFactory" parent="jdbcDataSourceServiceFactory">
@@ -674,6 +677,9 @@
 
     <bean id="azureSqlManagementService" class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.azuresql.AzureSqlManagementService">
         <property name="defaultJdbcUrlSyntax" ref="defaultAzureJdbcUrlSyntax"/>
+<!--  Default value should be sufficient but can be increased to improve reliability if needed
+        <property name="maxErrorRetry" value="6"/>
+-->
     </bean>
 
     <bean id="virtualDataSourceServiceFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.VirtualReportDataSourceServiceFactory"
@@ -833,6 +839,7 @@
         </property>
         <property name="reportThumbnailServiceEnabled" value="${property.reportThumbnailServiceEnabled}"/>
         <property name="asyncThumbnailCreator" ref="asyncThumbnailCreator"/>
+        <property name="reportUnitClassLoadingEnabled" value="true"/>
     </bean>
 
 	<bean id="engineCache" class="org.springframework.cache.ehcache.EhCacheFactoryBean"
@@ -1338,6 +1345,14 @@
                 </entry>
             </map>
         </property>
+        <property name="propertiesMap">
+            <props>
+                <prop key="net.sf.jasperreports.chrome.enabled">#{!'${chrome.path:}'.trim().isEmpty()}</prop>
+                <prop key="net.sf.jasperreports.chrome.executable.path">${chrome.path:}</prop>
+                <prop key="net.sf.jasperreports.chrome.page.timeout">#{'${chrome.page.timeout:}'.trim().isEmpty() ? 150000 : (T(Integer).parseInt('${chrome.page.timeout:}'.trim()) * 1000)}</prop>
+                <prop key="net.sf.jasperreports.chrome.argument.enable-logging">stderr</prop>
+            </props>
+        </property>
     </bean>
 
     <bean id="dsWrapperParamContribFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.DataSourceWrapperParameterContributorFactory">
@@ -1478,37 +1493,6 @@
         </property>
     </bean>
 
-    <bean id="crossDomainFilter" class="com.jaspersoft.jasperserver.api.security.csrf.CrossDomainCommunicationFilter">
-        <description>
-            Controls cross domain communication based on the regex returned by the whitelistProvider#getWhitelistPattern.
-            If no profile attribs are returned, only requests from the same page domain as Jasper Server are allowed.
-        </description>
-        <property name="whitelistProvider">
-            <description>
-                Provides cross-domain communication white list regex based on the logged-in user/principal.
-                Server level attribs, if allowed, can be overwritten at tenant and user levels.
-            </description>
-            <bean class="com.jaspersoft.jasperserver.api.security.csrf.DomainWhitelistProviderImpl">
-                <description>
-                    Default implementation, which could be extended to provide external white lists.
-                </description>
-                <property name="profileAttributeService" ref="profileAttributeServiceTarget"/>
-                <property name="additionalWhitelistAttributes">
-                    <description>
-                        This property allows an unlimited number of white list attributes at server, organization, and
-                        user levels in addition to the default 'domainWhitelist' attribute.
-                        All these attribute values are combined into a regular expression, so be wary of creating too
-                        many white lists for the server or for any one org/user.  It's best to have a list at the server
-                        level to be overwritten by that at the org/user levels.
-                    </description>
-                    <list>
-                        <value>domainWhitelist1</value>
-                        <value>domainWhitelist2</value>
-                    </list>
-                </property>
-            </bean>
-        </property>
-    </bean>
 
     <!-- Make maxSize bigger if you are displaying dashboards with 10+ frames and you are getting image loading problems -->
     <bean id="jasperPrintAccessor" class="com.jaspersoft.jasperserver.war.util.LRUSessionObjectAccessor">
@@ -1570,19 +1554,6 @@
                 <entry key="ReportInteraction" value-ref="${bean.reportExecutionHyperlinkProducer}"/>
                 <entry key="LocalPage" value-ref="localAnchorHyperlinkProducerFactory"/>
                 <entry key="LocalAnchor" value-ref="localAnchorHyperlinkProducerFactory"/>
-            </map>
-        </property>
-    </bean>
-
-    <bean id="swfReportExecutionHyperlinkProducer" class="com.jaspersoft.jasperserver.war.action.hyperlinks.ReportExecutionHyperlinkProducerFactory"
-        parent="reportExecutionHyperlinkProducer">
-        <property name="defaultOutputChannel" value="swf"/>
-    </bean>
-
-    <bean id="swfReportHyperlinkProducerFactory" class="com.jaspersoft.jasperserver.war.action.hyperlinks.MapHyperlinkProducerFactoryFlowFactory">
-        <property name="flowHyperlinkProducers">
-            <map>
-                <entry key="ReportExecution" value-ref="${bean.swfReportExecutionHyperlinkProducer}"/>
             </map>
         </property>
     </bean>
@@ -1975,6 +1946,13 @@
         <property name="jdbcDriversFolder" value="#{configurationBean.jdbcDriversFolderUri}"/>
     </bean>
 
+    <util:list id="jdbcDataSourceMetadataBuilderSupportedList" list-class="java.util.ArrayList">
+        <value>com.jaspersoft.jasperserver.dto.resources.ClientJdbcDataSource</value>
+        <value>com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource</value>
+        <value>com.jaspersoft.jasperserver.dto.resources.ClientVirtualDataSource</value>
+        <value>com.jaspersoft.jasperserver.dto.resources.ClientAwsDataSource</value>
+        <value>com.jaspersoft.jasperserver.dto.resources.ClientAzureSqlDataSource</value>
+    </util:list>
 
     <bean id="awsDataSourceRecovery" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsDataSourceRecovery">
         <property name="awsDataSourceActiveStatus" value="available"/>
@@ -2010,8 +1988,10 @@
     </bean>
 
     <util:list id="filterAwsRegionList" list-class="java.util.ArrayList">
+<!--
         <value>us-gov-west-1.amazonaws.com</value>
         <value>us-gov-east-1.amazonaws.com</value>
+-->
     </util:list>
 
     <bean id="awsRegions" class="java.util.ArrayList">
@@ -2047,13 +2027,8 @@
         <aop:aspect ref="profileAttributesResolverAspect">
             <aop:pointcut id="dataSourceResolver"
                           expression="execution(com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService
-                           com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory.createService(com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource)))"/>
+                           com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory.createService(..))"/>
             <aop:around pointcut-ref="dataSourceResolver"
-                        method="resolveDataSourceAttributes"/>
-            <aop:pointcut id="dataSourceResolver2"
-                          expression="execution(com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService
-                           com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory.createService(com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource, java.lang.Boolean)))"/>
-            <aop:around pointcut-ref="dataSourceResolver2"
                         method="resolveDataSourceAttributes"/>
             <aop:pointcut id="awsCredentialsResolver"
                           expression="execution(com.amazonaws.auth.AWSCredentials com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsCredentialUtil.getAWSCredentials(java.lang.String, java.lang.String, java.lang.String)))"/>
@@ -2081,4 +2056,36 @@
             </bean>
         </entry>
     </util:map>
+
+	<!-- 
+		Support for setting time zone via SQL statement when running queries for JR.
+			For example, in PostgreSQL, this is done with "SET LOCAL TIMEZONE=<timezone spec>"
+		This bean has common configuration.
+		One (but not both) of the beans following this one should be uncommented depending how you want to decide whether to add the SQL.
+		The first one just uses a default flag.
+		The second one looks for a profile attribute.
+		This is a fix for JS-57353, but made more configurable; the original one would add a profile attribute query for each query run.
+	 -->
+    <bean id="tzQueryProviderBase" abstract="true" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.sql.TimeZoneQueryProviderImpl">
+        <!-- This placeholder will be replaced with the real time zone -->
+        <property name="timeZonePlaceholder" value="{TimeZone}"/>
+        <!-- Database time zone specific SQL queries. For now only Postgres is supported -->
+        <property name="productNameToQuery">
+            <map>
+                <entry key="postgresql" value="SET LOCAL TIMEZONE='{TimeZone}'"/>
+            </map>
+        </property>
+    </bean>
+	<!-- Uncomment this bean to have a fixed setting -->
+    <bean class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.sql.TimeZoneQueryProviderImpl" parent="tzQueryProviderBase">
+        <property name="defaultSetTimeZoneInSQL" value="false"/>
+    </bean>
+    <!--
+         Uncomment this bean to check profile attributes (this adds an extra repo query) 
+    <bean class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.sql.ProfileAttributeTimeZoneQueryProviderImpl" parent="tzQueryProviderBase">
+        <property name="profileAttributeService" ref="profileAttributeService"/>
+        <property name="resourceFactory" ref="mappingResourceFactory"/>
+    </bean>
+     -->
+
 </beans>

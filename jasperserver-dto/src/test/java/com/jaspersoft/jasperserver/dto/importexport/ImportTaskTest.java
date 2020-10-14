@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -48,6 +48,13 @@ public class ImportTaskTest extends BaseDTOPresentableTest<ImportTask> {
     private static final List<String> TEST_PARAMETERS_1 = Collections.singletonList(TEST_PARAMETER_1);
     private static final List<String> TEST_PARAMETERS_EMPTY = new ArrayList<String>();
 
+    private static final String TEST_IMPORT_EXPORT_KEY_ALIAS = "TEST_IMPORT_EXPORT_KEY_ALIAS";
+    private static final String TEST_IMPORT_EXPORT_KEY_ALIAS_ALT= "TEST_IMPORT_EXPORT_KEY_ALIAS_ALT";
+    private static final String TEST_IMPORT_EXPORT_SECRET_KEY = "TEST_IMPORT_EXPORT_SECRET_KEY";
+    private static final String TEST_IMPORT_EXPORT_SECRET_KEY_ALT = "TEST_IMPORT_EXPORT_SECRET_KEY_ALT";
+    private static final String TEST_IMPORT_EXPORT_SECRET_URI = "TEST_IMPORT_EXPORT_SECRET_URI";
+    private static final String TEST_IMPORT_EXPORT_SECRET_URI_ALT = "TEST_IMPORT_EXPORT_SECRET_URI_ALT";
+
     @Override
     protected void assertFieldsHaveUniqueReferences(ImportTask expected, ImportTask actual) {
         assertNotSame(expected.getParameters(), actual.getParameters());
@@ -64,6 +71,9 @@ public class ImportTaskTest extends BaseDTOPresentableTest<ImportTask> {
                 createFullyConfiguredInstance().setBrokenDependencies(TEST_BROKEN_DEPENDENCIES_1),
                 createFullyConfiguredInstance().setParameters(TEST_PARAMETERS_1),
                 createFullyConfiguredInstance().setParameters(TEST_PARAMETERS_EMPTY),
+                createFullyConfiguredInstance().setKeyAlias(TEST_IMPORT_EXPORT_KEY_ALIAS_ALT),
+                createFullyConfiguredInstance().setSecretKey(TEST_IMPORT_EXPORT_SECRET_KEY_ALT),
+                createFullyConfiguredInstance().setSecretUri(TEST_IMPORT_EXPORT_SECRET_URI_ALT),
                 // null values
                 createFullyConfiguredInstance().setOrganization(null),
                 createFullyConfiguredInstance().setBrokenDependencies(null),
@@ -76,7 +86,10 @@ public class ImportTaskTest extends BaseDTOPresentableTest<ImportTask> {
         return new ImportTask()
                 .setOrganization(TEST_ORGANIZATION)
                 .setBrokenDependencies(TEST_BROKEN_DEPENDENCIES)
-                .setParameters(TEST_PARAMETERS);
+                .setParameters(TEST_PARAMETERS)
+                .setKeyAlias(TEST_IMPORT_EXPORT_KEY_ALIAS)
+                .setSecretKey(TEST_IMPORT_EXPORT_SECRET_KEY)
+                .setSecretUri(TEST_IMPORT_EXPORT_SECRET_URI);
     }
 
     @Override

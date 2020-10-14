@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -51,6 +51,10 @@
 
     <bean id="defaultEvaluationEventsHandler" class="com.jaspersoft.jasperserver.inputcontrols.cascade.EmptyEvaluationEventsHandlerImpl"/>
 
+    <!-- If true, JRS allows unknown parameters and their values to be kept in the parameter map -->
+    <bean id="allowExtraReportParameters" class="java.lang.Boolean">
+        <constructor-arg value="false"/>
+    </bean>
 
     <bean id="controlLogicUriMappingCe" class="java.util.HashMap">
         <constructor-arg  index="0" type="java.util.Map">

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,13 +35,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * @author Anton Fomin
@@ -158,6 +158,13 @@ public class ReportLoadingServiceTest {
     }
 
     @Test
+    public void isDummyReport_noData_returnsFalse() {
+        ResourceReference queryDataSourceReference = mock(ResourceReference.class, "queryDataSourceReference");
+        boolean dummyReport = reportLoadingService.isDummyReport(null,queryDataSourceReference);
+        assertFalse(dummyReport);
+    }
+
+    @Test
     public void getInputControlReferencesContainerAndDataSourceControlsMergedAll() {
         List<ResourceReference> containerRefs = new ArrayList<>();
         containerRefs.add(createLocalRef("Control0"));
@@ -182,6 +189,23 @@ public class ReportLoadingServiceTest {
         expectedRefs.remove(2);
 
         assertEquals(expectedRefs, actualRefs);
+    }
+
+    @Test
+    public void isDummyReport_Without_Data_Returns_False() {
+        ResourceReference queryDataSourceReference = mock(ResourceReference.class);
+        ExecutionContext executionContext = mock(ExecutionContext.class);
+        boolean dummyReport = reportLoadingService.isDummyReport(executionContext,queryDataSourceReference);
+        assertFalse(dummyReport);
+    }
+
+    @Test
+    public void isDummyReport_With_Data_Returns_False() {
+        final String uri = "/public/test_resource";
+        ResourceReference resource = mock(ResourceReference.class);
+        ExecutionContext executionContext = mock(ExecutionContext.class);
+        boolean dummyReport = reportLoadingService.isDummyReport(executionContext,resource);
+        assertFalse(dummyReport);
     }
 
     private ResourceReference createLocalRef(String name) {

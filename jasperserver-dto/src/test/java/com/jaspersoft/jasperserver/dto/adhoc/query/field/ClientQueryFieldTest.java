@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,10 +22,14 @@
 package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 
 import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceField;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.basetests.BaseDTOJSONPresentableTest;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Olexandr Dahno <odahno@tibco.com>
@@ -66,7 +70,9 @@ class ClientQueryFieldTest extends BaseDTOJSONPresentableTest<ClientQueryField> 
                 createFullyConfiguredInstance().setDataSourceField(TEST_DATASOURCE_FIELD_ALT_2),
                 createFullyConfiguredInstance().setId(null),
                 createFullyConfiguredInstance().setFieldName(null),
-                createFullyConfiguredInstance().setDataSourceField(null)
+                createFullyConfiguredInstance().setDataSourceField(null),
+                createFullyConfiguredInstance().setExpressionContainer(
+                        new ClientExpressionContainer("sum(field1)"))
         );
     }
 
@@ -85,5 +91,16 @@ class ClientQueryFieldTest extends BaseDTOJSONPresentableTest<ClientQueryField> 
     @Override
     protected ClientQueryField createInstanceFromOther(ClientQueryField other) {
         return new ClientQueryField(other);
+    }
+
+    @Test
+    public void nullTest() {
+        Exception ex = null;
+        try {
+            ClientQueryField clientQueryField = new ClientQueryField((ClientQueryField) null);
+        } catch (Exception ex2) {
+            ex = ex2;
+        }
+        assertTrue(ex != null);
     }
 }

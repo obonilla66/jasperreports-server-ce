@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -39,7 +39,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.xml.domain.impl.ResourceDescriptor;
 import com.jaspersoft.jasperserver.crypto.EncryptionEngine;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.conf.BuildEnc;
+import static com.jaspersoft.jasperserver.crypto.conf.Defaults.BuildEnc;
 import com.jaspersoft.jasperserver.util.test.BaseServiceSetupTestNG;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -286,7 +286,7 @@ public class FullDataCreateTestNG extends BaseServiceSetupTestNG {
 		String passwd = getJdbcProps().getProperty("test.jdbc.password");
 		if (EncryptionEngine.isEncrypted(passwd)) {
 			KeystoreManager ksManager = KeystoreManager.getInstance();
-			passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), passwd);
+			passwd = EncryptionEngine.decrypt(ksManager.getKeystore(null).getKey(BuildEnc.getConfId()), passwd);
 		}
 		datasource.setPassword(passwd);
 
@@ -353,7 +353,7 @@ public class FullDataCreateTestNG extends BaseServiceSetupTestNG {
 		String passwd = getJdbcProps().getProperty("foodmart.jdbc.password");
 		if (EncryptionEngine.isEncrypted(passwd)) {
 			KeystoreManager ksManager = KeystoreManager.getInstance();
-			passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), passwd);
+			passwd = EncryptionEngine.decrypt(ksManager.getKeystore(null).getKey(BuildEnc.getConfId()), passwd);
 		}
 		createJDBCDataSourceResource("/analysis/datasources",
                         "FoodmartDataSource",
@@ -380,7 +380,7 @@ public class FullDataCreateTestNG extends BaseServiceSetupTestNG {
 		String passwd = getJdbcProps().getProperty("test.jdbc.password");
 		if (EncryptionEngine.isEncrypted(passwd)) {
 			KeystoreManager ksManager = KeystoreManager.getInstance();
-			passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), passwd);
+			passwd = EncryptionEngine.decrypt(ksManager.getKeystore(null).getKey(BuildEnc.getConfId()), passwd);
 		}
 		createJDBCDataSourceResource("/analysis/datasources",
                         "SugarCRMDataSource",
@@ -581,7 +581,7 @@ public class FullDataCreateTestNG extends BaseServiceSetupTestNG {
 		String passwd = getJdbcProps().getProperty("foodmart_ja.jdbc.password");
 		if (EncryptionEngine.isEncrypted(passwd)) {
 			KeystoreManager ksManager = KeystoreManager.getInstance();
-			passwd = EncryptionEngine.decrypt(ksManager.getKey(BuildEnc.ID), passwd);
+			passwd = EncryptionEngine.decrypt(ksManager.getKeystore(null).getKey(BuildEnc.getConfId()), passwd);
 		}
 		createJDBCDataSourceResource("/analysis/datasources",
 					"FoodmartJaDataSource",

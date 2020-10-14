@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -50,7 +50,7 @@ public class JrsAuthenticationSuccessHandler extends SavedRequestAwareAuthentica
 	private static final Logger logger = LogManager.getLogger(JrsAuthenticationSuccessHandler.class);
 
 	private RequestCache requestCache = new HttpSessionRequestCache();
-
+    private ResponseHeaderUpdater responseHeadersUpdater;
 	private SessionRegistry sessionRegistry;
     private String jsonRedirectUrl;
 
@@ -64,6 +64,9 @@ public class JrsAuthenticationSuccessHandler extends SavedRequestAwareAuthentica
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+        if (responseHeadersUpdater != null) {
+            responseHeadersUpdater.changeHeaders(response, request);
+        }
         final SecurityContext securityContext = SecurityContextHolder.getContext();
 		//[bug 40360] - Fix Spring Security multi-threading bug.
 		new HttpSessionSecurityContextRepository().saveContext(securityContext, request, response);
@@ -104,5 +107,9 @@ public class JrsAuthenticationSuccessHandler extends SavedRequestAwareAuthentica
         final String accept = request.getHeader("Accept");
         return accept != null && accept.toLowerCase().contains("application/json") ?
                 jsonRedirectUrl : super.determineTargetUrl(request, response);
+    }
+
+    public void setResponseHeadersUpdater(ResponseHeaderUpdater responseHeadersUpdater) {
+        this.responseHeadersUpdater = responseHeadersUpdater;
     }
 }

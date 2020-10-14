@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,32 +21,18 @@
 package com.jaspersoft.jasperserver.dto.adhoc.query.field;
 
 import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceField;
-import com.jaspersoft.jasperserver.dto.adhoc.query.ClientAggregate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.ClientField;
-import com.jaspersoft.jasperserver.dto.adhoc.query.ClientFieldReference;
-import com.jaspersoft.jasperserver.dto.adhoc.query.ClientIdentifiable;
+import com.jaspersoft.jasperserver.dto.adhoc.query.*;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ast.ClientQueryExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.ast.ClientQueryVisitor;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientBoolean;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientDate;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNull;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientNumber;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientString;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTime;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.ClientTimestamp;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.literal.*;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.ClientFunction;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientAdd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientDivide;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientMultiply;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.arithmetic.ClientSubtract;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientEquals;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreater;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientGreaterOrEqual;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLess;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientLessOrEqual;
-import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.ClientNotEqual;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.comparison.*;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientAnd;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientNot;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.operator.logical.ClientOr;
@@ -71,9 +57,11 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  */
 @XmlRootElement
 @CheckAggregateDefinition
-public class ClientQueryAggregatedField implements ClientField, ClientAggregate, ClientFieldReference, ClientIdentifiable<String>, ClientQueryExpression, DeepCloneable<ClientQueryAggregatedField> {
+public class ClientQueryAggregatedField implements ClientField, ClientAggregate, ClientFieldReference, ClientIdentifiable<String>,
+        ClientQueryExpression, IExpressionContainer, DeepCloneable<ClientQueryAggregatedField> {
     private String id;
     private String aggregateFunction;
+    private String fieldExpression;
     private String aggregateFirstLevelFunction;
 
 
@@ -115,6 +103,15 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
     private String fieldRef;
 
     public ClientQueryAggregatedField() {
+    }
+
+    public ClientQueryAggregatedField(String field) {
+        QueryPatternsUtil.NameAliasExpression nameAliasExpression = QueryPatternsUtil.parseNameAliasExpression(field);
+        this.fieldRef = nameAliasExpression.name;
+        this.id = nameAliasExpression.alias;
+        if (nameAliasExpression.expression != null) {
+            this.expressionContainer = new ClientExpressionContainer(nameAliasExpression.expression);
+        }
     }
 
     public ClientQueryAggregatedField(ClientQueryAggregatedField field) {
@@ -196,11 +193,18 @@ public class ClientQueryAggregatedField implements ClientField, ClientAggregate,
         return expressionContainer.getString();
     }
 
+    @Override
+    public String getFieldExpression() {
+        return fieldExpression;
+    }
+
+    @Override
     @XmlElement(name = "expression")
     public ClientExpressionContainer getExpressionContainer() {
         return expressionContainer;
     }
 
+    @Override
     public ClientQueryAggregatedField setExpressionContainer(ClientExpressionContainer expressionContainer) {
         this.expressionContainer = expressionContainer;
         return this;

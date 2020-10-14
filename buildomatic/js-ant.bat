@@ -39,4 +39,4 @@ goto :setArgs
 
 IF "%BUILDOMATIC_MODE%"=="" set BUILDOMATIC_MODE=interactive
 
-%ANT_RUN% -nouserlib -f build.xml %CMD_LINE_ARGS%
+%ANT_RUN% -nouserlib -lib . -lib lib  -f build.xml %CMD_LINE_ARGS%

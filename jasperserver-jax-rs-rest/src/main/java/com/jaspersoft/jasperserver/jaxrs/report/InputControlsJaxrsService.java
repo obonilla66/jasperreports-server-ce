@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.reports.ReportParameters;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControlsListWrapper;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValuesListWrapper;
 import com.jaspersoft.jasperserver.remote.common.CallTemplate;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceWrapper;
 import com.jaspersoft.jasperserver.remote.exception.ModificationNotAllowedException;
@@ -34,7 +35,6 @@ import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
-import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +46,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import java.util.*;
+
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_LABEL;
 
 /**
  * <p></p>
@@ -59,10 +61,20 @@ import java.util.*;
 public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControlsLogicService> {
     public static String EXCLUDE_PARAMETER = "exclude";
     public static String STATE_VALUE = "state";
+    public static final String INCLUDE_TOTAL_COUNT = "includeTotalCount";
+    public static final String FRESH_DATA = "freshData";
 
     @Resource(name = "inputControlsLogicService")
     public void setRemoteService(InputControlsLogicService remoteService) {
         this.remoteService = remoteService;
+    }
+
+
+    @GET
+    @Path("/selectedValues")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getSelectedValues(@PathParam("reportUnitURI") final String reportUnitURI, @QueryParam("freshData") @DefaultValue("false") Boolean freshData, @QueryParam(WITH_LABEL) @DefaultValue("true") Boolean withLabel) {
+        return internalGetSelectedValues(reportUnitURI, freshData, withLabel);
     }
 
     @GET
@@ -86,6 +98,25 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     @Produces(MediaType.APPLICATION_XML)
     public Response getReportInputParametersViaPost(@PathParam("reportUnitURI") String reportUnitURI, ReportParameters parameters) {
         return internalGetReportInputParameters(reportUnitURI, null, parameters.getRawParameters());
+    }
+
+    protected Response internalGetSelectedValues(final String reportUnitUri, boolean freshData, boolean withLabel) {
+        return callRemoteService(new ConcreteCaller<Response>() {
+            @Override
+            public Response call(InputControlsLogicService remoteService) throws ErrorDescriptorException {
+                SelectedValuesListWrapper selectedValuesListWrapper;
+                try {
+                    selectedValuesListWrapper = remoteService.getInputControlsSelectedValues(Folder.SEPARATOR + reportUnitUri, freshData, withLabel);
+                } catch (CascadeResourceNotFoundException e) {
+                    throw new ResourceNotFoundException("URI:" + e.getResourceUri() + " Type:" + e.getResourceType());
+                }
+                if (selectedValuesListWrapper != null) {
+                    return Response.ok(selectedValuesListWrapper).build();
+                } else {
+                    return Response.status(Response.Status.NO_CONTENT).build();
+                }
+            }
+        });
     }
 
     protected Response internalGetReportInputParameters(final String reportUnitUri, final Set<String> inputControlIds, final Map<String, String[]> rawParameters) {
@@ -172,7 +203,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     @Path("/values")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getInputControlsInitialValues(@PathParam("reportUnitURI") final String reportUnitURI,
-            @Context final HttpServletRequest request, @QueryParam("freshData") @DefaultValue("false") Boolean freshData) {
+            @Context final HttpServletRequest request, @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
         // parameters map can be safely cast to Map<String, String[]>
         @SuppressWarnings("unchecked")
         final Map<String, String[]> parameterMap = request.getParameterMap();
@@ -184,8 +215,34 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getInputControlsInitialValuesViaPost(@PathParam("reportUnitURI") String reportUnitURI,
-                                                         Map<String, String[]> jsonParameters, @QueryParam("freshData") @DefaultValue("false") Boolean freshData) {
+                                                         Map<String, String[]> jsonParameters, @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
         return internalGetInputControlsInitialValues(reportUnitURI, jsonParameters, freshData);
+    }
+
+    @POST
+    @Path("/values/pagination")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getInputControlsPaginationValues(@PathParam("reportUnitURI") String reportUnitURI,
+                                                         ReportParameters parameters, @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData,
+                                                     @QueryParam(INCLUDE_TOTAL_COUNT) @DefaultValue("true") Boolean includeTotalCount) {
+        Map<String, String[]> parametersMap = getParametersWithTotalCount(parameters, includeTotalCount);
+        return internalGetInputControlsInitialValues(reportUnitURI, parametersMap, freshData);
+    }
+
+    @POST
+    @Path("/{inputControlIds: [^;/]+(;[^;/]+)*}/values/pagination")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getReportInputControlValuesViaPost(
+            @PathParam("reportUnitURI") final String reportUnitUri,
+            @PathParam("inputControlIds") final PathSegment inputControlIds,
+            ReportParameters parameters,
+            @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData,
+            @QueryParam(INCLUDE_TOTAL_COUNT) @DefaultValue("true") Boolean includeTotalCount) {
+
+        Map<String, String[]> parametersMap = getParametersWithTotalCount(parameters, includeTotalCount);
+        return internalGetInputControlValues(Folder.SEPARATOR + reportUnitUri, inputControlIds, parametersMap, freshData);
     }
 
     @POST
@@ -193,7 +250,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
     public Response getInputControlsInitialValuesViaPost(@PathParam("reportUnitURI") String reportUnitURI,
-            ReportParameters parameters, @QueryParam("freshData") @DefaultValue("false") Boolean freshData) {
+            ReportParameters parameters, @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
         return internalGetInputControlsInitialValues(reportUnitURI, parameters.getRawParameters(), freshData);
     }
 
@@ -222,7 +279,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
             @PathParam("reportUnitURI") final String reportUnitUri,
             @PathParam("inputControlIds") final PathSegment inputControlIds,
             @Context final HttpServletRequest request,
-            @QueryParam("freshData") @DefaultValue("false") Boolean freshData) {
+            @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
         // parameters map can be safely cast to Map<String, String[]>
         @SuppressWarnings("unchecked")
         final Map<String, String[]> parameterMap = request.getParameterMap();
@@ -237,7 +294,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
             @PathParam("reportUnitURI") final String reportUnitUri,
             @PathParam("inputControlIds") final PathSegment inputControlIds,
             Map<String, String[]> jsonParameters,
-            @QueryParam("freshData") @DefaultValue("false") Boolean freshData) {
+            @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
         return internalGetInputControlValues(Folder.SEPARATOR + reportUnitUri, inputControlIds,
                 jsonParameters, freshData);
     }
@@ -250,7 +307,7 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
             @PathParam("reportUnitURI") final String reportUnitUri,
             @PathParam("inputControlIds") final PathSegment inputControlIds,
             ReportParameters parameters,
-            @QueryParam("freshData") @DefaultValue("false") Boolean freshData) {
+            @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
         return internalGetInputControlValues(Folder.SEPARATOR + reportUnitUri, inputControlIds,
                 parameters.getRawParameters(), freshData);
     }
@@ -279,8 +336,19 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     protected Set<String> getInputControlIdsFromPathSegment(PathSegment inputControlIdsSegment) {
         Set<String> inputControlIds = new HashSet<String>();
         inputControlIds.add(inputControlIdsSegment.getPath());
-        for (String currentId : inputControlIdsSegment.getMatrixParameters().keySet())
+        for (String currentId : inputControlIdsSegment.getMatrixParameters().keySet()) {
             inputControlIds.add(currentId);
+        }
         return inputControlIds;
+    }
+
+    protected Map<String, String[]> getParametersWithTotalCount(ReportParameters parameters, @QueryParam(INCLUDE_TOTAL_COUNT) @DefaultValue("true") Boolean includeTotalCount) {
+        Map<String, String[]> parametersMap = new HashMap<>();
+        parametersMap.put(INCLUDE_TOTAL_COUNT, new String[] {includeTotalCount.toString()});
+
+        if(parameters != null) {
+            parametersMap.putAll(parameters.getRawParameters());
+        }
+        return parametersMap;
     }
 }

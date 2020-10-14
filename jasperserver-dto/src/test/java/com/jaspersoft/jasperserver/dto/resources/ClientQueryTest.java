@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,9 +22,12 @@
 package com.jaspersoft.jasperserver.dto.resources;
 
 import com.jaspersoft.jasperserver.dto.basetests.BaseDTOPresentableTest;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andriy Tivodar <ativodar@tibco>
@@ -122,5 +125,16 @@ class ClientQueryTest extends BaseDTOPresentableTest<ClientQuery> {
     @Override
     protected ClientQuery createInstanceFromOther(ClientQuery other) {
         return new ClientQuery(other);
+    }
+
+    @Test
+    public void nullTest() {
+        Exception ex = null;
+        try {
+            ClientQuery clientQuery = new ClientQuery((ClientQuery) null);
+        } catch (Exception ex2) {
+            ex = ex2;
+        }
+        assertTrue(ex != null);
     }
 }

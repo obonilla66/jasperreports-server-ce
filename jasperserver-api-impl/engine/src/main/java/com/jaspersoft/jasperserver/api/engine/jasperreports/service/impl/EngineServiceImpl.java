@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -149,6 +149,7 @@ import net.sf.jasperreports.engine.util.JRSaver;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 import net.sf.jasperreports.engine.xml.JRXmlTemplateLoader;
 import net.sf.jasperreports.engine.xml.JRXmlWriter;
+import net.sf.jasperreports.extensions.DefaultExtensionsRegistry;
 import net.sf.jasperreports.repo.JasperDesignCache;
 import net.sf.jasperreports.repo.ReportCompiler;
 import net.sf.jasperreports.web.servlets.AsyncJasperPrintAccessor;
@@ -274,6 +275,8 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
     private AtomicLong endSyncReportExecutionCount=new AtomicLong();
     private AtomicLong endAsyncReportExecutionCount=new AtomicLong();
     private AtomicLong errorReportExecutionCount=new AtomicLong();
+    
+    private boolean reportUnitClassLoadingEnabled;
 
 	public EngineServiceImpl()
 	{
@@ -1604,7 +1607,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 		}
 
 		return new JarsClassLoader(jars, origClassLoader,
-				reportJarsProtectionDomainProvider.getProtectionDomain());
+				reportJarsProtectionDomainProvider.getProtectionDomain(), reportUnitClassLoadingEnabled);
 	}
 
 	private Object getJarFileNames(List jarFiles) {
@@ -1675,6 +1678,13 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 					resName = finalResource.getName();//TODO first reference name?
 				}
 				
+				if (!reportUnitClassLoadingEnabled && (
+						DefaultExtensionsRegistry.EXTENSION_RESOURCE_NAME.equals(resName)
+						|| resName.endsWith(".class"))) {
+					//avoid abuse
+					continue;
+				}
+				
 				String resPathKey = repositoryContextManager.getRepositoryPathKey(
 						finalResource.getURIString());
 				String uri = repositoryContextManager.getRepositoryUriForKey(resPathKey);
@@ -1709,6 +1719,11 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 				
 				if (cache != null) {
 					report = cache.getJasperReport(location);
+
+					//JS-58747 - in the earlier version, getJasperReport() was implicitly setting jasperDesign in the cache,
+					// but current jasperreports lib doesn't do this, so we are explicitly calling getJasperDesign().
+					// here getJasperDesign() method will extract jasperDesign from reports if the jasperDesign in the cache is null.
+					cache.getJasperDesign(location);
 				}
 				
 				if (report == null) {
@@ -2354,7 +2369,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 			long start = System.currentTimeMillis();
 			OrderedMap result = JRQueryExecuterAdapter.executeQuery(query, 
 					keyColumn, resultColumns, 
-					parameters, parameterTypes, additionalParameters, formatValueColumns);
+					parameters, parameterTypes, additionalParameters, formatValueColumns, dataSource);
 			if (valueQueryLog.isDebugEnabled()) {
 				valueQueryLog.debug("query took " + (System.currentTimeMillis() - start) + " ms: " + query.getSql());
 				valueQueryLog.debug("params: " + parameters);
@@ -3161,4 +3176,12 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
     public void setAsyncThumbnailCreator(AsyncThumbnailCreator asyncThumbnailCreator) {
         this.asyncThumbnailCreator = asyncThumbnailCreator;
     }
+
+	public boolean isReportUnitClassLoadingEnabled() {
+		return reportUnitClassLoadingEnabled;
+	}
+
+	public void setReportUnitClassLoadingEnabled(boolean reportUnitClassLoadingEnabled) {
+		this.reportUnitClassLoadingEnabled = reportUnitClassLoadingEnabled;
+	}
 }

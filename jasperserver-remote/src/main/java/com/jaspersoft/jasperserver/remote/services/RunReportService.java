@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -26,6 +26,7 @@ import com.jaspersoft.jasperserver.api.engine.common.service.SchedulerReportExec
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 
+import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.Set;
 
@@ -121,6 +122,21 @@ public interface RunReportService {
      */
     ReportOutputResource getAttachment(String executionId, String exportId, String attachmentName) throws ResourceNotFoundException;
 
+    /**
+     * Get report execution additional info, such as report bookmarks and parts, that is usually ready when the report execution runs to completion
+     */
+    Response getReportInfo(String executionId);
+
+    /**
+     * Get the page status
+     */
+   Response getReportExecutionPageStatus(String executionId, String pages);
+
+        
+    /**
+     * Run a report action such as sort/filter/format/etc.
+     */
+    Response runReportAction(String executionId, String actionData);
 
     /**
      * Asynchronous start of export procedure.

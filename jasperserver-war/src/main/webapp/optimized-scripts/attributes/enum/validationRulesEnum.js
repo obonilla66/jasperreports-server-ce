@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,T,A){A.exports={MAX_ATTRIBUTE_NAME_LENGTH:255,MAX_ATTRIBUTE_VALUE_LENGTH:2e3}});

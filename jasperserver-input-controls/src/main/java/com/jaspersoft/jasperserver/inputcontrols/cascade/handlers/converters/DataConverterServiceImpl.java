@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.Map;
 
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_VALUE;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.InputControlValueClassResolver.getValueClass;
 
 /**
@@ -94,6 +95,10 @@ public class DataConverterServiceImpl implements DataConverterService {
 
         Class<?> valueClass;
 
+        if(typedValue != null && typedValue.equals(NOTHING_SUBSTITUTION_VALUE)) {
+            return typedValue.toString();
+        }
+
         // Do the trick here - use default class if is assignable from value class.
         if (typedValue != null) {
             if (defaultClass != null && defaultClass.isAssignableFrom(typedValue.getClass())) {
@@ -128,6 +133,10 @@ public class DataConverterServiceImpl implements DataConverterService {
     @Override
     public Object convertSingleValue(String rawValue, DataType dataType, Class<?> inputValueClass)
             throws InputControlValidationException {
+
+        if(rawValue != null && rawValue.equals(NOTHING_SUBSTITUTION_VALUE)) {
+            return rawValue;
+        }
 
         Class<?> valueClass = inputValueClass != null ? inputValueClass : getValueClass(dataType, null);
 

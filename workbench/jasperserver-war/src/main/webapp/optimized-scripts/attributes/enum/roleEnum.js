@@ -1,1 +1,0 @@
-define(["require","exports","module"],function(e,R,o){o.exports={ROLE_ADMINISTRATOR:"role:/ROLE_ADMINISTRATOR"}});

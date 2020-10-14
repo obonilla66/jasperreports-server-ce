@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,8 +21,13 @@
 
 package com.jaspersoft.jasperserver.war.util;
 
+import com.jaspersoft.jasperserver.api.common.util.spring.UsernamePasswordAuthenticationParameterConfiguration;
+import com.jaspersoft.jasperserver.api.common.util.AuthFilterConstants;
 import com.jaspersoft.jasperserver.api.security.UsernamePasswordAuthenticationFilterWarningWrapper;
 import com.jaspersoft.jasperserver.api.security.encryption.EncryptionRequestUtils;
+import com.jaspersoft.jasperserver.war.common.JasperServerHttpConstants;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,6 +57,7 @@ public class RequestParameterAuthenticationFilter implements Filter {
 	private static final Log log = LogFactory.getLog(RequestParameterAuthenticationFilter.class);
 	private static String defaultDisableFlag = "disable-re-authentication-flag";
 	private String disableAuthenticationFlag;
+	private UsernamePasswordAuthenticationParameterConfiguration parameterConfiguration;
 
 	private AuthenticationManager authenticationManager;
 	private String authenticationFailureUrl;
@@ -69,11 +75,17 @@ public class RequestParameterAuthenticationFilter implements Filter {
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 
 		if (requiresAuthentication(httpRequest)) {
-			String username = EncryptionRequestUtils.getValueWithLegacySupport(httpRequest, UsernamePasswordAuthenticationFilterWarningWrapper.SPRING_SECURITY_FORM_USERNAME_KEY);
-			String password = EncryptionRequestUtils.getValueWithLegacySupport(httpRequest, UsernamePasswordAuthenticationFilterWarningWrapper.SPRING_SECURITY_FORM_PASSWORD_KEY);
+			String username = null;
+			String password = null;
+      for(Map<String, String> authParam : parameterConfiguration.getAuthParameters()){
+        username = EncryptionRequestUtils.getValue(request, authParam.get(JasperServerHttpConstants.USERNAME_PARAM));
+        if(username != null){
+					password = EncryptionRequestUtils.getValue(request, authParam.get(JasperServerHttpConstants.PASSWORD_PARAM));
+					break;
+        }
+      }
 			UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
 			authRequest.setDetails(new WebAuthenticationDetails(httpRequest));
-
 			Authentication authResult;
 			final SecurityContext securityContext = SecurityContextHolder.getContext();
 			try {
@@ -116,10 +128,15 @@ public class RequestParameterAuthenticationFilter implements Filter {
 
 	protected boolean requiresAuthentication(HttpServletRequest request) {
 		boolean authenticate;
-		String username = EncryptionRequestUtils.getValueWithLegacySupport(request, UsernamePasswordAuthenticationFilterWarningWrapper.SPRING_SECURITY_FORM_USERNAME_KEY);
+		String username = null;
+    for(Map<String, String> authParam : parameterConfiguration.getAuthParameters()){
+      username = EncryptionRequestUtils.getValue(request, authParam.get(JasperServerHttpConstants.USERNAME_PARAM));
+      if(username!=null)
+        break;
+    }
 		// check if request contain flag for disabling authentication by requestParameter
 		Boolean disableAuthentication = request.getParameter(getDisableAuthenticationFlag()) != null;
-		if (username == null || disableAuthentication) {
+		if (username == null || disableAuthentication || request.getMethod().equals("OPTIONS") || request.getAttribute(AuthFilterConstants.AUTH_FLOW_CONST) != null) {
 			authenticate = false;
 		} else {
 			Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
@@ -189,4 +206,13 @@ public class RequestParameterAuthenticationFilter implements Filter {
 	public void setDisableAuthenticationFlag(String disableAuthenticationFlag) {
 		this.disableAuthenticationFlag = disableAuthenticationFlag;
 	}
+
+	public void setParameterConfiguration(UsernamePasswordAuthenticationParameterConfiguration parameterConfiguration) {
+		this.parameterConfiguration = parameterConfiguration;
+	}
+
+	public UsernamePasswordAuthenticationParameterConfiguration getParameterConfiguration() {
+		return parameterConfiguration;
+	}
+
 }

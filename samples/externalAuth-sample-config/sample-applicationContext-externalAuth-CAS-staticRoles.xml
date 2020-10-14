@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -40,6 +40,7 @@
         <property name="sessionAuthenticationStrategy">
             <ref bean="casSessionAuthStrategy"/>
         </property>
+        <property name="parameterConfiguration"><ref bean="usernamePasswordAuthenticationParameter"/></property>
     </bean>
 
     <bean id="externalAuthSuccessHandler"
@@ -52,7 +53,6 @@
     <bean id="proxyAuthenticationRestProcessingFilter"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.cas.JSCasProcessingFilter" parent="proxyAuthenticationProcessingFilter">
         <property name="authenticationManager" ref="casRestAuthenticationManager"/>
-
         <property name="authenticationFailureHandler">
             <bean class="com.jaspersoft.jasperserver.api.security.externalAuth.RestAuthenticationFailureHandler"/>
         </property>
@@ -67,6 +67,7 @@
         </property>
 
         <property name="filterProcessesUrl" value="/rest_v2/login"/>
+        <property name="parameterConfiguration"><ref bean="usernamePasswordAuthenticationParameter"/></property>
     </bean>
 
     <!-- [40308] Single sign out START: links Spring's SessionFixationProtectionStrategy, creating a new session upon

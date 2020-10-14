@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,9 +25,15 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.DelegatingFilterProxy;
-
+import com.jaspersoft.jasperserver.api.security.ResponseHeaderUpdater;
 import javax.servlet.Filter;
 import javax.servlet.ServletException;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 
 /**
  * External authentication config. support class.  This class creates 'external' proxies
@@ -48,6 +54,8 @@ public class JSDelegatingFilterProxy extends DelegatingFilterProxy implements In
 		return defaultFilter;
 	}
 
+	private ResponseHeaderUpdater responseHeadersUpdater;
+
 	/**
 	 *
 	 * @param defaultFilter filter used if a filter with targetBeanName is not found in the application context
@@ -55,6 +63,15 @@ public class JSDelegatingFilterProxy extends DelegatingFilterProxy implements In
 	public void setDefaultFilter(Filter defaultFilter) {
 		this.defaultFilter = defaultFilter;
 	}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+		if (responseHeadersUpdater != null) {
+			responseHeadersUpdater.changeHeaders((HttpServletResponse)response, (HttpServletRequest) request);
+		}
+		super.doFilter(request, response, filterChain);
+	}
+
 
 	@Override
 	public void afterPropertiesSet() throws ServletException {
@@ -81,4 +98,9 @@ public class JSDelegatingFilterProxy extends DelegatingFilterProxy implements In
 			return this.defaultFilter;
 		}
 	}
+
+	public void setResponseHeadersUpdater(ResponseHeaderUpdater responseHeadersUpdater) {
+		this.responseHeadersUpdater = responseHeadersUpdater;
+	}
+
 }

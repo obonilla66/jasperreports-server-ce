@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.dto.adhoc.query.group;
 
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryLevel;
 import com.jaspersoft.jasperserver.dto.adhoc.query.group.axis.ClientGroupAxis;
@@ -37,6 +38,7 @@ import java.util.List;
 import static com.jaspersoft.jasperserver.dto.utils.CustomAssertions.assertNotSameCollection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andriy Tivodar <ativodar@tibco>
@@ -45,6 +47,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ClientQueryGroupByTest extends BaseDTOPresentableTest<ClientQueryGroupBy> {
     private static final List<ClientQueryGroup> GROUPS = Collections.singletonList(new ClientQueryGroup().setId("id"));
     private static final List<ClientQueryGroup> GROUPS_ALTERNATIVE = Collections.singletonList(new ClientQueryGroup().setId("idAlternative"));
+    private static final List<ClientQueryGroup> GROUPS_ALTERNATIVE2 = Collections.singletonList(
+            new ClientQueryGroup().setId("idAlternative").setExpressionContainer(
+                    new ClientExpressionContainer("sum(field1)")));
 
     private static final ClientGroupAxis CLIENT_GROUP_AXIS = new ClientGroupAxis(GROUPS);
     private static final List<ClientGroupAxis> CLIENT_GROUP_AXIS_LIST = Collections.singletonList(CLIENT_GROUP_AXIS);
@@ -54,7 +59,9 @@ public class ClientQueryGroupByTest extends BaseDTOPresentableTest<ClientQueryGr
         return Arrays.asList(
                 createFullyConfiguredInstance().setGroups(GROUPS_ALTERNATIVE),
                 // with null values
-                createFullyConfiguredInstance().setGroups(null)
+                createFullyConfiguredInstance().setGroups(null),
+                // group with expression
+                createFullyConfiguredInstance().setGroups(GROUPS_ALTERNATIVE2)
         );
     }
 
@@ -131,4 +138,16 @@ public class ClientQueryGroupByTest extends BaseDTOPresentableTest<ClientQueryGr
 
         assertEquals(CLIENT_GROUP_AXIS_LIST, result);
     }
+
+    @Test
+    public void nullTest() {
+        Exception ex = null;
+        try {
+            ClientQueryGroup clientQueryGroup = new ClientQueryGroup((ClientQueryGroup) null);
+        } catch (Exception ex2) {
+            ex = ex2;
+        }
+        assertTrue(ex != null);
+    }
+
 }

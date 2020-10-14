@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.api.security.csrf;
 
+import com.jaspersoft.jasperserver.api.common.util.AuthFilterConstants;
 import org.apache.http.protocol.HTTP;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,7 +62,7 @@ public class JSCsrfGuardFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         String uaHeader = httpRequest.getHeader(HTTP.USER_AGENT);
-        boolean isVisualizeRequest = httpRequest.getHeader(CrossDomainCommunicationFilter.X_REMOTE_DOMAIN) != null;
+        boolean isVisualizeRequest = httpRequest.getHeader(AuthFilterConstants.X_REMOTE_DOMAIN) != null;
 
         // !isVisualizeRequest - we do not need to protect Visualize per domain white listing that we implement.
         // isUserAgentProtected() - determines if the reques is coming from a supported browser.

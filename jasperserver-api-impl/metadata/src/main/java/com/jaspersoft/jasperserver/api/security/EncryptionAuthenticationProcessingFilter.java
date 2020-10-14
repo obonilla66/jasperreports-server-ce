@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -20,11 +20,17 @@
  */
 package com.jaspersoft.jasperserver.api.security;
 
+import com.jaspersoft.jasperserver.api.common.util.AuthFilterConstants;
 import com.jaspersoft.jasperserver.api.security.encryption.EncryptionRequestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.AuthenticationManager;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 
 /**
@@ -36,7 +42,9 @@ import javax.servlet.http.HttpServletRequest;
  * @see com.jaspersoft.jasperserver.api.security.encryption.EncryptionFilter
  */
 public class EncryptionAuthenticationProcessingFilter extends UsernamePasswordAuthenticationFilterWarningWrapper {
+
     private Logger log = LogManager.getLogger(this.getClass());
+
 
     /**
      * When the password is encrypted in the EncryptionFilter, the encrypted value is passed into the
@@ -49,4 +57,19 @@ public class EncryptionAuthenticationProcessingFilter extends UsernamePasswordAu
     protected String obtainPassword(HttpServletRequest request) {
         return EncryptionRequestUtils.getValueWithLegacySupport(request, getPasswordParameter());
     }
-}
+	@Override
+    protected void successfulAuthentication(HttpServletRequest request,
+                                            HttpServletResponse response, FilterChain chain, Authentication authResult)
+            throws IOException, ServletException {
+        if (request.getHeader(AuthFilterConstants.X_REMOTE_DOMAIN)!=null) {
+            request.setAttribute(AuthFilterConstants.AUTH_FLOW_CONST, "true");
+            chain.doFilter(request, response);
+        }
+        super.successfulAuthentication(request, response, chain, authResult);
+
+    }
+
+    @Override
+    public AuthenticationManager getAuthenticationManager() {
+        return super.getAuthenticationManager();
+    }}

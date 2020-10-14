@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -31,8 +31,9 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.security.encryption.PlainCipher;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
+import com.jaspersoft.jasperserver.crypto.KeyProperties;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
 import com.jaspersoft.jasperserver.dto.common.BrokenDependenciesStrategy;
 import com.jaspersoft.jasperserver.dto.common.WarningDescriptor;
 import com.jaspersoft.jasperserver.export.ExportTaskImpl;
@@ -100,6 +101,7 @@ public abstract class ImportExportServiceImpl implements ImportExportService, Zi
     @Autowired
     private KeystoreManager keystoreManager;
 
+    private  JrsKeystore keystore;
     /**
      * @see ImportExportServiceImpl#setDiagnosticDataCipherer(PlainCipher)
      */
@@ -161,9 +163,12 @@ public abstract class ImportExportServiceImpl implements ImportExportService, Zi
 
                 } else if(importParams.containsKey(EncryptionParams.KEY_ALIAS_PARAMETER) ) {
                     final String alias = importParams.get(EncryptionParams.KEY_ALIAS_PARAMETER);
-                    final KeystoreProperties props = keystoreManager.getKeystoreProperties(alias);
-                    if (props.getKeyAlis() != null) {
-                        final Key sKey = keystoreManager.getKey(props.getKeyAlis(), props.getKeyPasswd() != null ? props.getKeyPasswd() : "");
+                    if (keystore == null) {
+                        keystore = keystoreManager.getKeystore(null);
+                    }
+                    final KeyProperties props = keystore.getKeyProperties(alias);
+                    if (props.getKeyAlias() != null) {
+                        final Key sKey = keystore.getKey(new KeyProperties(props.getKeyAlias(), props.getKeyPasswd() != null ? props.getKeyPasswd() : ""));
                         if (sKey != null) {
                             key = Hexer.stringify(sKey.getEncoded());
                         }

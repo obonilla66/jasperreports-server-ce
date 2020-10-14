@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -31,6 +31,7 @@ import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
 import com.jaspersoft.jasperserver.dto.common.validations.DateTimeFormatValidationRule;
 import com.jaspersoft.jasperserver.dto.common.validations.MandatoryValidationRule;
 import com.jaspersoft.jasperserver.dto.common.validations.ValidationRule;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
 import com.jaspersoft.jasperserver.dto.resources.ClientDataType;
@@ -69,6 +70,7 @@ public class BasicInputControlHandler implements InputControlHandler {
     protected CachedRepositoryService cachedRepositoryService;
     @Resource
     private GenericTypeProcessorRegistry genericTypeProcessorRegistry;
+
     @Resource
     protected DataConverterService dataConverterService;
     @Resource
@@ -157,6 +159,12 @@ public class BasicInputControlHandler implements InputControlHandler {
         return state;
     }
 
+    @Override
+
+    public final Map<String, List<InputControlOption>> filterSelectedValues(InputControl inputControl, ResourceReference dataSource, Map<String, Object> parameters, Map<String, Class<?>> parameterTypes, ReportInputControlInformation info) throws CascadeResourceNotFoundException {
+        return fillSelectedValue(inputControl, dataSource, parameters, info, parameterTypes);
+    }
+
     protected List<ValidationRule> getValidationRules(InputControl inputControl) throws CascadeResourceNotFoundException {
         List<ValidationRule> validationRules = new ArrayList<ValidationRule>();
         if (inputControl.isMandatory()) {
@@ -193,15 +201,78 @@ public class BasicInputControlHandler implements InputControlHandler {
         return validationRules;
     }
 
+    /**
+     *
+     * @param state
+     * @param inputControl
+     * @param dataSource
+     * @param parameters
+     * @param info
+     * @param parameterTypes
+     * @throws CascadeResourceNotFoundException
+     */
     protected void fillStateValue(InputControlState state, InputControl inputControl, ResourceReference dataSource, Map<String, Object> parameters, ReportInputControlInformation info, Map<String, Class<?>> parameterTypes) throws CascadeResourceNotFoundException {
         // call formatting of value in case if this control parameter present in input parameters. This is needed to avoid wrong null substitution
         if (parameters.containsKey(inputControl.getName())) {
             final Object typedValue = parameters.get(inputControl.getName());
-            if (inputControl.isMandatory())
+            if (inputControl.isMandatory()) {
                 doMandatoryValidation(typedValue, state);
-            state.setValue(dataConverterService.formatSingleValue(typedValue, inputControl, info));
-        } else
+            }
+            String value = dataConverterService.formatSingleValue(typedValue, inputControl, info);
+            state.setValue(value);
+            setTotalCount(state, parameters);
+            // selected values are exist, update incoming parameters for cascading ICs
+            parameters.put(inputControl.getName(), dataConverterService.convertSingleValue(value, inputControl, info));
+        } else {
             internalApplyNothingSubstitution(inputControl.getName(), parameters);
+        }
+    }
+
+    /**
+     * If the includeTotalCount parameter is true then include totalCount in the state.
+     * Set the total count to 1 as state only contains a single value here.
+     * @param state
+     * @param parameters
+     */
+    protected void setTotalCount(InputControlState state, Map<String, Object> parameters) {
+        if(parameters.get("includeTotalCount") != null) {
+            if (parameters.get("includeTotalCount").equals("true")) {
+                state.setTotalCount("1");
+            }
+        }
+    }
+
+    protected Map<String,List<InputControlOption>> fillSelectedValue(InputControl inputControl, ResourceReference dataSource, Map<String, Object> parameters, ReportInputControlInformation info, Map<String, Class<?>> parameterTypes) throws CascadeResourceNotFoundException {
+        Map<String, List<InputControlOption>> selectedValueMap;
+        InputControlOption inputControlOption;
+        List selectedValues;
+        String formattedValue;
+        if (parameters.containsKey(inputControl.getName())) {
+            final Object typedValue = parameters.get(inputControl.getName());
+            selectedValueMap = new HashMap<>();
+
+            // call formatting of value in case if this control parameter present in input parameters.
+            // This is needed to avoid wrong null substitution
+            formattedValue = dataConverterService.formatSingleValue(typedValue, inputControl, info);
+
+
+            if(parameters.containsKey(WITH_NO_LABEL)) {
+                inputControlOption = buildInputControlOption(null, formattedValue);
+            } else {
+                inputControlOption = buildInputControlOption(formattedValue, formattedValue);
+            }
+
+            // selected values are exist, update incoming parameters for cascading ICs
+            parameters.put(inputControl.getName(), dataConverterService.convertSingleValue(formattedValue, inputControl, info));
+
+            inputControlOption.setSelected(null);
+            selectedValues = Arrays.asList(new InputControlOption[]{inputControlOption});
+            selectedValueMap.put(inputControl.getName(), selectedValues);
+            return selectedValueMap;
+        } else {
+            internalApplyNothingSubstitution(inputControl.getName(), parameters);
+            return null;
+        }
     }
 
     /**
@@ -220,16 +291,16 @@ public class BasicInputControlHandler implements InputControlHandler {
     }
 
     @Override
-    public final Object convertParameterValueFromRawData(String[] rawData, InputControl inputControl, ReportInputControlInformation info) throws CascadeResourceNotFoundException, InputControlValidationException {
-        // default value is used if no raw value provided
-        Object value;
-        if (rawData != null) {
-            value = internalConvertParameterValueFromRawData(rawData, inputControl, info);
-        } else {
-            value = info.getDefaultValue();
-        }
+        public final Object convertParameterValueFromRawData(String[] rawData, InputControl inputControl, ReportInputControlInformation info) throws CascadeResourceNotFoundException, InputControlValidationException {
+            // default value is used if no raw value provided
+            Object value;
+            if (rawData != null) {
+                value = internalConvertParameterValueFromRawData(rawData, inputControl, info);
+            } else {
+                value = info.getDefaultValue();
+            }
 
-        internalValidateValue(value, inputControl, info);
+            internalValidateValue(value, inputControl, info);
 
         return value;
     }
@@ -272,4 +343,12 @@ public class BasicInputControlHandler implements InputControlHandler {
     protected String getMessage(String messageKey, Object... arguments) {
         return messageSource.getMessage(messageKey, arguments, LocaleContextHolder.getLocale());
     }
+
+    protected void setDataConverterService(DataConverterService dataConverterService) {
+        this.dataConverterService = dataConverterService;
+    }
+    protected InputControlOption buildInputControlOption(String label, String value) {
+        return new InputControlOption(value, label);
+    }
 }
+

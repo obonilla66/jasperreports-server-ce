@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -55,9 +55,9 @@ import java.security.cert.CertificateException;
 import java.util.*;
 
 import static com.jaspersoft.jasperserver.crypto.KeystoreManager.KS_TYPE;
-import static com.jaspersoft.jasperserver.crypto.KeystoreManager.generateKeyPair;
 import static com.jaspersoft.jasperserver.export.util.CommandUtils.requestConfirmedPassword;
 import static java.lang.Integer.parseInt;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
@@ -296,7 +296,7 @@ public class ExporterImpl extends BaseExporterImporter implements Exporter {
 			if(destKeyPasswd == null || destKeyPasswd.isEmpty()) {
 				throw new RuntimeException("Error: Empty key password");
 			}
-			String keyAlias = cipher.getKeyUuid();
+//			String keyAlias = cipher.getKeyUuid();
 			final Key cipherKey = cipher.getKey();
 
 			final File storeFile = new File(params.getDestKeyStore().get());
@@ -318,10 +318,16 @@ public class ExporterImpl extends BaseExporterImporter implements Exporter {
 			}
 
 			try (FileOutputStream ksFos = new FileOutputStream(storeFile)) {
+				final char[] keyPassword = destKeyPasswd.toCharArray();
 
-				store.setKeyEntry(keyAlias, cipherKey, destKeyPasswd.toCharArray(), null);
+				store.setKeyEntry(cipher.getKeyUuid(), cipherKey, keyPassword, null);
+				System.out.println(KEY_ALIAS_UUID_TITLE + cipher.getKeyUuid());
+
+				if(params.getKeyAlias().isPresent() && isNotBlank(params.getKeyAlias().get())) {
+					store.setKeyEntry(params.getKeyAlias().get(), cipherKey, keyPassword, null);
+				}
+
 				store.store(ksFos, destStorePass.toCharArray());
-				System.out.println(KEY_ALIAS_UUID_TITLE + keyAlias);
 			} catch (KeyStoreException | NoSuchAlgorithmException | IOException | CertificateException e) {
 				throw new RuntimeException(e);
 			}

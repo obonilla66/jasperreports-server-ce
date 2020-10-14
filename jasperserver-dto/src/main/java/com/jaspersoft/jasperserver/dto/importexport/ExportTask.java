@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -43,6 +43,7 @@ public class ExportTask implements DeepCloneable<ExportTask> {
     private List<String> usersToExport;
     private List<String> resourceTypes;
     private String organization;
+    private String keyAlias;
 
     @XmlTransient
     private List<String> urisOfScheduledJobs;
@@ -60,6 +61,7 @@ public class ExportTask implements DeepCloneable<ExportTask> {
         this.usersToExport = copyOf(other.getUsers());
         this.resourceTypes = copyOf(other.getResourceTypes());
         this.organization = other.getOrganization();
+        this.keyAlias = other.getKeyAlias();
     }
 
     @XmlElementWrapper(name = "parameters")
@@ -136,6 +138,16 @@ public class ExportTask implements DeepCloneable<ExportTask> {
         return this;
     }
 
+    @XmlElement(name = "keyAlias")
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    public ExportTask setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -144,6 +156,8 @@ public class ExportTask implements DeepCloneable<ExportTask> {
         ExportTask that = (ExportTask) o;
 
         if (exportParams != null ? !exportParams.equals(that.exportParams) : that.exportParams != null) return false;
+        if (keyAlias != null ? !keyAlias.equals(that.keyAlias) : that.keyAlias != null)
+            return false;
         if (urisOfResources != null ? !urisOfResources.equals(that.urisOfResources) : that.urisOfResources != null)
             return false;
         if (urisOfScheduledJobs != null ? !urisOfScheduledJobs.equals(that.urisOfScheduledJobs) : that.urisOfScheduledJobs != null)
@@ -167,6 +181,8 @@ public class ExportTask implements DeepCloneable<ExportTask> {
         result = 31 * result + (usersToExport != null ? usersToExport.hashCode() : 0);
         result = 31 * result + (getResourceTypes() != null ? getResourceTypes().hashCode() : 0);
         result = 31 * result + (getOrganization() != null ? getOrganization().hashCode() : 0);
+        result = 31 * result + (keyAlias != null ? keyAlias.hashCode() : 0);
+
         return result;
     }
 
@@ -180,6 +196,7 @@ public class ExportTask implements DeepCloneable<ExportTask> {
                 ", usersToExport=" + usersToExport +
                 ", resourceTypes=" + resourceTypes +
                 ", organization='" + organization + '\'' +
+                ", keyAlias='" + keyAlias + '\'' +
                 '}';
     }
 

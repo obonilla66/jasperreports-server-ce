@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,7 +21,10 @@
 
 package com.jaspersoft.jasperserver.export.service.impl;
 
+import com.jaspersoft.jasperserver.api.common.crypto.KeystoreManagerFactory;
 import com.jaspersoft.jasperserver.api.common.util.spring.ApplicationContextProvider;
+import com.jaspersoft.jasperserver.crypto.KeyProperties;
+import com.jaspersoft.jasperserver.crypto.KeystoreManager;
 import com.jaspersoft.jasperserver.test.ks.KeystoreUtils;
 import com.jaspersoft.jasperserver.dto.common.WarningDescriptor;
 import com.jaspersoft.jasperserver.export.Exporter;
@@ -37,17 +40,11 @@ import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import static java.lang.System.getenv;
@@ -75,6 +72,9 @@ public class ImportExportServiceImplTest extends AbstractTestNGSpringContextTest
 
     @Resource(name = "importExportPrivilegeRoles")
     protected Set<String> importExportPrivilegeRoles;
+
+    @Resource(name = "keystoreManager")
+    protected KeystoreManager keystoreManager;
 
     //needed for import/export beans using password decryption;
 	// without this resource init, UserBean's importExportCipher is
@@ -213,6 +213,58 @@ public class ImportExportServiceImplTest extends AbstractTestNGSpringContextTest
             if (!entries.contains("roles/" + s + ".xml"))
                 fail("roles/" + s + ".xml not found");
         }
+    }
+
+    @Test(enabled = true)
+    public void testExportRolesWithUsersUsingNonDefaultKey() {
+        List<String> expected = new ArrayList<String>();
+        expected.add("ROLE_USER");
+        expected.add("ROLE_DEMO");
+
+        Map<String, String> params = new HashMap<>();
+        params.put("role-users", Boolean.TRUE.toString());
+        params.put("keyalias", "diagnosticDataEncSecret");
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        try {
+            service.doExport(outputStream, params, null, null, expected, null, null, null, enUsLocale, new ArrayList<WarningDescriptor>());
+        }
+        catch (Exception e){
+            fail(e.getMessage());
+        }
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+
+        ZipInputStream zip = new ZipInputStream(inputStream);
+
+        final KeyProperties properties = keystoreManager.getKeystore(null).getKeyProperties("diagnosticDataEncSecret");
+
+        boolean foundExpectedKeyByUUID = false;
+        try {
+            ZipEntry entry = zip.getNextEntry();
+            while (entry != null) {
+                if ("index.xml".equals( entry.getName())){
+                    String text = "";
+                    try (Scanner scanner = new Scanner(zip, StandardCharsets.UTF_8.name())) {
+                        final Scanner scan = scanner.useDelimiter("<property");
+                        while (!text.equalsIgnoreCase("</export>")) {
+                            text = scan.next();
+
+                            foundExpectedKeyByUUID = text.contains(properties.getKeyUuid().toString());
+                            if (foundExpectedKeyByUUID) break;
+                        }
+                    }
+                }
+
+                if(foundExpectedKeyByUUID) break;
+                entry = zip.getNextEntry();
+            }
+        } catch (Exception er) {
+            fail(er.getMessage());
+        }
+
+        assertTrue(foundExpectedKeyByUUID);
     }
 
     @Test(enabled = true)

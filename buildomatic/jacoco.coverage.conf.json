@@ -6,28 +6,28 @@
 }, {
   "moduleName" : "jasperserver-api-impl/common",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.54,
+  "instructionCoveredRatio" : 0.55,
   "branchCoveredRatio" : 0.49
 }, {
   "moduleName" : "jasperserver-api-impl/engine",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.27,
-  "branchCoveredRatio" : 0.16
+  "instructionCoveredRatio" : 0.28,
+  "branchCoveredRatio" : 0.17
 }, {
   "moduleName" : "jasperserver-api-impl/externalAuth",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.29,
-  "branchCoveredRatio" : 0.21
+  "instructionCoveredRatio" : 0.32,
+  "branchCoveredRatio" : 0.24
 }, {
   "moduleName" : "jasperserver-api-impl/metadata",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.42,
-  "branchCoveredRatio" : 0.38
+  "instructionCoveredRatio" : 0.43,
+  "branchCoveredRatio" : 0.39
 }, {
   "moduleName" : "jasperserver-api/common",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.4,
-  "branchCoveredRatio" : 0.36
+  "instructionCoveredRatio" : 0.45,
+  "branchCoveredRatio" : 0.4
 }, {
   "moduleName" : "jasperserver-api/engine",
   "jrsVersion" : "ce",
@@ -36,13 +36,13 @@
 }, {
   "moduleName" : "jasperserver-api/externalAuth",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.79,
-  "branchCoveredRatio" : 0.57
+  "instructionCoveredRatio" : 0.81,
+  "branchCoveredRatio" : 0.62
 }, {
   "moduleName" : "jasperserver-api/metadata",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.62,
-  "branchCoveredRatio" : 0.45
+  "instructionCoveredRatio" : 0.63,
+  "branchCoveredRatio" : 0.46
 }, {
   "moduleName" : "jasperserver-common-ws",
   "jrsVersion" : "ce",
@@ -62,8 +62,8 @@
 }, {
   "moduleName" : "jasperserver-custom-datasources",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.059,
-  "branchCoveredRatio" : 0.051
+  "instructionCoveredRatio" : 0.13,
+  "branchCoveredRatio" : 0.077
 }, {
   "moduleName" : "jasperserver-dto",
   "jrsVersion" : "ce",
@@ -83,13 +83,13 @@
 }, {
   "moduleName" : "jasperserver-input-controls",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.68,
-  "branchCoveredRatio" : 0.68
+  "instructionCoveredRatio" : 0.71,
+  "branchCoveredRatio" : 0.7
 }, {
   "moduleName" : "jasperserver-jax-rs-rest",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.34,
-  "branchCoveredRatio" : 0.26
+  "instructionCoveredRatio" : 0.36,
+  "branchCoveredRatio" : 0.28
 }, {
   "moduleName" : "jasperserver-remote",
   "jrsVersion" : "ce",
@@ -108,8 +108,8 @@
 }, {
   "moduleName" : "jasperserver-war-jar",
   "jrsVersion" : "ce",
-  "instructionCoveredRatio" : 0.12,
-  "branchCoveredRatio" : 0.082
+  "instructionCoveredRatio" : 0.13,
+  "branchCoveredRatio" : 0.087
 }, {
   "moduleName" : "jasperserver-web-common-api",
   "jrsVersion" : "ce",
@@ -123,8 +123,8 @@
 }, {
   "moduleName" : "adhoc-engine/adhoc-model",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.6,
-  "branchCoveredRatio" : 0.61
+  "instructionCoveredRatio" : 0.61,
+  "branchCoveredRatio" : 0.62
 }, {
   "moduleName" : "adhoc-engine/adhoc-persistence",
   "jrsVersion" : "pro",
@@ -133,7 +133,7 @@
 }, {
   "moduleName" : "analysis",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.06,
+  "instructionCoveredRatio" : 0.059,
   "branchCoveredRatio" : 0.019
 }, {
   "moduleName" : "analysis-export",
@@ -143,7 +143,7 @@
 }, {
   "moduleName" : "common",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.32,
+  "instructionCoveredRatio" : 0.33,
   "branchCoveredRatio" : 0.24
 }, {
   "moduleName" : "common-export",
@@ -168,8 +168,8 @@
 }, {
   "moduleName" : "gyroscope",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.54,
-  "branchCoveredRatio" : 0.43
+  "instructionCoveredRatio" : 0.56,
+  "branchCoveredRatio" : 0.45
 }, {
   "moduleName" : "gyroscope-export",
   "jrsVersion" : "pro",
@@ -183,23 +183,23 @@
 }, {
   "moduleName" : "gyroscope-web",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.28,
+  "instructionCoveredRatio" : 0.29,
   "branchCoveredRatio" : 0.18
 }, {
   "moduleName" : "jasperserver-jax-rs-rest",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.38,
+  "instructionCoveredRatio" : 0.39,
   "branchCoveredRatio" : 0.42
 }, {
   "moduleName" : "jasperserver-remote",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.6,
-  "branchCoveredRatio" : 0.55
+  "instructionCoveredRatio" : 0.61,
+  "branchCoveredRatio" : 0.56
 }, {
   "moduleName" : "jasperserver-war-jar",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.32,
-  "branchCoveredRatio" : 0.24
+  "instructionCoveredRatio" : 0.37,
+  "branchCoveredRatio" : 0.27
 }, {
   "moduleName" : "jpivot-aop-woven",
   "jrsVersion" : "pro",
@@ -219,12 +219,12 @@
 }, {
   "moduleName" : "multi-tenancy",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.32,
-  "branchCoveredRatio" : 0.25
+  "instructionCoveredRatio" : 0.33,
+  "branchCoveredRatio" : 0.26
 }, {
   "moduleName" : "report-options/api",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.16,
+  "instructionCoveredRatio" : 0.19,
   "branchCoveredRatio" : 0.17
 }, {
   "moduleName" : "report-options/export",
@@ -239,8 +239,8 @@
 }, {
   "moduleName" : "repository-hibernate",
   "jrsVersion" : "pro",
-  "instructionCoveredRatio" : 0.0,
-  "branchCoveredRatio" : 0.0
+  "instructionCoveredRatio" : 0.84,
+  "branchCoveredRatio" : 0.66
 }, {
   "moduleName" : "search",
   "jrsVersion" : "pro",

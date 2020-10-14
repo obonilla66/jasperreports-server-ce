@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.inputcontrols.cascade.handlers;
 
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationException;
 
@@ -31,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * @author Yaroslav.Kovalchyk
@@ -103,7 +105,8 @@ public class MultiSelectListInputControlHandler extends SingleSelectListInputCon
      * @param selected     selected value
      * @return true if selected values collection contains given value
      */
-    protected Boolean matches(Object valueToCheck, Object selected) {
+    @Deprecated
+    protected boolean matches(Object valueToCheck, Object selected) {
         Boolean result = false;
         if(selected instanceof Collection<?>){
             Collection<?> selectedValues = (Collection<?>) selected;
@@ -118,23 +121,35 @@ public class MultiSelectListInputControlHandler extends SingleSelectListInputCon
     }
 
     /**
-     * To remove the delimiter and to address null values in the multi-select value
-     * @param value
-     * @return Object
+     *
+     * @param inputControl
+     * @param info
+     * @param selectedValues
+     * @param selectedValuesList
+     * @param defaultValue
+     * @return
+     * @throws CascadeResourceNotFoundException
      */
-    protected Object preprocessValue(Object value) {
-        if(value instanceof String) {
-            if(value.equals("null")) {
-                value = null;
-            } else {
-                value = ((String) value).replace("\\,",",");
+
+    protected List<InputControlOption> populateSelectedValuesWithNoLabel(InputControl inputControl, ReportInputControlInformation info, List<InputControlOption> selectedValues, List<Object> selectedValuesList, Object defaultValue) throws CascadeResourceNotFoundException {
+        InputControlOption inputControlOption;
+        if (defaultValue != null) {
+            if (defaultValue instanceof Collection<?>) {
+                Collection<?> defaultValuesList = (Collection<?>) defaultValue;
+                for (Object currentSelectedValue : defaultValuesList) {
+                    inputControlOption = buildInputControlOption(null, dataConverterService.formatSingleValue(currentSelectedValue, inputControl, info));
+                    inputControlOption.setSelected(null);
+                    selectedValues.add(inputControlOption);
+                    selectedValuesList.add(currentSelectedValue);
+                }
             }
         }
-        return value;
+        return selectedValues;
     }
 
+
     @Override
-    protected Boolean isNothingSelected(String inputControlName, Map<String, Object> incomingParameters) {
+    protected boolean isNothingSelected(String inputControlName, Map<String, Object> incomingParameters) {
         Object incomingValue = incomingParameters.get(inputControlName);
         return (incomingValue instanceof Collection<?>) && (((Collection<?>) incomingValue).isEmpty());
     }
@@ -152,7 +167,7 @@ public class MultiSelectListInputControlHandler extends SingleSelectListInputCon
     }
 
     @Override
-    protected Boolean shouldAddNothinSelectedOption(InputControl inputControl) {
+    protected boolean shouldAddNothinSelectedOption(InputControl inputControl) {
         return false;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.util.LocaleHelper;
 import com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder;
+import com.jaspersoft.jasperserver.api.common.util.spring.UsernamePasswordAuthenticationParameterConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.MetadataUserDetails;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
@@ -34,6 +35,8 @@ import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
 import com.jaspersoft.jasperserver.war.common.JasperServerHttpConstants;
 import com.jaspersoft.jasperserver.war.common.LocalesList;
 import com.jaspersoft.jasperserver.war.common.WebConfiguration;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -61,6 +64,7 @@ public class UserPreferencesFilter implements Filter
 
 	protected WebConfiguration configuration;
 	protected LocalesList locales;
+	private UsernamePasswordAuthenticationParameterConfiguration usernamePasswordAuthenticationParameterConfiguration;
 
     private int cookieAge;
 	UserAuthorityService userService;
@@ -141,7 +145,12 @@ public class UserPreferencesFilter implements Filter
         }
 		TimeZoneContextHolder.setTimeZone(getTimezone(userTimezone));
 
-		String userName = EncryptionRequestUtils.getValueWithLegacySupport(httpRequest, USER_NAME);
+		String userName =null;
+		for(Map<String, String> authParam : usernamePasswordAuthenticationParameterConfiguration.getAuthParameters()){
+      userName = EncryptionRequestUtils.getValue(request, authParam.get(JasperServerHttpConstants.USERNAME_PARAM));
+      if(userName!=null)
+        break;
+    }
 		String userNewPassword = EncryptionRequestUtils.getValue(httpRequest, USER_PASSWORD);
 		String passwordExpiredDays = request.getParameter("passwordExpiredDays");
 
@@ -271,6 +280,14 @@ public class UserPreferencesFilter implements Filter
     public void setLocales(LocalesList locales) {
         this.locales = locales;
     }
+
+	public void setUsernamePasswordAuthenticationParameterConfiguration(UsernamePasswordAuthenticationParameterConfiguration usernamePasswordAuthenticationParameterConfiguration) {
+		this.usernamePasswordAuthenticationParameterConfiguration = usernamePasswordAuthenticationParameterConfiguration;
+	}
+
+	public UsernamePasswordAuthenticationParameterConfiguration getUsernamePasswordAuthenticationParameterConfiguration() {
+		return usernamePasswordAuthenticationParameterConfiguration;
+	}
 
 	private static TimeZone getTimezone(String timeZoneId) {
 		TimeZone timeZone;

@@ -22,7 +22,8 @@
   ],
   "orderBy": [
     {
-      "aggregation": true
+      "aggregation": true,
+      "ascending": true
     },
     {
       "ascending": true

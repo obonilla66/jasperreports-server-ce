@@ -119,7 +119,7 @@ IF "%JS_SETUP_MODE%"=="upgrade" (
 IF "%JS_ANT_TARGET%" == "" ( GOTO :antTargetNotSpecified )
 CALL :log "Running %JS_ANT_TARGET% Ant task"
 CALL :log
-CALL %ANT_RUN% -nouserlib -f build.xml %JS_ANT_TARGET% %JS_ANT_OPTIONS% 2>&1 | "%~dp0/wtee" -a %JS_LOG_FILE%
+CALL %ANT_RUN% -nouserlib -lib . -lib lib -f build.xml %JS_ANT_TARGET% %JS_ANT_OPTIONS% 2>&1 | "%~dp0/wtee" -a %JS_LOG_FILE%
 
 IF ERRORLEVEL 1 ( GOTO :runAntFailed )
 CALL :log "Checking Ant return code: OK"

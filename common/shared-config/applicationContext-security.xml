@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -72,35 +72,35 @@
     <!--The fallbackFactory should never be itself like ref="passwordEncoder"-->
     <bean id="passwordEncoder" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
       <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer"/>
-      <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.PasswordEncoderEnc).ID}"/>
+      <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).PasswordEncoderEnc.value().getConfId()}"/>
       <property name="fallbackFactory" ref="&amp;passwordEncoder_7_2" />
     </bean>
 
     <bean id="passwordEncoder_7_2" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer"/>
-        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.DeprecatedPasswordEncoderEnc).ID}"/>
+        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).DeprecatedPasswordEncoderEnc.value().getConfId()}"/>
     </bean>
 
     <bean id="importExportCipher" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.Cipherer"/>
-        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.ImportExportEnc).ID}"/>
+        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).ImportExportEnc.value().getConfId()}"/>
         <property name="fallbackFactory" ref="&amp;importExport_7_2" />
     </bean>
 
     <bean id="importExport_7_2" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.Cipherer"/>
-        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.DeprecatedImportExportEnc).ID}"/>
+        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).DeprecatedImportExportEnc.value().getConfId()}"/>
     </bean>
 
     <bean id="diagnosticDataCipherer" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.DiagnosticDataCipherer"/>
-        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.DiagnosticDataEnc).ID}"/>
+        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).DiagnosticDataEnc.value().getConfId()}"/>
         <property name="allowEncryption" value="true"/>
     </bean>
 
     <bean id="httpParameterCipher" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.security.encryption.EncryptionRSA"/>
-        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.DeprecatedHttpParameterEnc).ID}"/>
+        <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).DeprecatedHttpParameterEnc.value().getConfId()}"/>
     </bean>
 
     <!--

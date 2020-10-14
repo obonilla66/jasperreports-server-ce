@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,19 +22,13 @@
 package com.jaspersoft.jasperserver.export.io;
 
 import com.jaspersoft.jasperserver.api.JSException;
-import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
-import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
-import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
+import com.jaspersoft.jasperserver.crypto.JrsKeystore;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
-import com.jaspersoft.jasperserver.crypto.KeystoreProperties;
 import com.jaspersoft.jasperserver.export.DefaultKeystorePasswdProvider;
 import com.jaspersoft.jasperserver.export.Parameters;
-import com.jaspersoft.jasperserver.export.modules.auth.AuthorityModuleConfiguration;
 import com.jaspersoft.jasperserver.export.util.EncryptionParams;
 
 import java.io.Console;
-import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -51,6 +45,7 @@ public class SecretKeyInputFactory implements ImportInputFactory {
     private String inputKeyParameter;
     private String importerBeanName;
     protected KeystoreManager keystoreManager;
+    private JrsKeystore keystore;
 
     protected DefaultKeystorePasswdProvider defaultKeystorePasswdProvider;
 
@@ -120,7 +115,7 @@ public class SecretKeyInputFactory implements ImportInputFactory {
                 throw new JSException("--keyalias must be specified.");
             }
 
-            if (!keystoreManager.containsAlias(keyAlias.get())) {
+            if (!keystore.containsAlias(keyAlias.get())) {
                 String keyPasswd = cryptoParameters.getKeyPasswd().orElseGet(passwdSupplier);
                 if (keyPasswd.isEmpty()) {
                     passwdSupplier.get();
@@ -151,6 +146,7 @@ public class SecretKeyInputFactory implements ImportInputFactory {
 
     public void setKeystoreManager(KeystoreManager keystoreManager) {
         this.keystoreManager = keystoreManager;
+        keystore = keystoreManager.getKeystore(null);
     }
 
     public void setDefaultKeystorePasswdProvider(DefaultKeystorePasswdProvider defaultKeystorePasswdProvider) {

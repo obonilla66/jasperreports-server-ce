@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -39,13 +39,21 @@ import com.microsoft.windowsazure.management.sql.models.Database;
 import com.microsoft.windowsazure.management.sql.models.FirewallRuleCreateParameters;
 import com.microsoft.windowsazure.management.sql.models.FirewallRuleUpdateParameters;
 import com.microsoft.windowsazure.management.sql.models.Server;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Utility class for high level Azure SQL Management operations.
  */
 public class AzureSqlManagementService {
+    private static final Logger logger = LogManager.getLogger(AzureSqlManagementService.class);
 
     private String defaultJdbcUrlSyntax;
+
+    private int maxErrorRetry = 6; // empirically this seems to be sufficient for 99.9% of cases
+    public void setMaxErrorRetry(int maxErrorRetry) { // but it can be optionally set externally in the corresponding applicationContext.xml
+        this.maxErrorRetry = maxErrorRetry;
+    }
 
     /**
      * Returns JDBC URL string constructed from server name and database name.
@@ -139,19 +147,35 @@ public class AzureSqlManagementService {
     }
 
     private ImmutableMap<String, ImmutableSet<String>> getServerAndDbPairs(SqlManagementClient azureClient) throws Exception {
-        ImmutableMap.Builder<String, ImmutableSet<String>> server2Databases = ImmutableMap.builder();
-        for (Server server : azureClient.getServersOperations().list()) {
-            if (StringUtils.isNotBlank(server.getName())) {
-                ImmutableSet.Builder<String> databases = ImmutableSet.builder();
-                for (Database db : azureClient.getDatabasesOperations().list(server.getName()).getDatabases()) {
-                    if (StringUtils.isNotBlank(db.getName())) {
-                        databases.add(db.getName());
+        int retries = 0;
+        do {
+            ImmutableMap.Builder<String, ImmutableSet<String>> server2Databases = ImmutableMap.builder();
+            try {
+                for (Server server : azureClient.getServersOperations().list()) {
+                    if (StringUtils.isNotBlank(server.getName())) {
+                        ImmutableSet.Builder<String> databases = ImmutableSet.builder();
+                        for (Database db : azureClient.getDatabasesOperations().list(server.getName()).getDatabases()) {
+                            if (StringUtils.isNotBlank(db.getName())) {
+                                databases.add(db.getName());
+                            }
+                        }
+                        server2Databases.put(server.getName(), databases.build());
                     }
                 }
-                server2Databases.put(server.getName(), databases.build());
+                if(retries>0){ // notice there was a retry
+                    logger.warn("Azure SQL DB Retries: " + retries );
+                }
+                return server2Databases.build();
+            } catch (Exception e){
+                // we're using deprecated API so it isn't reliable anymore. Keep trying.
+                if(retries<maxErrorRetry){
+                    retries+=1;
+                } else {
+                    logger.error("Azure SQL DB " + maxErrorRetry + " retries exhausted.");
+                    throw e;
+                }
             }
-        }
-        return server2Databases.build();
+        } while (true );
     }
 
     private void checkArgNotEmpty(String arg, String errorCode) {
