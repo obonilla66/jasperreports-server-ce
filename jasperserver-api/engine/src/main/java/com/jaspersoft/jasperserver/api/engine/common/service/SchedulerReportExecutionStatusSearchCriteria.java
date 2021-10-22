@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.api.engine.common.service;
 
 
 import com.jaspersoft.jasperserver.api.JasperServerAPI;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 
 import java.util.Date;
 
@@ -39,6 +40,7 @@ public class SchedulerReportExecutionStatusSearchCriteria extends ReportExecutio
     private Long jobID;
     private String jobLabel;
     private String userName;
+    private User user;
     private Date fireTimeFrom;
     private Date fireTimeTo;
 
@@ -83,4 +85,13 @@ public class SchedulerReportExecutionStatusSearchCriteria extends ReportExecutio
     public void setUserName(String userName) {
         this.userName = userName;
     }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
 }

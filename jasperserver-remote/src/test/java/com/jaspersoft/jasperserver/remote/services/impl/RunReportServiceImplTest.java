@@ -26,28 +26,38 @@ import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.common.service.VirtualizerFactory;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
-import com.jaspersoft.jasperserver.remote.exception.ErrorDescriptorBuildingService;
-import com.jaspersoft.jasperserver.remote.reports.HtmlExportStrategy;
-import com.jaspersoft.jasperserver.remote.services.ReportExecutor;
-import com.jaspersoft.jasperserver.remote.utils.AuditHelper;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
-
+import com.jaspersoft.jasperserver.remote.exception.ErrorDescriptorBuildingService;
+import com.jaspersoft.jasperserver.remote.reports.HtmlExportStrategy;
+import com.jaspersoft.jasperserver.remote.services.ReportExecution;
+import com.jaspersoft.jasperserver.remote.services.ReportExecutor;
+import com.jaspersoft.jasperserver.remote.utils.AuditHelper;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_VALUE;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NULL_SUBSTITUTION_VALUE;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 
 @ContextConfiguration(locations = {
@@ -263,5 +273,26 @@ public class RunReportServiceImplTest extends AbstractTestNGSpringContextTests {
         service.verifyCorrectParameterValuesForNonCascadingControlsEntryPoint(controlsCascade, initial, processed);
     }
 
+    @Test
+    public void verifyRequestAttributesArePropagatedToReportExecutionRunnable() {
+        // Arrange
+        final RequestAttributes attributes1 = mock(RequestAttributes.class);
+        final RequestAttributes attributes2 = mock(RequestAttributes.class);
+        // Set 1-st version of attributes
+        RequestContextHolder.setRequestAttributes(attributes1);
+
+        // Act
+        service.startReportExecution(new ReportExecution());
+        ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(asyncExecutor).execute(argumentCaptor.capture());
+        // Override original attributes with 2-nd version
+        RequestContextHolder.setRequestAttributes(attributes2);
+        Runnable runnable = argumentCaptor.getValue();
+        runnable.run();
+
+        // Assert
+        // Ensure that runnable is using 1-st version of attributes
+        assertEquals(attributes1, RequestContextHolder.getRequestAttributes());
+    }
 
 }

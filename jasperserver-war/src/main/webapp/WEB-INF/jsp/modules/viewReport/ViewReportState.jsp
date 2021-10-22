@@ -87,8 +87,8 @@
 
     <js:out javaScriptEscape="true">
     Report.flowExecutionKey = '${flowExecutionKey}';
-    Report.reportUnitURI = '${requestScope.reportUnit}';
-    Report.reportOptionsURI = '${requestScope.reportOptionsURI}';    
+    Report.reportUnitURI = '${requestScope.reportUnit}'.replace(/^repo:/, "");
+    Report.reportOptionsURI = '${requestScope.reportOptionsURI}'.replace(/^repo:/, "");  
     Report.reportLabel = '${reportUnitObject.label}';
     Report.reportDescription = '${reportUnitObject.description}';
     Report.reportForceControls = ${reportForceControls};

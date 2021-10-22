@@ -56,6 +56,9 @@ public class ParameterTypeCompositeLookup implements ParameterTypeLookup {
     }
 
     String getResourceType(ResourceReference dataSource) {
+        if(dataSource == null) {
+            return null;
+        }
         if (dataSource.isLocal()) {
             return dataSource.getLocalResource() != null
                     ? dataSource.getLocalResource().getClass().getName()

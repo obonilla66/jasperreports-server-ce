@@ -800,6 +800,23 @@
 
     <util:map id="engineExecutions" key-type="java.lang.String" value-type="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.EngineServiceImpl.ReportExecutionStatus" map-class="java.util.concurrent.ConcurrentHashMap"/>
 
+    <!--
+        Super user role list for report execution and dashboard execution
+        and this list only supports root level role
+    -->
+    <util:list id="authorizedAllExecutionsRolesList" value-type="java.lang.String">
+        <value>ROLE_SUPERUSER</value>
+    </util:list>
+
+    <!--
+        Admin user role list for report execution and dashboard execution
+        and this list only supports root level role
+    -->
+    <util:list id="authorizedOrgExecutionsRolesList" value-type="java.lang.String">
+        <value>ROLE_SUPERUSER</value>
+        <value>ROLE_ADMINISTRATOR</value>
+    </util:list>
+
     <bean id="engineService" class="${bean.class.engineService}" destroy-method="release">
         <property name="auditContext" ref="${bean.auditContext}"/>
         <property name="repositoryService">
@@ -840,6 +857,8 @@
         <property name="reportThumbnailServiceEnabled" value="${property.reportThumbnailServiceEnabled}"/>
         <property name="asyncThumbnailCreator" ref="asyncThumbnailCreator"/>
         <property name="reportUnitClassLoadingEnabled" value="true"/>
+        <property name="authorizedAllExecutionsRolesList" ref="authorizedAllExecutionsRolesList"/>
+        <property name="authorizedOrgExecutionsRolesList" ref="authorizedOrgExecutionsRolesList"/>
     </bean>
 
 	<bean id="engineCache" class="org.springframework.cache.ehcache.EhCacheFactoryBean"
@@ -1385,6 +1404,14 @@
     	</property>
     </bean>
 
+
+    <util:list id="processedExceptionsForCreatingContext" value-type="java.lang.String">
+        <value>com.jaspersoft.jasperserver.api.ErrorDescriptorException</value>
+        <value>com.jaspersoft.jasperserver.api.JSException</value>
+        <value>com.jaspersoft.jasperserver.api.ExceptionListWrapper</value>
+        <value>com.jaspersoft.commons.dataset.expr.DomELParsingException</value>
+        <value>javax.validation.ConstraintViolationException</value>
+    </util:list>
 
     <bean id="messageProviderFactory" class="com.jaspersoft.jasperserver.api.engine.jasperreports.util.MessageSourceMessageProviderFactory">
         <property name="messageSource">

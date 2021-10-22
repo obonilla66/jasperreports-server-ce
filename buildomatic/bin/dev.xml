@@ -543,7 +543,7 @@
         </parallel>
 
         <!-- generate list of third-party JARs and check against "master" list -->
-        <runtarget target="check-war-deps-ce"/> <!--Can't be run in parallel without ensuring ${ieLib} folder has been processed first-->
+         <!--Can't be run in parallel without ensuring ${ieLib} folder has been processed first-->
     </target>
 
     <target name="build-pro"
@@ -598,7 +598,7 @@
             </then>
         </if>
     	<!-- generate list of third-party JARs and check against "master" list -->
-        <runtarget target="check-war-deps-pro"/>
+        
         </parallel>
     </target>
 

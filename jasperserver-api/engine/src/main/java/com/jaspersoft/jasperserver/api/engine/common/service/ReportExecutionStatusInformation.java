@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.api.engine.common.service;
 
 
 import com.jaspersoft.jasperserver.api.JasperServerAPI;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 
 import java.util.Map;
 
@@ -55,6 +56,13 @@ public interface ReportExecutionStatusInformation {
      * @return a Map that contains property keys and values of current job information
      */
     public Map<String, Object> getProperties();
+
+    /**
+     * get user info of current job
+     *
+     * @return user info of current job which contains user name and organization info
+     */
+    public User getOwner();
 
     /**
      * Cancels/interrupts current report execution.

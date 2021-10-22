@@ -37,23 +37,23 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.NumberUtils.toBigDecimal;
+import org.apache.commons.math3.util.Pair;
 
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.TreeSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.OFFSET;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.SELECT;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.NumberUtils.toBigDecimal;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.SELECTED_ONLY_INTERNAL;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 /**
  * @author Yaroslav.Kovalchyk
@@ -61,7 +61,9 @@ import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesL
  */
 public class SingleSelectListInputControlHandler extends BasicInputControlHandler {
 
-    protected final static Log log = LogFactory.getLog(SingleSelectListInputControlHandler.class);
+    public static final String SELECT = "select";
+
+    private static final Log log = LogFactory.getLog(SingleSelectListInputControlHandler.class);
 
     private ValuesLoader loader;
 
@@ -186,7 +188,7 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         // construct selected values dictionary as incoming values can be large sometimes
         SelectedValuesDict defaultValueDict = createSelectedValuesDict(defaultValue);
         InputControlOption inputControlOption;
-        if (CollectionUtils.isNotEmpty(values)) {
+        if (isNotEmpty(values)) {
             // iterate over values and match with the default values
             for (ListOfValuesItem currentItem : values) {
                 if(validateInputControlValues(currentItem, dataType)) {
@@ -259,15 +261,21 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         List<ListOfValuesItem> values = getListOfValuesItems(inputControl, dataSource, parameters, info, parameterTypes);
         final DataType dataType = inputControl.getDataType() != null ? cachedRepositoryService.getResource(DataType.class, inputControl.getDataType()) : null;
         List<InputControlOption> options = new ArrayList<>();
+
         InputControlOption nothingOption = null;
+        Pair<InputControlOption, Object> firstValidValue = null;
+
         // default options will be collected to defaultOptions map
         // default values are collected to a map because of option object and typed value are both required
         Map<InputControlOption, Object> defaultOptions = new HashMap<>();
         // selected values will be collected to selectedValues list
         List<Object> selectedValues = new ArrayList<>();
         final String controlName = inputControl.getName();
-        Boolean isNothingSelected = isNothingSelected(controlName, parameters);
-        Object incomingValue = setIncomingValue(inputControl, parameters, info, controlName);
+
+        boolean isNothingSelected = isNothingSelected(controlName, parameters);
+        boolean showSelectedOnly = isShowSelectedOnlyValues(parameters);
+
+        Object incomingValue = setIncomingValue(controlName, parameters, info);
 
         // construct selected values dictionary as incoming values can be large sometimes
         SelectedValuesDict incomingValueDict = createSelectedValuesDict(incomingValue);
@@ -279,36 +287,75 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         // check if the select parameter value is "allValues"
         selectAll = isAllValues(inputControl, parameters);
 
+        Map<String, String> errors = new HashMap<>();
+
+        final int limit = inputControlPagination.getLimit(inputControl, parameters, errors);
+        final int offset = inputControlPagination.getOffset(
+                inputControl, parameters, values != null ? values.size() : 0, errors
+        );
+
+        inputControlPagination.checkLimitOffsetRange(errors);
+
         if (values != null && !values.isEmpty()) {
+            int position = 0;
+            int actualTotalSize = values.size();
+
             // iterate over values
             for (ListOfValuesItem currentItem : values) {
-                Object currentItemValue = getCurrentItemValue(inputControl, info, currentItem);
-
                 // Add option only if it meets validation rules of the dataType
-                if (validateInputControlValues(currentItem, dataType)) {
-                    InputControlOption option = buildInputControlOption(currentItem.getLabel(), dataConverterService.formatSingleValue(currentItemValue, inputControl, info));
+                if (!validateInputControlValues(currentItem, dataType)) {
+                    // Re-validate offset each time because of "validateInputControlValues" might fail
+                    // and number of options will be less then number of actual values
+                    inputControlPagination.validateOffset(offset, --actualTotalSize, null);
+                    continue;
+                }
 
-                    // check to see which values to be selected and when selectAll is true, return true for all the values.
-                    Boolean isSelected = (!isNothingSelected && incomingValueDict.checkMatch(currentItemValue)) || selectAll;
+                final Object currentItemValue = getCurrentItemValue(inputControl, info, currentItem);
+
+                // check to see which values to be selected and when selectAll is true, return true for all the values.
+                boolean isSelected = selectAll || (!isNothingSelected && incomingValueDict.checkMatch(currentItemValue));
+                if (isSelected) {
+                    // collect selected values to update parameters with selected data
+                    selectedValues.add(currentItemValue);
+                }
+
+                final boolean showSelectedValuesAndValueIsSelected = showSelectedOnly && isSelected;
+                final boolean paginationIsNotIgnoredAndOptionsWithinLimitAndOffset = !showSelectedOnly
+                        && position >= offset
+                        && options.size() < limit;
+
+                InputControlOption option = null;
+                // If we showSelectedOnly is true (meaning we need to return only "selected" values) then we need
+                // to ignore pagination completely. Otherwise check if options are within limit and offset
+                if (showSelectedValuesAndValueIsSelected || paginationIsNotIgnoredAndOptionsWithinLimitAndOffset) {
+                    option = getOrBuildInputControlOption(inputControl, info, currentItem, currentItemValue, null);
                     option.setSelected(isSelected);
-                    if (isSelected) {
-                        // collect selected values to update parameters with selected data
-                        selectedValues.add(currentItemValue);
-                    }
-                    // collect default options if no selected values found and not a case that nothing is selected
-                    if (selectedValues.size() == 0 && !isNothingSelected) {
-                        if(defaultValueDict.checkMatch(currentItemValue)) {
-                            defaultOptions.put(option, currentItemValue);
-                        }
-                        // collect default options and values if no incoming values found yet
-
-                    }
-                    nothingOption = getNothingInputControlOption(nothingOption, option);
                     options.add(option);
+                }
+                position++;
+
+                // Collect default options if no selected values are found and not a case that nothing is selected
+                if (selectedValues.isEmpty()
+                        && !isNothingSelected
+                        && defaultValueDict.checkMatch(currentItemValue)) {
+                        option = getOrBuildInputControlOption(inputControl, info, currentItem, currentItemValue, option);
+                        defaultOptions.put(option, currentItemValue);
+                }
+                // Remember a first valid value and build input control option. It is required later if
+                // we have 0 selected values, and input control is mandatory - then we need to "select" 1-st value
+                if (firstValidValue == null) {
+                    firstValidValue = Pair.create(
+                            getOrBuildInputControlOption(inputControl, info, currentItem, currentItemValue, option),
+                            currentItemValue
+                    );
+                }
+                if (isNothingValue(currentItemValue) || isNothingInputControlOption(option)) {
+                    nothingOption = getOrBuildInputControlOption(inputControl, info, currentItem, currentItemValue, option);
                 }
             }
         }
-        if (selectedValues.size() == 0 && !options.isEmpty()) {
+
+        if (selectedValues.isEmpty()) {
             // incoming value isn't found in values list
             if (!defaultOptions.isEmpty()) {
                 // default values found. So, they should be selected
@@ -317,22 +364,29 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
                 }
                 // put default values to selected values list for further update of incoming parameters map
                 selectedValues = new ArrayList<>(defaultOptions.values());
-            } else if (inputControl.isMandatory() && !isNothingSelected) {
-                // default values sre not found in values list
-                // this control is mandatory, first value should be selected if offset is null or 0.
-                String offset = (String)parameters.get(inputControl.getName() +"_"+ OFFSET);
-                if(CollectionUtils.isNotEmpty(values) && (offset == null || offset.equals("0"))) {
-                    options.get(0).setSelected(true);
-                    selectedValues.add(values.get(0).getValue());
+
+                // If we don't have selected and options - set options to default values
+                if (optionsAreRequired(options, showSelectedOnly)) {
+                    options.addAll(defaultOptions.keySet());
+                }
+            // Default values are not found in values list
+            // This control is mandatory, first value should be selected if offset is null or 0.
+            } else if (inputControl.isMandatory() &&
+                    !isNothingSelected &&
+                    firstValidValue != null &&
+                    offset == 0) {
+                firstValidValue.getKey().setSelected(true);
+                selectedValues.add(firstValidValue.getValue());
+
+                // If we don't have selected, options and default values - set options to be the first valid option
+                if (optionsAreRequired(options, showSelectedOnly)) {
+                    options.add(firstValidValue.getKey());
                 }
             }
         }
 
-        state.setOptions(options);
-        setStateTotalCount(state, parameters);
-
         // update incoming parameters map with selected values
-        if (selectedValues.size() == 0) {
+        if (selectedValues.isEmpty()) {
             if (inputControl.isMandatory()){
                 doMandatoryValidation(null, state);// mandatory error should appears in this case
             }
@@ -341,19 +395,45 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
             applyNothingSelected(controlName, parameters);
             if (nothingOption != null) {
                 nothingOption.setSelected(true);
+
+                // If we don't have options - set options to contains selected "nothing" option
+                if (optionsAreRequired(options, showSelectedOnly)) {
+                    options.add(nothingOption);
+                }
             }
+
             internalApplyNothingSubstitution(controlName, parameters);
         } else {
             // selected values are exist, update incoming parameters
             parameters.put(controlName, getConcreteSelectedValue(selectedValues));
         }
+
+        state.setOptions(options);
+        setStateTotalCount(state, parameters);
     }
 
-    private InputControlOption getNothingInputControlOption(InputControlOption nothingOption, InputControlOption option) {
-        if(option.getLabel().equals(NOTHING_SUBSTITUTION_LABEL) && option.getValue().equals(NOTHING_SUBSTITUTION_VALUE)) {
-            nothingOption = option;
-        }
-        return nothingOption;
+    private boolean optionsAreRequired(List<InputControlOption> options, boolean showSelectedOnly) {
+        return showSelectedOnly && options.isEmpty();
+    }
+
+    private boolean isNothingInputControlOption(InputControlOption option) {
+        return option != null
+                && isNothingValue(option.getValue())
+                && isNothingLabel(option.getLabel());
+    }
+
+    private boolean isShowSelectedOnlyValues(Map<String, Object> parameters) {
+        return parameters.containsKey(SELECTED_ONLY_INTERNAL) &&
+                Boolean.parseBoolean((String) parameters.get(SELECTED_ONLY_INTERNAL));
+    }
+
+    private InputControlOption getOrBuildInputControlOption(InputControl inputControl,
+                                                            ReportInputControlInformation info,
+                                                            ListOfValuesItem currentItem,
+                                                            Object currentItemValue,
+                                                            InputControlOption option) throws CascadeResourceNotFoundException {
+        if (option != null) return option;
+        return buildInputControlOption(currentItem.getLabel(), dataConverterService.formatSingleValue(currentItemValue, inputControl, info));
     }
 
     protected SelectedValuesDict createSelectedValuesDict(Object incomingValue) {
@@ -363,39 +443,22 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         return incomingValueStruct;
     }
 
-    private List<ListOfValuesItem> getDefaultValues(InputControl inputControl, Map<String, Object> parameters, ReportInputControlInformation info) {
-        List<ListOfValuesItem> values;
-        Map<String, String> errors = new HashMap<>();
-        int defaultValueSize =  getDefaultValuesList(info).size();
-        int limit = loader.getLimit(inputControl, parameters, errors);
-        int offset = loader.getOffset(inputControl, parameters, defaultValueSize, errors);
-
-        loader.checkLimitOffsetRange(errors);
-
-        int totalLimit = loader.getTotalLimit(limit , offset, defaultValueSize);
-        String criteria = loader.getCriteria(inputControl, parameters);
-        values = generateValuesFromDefaultValues(info, totalLimit, limit,  offset, criteria);
-        return values;
-    }
-
-
     protected boolean isAllValues(InputControl inputControl, Map<String, Object> parameters) {
         Object selectedValue = parameters.get(inputControl.getName()+"_"+SELECT);
         return  (selectedValue != null && ((String)selectedValue).equalsIgnoreCase(ALL_VALUES));
     }
 
-
     protected void setStateTotalCount(InputControlState state, Map<String, Object> parameters) {
-        if(parameters.get(TOTAL_COUNT) != null) {
+        if (parameters.get(TOTAL_COUNT) != null) {
                 state.setTotalCount(parameters.get(TOTAL_COUNT).toString());
         }
     }
 
-    protected Object setIncomingValue(InputControl inputControl, Map<String, Object> parameters, ReportInputControlInformation info, String controlName) {
+    protected Object setIncomingValue(String controlName, Map<String, Object> parameters, ReportInputControlInformation info) {
         Object incomingValue = parameters.get(controlName);
-        Object selectedValue = parameters.get(inputControl.getName()+"_"+SELECT);
+        Object selectedValue = parameters.get(controlName + "_" + SELECT);
         boolean isSelectDefaultValues = (selectedValue != null && ((String)selectedValue).equalsIgnoreCase(SELECTED_VALUES));
-        boolean isIncomingValueEmpty = NOTHING_SUBSTITUTION_VALUE.equals(incomingValue);
+        boolean isIncomingValueEmpty = isNothingValue(incomingValue);
 
         if( isSelectDefaultValues || isIncomingValueEmpty) {
             incomingValue = info.getDefaultValue();
@@ -424,7 +487,8 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         if (DiagnosticSnapshotPropertyHelper.isDiagSnapshotSet(parameters)) {
             //  If datasnapshot is available then default values for IC
             // will be loaded from datasnapshot parameters, this logic is counting on that.
-            values = getDefaultValues(inputControl, parameters, info);
+            String criteria = loader.getCriteria(inputControl, parameters);
+            values = generateValuesFromDefaultValues(info, criteria);
             inputControl.setReadOnly(true);
         } else {
             values = loader.loadValues(inputControl, dataSource, parameters, parameterTypes, info, isSingleSelect);
@@ -433,42 +497,32 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
     }
 
 
-    protected List<ListOfValuesItem> generateValuesFromDefaultValues(ReportInputControlInformation info, int totalLimit, int limit, int offset, String criteria) {
+    protected List<ListOfValuesItem> generateValuesFromDefaultValues(ReportInputControlInformation info, String criteria) {
         List<ListOfValuesItem> result = new ArrayList<>();
         List<Object> mid = getDefaultValuesList(info);
-        int toIndex;
 
         Object value;
         String formattedValue;
         for (int i = 0; i < mid.size(); i++) {
             value = mid.get(i);
             if (null != value) {
-                formattedValue=value.toString();
+                formattedValue = value.toString();
             } else {
                 // just for tolerance ...
-                formattedValue="Null";
+                formattedValue = "Null";
             }
             ListOfValuesItem item = new ListOfValuesItemImpl();
             item.setLabel(formattedValue);
             item.setValue(formattedValue);
+
             /**
-             * If the limit-offset is provided, filter the results based on the totalLimit
+             * Filter the results based on the totalLimit
              * and filter by search criteria when provided.
              */
-            if(result.size() < totalLimit) {
-                result = loader.checkCriteriaAndAddItem(criteria, result, item);
-            } else {
-                //when result size reached the limit then break;
-                break;
-            }
+            result = loader.checkCriteriaAndAddItem(criteria, result, item);
         }
 
-        //get the toIndex based on the constructed result list size
-        toIndex = loader.getTotalLimit(limit, offset, result.size());
-        /** Validate to see if offset is more than the result size
-         * before getting the sublist.
-         */
-        return result.subList(loader.validateOffset(offset, result.size(), null), toIndex);
+        return result;
     }
 
     protected List<Object> getDefaultValuesList(ReportInputControlInformation info) {
@@ -553,6 +607,7 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
     protected InputControlOption buildInputControlOption(String label, String value) {
         return new InputControlOption(value, label);
     }
+
     protected void setDataConverterService(DataConverterService dataConverterService) {
         this.dataConverterService = dataConverterService;
     }
@@ -658,4 +713,13 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         }
         return value;
     }
+
+    private boolean isNothingValue(Object value) {
+        return NOTHING_SUBSTITUTION_VALUE.equals(value);
+    }
+
+    private boolean isNothingLabel(Object label) {
+        return NOTHING_SUBSTITUTION_LABEL.equals(label);
+    }
+
 }

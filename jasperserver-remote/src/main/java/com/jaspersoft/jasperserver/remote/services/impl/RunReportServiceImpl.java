@@ -84,6 +84,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
@@ -251,12 +253,14 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
         final TimeZone timeZone = TimeZoneContextHolder.getTimeZone();
         final SecurityContext context = SecurityContextHolder.getContext();
         final ReportExecution finalReportExecution = reportExecution;
+        final RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         asyncExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 LocaleContextHolder.setLocale(locale);
                 TimeZoneContextHolder.setTimeZone(timeZone);
                 SecurityContextHolder.setContext(context);
+                RequestContextHolder.setRequestAttributes(requestAttributes);
                 ReportUnitResult reportUnitResult = null;
                 ErrorDescriptor errorDescriptor = null;
 
@@ -1033,8 +1037,8 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
      */
     public Set<ReportExecutionStatusInformation> getCurrentlyRunningReports(SchedulerReportExecutionStatusSearchCriteria searchCriteria) {
         Set<ReportExecutionStatusInformation> result = null;
-        List<ReportExecutionStatusInformation> reportExecutionStatusList = searchCriteria != null ?
-                engine.getSchedulerReportExecutionStatusList(searchCriteria) : engine.getReportExecutionStatusList();
+        List<ReportExecutionStatusInformation> reportExecutionStatusList =
+                engine.getSchedulerReportExecutionStatusList(searchCriteria);
         if (reportExecutionStatusList != null && !reportExecutionStatusList.isEmpty()) {
             result = new HashSet<ReportExecutionStatusInformation>();
             result.addAll(reportExecutionStatusList);

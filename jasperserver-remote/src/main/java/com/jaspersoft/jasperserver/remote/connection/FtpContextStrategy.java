@@ -58,14 +58,16 @@ public class FtpContextStrategy implements ContextManagementStrategy<FtpConnecti
     private Map<String, FtpConnectionDescriptionProvider> connectionDescriptionProviders;
 
     @Override
-    public FtpConnection createContext(FtpConnection contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public FtpConnection createContext(FtpConnection contextDescriptionOrg, Map<String, Object> data) throws IllegalParameterValueException {
         FTPService.FTPServiceClient client = null;
+        // deep copy ftp connection, so the original ftp connection will remind unchange and we can reuse that in error message
+        FtpConnection contextDescription = contextDescriptionOrg.deepClone();
         try {
 
             // Check secure fields for null values and update them if necessary:
-
             // resolve the original values
             FtpConnection storedFtpConnection = null;
+
             String holder = contextDescription.getHolder();
             FtpConnectionDescriptionProvider provider = null;
             if (holder != null) {
@@ -74,7 +76,7 @@ public class FtpContextStrategy implements ContextManagementStrategy<FtpConnecti
                 if (holderParts.length != 2)
                     throw new IllegalParameterValueException("holder", holder);
 
-                provider = connectionDescriptionProviders.get(holderParts[0]);
+                provider = getConnectionDescriptionProviders().get(holderParts[0]);
                 if (provider != null) {
                     storedFtpConnection = provider.getFtpConnectionDescription(holderParts[1]);
                 } else {
@@ -131,9 +133,9 @@ public class FtpContextStrategy implements ContextManagementStrategy<FtpConnecti
             }
             client.changeDirectory(contextDescription.getFolderPath());
         } catch (UnknownHostException e) {
-            throw new ContextCreationFailedException(contextDescription.getHost(), "host", null, e, secureExceptionHandler);
+            throw new ContextCreationFailedException(contextDescriptionOrg.getHost(), "host", null, e, secureExceptionHandler);
         } catch (Exception e) {
-            throw new ContextCreationFailedException(contextDescription, e, secureExceptionHandler);
+            throw new ContextCreationFailedException(contextDescriptionOrg, e, secureExceptionHandler);
         } finally {
             if (client != null) try {
                 client.disconnect();
@@ -151,6 +153,22 @@ public class FtpContextStrategy implements ContextManagementStrategy<FtpConnecti
 
     @Override
     public FtpConnection getContextForClient(FtpConnection contextDescription, Map<String, Object> data, Map<String, String[]> additionalProperties) {
-        return new FtpConnection(contextDescription).setPassword(null);
+        return new FtpConnection(contextDescription).setPassword(null).setSshPassphrase(null);
+    }
+
+    protected Map<String, FtpConnectionDescriptionProvider> getConnectionDescriptionProviders() {
+        return connectionDescriptionProviders;
+    }
+
+    protected void setConnectionDescriptionProviders(Map<String, FtpConnectionDescriptionProvider> connectionDescriptionProviders) {
+        this.connectionDescriptionProviders = connectionDescriptionProviders;
+    }
+
+    protected SecureExceptionHandler getSecureExceptionHandler() {
+        return secureExceptionHandler;
+    }
+
+    protected void setSecureExceptionHandler(SecureExceptionHandler secureExceptionHandler) {
+        this.secureExceptionHandler = secureExceptionHandler;
     }
 }

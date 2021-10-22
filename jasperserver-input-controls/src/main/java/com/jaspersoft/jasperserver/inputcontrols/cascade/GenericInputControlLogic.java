@@ -65,6 +65,8 @@ import java.util.*;
 import static com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver.SKIP_PROFILE_ATTRIBUTES_RESOLVING;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_LABEL;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_NO_LABEL;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.INCLUDE_TOTAL_COUNT;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.SELECTED_ONLY_INTERNAL;
 
 
 /**
@@ -539,7 +541,7 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
             throws CascadeResourceNotFoundException {
 
         //Need to preserve order in result map
-        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        Map<String, Object> result = new LinkedHashMap<>();
         // fix for JS-34780
         if (allowExtraReportParameters) {
             // add all parameters (even unknown), and correct / remove them later on
@@ -571,16 +573,22 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
                 }
 
                 // Add parameters such as limit, offset, criteria and select
-                addOtherParameters(requestParameters, result, inputControlName);
+                setInputControlParameters(requestParameters, result, inputControlName);
             }
-            if(requestParameters.get("includeTotalCount") != null) {
-                result.put("includeTotalCount", requestParameters.get("includeTotalCount")[0]);
-            }
+            setAdditionalParameters(requestParameters, result);
         }
         return result;
     }
 
-    private void addOtherParameters(Map<String, String[]> requestParameters, Map<String, Object> result, String inputControlName) {
+    private void setAdditionalParameters(Map<String, String[]> requestParameters, Map<String, Object> result) {
+        for (String parameter : Arrays.asList(INCLUDE_TOTAL_COUNT, SELECTED_ONLY_INTERNAL)) {
+            if (requestParameters.containsKey(parameter)) {
+                result.put(parameter, requestParameters.get(parameter)[0]);
+            }
+        }
+    }
+
+    private void setInputControlParameters(Map<String, String[]> requestParameters, Map<String, Object> result, String inputControlName) {
         if(requestParameters.get(inputControlName+"_limit") != null) {
             result.put(inputControlName+"_limit", requestParameters.get(inputControlName+"_limit")[0]);
         }

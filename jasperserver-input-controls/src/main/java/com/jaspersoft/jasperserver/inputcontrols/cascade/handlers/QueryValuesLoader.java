@@ -35,29 +35,26 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedEngineService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedRepositoryService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterService;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedEngineService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterResolver;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.ParameterTypeLookup;
 import org.apache.commons.collections.OrderedMap;
 import org.apache.commons.collections.OrderedMapIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Collections;
 
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_LABEL;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_VALUE;
@@ -87,23 +84,20 @@ public class QueryValuesLoader implements ValuesLoader {
     private AuditContext concreteAuditContext;
     @javax.annotation.Resource
     protected ParameterTypeLookup parameterTypeCompositeLookup;
+    @javax.annotation.Resource
+    protected InputControlPagination inputControlPagination;
 
     @Override
     public List<ListOfValuesItem> loadValues(InputControl inputControl, ResourceReference dataSource, Map<String, Object> parameters, Map<String, Class<?>> parameterTypes, ReportInputControlInformation info, boolean isSingleSelect) throws CascadeResourceNotFoundException {
-        int limit;
-        int offset;
-        String criteria;
-        int totalLimit;
         OrderedMap results = null;
-        Map<String, String> errors = new HashMap<>();
 
         createInputControlsAuditEvent(inputControl.getURIString(), parameters);
 
-        List<ListOfValuesItem> result = null;
+        List<ListOfValuesItem> listOfValuesItems = null;
         ResourceReference dataSourceForQuery = resolveDatasource(inputControl, dataSource);
         final Query query = cachedRepositoryService.getResource(Query.class, inputControl.getQuery());
 
-        Map<String, Object> domainSchemaParameters = new HashMap<String, Object>();
+        Map<String, Object> domainSchemaParameters = new HashMap<>();
 
         //TODO Extract this parameter extension to separate interface
         prepareDomainDataSource(dataSourceForQuery, domainSchemaParameters);
@@ -114,13 +108,13 @@ public class QueryValuesLoader implements ValuesLoader {
 
         executionParameterTypes.putAll(missingParameterTypes);
 
-        if (parameters!=null&&parameters.containsKey(EhcacheEngineService.IC_REFRESH_KEY)) {
-        	executionParameters.put(EhcacheEngineService.IC_REFRESH_KEY,"true");
+        if (parameters != null && parameters.containsKey(EhcacheEngineService.IC_REFRESH_KEY)) {
+            executionParameters.put(EhcacheEngineService.IC_REFRESH_KEY, "true");
         }
-        if (parameters!=null&&parameters.containsKey(EhcacheEngineService.DIAGNOSTIC_REPORT_URI)) {
+        if (parameters != null && parameters.containsKey(EhcacheEngineService.DIAGNOSTIC_REPORT_URI)) {
             executionParameters.put(EhcacheEngineService.DIAGNOSTIC_REPORT_URI, parameters.get(EhcacheEngineService.DIAGNOSTIC_REPORT_URI));
         }
-        if (parameters!=null&&parameters.containsKey(EhcacheEngineService.DIAGNOSTIC_STATE)) {
+        if (parameters != null && parameters.containsKey(EhcacheEngineService.DIAGNOSTIC_STATE)) {
             executionParameters.put(EhcacheEngineService.DIAGNOSTIC_STATE, parameters.get(EhcacheEngineService.DIAGNOSTIC_STATE));
         }
 
@@ -128,58 +122,15 @@ public class QueryValuesLoader implements ValuesLoader {
         results = getResultsOrderedMap(inputControl, dataSourceForQuery, executionParameters, executionParameterTypes, results);
         addNothingLabelToResults(results, isSingleSelect, inputControl);
 
-        if(results != null) {
-            limit = getLimit(inputControl, parameters, errors);
-            offset = getOffset(inputControl, parameters, results.size(), errors);
-
-            checkLimitOffsetRange(errors);
-
-            totalLimit = getTotalLimit(limit, offset, results.size());
-
-            criteria = getCriteria(inputControl, parameters);
-
-            setTotalCount(inputControl, parameters, info, criteria, results);
-
-            result = getListOfValuesItems(inputControl, info, criteria, limit, offset, totalLimit, results);
+        if (results != null) {
+            String criteria = getCriteria(inputControl, parameters);
+            listOfValuesItems = getListOfValuesItems(inputControl, info, criteria, results);
+            addTotalCountToParameters(parameters, listOfValuesItems.size());
         }
 
         closeInputControlsAuditEvent();
 
-        return result;
-    }
-
-    /**
-     * Filter the results to get totalCount by criteria if any and  add total count to result parameters
-     * @param inputControl
-     * @param parameters
-     * @param info
-     * @param criteria
-     * @param results
-     * @throws CascadeResourceNotFoundException
-     */
-    public void setTotalCount(InputControl inputControl, Map<String, Object> parameters, ReportInputControlInformation info, String criteria, OrderedMap results) throws CascadeResourceNotFoundException {
-        if(criteria != null) {
-            int totalCount = getTotalCountByCriteria(inputControl, info, results, criteria);
-            addTotalCountToParameters(parameters, totalCount);
-        } else {
-            addTotalCountToParameters(parameters, results.size());
-        }
-    }
-
-    protected int getTotalCountByCriteria(InputControl inputControl, ReportInputControlInformation info, OrderedMap results, String criteria) throws CascadeResourceNotFoundException {
-        int totalCount = 0;
-
-        OrderedMapIterator it = results.orderedMapIterator();
-        while (it.hasNext()) {
-            Object valueColumn = it.next();
-            Object[] visibleColumns = (Object[]) it.getValue();
-            String label = extractLabelFromResults(inputControl, info, visibleColumns, new StringBuilder());
-
-            if (StringUtils.containsIgnoreCase(label, criteria)) {
-                totalCount++;
-            }
-        }
-        return totalCount;
+        return listOfValuesItems;
     }
 
     private OrderedMap getResultsOrderedMap(InputControl inputControl, ResourceReference dataSourceForQuery, Map<String, Object> executionParameters, Map<String, Class<?>> executionParameterTypes, OrderedMap results) throws CascadeResourceNotFoundException {
@@ -200,76 +151,50 @@ public class QueryValuesLoader implements ValuesLoader {
         return results;
     }
 
-    protected List<ListOfValuesItem> getListOfValuesItems(InputControl inputControl, ReportInputControlInformation info, String criteria, int limit, int offset, int totalLimit, OrderedMap results) throws CascadeResourceNotFoundException {
-        int toIndex;
-        List<ListOfValuesItem> result = null;
+    protected List<ListOfValuesItem> getListOfValuesItems(InputControl inputControl, ReportInputControlInformation info, String criteria, OrderedMap results) throws CascadeResourceNotFoundException {
+        List<ListOfValuesItem> result = new ArrayList<>(results.size());
+
+        if (results.containsKey(NOTHING_SUBSTITUTION_VALUE)) {
+            createAndAddItem(criteria, result, NOTHING_SUBSTITUTION_VALUE, NOTHING_SUBSTITUTION_LABEL);
+        }
+
         OrderedMapIterator it = results.orderedMapIterator();
-        result = createListOfValuesItems(criteria, totalLimit, results, result);
+
         while (it.hasNext()) {
             Object valueColumn = it.next();
+            if (NOTHING_SUBSTITUTION_VALUE.equals(valueColumn)) continue;
+
             Object[] visibleColumns = (Object[]) it.getValue();
-
-            String label = extractLabelFromResults(inputControl, info, visibleColumns, new StringBuilder());
-            if(!NOTHING_SUBSTITUTION_VALUE.equals(valueColumn)) {
-
-                /**
-                 * If the limit-offset is provided, filter the results based on the totalLimit
-                 * and filter by search criteria when provided and then add item to result.
-                 */
-                if (createAndAddItem(criteria, totalLimit, result, valueColumn, label)) {
-                    break;
-                }
-            }
+            String label = extractLabelFromResults(inputControl, info, visibleColumns);
+            createAndAddItem(criteria, result, valueColumn, label);
         }
 
-        if(result == null) {
-            return null;
-        } else {
-            //get the toIndex based on the constructed result list size
-            toIndex = getTotalLimit(limit, offset, result.size());
-            /** Validate to see if offset is more than the result size
-             * before getting the sublist.
-             */
-            return result.subList(validateOffset(offset, result.size(), null), toIndex);
-        }
-    }
-
-    private List<ListOfValuesItem> createListOfValuesItems(String criteria, int totalLimit, OrderedMap results, List<ListOfValuesItem> result) {
-        if(result == null) {
-            result = new ArrayList<>(results.size());
-            if(results.containsKey(NOTHING_SUBSTITUTION_VALUE)) {
-                createAndAddItem(criteria, totalLimit, result, NOTHING_SUBSTITUTION_VALUE, NOTHING_SUBSTITUTION_LABEL);
-            }
-        }
         return result;
     }
 
-    private boolean createAndAddItem(String criteria, int totalLimit, List<ListOfValuesItem> result, Object valueColumn, String label) {
+    private void createAndAddItem(String criteria, List<ListOfValuesItem> result, Object valueColumn, String label) {
         ListOfValuesItem item = new ListOfValuesItemImpl();
         item.setLabel(label);
+
         valueColumn = formatValueColumn(valueColumn);
         item.setValue(valueColumn);
 
         /**
-         * If the limit-offset is provided, filter the results based on the totalLimit
-         * and filter by search criteria when provided and then add item to result.
+         * Filter the results based on the totalLimit and by search criteria
+         * when provided and then add item to result.
          */
-        if (!checkLimitAndAddItem(criteria, totalLimit, result, item)) {
-            //when result size reached the limit then break;
-            return true;
-        }
-        return false;
+        checkCriteriaAndAddItem(criteria, result, item);
     }
 
     private void addNothingLabelToResults(OrderedMap results, boolean isSingleSelect, InputControl inputControl) {
-        if (results != null) {
-            if(isSingleSelect && !inputControl.isMandatory()) {
-                results.put(NOTHING_SUBSTITUTION_VALUE, new Object[]{NOTHING_SUBSTITUTION_LABEL});
-            }
+        if (results != null && isSingleSelect && !inputControl.isMandatory()) {
+            results.put(NOTHING_SUBSTITUTION_VALUE, new Object[]{NOTHING_SUBSTITUTION_LABEL});
         }
     }
 
-    protected String extractLabelFromResults(InputControl inputControl, ReportInputControlInformation info, Object[] visibleColumns, StringBuilder label) throws CascadeResourceNotFoundException {
+    protected String extractLabelFromResults(InputControl inputControl, ReportInputControlInformation info, Object[] visibleColumns) throws CascadeResourceNotFoundException {
+        StringBuilder label = new StringBuilder();
+
         for (int i = 0; i < visibleColumns.length; i++) {
             Object visibleColumn = visibleColumns[i];
             String visibleColumnName = inputControl.getQueryVisibleColumns()[i];
@@ -280,6 +205,7 @@ public class QueryValuesLoader implements ValuesLoader {
             String formattedValue = formatValueToString(visibleColumn, isVisibleColumnMatchesValueColumn, inputControl, info);
             label.append(visibleColumn != null ? formattedValue : InputControlHandler.NULL_SUBSTITUTION_LABEL);
         }
+
         return label.toString();
     }
 
@@ -290,14 +216,14 @@ public class QueryValuesLoader implements ValuesLoader {
     }
 
     private Object formatValueColumn(Object valueColumn) {
-        if(valueColumn instanceof BigDecimal) {
+        if (valueColumn instanceof BigDecimal) {
             valueColumn = ((BigDecimal) valueColumn).stripTrailingZeros();
         }
         return valueColumn;
     }
 
     private String formatValueToString(Object visibleColumn, boolean isVisibleColumnMatchesValueColumn,
-       InputControl inputControl, ReportInputControlInformation info)
+                                       InputControl inputControl, ReportInputControlInformation info)
             throws CascadeResourceNotFoundException {
 
         if (isVisibleColumnMatchesValueColumn) {
@@ -313,7 +239,7 @@ public class QueryValuesLoader implements ValuesLoader {
      * that's not needed.
      */
     protected void prepareDomainDataSource(ResourceReference dataSourceRef, Map<String, Object> parameters) throws CascadeResourceNotFoundException {
-    	ReportDataSource dataSource = (ReportDataSource) cachedRepositoryService.getResource(Resource.class, dataSourceRef);
+        ReportDataSource dataSource = (ReportDataSource) cachedRepositoryService.getResource(Resource.class, dataSourceRef);
         if (filterResolver.paramTestNeedsDataSourceInit(dataSource)) {
             parameters.putAll(cachedEngineService.getSLParameters(dataSource));
         }
@@ -325,7 +251,7 @@ public class QueryValuesLoader implements ValuesLoader {
      * but QueryManipulator sets query to empty string and Executor throws exception if parameter is absent,
      * so we set Null as most suitable value as yet.
      *
-     * @param query Query
+     * @param query      Query
      * @param parameters Map&lt;String, Object&gt;
      * @return Map&lt;String, Object&gt; copy of map, where missing parameters filled with Null values.
      */
@@ -345,7 +271,8 @@ public class QueryValuesLoader implements ValuesLoader {
 
     /**
      * Filter only specified parameter types
-     * @param parameters Parameter names
+     *
+     * @param parameters     Parameter names
      * @param parameterTypes Map of parameter types
      * @return Filtered map of parameter types
      */
@@ -362,8 +289,8 @@ public class QueryValuesLoader implements ValuesLoader {
     /**
      * Retrieves additional parameter types from dataSource (if it has any)
      *
-     * @param dataSource a resource that might have parameters
-     * @param parameters a map of all parameters
+     * @param dataSource     a resource that might have parameters
+     * @param parameters     a map of all parameters
      * @param parameterTypes types that were find out earlier
      * @return a map with parameter name and type
      * @throws CascadeResourceNotFoundException
@@ -410,7 +337,7 @@ public class QueryValuesLoader implements ValuesLoader {
                     event.setResourceUri(resourceUri);
                 }
 
-                for (Map.Entry<String, Object> entry: parameters.entrySet()) {
+                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
                     if (entry.getKey() != null) {
                         concreteAuditContext.addPropertyToAuditEvent("inputControlParam", entry, event);
                     }

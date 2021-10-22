@@ -28,8 +28,11 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataS
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.client.RoleImpl;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.client.UserImpl;
 import net.sf.jasperreports.engine.JasperReport;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -111,4 +115,62 @@ public class EngineServiceImplTest {
         verify(factory).createService(same(datasource), eq(hasCachedData));
         verify(dataSourceService).setReportParameterValues(same(reportParameters), eq(hasCachedData));
     }
+
+    @Test
+    public void inludeUser() {
+        service.setAuthorizedAllExecutionsRolesList(Arrays.asList("ROLE_SUPERUSER"));
+        service.setAuthorizedOrgExecutionsRolesList(Arrays.asList("ROLE_ADMINISTRATOR", "ROLE_ADMINISTRATOR"));
+        Assert.assertTrue(includeUser("superuser", null, "superuser", null));
+        Assert.assertTrue(includeUser("superuser", null, "joeuser", null));
+        Assert.assertTrue(includeUser("superuser", null, "joeuser", "org1"));
+        Assert.assertTrue(includeUser("superuser", null, "jasperadmin", null));
+        Assert.assertTrue(includeUser("superuser", null, "jasperadmin", "org1"));
+        Assert.assertFalse(includeUser("superuser", null, "jasperadmin", null, "jasperadmin|org1"));
+        Assert.assertTrue(includeUser("superuser", null, "jasperadmin", "org1", "jasperadmin"));
+        Assert.assertTrue(includeUser("superuser", null, "jasperadmin", "org1", "jasperadmin|org1"));
+        Assert.assertFalse(includeUser("superuser", null, "jasperadmin", "org1", "superuser"));
+
+        Assert.assertFalse(includeUser("jasperadmin", null, "superuser", null));
+        Assert.assertTrue(includeUser("jasperadmin", null, "jasperamdin", null));
+        Assert.assertTrue(includeUser("jasperadmin", null, "joeuser", null));
+        Assert.assertTrue(includeUser("jasperadmin", "org1", "jasperadmin", "org1"));
+        Assert.assertTrue(includeUser("jasperadmin", "org1", "joeuser", "org1"));
+        Assert.assertFalse(includeUser("jasperadmin", "org1", "jasperadmin", "org2"));
+        Assert.assertFalse(includeUser("jasperadmin", "org1", "joeuser", "org2"));
+
+        Assert.assertFalse(includeUser("joeuser", null, "superuser", null));
+        Assert.assertFalse(includeUser("joeuser", null, "jasperamdin", null));
+        Assert.assertTrue(includeUser("joeuser", null, "joeuser", null));
+        Assert.assertFalse(includeUser("joeuser", null, "joeuser", "org1"));
+        Assert.assertFalse(includeUser("joeuser", "org1", "jasperadmin", "org1"));
+        Assert.assertTrue(includeUser("joeuser", "org1", "joeuser", "org1"));
+        Assert.assertFalse(includeUser("joeuser", "org1", "jasperadmin", "org2"));
+        Assert.assertFalse(includeUser("joeuser", "org1", "joeuser", "org2"));
+    }
+
+    private boolean includeUser(String loginUser, String loginOrg, String curUser, String curOrg, String searchUser) {
+        return service.includeUser(createUser(loginUser, loginOrg), createUser(curUser, curOrg), searchUser);
+    }
+
+    private boolean includeUser(String loginUser, String loginOrg, String curUser, String curOrg) {
+        return service.includeUser(createUser(loginUser, loginOrg), createUser(curUser, curOrg));
+    }
+
+    private UserImpl createUser(String userName, String userOrg){
+        UserImpl user = new UserImpl();
+        user.setUsername(userName);
+        user.setTenantId(userOrg);
+        if (userName.equals("superuser") || userName.equals("jasperadmin")) {
+            RoleImpl role1 = new RoleImpl();
+            role1.setRoleName("ROLE_ADMINISTRATOR");
+            user.addRole(role1);
+        }
+        if (userName.equals("superuser")) {
+            RoleImpl role2 = new RoleImpl();
+            role2.setRoleName("ROLE_SUPERUSER");
+            user.addRole(role2);
+        }
+        return user;
+    }
+
 }

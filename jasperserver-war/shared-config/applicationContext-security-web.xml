@@ -49,7 +49,7 @@
                 <security:filter-chain pattern="/xmla" filters="httpSessionContextIntegrationFilter,${bean.loggingFilter},${bean.basicProcessingFilter},JIAuthenticationSynchronizer,anonymousProcessingFilter,basicAuthExceptionTranslationFilter,filterInvocationInterceptor"/>
                 <security:filter-chain pattern="/services/**" filters="httpSessionContextIntegrationFilter,${bean.loggingFilter},delegatingCASSingleSignOutFilter,delegatingPreAuthenticatedFilter,${bean.portletAuthenticationProcessingFilter},delegatingBasicProcessingFilter,${bean.passwordExpirationProcessingFilter},JIAuthenticationSynchronizer,anonymousProcessingFilter,wsBasicAuthExceptionTranslationFilter,filterInvocationInterceptor"/>
                 <security:filter-chain pattern="/rest_v2/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,textOnlyResponseWebAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationRestProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRestRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,restExceptionTranslationFilter,filterInvocationInterceptor"/>
-                <security:filter-chain pattern="/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,multipartRequestWrapperFilter,webAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,delegatingExceptionTranslationFilter,filterInvocationInterceptor,iPadSupportFilter"/>
+                <security:filter-chain pattern="/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,delegatingCASPreAuthCORSFilter,multipartRequestWrapperFilter,webAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,delegatingExceptionTranslationFilter,filterInvocationInterceptor,iPadSupportFilter"/>
             </list>
         </constructor-arg>
         <property name="firewall">
@@ -156,9 +156,7 @@
     <bean id="delegatingPreAuthenticatedFilter"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.JSDelegatingFilterProxy">
         <property name="targetBeanName" value="proxyPreAuthenticatedProcessingFilter"/>
-        <property name="defaultFilter">
-            <bean class="com.jaspersoft.jasperserver.war.NullFilter"/>
-        </property>
+        <property name="defaultFilter" ref="nullFilter"/>
         <property name="responseHeadersUpdater" ref="responseHeadersUpdater"/>
     </bean>
 
@@ -393,9 +391,16 @@
     <bean id="delegatingCASSingleSignOutFilter"
           class="com.jaspersoft.jasperserver.api.security.externalAuth.JSDelegatingFilterProxy">
         <property name="targetBeanName" value="casSingleSignOutFilter"/>
-        <property name="defaultFilter">
-            <bean class="com.jaspersoft.jasperserver.war.NullFilter"/>
-        </property>
+        <property name="defaultFilter" ref="nullFilter"/>
+    </bean>
+
+    <!-- This filter is working only if CAS filter is present. Otherwise it is ignored -->
+    <bean id="delegatingCASPreAuthCORSFilter"
+          class="com.jaspersoft.jasperserver.api.security.externalAuth.JSDelegatingFilterProxy"
+          depends-on="delegatingAuthenticationProcessingFilter">
+        <property name="targetBeanName"
+                  value="#{#root.containsObject('casSingleSignOutFilter') ? 'corsDelegatingFilter' : 'nullFilter'}"/>
+        <property name="defaultFilter" ref="nullFilter"/>
     </bean>
 
     <bean id="httpRequestAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
@@ -634,5 +639,7 @@
             </bean>
         </property>
     </bean>
+
+    <bean id="nullFilter" class="com.jaspersoft.jasperserver.war.NullFilter"/>
 
 </beans>

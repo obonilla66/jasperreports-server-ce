@@ -37,6 +37,7 @@ import com.jaspersoft.jasperserver.remote.services.ReportOutputPages;
 import com.jaspersoft.jasperserver.remote.services.ReportOutputResource;
 import com.jaspersoft.jasperserver.remote.services.RunReportService;
 
+import com.jaspersoft.jasperserver.remote.services.UserAndRoleService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -98,6 +99,10 @@ import java.util.Set;
 		+ "by the scheduler. Finally, the `reportExecutions` service allows the client to stop any report execution or job that has been triggered.\n"
 )
 public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReportService> {
+
+    @Resource(name = "userAndRoleService")
+	UserAndRoleService userAndRoleService;
+
     @Resource(name = "runReportService")
     public void setRemoteService(RunReportService remoteService) {
         this.remoteService = remoteService;
@@ -335,10 +340,10 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
 			+ "including report jobs triggered by the scheduler."
 			+ "To search for running reports, use the search arguments with this URL.\n\n"
 			+ "> For security purposes, the search for running reports is has the following restrictions:\n\n"
-			+ "> * The system administrator (`superuser`) can see and cancel any report running on the server.\n\n" 
-			+ "> * An organization admin (jasperadmin) can see every running report, but can cancel only the reports that were started by "
-			+ "a user of the same organization or one of its child organizations.\n\n" 
-			+ "> * A regular user can see every running report, but can cancel only the reports that he initiated.", 
+			+ "> * The system administrator (`superuser`) can see and cancel any report running on the server.\n\n"
+			+ "> * An organization admin (jasperadmin) can see every running report by "
+			+ "a user of the same organization or one of its child organizations.\n\n"
+			+ "> * A regular user can see report that he initiated.",
 		responses = {
 			@ApiResponse(
 				responseCode = "200", 

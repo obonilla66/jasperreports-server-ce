@@ -53,6 +53,7 @@ public class MasterPropertiesObfuscator extends Task {
     public static final String ENCRYPT_DONE_FLAG = "encrypt.done";
     public static final String PROPS_TO_ENCRYPT_PARAM = "propsToEncrypt";
     public static final String PROPS_TO_ENCRYPT_DEF = "dbPassword";
+    public static final String PROPS_TO_ENCRYPT_DELIMITER = ",";
 
     private String propsFile;   //required
     //keystore property file loc-n
@@ -79,8 +80,10 @@ public class MasterPropertiesObfuscator extends Task {
                                 config.getString(conf.getEncTransformation().toString(), conf.getEncTransformation().value()),
                                 config.getString(conf.getKeySize().toString(), String.valueOf(conf.getKeySize().value())),
                                 config.getString(conf.getKeyAlgorithm().toString(), conf.getKeyAlgorithm().value()));
-                List<Object> propsToEncryptList = config.getList(PROPS_TO_ENCRYPT_PARAM, Arrays.<Object>asList(PROPS_TO_ENCRYPT_DEF));
-                log("Encrypt " + StringUtils.join(propsToEncryptList.toArray(), ','), Project.MSG_INFO);
+                String propsToEncrypt = config.getString(PROPS_TO_ENCRYPT_PARAM, PROPS_TO_ENCRYPT_DEF);
+
+                List<String> propsToEncryptList = Arrays.asList(propsToEncrypt.split("\\s*" + PROPS_TO_ENCRYPT_DELIMITER + "\\s*"));
+                log("Encrypt " + StringUtils.join(propsToEncryptList.toArray(), PROPS_TO_ENCRYPT_DELIMITER), Project.MSG_INFO);
                 log("Encryption block size: " + encProps.getBlockSize(), Project.MSG_DEBUG);
                 log("Encryption mode: " + encProps.getCipherTransformation(), Project.MSG_DEBUG);
 
@@ -93,7 +96,7 @@ public class MasterPropertiesObfuscator extends Task {
                 Key secret = ks.getKey(conf);
 
                 Set<String> paramSet = new HashSet<String>(propsToEncryptList.size());
-                for (Object prop : propsToEncryptList) {
+                for (String prop : propsToEncryptList) {
                     String propNameToEnc = prop.toString().trim();
                     if (paramSet.contains(propNameToEnc))
                         continue;  //was already encrypted once

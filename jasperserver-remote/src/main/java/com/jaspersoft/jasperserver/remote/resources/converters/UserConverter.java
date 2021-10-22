@@ -135,4 +135,10 @@ public class UserConverter implements ToServerConverter<ClientUser, User, ToServ
     public String getClientResourceType() {
         return ClientUser.class.getName();
     }
+
+    public static  UserConverter getUserConverter() {
+        UserConverter userConverter = new UserConverter();
+        userConverter.roleConverter = new RoleConverter();
+        return userConverter;
+    }
 }

@@ -24,21 +24,32 @@ package com.jaspersoft.jasperserver.inputcontrols.cascade.handlers;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
-import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationException;
 import org.junit.Before;
 import org.junit.Test;
-import java.util.*;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 public class ValuesLoaderTest {
 
-    ValuesLoader valuesLoader;
+    private ValuesLoader valuesLoader;
 
     @Before
     public void setup() {
-        valuesLoader = mock(ValuesLoader.class);
+        valuesLoader = spy(ValuesLoader.class);
     }
 
     @Test
@@ -46,7 +57,6 @@ public class ValuesLoaderTest {
         List<ListOfValuesItem> result = new ArrayList<>();
         ListOfValuesItem item = new ListOfValuesItemImpl();
         item.setLabel("USA");
-        doCallRealMethod().when(valuesLoader).checkCriteriaAndAddItem(anyString(), anyList(), any(ListOfValuesItem.class));
 
         valuesLoader.checkCriteriaAndAddItem("USA", result, item);
         assertEquals(result.get(0).getLabel(), "USA");
@@ -56,20 +66,15 @@ public class ValuesLoaderTest {
         assertTrue(result.isEmpty());
     }
 
-
     @Test
-    public void checkLimitAndAddItem_withAnyParameterValue() {
+    public void checkCriteriaAndAddItem_withNullCriteria_addedItem() {
         List<ListOfValuesItem> result = new ArrayList<>();
-        ListOfValuesItem listOfValuesItem = new ListOfValuesItemImpl();
-        listOfValuesItem.setLabel("USA");
-        result.add(listOfValuesItem);
-
         ListOfValuesItem item = new ListOfValuesItemImpl();
-        item.setLabel("Canada");
+        item.setLabel("USA");
 
-        doCallRealMethod().when(valuesLoader).checkLimitAndAddItem(anyString(), anyInt(), anyList(), any(ListOfValuesItem.class));
-        assertTrue(valuesLoader.checkLimitAndAddItem("Canada", 2, result, item));
-        assertFalse(valuesLoader.checkLimitAndAddItem("Canada", 1, result, item));
+        valuesLoader.checkCriteriaAndAddItem(null, result, item);
+
+        assertEquals(item.getLabel(), result.get(0).getLabel());
     }
 
     @Test
@@ -85,67 +90,8 @@ public class ValuesLoaderTest {
         assertEquals("USA", valuesLoader.getCriteria(inputControl, parameters));
     }
 
-
-    @Test
-    public void getOffset_withAnyParameterValue() {
-        Map<String, Object> parameters = new HashMap<>();
-        InputControl inputControl = mock(InputControl.class);
-        when(inputControl.getName()).thenReturn("Country");
-
-
-        doCallRealMethod().when(valuesLoader).getOffset(any(InputControl.class), any(Map.class), anyInt(), nullable(Map.class));
-        doCallRealMethod().when(valuesLoader).validateOffset(anyInt(), anyInt(), nullable(Map.class));
-        doCallRealMethod().when(valuesLoader).throwException(anyString(), anyInt(), nullable(Map.class));
-        assertEquals(valuesLoader.getOffset(inputControl, parameters, 10, null), 0);
-
-        parameters.put("Country_offset", "1");
-        assertEquals(1, valuesLoader.getOffset(inputControl, parameters, 10, null));
-        // with negative offset
-        try{
-            parameters.put("Country_offset", "-1");
-            valuesLoader.getOffset(inputControl, parameters, 10, null);
-            fail("expected InputControlValidationException");
-        } catch(InputControlValidationException e) {
-            assertNotNull(e);
-        }
-
-        //with offset equal to size
-        try{
-            parameters.put("Country_offset", "10");
-            valuesLoader.getOffset(inputControl, parameters, 10, null);
-            fail("expected InputControlValidationException");
-        } catch(InputControlValidationException e) {
-            assertNotNull(e);
-        }
-    }
-
-    @Test
-    public void getLimit_withAnyParameterValue() {
-        Map<String, Object> parameters = new HashMap<>();
-        InputControl inputControl = mock(InputControl.class);
-        when(inputControl.getName()).thenReturn("Country");
-
-        doCallRealMethod().when(valuesLoader).getLimit(any(InputControl.class), any(Map.class), nullable(Map.class));
-        doCallRealMethod().when(valuesLoader).throwException(anyString(), anyInt(), nullable(Map.class));
-        assertEquals(valuesLoader.getLimit(inputControl, parameters, null), Integer.MAX_VALUE);
-
-        parameters.put("Country_limit", "2");
-        assertEquals(2, valuesLoader.getLimit(inputControl, parameters, null));
-
-        // with negative limit
-        try{
-            parameters.put("Country_limit", "-1");
-            valuesLoader.getLimit(inputControl, parameters, null);
-            fail("expected InputControlValidationException");
-        } catch(InputControlValidationException e) {
-            assertNotNull(e);
-        }
-    }
-
     @Test
     public void addTotalCountToParameters_withIncludeTotalCount() {
-        InputControlState inputControlState = new InputControlState();
-
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("includeTotalCount", "true");
 
@@ -154,17 +100,4 @@ public class ValuesLoaderTest {
         assertEquals(10, parameters.get("totalCount"));
     }
 
-
-    @Test
-    public void getTotalLimit_withAnyValue() {
-        doCallRealMethod().when(valuesLoader).getTotalLimit(anyInt(), anyInt(), anyInt());
-        // with limit + offset less than total size
-        assertEquals(3, valuesLoader.getTotalLimit(2,1, 4));
-
-        // with limit + offset greater than size
-        assertEquals(4, valuesLoader.getTotalLimit(5,1, 4));
-
-        // with limit + offset greater than Int Max value
-        assertEquals(4, valuesLoader.getTotalLimit(Integer.MAX_VALUE,1, 4));
-    }
 }

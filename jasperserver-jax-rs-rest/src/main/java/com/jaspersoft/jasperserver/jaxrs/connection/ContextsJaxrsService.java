@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.jaxrs.connection;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.jaxrs.common.JaxrsEntityParser;
 import com.jaspersoft.jasperserver.jaxrs.resources.ContentNegotiationHandler;
@@ -51,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -81,6 +84,8 @@ public class ContextsJaxrsService {
     private ContextsManager contextsManager;
     @Resource
     private ContentNegotiationHandler contentNegotiationHandler;
+    @Resource(name = "processedExceptionsForCreatingContext")
+    private List<String> processedExceptionsForCreatingContext;
 
     @POST
     public Response createContext(InputStream stream, @HeaderParam(HttpHeaders.CONTENT_TYPE) MediaType mediaType,
@@ -116,8 +121,16 @@ public class ContextsJaxrsService {
             } else {
                 throw e;
             }
+        } catch (Exception ex) {
+            if (isProcessedException(ex, processedExceptionsForCreatingContext)) {
+                throw ex;
+            } else {
+                // just in case there is unknown exception,
+                // wrap unprocessed exception with error descriptor with error message only
+                log.debug("Create Context: Uncatch unprocessed exception: " + ex.getClass().getName(), ex);
+                throw new ErrorDescriptorException(ex.getMessage());
+            }
         }
-
         final UriBuilder uriBuilder = UriBuilder
                 .fromPath(uriInfo.getBaseUri().getPath())
                 .path(uriInfo.getPath() != null ? uriInfo.getPath() : "")
@@ -145,6 +158,32 @@ public class ContextsJaxrsService {
                     acceptString, additionalProperties);
             return Response.created(uriBuilder.build()).entity(targetContext).build();
         }
+    }
+
+
+    protected boolean isProcessedException(Exception ex, List<String> processedExceptionsForCreatingContext) {
+        if (processedExceptionsForCreatingContext != null) {
+            for (String processedException : processedExceptionsForCreatingContext) {
+                if (ex.getClass().getName().equals(processedException)) {
+                    return true;
+                }
+                Class processedExceptionClass = null;
+                try {
+                    processedExceptionClass = Class.forName(processedException);
+                } catch (Exception c) {
+                    log.debug("Create Context - can't find class <" + processedException +">");
+                }
+                if (processedExceptionClass != null) {
+                    try {
+                        Class subClass = ex.getClass().asSubclass(processedExceptionClass);
+                        if (subClass != null) return true;
+                    } catch (Exception c) {
+                        // not instance of current processed exception.  Continue
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     protected String clientTypeToMimeType(String clientType){

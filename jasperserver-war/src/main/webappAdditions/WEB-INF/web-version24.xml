@@ -453,7 +453,7 @@
   -->
 
   <!-- XML for Analysis Servlet -->
-  <servlet>
+  <!-- servlet>
     <servlet-name>JasperXmlaServlet</servlet-name>
     <servlet-class>com.jaspersoft.jasperserver.war.xmla.XmlaServletImpl</servlet-class>
     <load-on-startup>50</load-on-startup>
@@ -462,7 +462,7 @@
   <servlet-mapping>
     <servlet-name>JasperXmlaServlet</servlet-name>
     <url-pattern>/xmla</url-pattern>
-  </servlet-mapping>
+  </servlet-mapping -->
 
   <!-- for drillthrough -->
 

@@ -781,7 +781,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                             </bean>
                             <bean class="org.apache.http.message.BasicHeader">
                                 <constructor-arg value="Vary"/>
-                                <constructor-arg value="Accept-Language"/>
+                                <constructor-arg value="Accept-Language, Origin"/>
                             </bean>
                             <ref bean="staticResourcesExpiresHeader" />
                         </list>
@@ -800,7 +800,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                             </bean>
                             <bean class="org.apache.http.message.BasicHeader">
                                 <constructor-arg value="Vary"/>
-                                <constructor-arg value="Accept-Language"/>
+                                <constructor-arg value="Accept-Language,Origin"/>
                             </bean>
                             <ref bean="staticResourcesExpiresHeader" />
                         </list>
@@ -812,6 +812,10 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                             <bean class="org.apache.http.message.BasicHeader">
                                 <constructor-arg value="Cache-Control"/>
                                 <constructor-arg value="private,no-cache,no-store,max-age=0,must-revalidate"/>
+                            </bean>
+			    <bean class="org.apache.http.message.BasicHeader">
+                                <constructor-arg value="Vary"/>
+                                <constructor-arg value="Origin"/>
                             </bean>
                         </list>
                     </property>
@@ -826,6 +830,10 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                             <bean class="org.apache.http.message.BasicHeader">
                                 <constructor-arg value="Pragma"/>
                                 <constructor-arg value=""/>
+                            </bean>
+			    <bean class="org.apache.http.message.BasicHeader">
+                                <constructor-arg value="Vary"/>
+                                <constructor-arg value="Origin"/>
                             </bean>
                             <ref bean="thumbnailsListExpiresHeader" />
                         </list>
@@ -842,6 +850,10 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                             <bean class="org.apache.http.message.BasicHeader">
                                 <constructor-arg value="Pragma"/>
                                 <constructor-arg value=""/>
+                            </bean>
+			    <bean class="org.apache.http.message.BasicHeader">
+                                <constructor-arg value="Vary"/>
+                                <constructor-arg value="Origin"/>
                             </bean>
                             <ref bean="staticResourcesExpiresHeader" />
                         </list>

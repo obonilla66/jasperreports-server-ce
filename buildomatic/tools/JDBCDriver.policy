@@ -1,0 +1,26 @@
+grant CodeBase "file:<install_dir>/lib/sqlserver.jar" {
+	permission javax.security.auth.AuthPermission "doAs";
+	permission javax.security.auth.kerberos.ServicePermission "krbtgt/<your_realm>@<your_realm>", "initiate";
+	permission javax.security.auth.kerberos.ServicePermission "MSSQLSvc/<sqlserver_host>:<sqlserver_port>@<your_realm>", "initiate";
+};
+
+grant CodeBase "file:<install_dir>/lib/base.jar" {
+	permission javax.security.auth.AuthPermission "doAs";
+	permission javax.security.auth.kerberos.ServicePermission "krbtgt/<your_realm>@<your_realm>", "initiate";
+	permission javax.security.auth.kerberos.ServicePermission "MSSQLSvc/<sqlserver_host>:<sqlserver_port>@<your_realm>", "initiate";
+};
+
+grant CodeBase "file:<install_dir>/lib/util.jar" {
+	permission java.net.SocketPermission "*", "connect";
+	permission java.lang.RuntimePermission "getProtectionDomain";
+	permission java.util.PropertyPermission "java.security.krb5.conf", "read, write";
+	permission java.util.PropertyPermission "java.security.auth.login.config", "read, write";
+	permission javax.security.auth.AuthPermission "createLoginContext.JDBC_DRIVER_01";
+	permission java.io.FilePermission "./lib/util.jar", "read";
+	permission java.io.FilePermission "./lib/base.jar", "read";
+	permission java.io.FilePermission "./lib/sqlserver.jar", "read";
+
+	permission javax.security.auth.AuthPermission "doAs";
+	permission javax.security.auth.kerberos.ServicePermission "krbtgt/<your_realm>@<your_realm>", "initiate";
+	permission javax.security.auth.kerberos.ServicePermission "MSSQLSvc/<sqlserver_host>:<sqlserver_port>@<your_realm>", "initiate";
+};

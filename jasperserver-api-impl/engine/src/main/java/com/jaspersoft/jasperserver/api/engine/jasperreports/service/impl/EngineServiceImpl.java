@@ -113,7 +113,9 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataS
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.MetadataUserDetails;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import net.sf.ehcache.pool.SizeOfEngine;
 import net.sf.ehcache.pool.impl.DefaultSizeOfEngine;
@@ -167,6 +169,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -186,6 +189,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -217,6 +221,9 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 {
 	protected static final Log log = LogFactory.getLog(EngineServiceImpl.class);
 	protected static final Log valueQueryLog = LogFactory.getLog("valueQueryLog");
+
+	public static List<String> authorizedAllExecutionsRolesList;
+	public static List<String> authorizedOrgExecutionsRolesList;
 
 	private DataSourceServiceFactory dataSourceServiceFactories;
 	protected RepositoryUnsecure unsecureRepository;
@@ -284,7 +291,15 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 		resourcesClassLoaderCache = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.SOFT);
 		cacheableCompiledReports = new CacheableCompiledReports(this);
 	}
-	
+
+	public void setAuthorizedAllExecutionsRolesList(List<String> authorizedAllExecutionsRolesList) {
+		this.authorizedAllExecutionsRolesList = authorizedAllExecutionsRolesList;
+	}
+
+	public void setAuthorizedOrgExecutionsRolesList(List<String> authorizedOrgExecutionsRolesList) {
+		this.authorizedOrgExecutionsRolesList = authorizedOrgExecutionsRolesList;
+	}
+
 	public void afterPropertiesSet() throws Exception {
 		if (repositoryContextManager == null) {
 			repositoryContextManager = new DefaultRepositoryContextManager(repository, this);
@@ -2937,22 +2952,114 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
     }
 
     public List<ReportExecutionStatusInformation> getSchedulerReportExecutionStatusList(SchedulerReportExecutionStatusSearchCriteria searchCriteria) {
-        List<ReportExecutionStatusInformation> executions = getReportExecutionStatusList();
+
+		User loginUser = null;
+		if (SecurityContextHolder.getContext() != null && SecurityContextHolder.getContext().getAuthentication()!= null) {
+			if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User) {
+				loginUser = (MetadataUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			} else {
+				if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() == null) {
+					log.error("Report execution scheduler:  Fail to detect login user");
+				} else {
+					log.error("Report execution scheduler:  Cannot cast login user to User.  Actual class: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal().getClass().toString());
+				}
+			}
+		}
+
+		List<ReportExecutionStatusInformation> executions = getReportExecutionStatusList();
+
+
+
+
         if (executions == null)return null;
         List<ReportExecutionStatusInformation> newSet = new ArrayList<ReportExecutionStatusInformation>();
-        for (ReportExecutionStatusInformation entry : executions) {
-             Map<String, Object>  entryProperties = entry.getProperties();
-            if ((searchCriteria.getJobID() != null) && !equals(searchCriteria.getJobID(), entryProperties.get(EngineServiceImpl.ReportExecutionStatus.PROPERTY_JOBID))) continue;
-            if ((searchCriteria.getJobLabel() != null) && !equals(searchCriteria.getJobLabel(), entryProperties.get(EngineServiceImpl.ReportExecutionStatus.PROPERTY_JOBLABEL))) continue;
-            if ((searchCriteria.getReportURI() != null) && !equals(searchCriteria.getReportURI(), entry.getReportURI())) continue;
-            if ((searchCriteria.getFireTimeFrom() != null || searchCriteria.getFireTimeTo() != null) && !isBetween((Date) entryProperties.get(ReportExecutionStatus.PROPERTY_FIRETIME), searchCriteria.getFireTimeFrom(), searchCriteria.getFireTimeTo())) continue;
-            if ((searchCriteria.getUserName() != null) && !equals(searchCriteria.getUserName(), entryProperties.get(EngineServiceImpl.ReportExecutionStatus.PROPERTY_USERNAME))) continue;
-            newSet.add(entry);
-        }
+
+		for (ReportExecutionStatusInformation entry : executions) {
+			// see JS-59924
+			if (!includeUser(loginUser, entry.getOwner(), (searchCriteria != null ? searchCriteria.getUserName() : null))) continue;
+
+			Map<String, Object>  entryProperties = entry.getProperties();
+			if (searchCriteria != null) {
+				if ((searchCriteria.getJobID() != null) && !equals(searchCriteria.getJobID(), (entryProperties != null ? entryProperties.get(EngineServiceImpl.ReportExecutionStatus.PROPERTY_JOBID) : null)))
+					continue;
+				if ((searchCriteria.getJobLabel() != null) && !equals(searchCriteria.getJobLabel(), (entryProperties != null ? entryProperties.get(EngineServiceImpl.ReportExecutionStatus.PROPERTY_JOBLABEL) : null)))
+					continue;
+				if ((searchCriteria.getReportURI() != null) && !equals(searchCriteria.getReportURI(), entry.getReportURI()))
+					continue;
+				if ((searchCriteria.getFireTimeFrom() != null || searchCriteria.getFireTimeTo() != null) && !isBetween((Date) (entryProperties != null ? entryProperties.get(ReportExecutionStatus.PROPERTY_FIRETIME) : null), searchCriteria.getFireTimeFrom(), searchCriteria.getFireTimeTo()))
+					continue;
+			}
+			newSet.add(entry);
+		}
         return newSet;
     }
 
-    /**
+	protected boolean includeUser(User loginUser, User currentOwner, String searchUser) {
+		/***
+		 * if login user is superuser, include everything
+		 * if login user is jasperadmin, include everything within the same organization
+		 * joeuser can only see his own stuffs
+		 */
+		if (includeUser(loginUser, currentOwner)) {
+			/***
+			 * if specific search is not null, only include if the owner is same as specific search
+			 */
+			if (searchUser != null) return isSameUser(currentOwner, searchUser);
+			else return true;
+		}
+		return false;
+	}
+
+
+	protected boolean includeUser(User loginUser, User currentOwner) {
+		if (isAuthorizedExecution(loginUser, authorizedAllExecutionsRolesList, true)) return true;
+		if (isAuthorizedExecution(loginUser, authorizedOrgExecutionsRolesList, false)) {
+			if (isAuthorizedExecution(currentOwner, authorizedAllExecutionsRolesList, true)) return false;
+			return  (equals(loginUser.getTenantId(), currentOwner.getTenantId()));
+		}
+		if (equals(loginUser.getUsername(), currentOwner.getUsername()) && equals(loginUser.getTenantId(), currentOwner.getTenantId())) return true;
+		return false;
+	}
+
+
+	private boolean isAuthorizedExecution(User user, List<String> authorizedRolesList, boolean requireToBeSuperUser) {
+		/***
+		 * login user has to be a super user to see all organizations and root executions.
+		 */
+		if (requireToBeSuperUser) {
+			if (user.getTenantId() != null) return false;
+		}
+		Set<String> roleNamesSet = new HashSet<String>();
+		if (user.getRoles() != null) {
+			@SuppressWarnings("unchecked")
+			Set<Role> userRoles = (Set<Role>)user.getRoles();
+			for (Role role : userRoles) {
+				roleNamesSet.add(role.getRoleName());
+			}
+		}
+		if (authorizedRolesList == null) {
+			log.error("Report execution scheduler:  authorized executions roles list is not set properly.  Please check authorizedOrgExecutionsRolesList and authorizedAllExecutionsRolesList values.");
+			return false;
+		}
+		for (String role : authorizedRolesList) {
+			if (roleNamesSet.contains(role)) return true;
+		}
+		return false;
+	}
+
+	private boolean isSameUser(User currentOwner, String searchUser) {
+		String searchOrg = null;
+		if (searchUser != null && searchUser.contains("|")) {
+			String[] userOrg = searchUser.split("\\|");
+			searchUser = userOrg[0];
+			searchOrg = userOrg[1];
+		}
+		if (searchOrg == null) return equals(currentOwner.getUsername(), searchUser);
+		else return equals(currentOwner.getUsername(), searchUser) && equals(currentOwner.getTenantId(), searchOrg);
+
+	}
+
+	/**
      * Compares if report execution fire time is in given range (inclusive). From and to time are both nullable, so following cases are processed:
      * from != null && to != null - true if fire time in range (inclusive)
      * from == null && to != null - fire time should be before or equals to "to"

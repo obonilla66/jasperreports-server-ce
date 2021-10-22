@@ -59,10 +59,14 @@ import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputCo
 @Path("/reports/{reportUnitURI: .+}/inputControls")
 @CallTemplate(ReportsServiceCallTemplate.class)
 public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControlsLogicService> {
-    public static String EXCLUDE_PARAMETER = "exclude";
-    public static String STATE_VALUE = "state";
+    public static final String EXCLUDE_PARAMETER = "exclude";
+    public static final String STATE_VALUE = "state";
     public static final String INCLUDE_TOTAL_COUNT = "includeTotalCount";
     public static final String FRESH_DATA = "freshData";
+
+    public static final String SELECTED_ONLY_PARAMETER = "selectedOnly";
+    // Using a different parameter name to avoid possible collision with Input Control having exactly the same name
+    public static final String SELECTED_ONLY_INTERNAL = "&selectedOnly";
 
     @Resource(name = "inputControlsLogicService")
     public void setRemoteService(InputControlsLogicService remoteService) {
@@ -215,7 +219,10 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getInputControlsInitialValuesViaPost(@PathParam("reportUnitURI") String reportUnitURI,
-                                                         Map<String, String[]> jsonParameters, @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
+                                                         Map<String, String[]> jsonParameters,
+                                                         @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData,
+                                                         @QueryParam(SELECTED_ONLY_PARAMETER) @DefaultValue("false") Boolean selectedOnly) {
+        setSelectedOnlyParameter(jsonParameters, selectedOnly);
         return internalGetInputControlsInitialValues(reportUnitURI, jsonParameters, freshData);
     }
 
@@ -294,7 +301,9 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
             @PathParam("reportUnitURI") final String reportUnitUri,
             @PathParam("inputControlIds") final PathSegment inputControlIds,
             Map<String, String[]> jsonParameters,
-            @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData) {
+            @QueryParam(FRESH_DATA) @DefaultValue("false") Boolean freshData,
+            @QueryParam(SELECTED_ONLY_PARAMETER) @DefaultValue("false") Boolean selectedOnly) {
+        setSelectedOnlyParameter(jsonParameters, selectedOnly);
         return internalGetInputControlValues(Folder.SEPARATOR + reportUnitUri, inputControlIds,
                 jsonParameters, freshData);
     }
@@ -350,5 +359,11 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
             parametersMap.putAll(parameters.getRawParameters());
         }
         return parametersMap;
+    }
+
+    private void setSelectedOnlyParameter(Map<String, String[]> jsonParameters, boolean selectedOnly) {
+        if (selectedOnly) {
+            jsonParameters.put(SELECTED_ONLY_INTERNAL, new String[] { Boolean.TRUE.toString() });
+        }
     }
 }

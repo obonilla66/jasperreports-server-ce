@@ -43,9 +43,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -58,6 +60,7 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertTrue;
 
 /**
  * <p></p>
@@ -225,4 +228,14 @@ public class ContextsJaxrsServiceTest {
         spyService.createContext(streamMock, connectionType, metadataType, request, uriInfo);
     }
 
+    @Test
+    public void isProcessedException() {
+        assertTrue(service.isProcessedException(new IllegalStateException(), Arrays.asList("java.lang.RuntimeException")));
+        assertFalse(service.isProcessedException(new RuntimeException(), Arrays.asList("java.lang.IllegalStateException")));
+        assertFalse(service.isProcessedException(new RuntimeException(), null));
+        assertFalse(service.isProcessedException(new IllegalStateException(), Arrays.asList("java.lang.WritePendingException", "java.lang.WritePendingException")));
+        assertTrue(service.isProcessedException(new IllegalStateException(), Arrays.asList("java.lang.WritePendingException", "java.lang.WritePendingException",
+                "java.lang.RuntimeException")));
+        assertFalse(service.isProcessedException(new IllegalStateException(), Arrays.asList("ABC", "EGH")));
+    }
 }

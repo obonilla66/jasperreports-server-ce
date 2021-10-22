@@ -20,61 +20,64 @@
  */
 package com.jaspersoft.jasperserver.inputcontrols.cascade.handlers;
 
-import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterService;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
 
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.entry;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.list;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.listOfValues;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.map;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 /**
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MultiSelectListInputControlHandlerTest {
+public class MultiSelectListInputControlHandlerTest extends BaseInputControlHandlerTest {
+
+    private static final String INPUT_CONTROL_NAME = "inputControl";
 
     @InjectMocks
     private MultiSelectListInputControlHandler handler;
 
-    @Mock
-    private ValuesLoader loader;
+    @Before
+    public void setUp() throws CascadeResourceNotFoundException {
+        values = getListOfValuesItem();
+        state = new InputControlState();
 
-    @Mock
-    protected DataConverterService dataConverterService;
-
-    @Mock
-    private InputControl inputControl;
-
-    @Mock
-    private ReportInputControlInformation reportInputControlInformation;
+        doReturn(INPUT_CONTROL_NAME).when(inputControl).getName();
+        doAnswer(invocation -> invocation.getArgument(0)).when(dataConverterService)
+                .convertSingleValue(anyString(), any(InputControl.class), any());
+        doAnswer(invocation -> invocation.getArgument(0)).when(dataConverterService)
+                .formatSingleValue(anyString(), any(InputControl.class), any());
+    }
 
     /**
      * Incoming value is of type Collection<Integer>.
@@ -198,5 +201,35 @@ public class MultiSelectListInputControlHandlerTest {
         assertFalse(selectedValuesDict.checkMatch("String"));
     }
 
+    @Test
+    public void selectedOnly_fillStateValue_selectedOptions() throws CascadeResourceNotFoundException{
+        Map<String, Object> parameters = new HashMap<>();
+
+        setIncomingValue(parameters, Collections.singletonList("Canada"), inputControl);
+        setSelectedOnly(parameters, true);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(1, state.getOptions().size());
+        assertEquals("Canada", state.getOptions().get(0).getValue());
+    }
+
+    @Test
+    public void selectedOnlyWithLimitAndOffset_fillStateValue_allSelectedOptionsIgnoringPagination() throws CascadeResourceNotFoundException{
+        Map<String, Object> parameters = new HashMap<>();
+
+        setIncomingValue(parameters, Arrays.asList("USA", "Canada", "Mexico"), inputControl);
+        setSelectedOnly(parameters, true);
+        setLimit(parameters, 1);
+        setOffset(parameters, 1);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(3, state.getOptions().size());
+    }
 
 }

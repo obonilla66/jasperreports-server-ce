@@ -21,9 +21,11 @@
 package com.jaspersoft.jasperserver.api.security.csrf;
 
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchCriteria;
 import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchResult;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeCategory;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +33,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -41,11 +42,18 @@ import java.util.regex.Pattern;
  * @version $Id$
  */
 public class DomainWhitelistProviderImpl implements DomainWhitelistProvider {
-    private static final Logger logger = LogManager.getLogger(DomainWhitelistProviderImpl.class);
+    private static final Logger log = LogManager.getLogger(DomainWhitelistProviderImpl.class);
 
     private static final String CROSS_DOMAIN_WHITELIST_ATTRIB_NAME = "domainWhitelist";
 
-    private List<String> additionalWhitelistAttributes = new ArrayList<String>() {{ add(CROSS_DOMAIN_WHITELIST_ATTRIB_NAME); }};
+    private final List<String> additionalWhitelistAttributes;
+
+    private ResourceFactory resourceFactory;
+
+    public DomainWhitelistProviderImpl() {
+        additionalWhitelistAttributes = new ArrayList<>();
+        additionalWhitelistAttributes.add(CROSS_DOMAIN_WHITELIST_ATTRIB_NAME);
+    }
 
     public void setAdditionalWhitelistAttributes(List<String> additionalWhitelistAttributes) {
         if (additionalWhitelistAttributes != null)
@@ -61,10 +69,11 @@ public class DomainWhitelistProviderImpl implements DomainWhitelistProvider {
     @Override
     public Pattern getWhitelistPattern() {
         ExecutionContextImpl context = new ExecutionContextImpl();
-        Authentication authenticationToken = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authenticationToken.getPrincipal();
+
+        Object principal = getPrincipal();
+
         AttributesSearchCriteria searchCriteria = new AttributesSearchCriteria.Builder()
-                .setNames(new HashSet<String>(additionalWhitelistAttributes))
+                .setNames(new HashSet<>(additionalWhitelistAttributes))
                 .setEffective(true).build();
         AttributesSearchResult<ProfileAttribute> result =
                 profileAttributeService.getProfileAttributesForPrincipal(context, principal, searchCriteria);
@@ -90,5 +99,25 @@ public class DomainWhitelistProviderImpl implements DomainWhitelistProvider {
         }
 
         return Pattern.compile(buf.toString(), Pattern.CASE_INSENSITIVE);
+    }
+
+    private Object getPrincipal() {
+        Authentication authenticationToken = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = null;
+
+        if (authenticationToken != null) {
+            principal = authenticationToken.getPrincipal();
+        }
+        if (principal == null) {
+            principal = ProfileAttributeCategory.SERVER.getPrincipal(resourceFactory);
+            log.debug("Principal is null, trying to get SERVER principal");
+        }
+        log.debug("Obtained {} principal", principal);
+
+        return principal;
+    }
+
+    public void setResourceFactory(ResourceFactory resourceFactory) {
+        this.resourceFactory = resourceFactory;
     }
 }

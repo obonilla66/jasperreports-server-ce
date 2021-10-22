@@ -28,83 +28,67 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterService;
-
 import org.apache.commons.collections.set.ListOrderedSet;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Spy;
 
 import java.math.BigDecimal;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyObject;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
+import java.util.stream.IntStream;
 
+import static com.jaspersoft.jasperserver.dto.common.validations.MandatoryValidationRule.ERROR_KEY;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_LABEL;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_VALUE;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.entry;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.listOfOptions;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.listOfValues;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.map;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 
 /**
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SingleSelectListInputControlHandlerTest {
+public class SingleSelectListInputControlHandlerTest extends BaseInputControlHandlerTest {
+
+    @Spy
     @InjectMocks
     private SingleSelectListInputControlHandler handler;
 
-    @Mock
-    private ValuesLoader loader;
-
-    @Mock
-    protected DataConverterService dataConverterService;
-
-    @Mock
-    private InputControl inputControl;
-
-    @Mock
-    private ReportInputControlInformation reportInputControlInformation;
-
-    List<ListOfValuesItem> values;
-
-    @Before
-    public void setup() {
-        values = getListOfValuesItem();
-    }
     /**
      * Incoming value is of type Integer.
      * List of values for input control contains values ot type BigDecimal.
@@ -170,37 +154,35 @@ public class SingleSelectListInputControlHandlerTest {
         assertEquals(options.get(0).isSelected(), true);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void getStateOfInputControlNumberWith_NoValueSelected() throws Exception {
+        final String errorMessage = "mandatoryErrorMessage";
         final String parameterName = "testName";
         final String parameterName_offset = "testName_offset";
         // incoming value is of type Integer
-        final Integer integerValue = Integer.valueOf(3);
-        // BigDecimal equivalent of incoming value
-        final BigDecimal bigDecimalValue = BigDecimal.valueOf(2);
+        final Integer integerValue = 5;
 
+        doReturn(errorMessage).when(messageSource).getMessage(eq(ERROR_KEY), any(), any());
         doReturn(parameterName).when(inputControl).getName();
         doReturn(true).when(inputControl).isMandatory();
-        final HashMap<String, Class<?>> parameterTypes = new HashMap<String, Class<?>>();
+        final HashMap<String, Class<?>> parameterTypes = new HashMap<>();
         Map<String, Object> inputParameters = map(entry(parameterName, integerValue), entry(parameterName_offset, "2"));
 
         // building list of values from BigDecimals
-        final List<ListOfValuesItem> listOfValues = listOfValues(BigDecimal.valueOf(0));
+        Object[] values = IntStream.range(0, 4).boxed().map(BigDecimal::new).toArray();
+        final List<ListOfValuesItem> listOfValues = listOfValues(values);
         doReturn(listOfValues).when(loader).loadValues(eq(inputControl), nullable(ResourceReference.class), eq(inputParameters), eq(parameterTypes), eq(reportInputControlInformation), anyBoolean());
 
-        ////////////tested method call/////////////////
-        final List<InputControlOption> options = handler.getState(inputControl, null, inputParameters, parameterTypes, reportInputControlInformation).getOptions();
-        // state should have options
-        assertNotNull(options);
-        // options number is one item more then values because of nothing selected item.
-        assertEquals(listOfValues.size(), options.size());
-        assertEquals(options.get(0).isSelected(), false);
+        InputControlState result = handler.getState(inputControl, null, inputParameters, parameterTypes, reportInputControlInformation);
+
+        assertEquals(errorMessage, result.getError());
     }
 
     /**
      * Incoming value is of type BigDecimal.
      * List of values for input control contains values ot type Integer.
      * BigDecimal value has corresponding Integer equivalent in list of values and corresponding option become selected.
+     *
      * @throws Exception
      */
     @Test
@@ -238,6 +220,7 @@ public class SingleSelectListInputControlHandlerTest {
     /**
      * Input control options ot type Long.
      * Checks if Numbers matcher works well for Long type. Covers the bugzilla #33225 case.
+     *
      * @throws Exception
      */
     @Test
@@ -250,8 +233,8 @@ public class SingleSelectListInputControlHandlerTest {
         final HashMap<String, Class<?>> parameterTypes = new HashMap<String, Class<?>>();
         Map<String, Object> inputParameters = map(entry(parameterName, selectedValue));
         // building list of values from Longs
-        final List<ListOfValuesItem> listOfValues = listOfValues(Long.valueOf("0"),Long.valueOf("49539595901085457"),
-                Long.valueOf("49539595901085458"), Long.valueOf("49539595901085459"), selectedValue,  Long.valueOf("49539595901085461"));
+        final List<ListOfValuesItem> listOfValues = listOfValues(Long.valueOf("0"), Long.valueOf("49539595901085457"),
+                Long.valueOf("49539595901085458"), Long.valueOf("49539595901085459"), selectedValue, Long.valueOf("49539595901085461"));
 
         doReturn(listOfValues).when(loader).loadValues(eq(inputControl), nullable(ResourceReference.class), eq(inputParameters), eq(parameterTypes), eq(reportInputControlInformation), anyBoolean());
 
@@ -273,6 +256,48 @@ public class SingleSelectListInputControlHandlerTest {
         assertEquals(selectedOptions.size(), 1);
         // selected item is string representation of Integer, which is equivalent to incoming BigDecimal value
         assertEquals(selectedOptions.get(0).getValue(), selectedValue.toString());
+    }
+
+
+    @Test
+    public void fillStateOfInputControlNumberWithListOfLong() throws Exception {
+        final String parameterName = "testName";
+        // Selected value is of type Long
+        final Long selectedValue = Long.valueOf("49539595901085460");
+
+        doReturn(parameterName).when(inputControl).getName();
+        final HashMap<String, Class<?>> parameterTypes = new HashMap<String, Class<?>>();
+        Map<String, Object> inputParameters = map(entry(parameterName, selectedValue));
+        // building list of values from Longs
+        final List<ListOfValuesItem> listOfValues = listOfValues(Long.valueOf("0"), Long.valueOf("49539595901085457"),
+                Long.valueOf("49539595901085458"), Long.valueOf("49539595901085459"), selectedValue, Long.valueOf("49539595901085461"));
+
+        doReturn(listOfValues).when(loader).loadValues(eq(inputControl), nullable(ResourceReference.class), eq(inputParameters), eq(parameterTypes), eq(reportInputControlInformation), anyBoolean());
+
+        doAnswer(invocationOnMock ->
+                invocationOnMock.getArguments()[0].toString()
+        ).when(dataConverterService).formatSingleValue(nullable(Object.class), any(InputControl.class), eq(reportInputControlInformation));
+
+        ////////////tested method call/////////////////
+
+
+        handler.fillStateValue(state, inputControl, dataSource, inputParameters, reportInputControlInformation, Collections.emptyMap());
+
+
+        List<InputControlOption>  options = state.getOptions();
+        // state should have options
+        assertNotNull(options);
+        // options number is one item more then values because of nothing selected item.
+        assertEquals(listOfValues.size(), options.size());
+        List<InputControlOption> selectedOptions = new ArrayList<InputControlOption>();
+        for (InputControlOption currentOption : options) {
+            if (currentOption.isSelected() != null && currentOption.isSelected()) selectedOptions.add(currentOption);
+        }
+        // only one item is selected
+        assertEquals(selectedOptions.size(), 1);
+        // selected item is string representation of Integer, which is equivalent to incoming BigDecimal value
+        assertEquals(selectedOptions.get(0).getValue(), selectedValue.toString());
+        assertEquals(inputParameters.get(parameterName), selectedValue);
     }
 
     @Test
@@ -317,7 +342,7 @@ public class SingleSelectListInputControlHandlerTest {
         when(selectListInputControlHandler.getCurrentItemValue(inputControl, info, values.get(1))).thenReturn("Canada");
         when(selectListInputControlHandler.getCurrentItemValue(inputControl, info, values.get(2))).thenReturn("Mexico");
 
-        selectListInputControlHandler.populateSelectedValuesList(inputControl, info, selectedValues, new ArrayList<>(),null, values, null, isNothingSelected);
+        selectListInputControlHandler.populateSelectedValuesList(inputControl, info, selectedValues, new ArrayList<>(), null, values, null, isNothingSelected);
 
         assertThat(selectedValues.get(0).getLabel(), is(defaultValue.get(0)));
     }
@@ -339,7 +364,7 @@ public class SingleSelectListInputControlHandlerTest {
         when(selectListInputControlHandler.getCurrentItemValue(inputControl, info, values.get(1))).thenReturn("Canada");
         when(selectListInputControlHandler.getCurrentItemValue(inputControl, info, values.get(2))).thenReturn("Mexico");
 
-        selectListInputControlHandler.populateSelectedValuesList(inputControl, info, selectedValues, new ArrayList<>(),null, values, null, isNothingSelected);
+        selectListInputControlHandler.populateSelectedValuesList(inputControl, info, selectedValues, new ArrayList<>(), null, values, null, isNothingSelected);
 
         assertThat(selectedValues.get(0).getLabel(), is(defaultValue.get(0)));
     }
@@ -390,7 +415,7 @@ public class SingleSelectListInputControlHandlerTest {
         ReportInputControlInformation info = null;
 
 
-        boolean  isNothingSelected = false;
+        boolean isNothingSelected = false;
         List<InputControlOption> selectedValues = new ArrayList<>();
         List<Object> selectedValuesList = new ArrayList<>();
 
@@ -403,19 +428,19 @@ public class SingleSelectListInputControlHandlerTest {
 
         selectListInputControlHandler.setDataConverterService(dataConverterService);
 
-        selectListInputControlHandler.getMandatoryValues(inputControl, info, selectedValues, selectedValuesList, values,isNothingSelected);
+        selectListInputControlHandler.getMandatoryValues(inputControl, info, selectedValues, selectedValuesList, values, isNothingSelected);
         assertEquals(selectedValuesList.get(0), "USA");
     }
 
     @Test
-    public void fillSelectedValue_withValidSelectedValues() throws CascadeResourceNotFoundException{
-        Map<String,List<InputControlOption>> selectedValuesMap;
+    public void fillSelectedValue_withValidSelectedValues() throws CascadeResourceNotFoundException {
+        Map<String, List<InputControlOption>> selectedValuesMap;
         SingleSelectListInputControlHandler selectListInputControlHandler = spy(new MultiSelectListInputControlHandler());
         ValuesLoader loader = mock(ValuesLoader.class);
         ReportInputControlInformation info = mock(ReportInputControlInformation.class);
         InputControl inputControl = mock(InputControl.class);
 
-        Map<String,List<String>> result = new HashMap<>();
+        Map<String, List<String>> result = new HashMap<>();
         result.put("Country", Arrays.asList(new String[]{"USA"}));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("Country", "USA");
@@ -430,15 +455,15 @@ public class SingleSelectListInputControlHandlerTest {
         selectListInputControlHandler.setLoader(loader);
 
         when(selectListInputControlHandler.isNothingSelected(inputControl.getName(), parameters)).thenReturn(true);
-        when(selectListInputControlHandler.populateSelectedValuesList(nullable(InputControl.class), nullable(ReportInputControlInformation.class), nullable(List.class), nullable(List.class),nullable(DataType.class),nullable(List.class), nullable(Object.class), anyBoolean())).thenReturn(selectedValues);
+        when(selectListInputControlHandler.populateSelectedValuesList(nullable(InputControl.class), nullable(ReportInputControlInformation.class), nullable(List.class), nullable(List.class), nullable(DataType.class), nullable(List.class), nullable(Object.class), anyBoolean())).thenReturn(selectedValues);
         selectedValuesMap = selectListInputControlHandler.fillSelectedValue(inputControl, null, parameters, info, null);
         assertEquals(selectedValues, selectedValuesMap.get("Country"));
-
     }
 
+
     /**
-     *  diagnostic datasnapshot contains IC default values
-     *  chosen by user when run report under diagnostic
+     * diagnostic datasnapshot contains IC default values
+     * chosen by user when run report under diagnostic
      *
      * @throws Exception
      */
@@ -456,7 +481,7 @@ public class SingleSelectListInputControlHandlerTest {
         Map<String, Object> inputParameters = map(
                 entry(DiagnosticSnapshotPropertyHelper.ATTRIBUTE_IS_DIAG_SNAPSHOT, Boolean.TRUE),
                 entry(parameterName, valueForDefault),
-                entry(parameterName+"_offset","1"));
+                entry(parameterName + "_offset", "1"));
 
         doReturn(valueForDefault).when(reportInputControlInformation).getDefaultValue();
 
@@ -470,9 +495,8 @@ public class SingleSelectListInputControlHandlerTest {
         final List<ListOfValuesItem> expectedResult = new ArrayList<>();
         expectedResult.add(listOfValuesItem);
 
-        doReturn(1).when(loader).getTotalLimit(2, 0, 1);
-        doReturn(2).when(loader).getLimit(nullable(InputControl.class), nullable(Map.class), nullable(Map.class) );
-        doReturn(0).when(loader).getOffset(nullable(InputControl.class), nullable(Map.class),anyInt(), anyMap());
+        doReturn(2).when(inputControlPagination).getLimit(nullable(InputControl.class), nullable(Map.class), nullable(Map.class));
+        doReturn(0).when(inputControlPagination).getOffset(nullable(InputControl.class), nullable(Map.class), anyInt(), anyMap());
         doReturn(expectedResult).when(loader).checkCriteriaAndAddItem(nullable(String.class), anyList(), any(ListOfValuesItem.class));
 
 
@@ -508,14 +532,14 @@ public class SingleSelectListInputControlHandlerTest {
             add("Mexico");
         }};
 
-        final ListOrderedSet defaultICValues = new ListOrderedSet(){{
+        final ListOrderedSet defaultICValues = new ListOrderedSet() {{
             addAll(valuesForDefault);
         }};
 
         final List<InputControlOption> defaultItems = listOfOptions(valuesForDefault, true);
 
         doReturn(parameterName).when(inputControl).getName();
-        final HashMap<String, Class<?>> parameterTypes = new HashMap<String, Class<?>>();
+        final HashMap<String, Class<?>> parameterTypes = new HashMap<>();
         Map<String, Object> inputParameters = map(
                 entry(DiagnosticSnapshotPropertyHelper.ATTRIBUTE_IS_DIAG_SNAPSHOT, Boolean.TRUE),
                 entry(parameterName, valuesForDefault.get(1)));
@@ -531,9 +555,8 @@ public class SingleSelectListInputControlHandlerTest {
         final List<ListOfValuesItem> expectedResult = values;
 
         doReturn(expectedResult).when(loader).checkCriteriaAndAddItem(nullable(String.class), anyList(), any(ListOfValuesItem.class));
-        doReturn(3).when(loader).getTotalLimit(4, 1, 3);
-        doReturn(4).when(loader).getLimit(nullable(InputControl.class), nullable(Map.class), nullable(Map.class) );
-        doReturn(1).when(loader).getOffset(nullable(InputControl.class), nullable(Map.class),anyInt(), anyMap());
+        doReturn(4).when(inputControlPagination).getLimit(nullable(InputControl.class), nullable(Map.class), nullable(Map.class));
+        doReturn(1).when(inputControlPagination).getOffset(nullable(InputControl.class), nullable(Map.class), anyInt(), anyMap());
 
 
         // dummy data conversion
@@ -548,9 +571,9 @@ public class SingleSelectListInputControlHandlerTest {
         assertFalse("options not same list from db", options.size() == listOfValues.size() + 1);
         assertTrue("option same list of defaults", options.contains(defaultItems.get(1)));
 
-        // options number is one item more then values because of nothing selected item.
-        assertEquals(defaultItems.size(), options.size());
-        List<InputControlOption> selectedOptions = new ArrayList<InputControlOption>();
+        // options number is size minus offset
+        assertEquals(2, options.size());
+        List<InputControlOption> selectedOptions = new ArrayList<>();
         for (InputControlOption currentOption : options) {
             if (currentOption.hasSelected()) {
                 selectedOptions.add(currentOption);
@@ -583,32 +606,24 @@ public class SingleSelectListInputControlHandlerTest {
 
     @Test
     public void setIncomingValue_withValidSelectedValue() {
-        InputControl inputControl = mock(InputControl.class);
-        when(inputControl.getName()).thenReturn("Country");
-
         ReportInputControlInformation info = mock(ReportInputControlInformation.class);
         when(info.getDefaultValue()).thenReturn("USA");
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("Country_select", "selectedValues");
         parameters.put("Country", "Canada");
-        assertEquals("USA", handler.setIncomingValue(inputControl, parameters, info, "Country"));
+        assertEquals("USA", handler.setIncomingValue("Country", parameters, info));
     }
 
     @Test
     public void setIncomingValue_withNoSelectedValue() {
-        InputControl inputControl = mock(InputControl.class);
-        when(inputControl.getName()).thenReturn("Country");
-
         ReportInputControlInformation info = mock(ReportInputControlInformation.class);
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("Country", "Canada");
 
-
-        assertEquals("Canada", handler.setIncomingValue(inputControl, parameters, info, "Country"));
+        assertEquals("Canada", handler.setIncomingValue("Country", parameters, info));
     }
-
 
     @Test
     public void getDefaultValuesList_withCollectionValue() {
@@ -646,15 +661,15 @@ public class SingleSelectListInputControlHandlerTest {
         QueryValuesLoader valuesLoader = new QueryValuesLoader();
         handler.setLoader(valuesLoader);
 
-        List<ListOfValuesItem> result = handler.generateValuesFromDefaultValues(info, 3, 2,1, "");
-        assertEquals("Canada", result.get(0).getValue());
+        List<ListOfValuesItem> result = handler.generateValuesFromDefaultValues(info, "");
+        assertEquals("USA", result.get(0).getValue());
     }
 
     @Test
     public void SelectedValuesDict_withCollection() {
 
         List<Object> defaultValue = Arrays.asList(new Object[]{10.20, "String"});
-        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict =  handler.createSelectedValuesDict(defaultValue);
+        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict = handler.createSelectedValuesDict(defaultValue);
         assertTrue(selectedValuesDict.checkMatch(10.20));
         assertTrue(selectedValuesDict.checkMatch("String"));
     }
@@ -663,13 +678,13 @@ public class SingleSelectListInputControlHandlerTest {
     public void SelectedValuesDict_withSingleIncomingValue() {
 
         Double defaultValue = 10.0;
-        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict =  handler.createSelectedValuesDict(defaultValue);
+        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict = handler.createSelectedValuesDict(defaultValue);
         assertTrue(selectedValuesDict.checkMatch(10));
 
-        doReturn("10").when(dataConverterService).formatSingleValue("10", null, (Class)null);
+        doReturn("10").when(dataConverterService).formatSingleValue("10", null, (Class) null);
         assertFalse(selectedValuesDict.checkMatch("10"));
 
-        doThrow(new IllegalStateException()).when(dataConverterService).formatSingleValue("invalid", null, (Class)null);
+        doThrow(new IllegalStateException()).when(dataConverterService).formatSingleValue("invalid", null, (Class) null);
         assertFalse(selectedValuesDict.checkMatch("invalid"));
 
 
@@ -678,34 +693,232 @@ public class SingleSelectListInputControlHandlerTest {
     @Test
     public void SelectedValuesDict_withNullValue() {
         Object defaultValue = null;
-        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict =  handler.createSelectedValuesDict(defaultValue);
+        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict = handler.createSelectedValuesDict(defaultValue);
         assertTrue(selectedValuesDict.checkMatch(null));
 
         defaultValue = "string";
-        selectedValuesDict =  handler.createSelectedValuesDict(defaultValue);
+        selectedValuesDict = handler.createSelectedValuesDict(defaultValue);
         assertFalse(selectedValuesDict.checkMatch(null));
 
     }
 
+    @Test
+    public void offsetAndLimit_fillStateValue_paginatedOptions() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setLimit(parameters, 2);
+        setOffset(parameters, 2);
 
-    public List<ListOfValuesItem> getListOfValuesItem() {
-        List<ListOfValuesItem> values = new ArrayList<>();
-        ListOfValuesItem listOfValuesItem1 = new ListOfValuesItemImpl();
-        ListOfValuesItem listOfValuesItem2 = new ListOfValuesItemImpl();
-        ListOfValuesItem listOfValuesItem3 = new ListOfValuesItemImpl();
+        mockLoadValues(values);
 
-        listOfValuesItem1.setLabel("USA");
-        listOfValuesItem1.setValue("USA");
-        values.add(listOfValuesItem1);
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
 
-        listOfValuesItem2.setLabel("Canada");
-        listOfValuesItem2.setValue("Canada");
-        values.add(listOfValuesItem2);
-
-        listOfValuesItem3.setLabel("Mexico");
-        listOfValuesItem3.setValue("Mexico");
-        values.add(listOfValuesItem3);
-
-        return values;
+        assertEquals(1, state.getOptions().size());
+        assertEquals("Mexico", state.getOptions().get(0).getLabel());
     }
+
+    @Test
+    public void onlyLimit_fillStateValue_paginatedOptions() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setLimit(parameters, 1);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(1, state.getOptions().size());
+        assertEquals("USA", state.getOptions().get(0).getLabel());
+    }
+
+    @Test(expected = InputControlValidationException.class)
+    public void offsetBiggerThenLimit_fillStateValue_exception() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setLimit(parameters, 3);
+        setOffset(parameters, 3);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+    }
+
+    @Test
+    public void selectedOnly_fillStateValue_selectedOptions() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setIncomingValue(parameters, "Canada", inputControl);
+        setSelectedOnly(parameters, true);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(1, state.getOptions().size());
+        assertEquals("Canada", state.getOptions().get(0).getValue());
+    }
+
+    @Test
+    public void selectedOnlyWithSelectedNothing_fillStateValue_selectedOptions() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setSelectedOnly(parameters, true);
+
+        ListOfValuesItem nothingItem = new ListOfValuesItemImpl();
+        nothingItem.setLabel(NOTHING_SUBSTITUTION_LABEL);
+        nothingItem.setValue(NOTHING_SUBSTITUTION_VALUE);
+        values.add(nothingItem);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(1, state.getOptions().size());
+        assertEquals(NOTHING_SUBSTITUTION_LABEL, state.getOptions().get(0).getLabel());
+        assertEquals(NOTHING_SUBSTITUTION_VALUE, state.getOptions().get(0).getValue());
+    }
+
+    @Test
+    public void selectedOnlyWithoutIncomingValueForNonMandatoryIC_fillStateValue_empty() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setSelectedOnly(parameters, true);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertTrue(state.getOptions().isEmpty());
+    }
+
+    @Test
+    public void selectedOnlyWithEmptyIncomingValueForMandatoryIC_fillStateValue_firstSelectedOption() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setSelectedOnly(parameters, true);
+
+        doReturn(true).when(inputControl).isMandatory();
+        setIncomingValue(parameters, "", inputControl);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(1, state.getOptions().size());
+        assertEquals("USA", state.getOptions().get(0).getValue());
+    }
+
+    @Test
+    public void selectedOnlyWithDefaultValues_fillStateValue_defaultSelectedOption() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setSelectedOnly(parameters, true);
+
+        doReturn("Mexico").when(reportInputControlInformation).getDefaultValue();
+        setIncomingValue(parameters, "", inputControl);
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(1, state.getOptions().size());
+        assertEquals("Mexico", state.getOptions().get(0).getValue());
+    }
+
+    @Test
+    public void selectedOnlyWithoutAnyValuesAndMandatoryIC_fillStateValue_mandatoryICErrorMessage() throws CascadeResourceNotFoundException {
+        final String errorMessage = "mandatoryICErrorMessage";
+        Map<String, Object> parameters = new HashMap<>();
+        setSelectedOnly(parameters, true);
+
+        doReturn(errorMessage).when(messageSource).getMessage(anyString(), any(), any());
+        doReturn(true).when(inputControl).isMandatory();
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(errorMessage, state.getError());
+    }
+
+    @Test(expected = InputControlValidationException.class)
+    public void offsetBiggerThenLimitAndTwoInvalidOptions_fillStateValue_exception() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setLimit(parameters, 3);
+        setOffset(parameters, 1);
+
+        doThrow(InputControlValidationException.class).
+                doThrow(InputControlValidationException.class).
+                doNothing().when(handler).validateSingleValue(any(), any());
+
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+    }
+
+    @Test
+    public void valuesWithNothingOption_fillStateValue_nothingIsSelected() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+
+        ListOfValuesItem nothingItem = listOfValuesItem(NOTHING_SUBSTITUTION_LABEL, NOTHING_SUBSTITUTION_VALUE);
+        values.add(nothingItem);
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(NOTHING_SUBSTITUTION_LABEL, state.getOptions().get(3).getLabel());
+        assertTrue(state.getOptions().get(3).isSelected());
+    }
+
+    @Test
+    public void valuesWithNothingOptionSelectedOnly_fillStateValue_nothingIsSelected() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setSelectedOnly(parameters, true);
+
+        ListOfValuesItem nothingItem = listOfValuesItem(NOTHING_SUBSTITUTION_LABEL, NOTHING_SUBSTITUTION_VALUE);
+        values.add(nothingItem);
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(NOTHING_SUBSTITUTION_LABEL, state.getOptions().get(0).getLabel());
+        assertTrue(state.getOptions().get(0).isSelected());
+    }
+
+
+    @Test
+    public void valuesWithNothingOptionAndUnknownValue_fillStateValue_nothingIsSelected() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+
+        setIncomingValue(parameters, "NotFound", inputControl);
+        doReturn(false).when(inputControl).isMandatory();
+
+        ListOfValuesItem nothingItem = listOfValuesItem(NOTHING_SUBSTITUTION_LABEL, NOTHING_SUBSTITUTION_VALUE);
+        values.add(nothingItem);
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(NOTHING_SUBSTITUTION_LABEL, state.getOptions().get(3).getLabel());
+        assertTrue(state.getOptions().get(3).isSelected());
+    }
+
+    @Test
+    public void valuesWithNothingOptionAndUnknownValueSelectedOnly_fillStateValue_nothingIsSelected() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+
+        setIncomingValue(parameters, "NotFound", inputControl);
+        setSelectedOnly(parameters, true);
+        doReturn(false).when(inputControl).isMandatory();
+
+        ListOfValuesItem nothingItem = listOfValuesItem(NOTHING_SUBSTITUTION_LABEL, NOTHING_SUBSTITUTION_VALUE);
+        values.add(nothingItem);
+        mockLoadValues(values);
+
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+
+        assertEquals(NOTHING_SUBSTITUTION_LABEL, state.getOptions().get(0).getLabel());
+        assertTrue(state.getOptions().get(0).isSelected());
+    }
+
+    @Test
+    public void nullValues_fillStateValue_empty() throws CascadeResourceNotFoundException {
+        mockLoadValues(null);
+
+        handler.fillStateValue(state, inputControl, dataSource, new HashMap<>(), reportInputControlInformation, Collections.emptyMap());
+
+        assertTrue(state.getOptions().isEmpty());
+    }
+
 }

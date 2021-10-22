@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.dto.dashboard;
 
+import com.jaspersoft.jasperserver.dto.authority.ClientUser;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -49,6 +50,7 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
     private List<String> jrStyle;
     private String outputTimeZone;
     private String outputLocale;
+    private ClientUser owner;
 
     public DashboardExportExecution() {}
 
@@ -67,6 +69,9 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         jrStyle = copyOf(other.getJrStyle());
         outputTimeZone = other.outputTimeZone;
         outputLocale = other.outputLocale;
+        if (other.owner != null) {
+            owner = new ClientUser(other.owner);
+        }
     }
 
     public int getWidth() {
@@ -177,6 +182,15 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         return this;
     }
 
+    public ClientUser getOwner() {
+        return owner;
+    }
+
+    public DashboardExportExecution setOwner(ClientUser owner) {
+        this.owner = owner;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -190,6 +204,7 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         if (referenceHeight != that.referenceHeight) return false;
         if (format != that.format) return false;
         if (uri != null ? !uri.equals(that.uri) : that.uri != null) return false;
+        if (owner != null ? !owner.equals(that.owner) : that.owner != null) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) return false;
         if (markup != null ? !markup.equals(that.markup) : that.markup != null) return false;
@@ -213,6 +228,7 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         result = 31 * result + (jrStyle != null ? jrStyle.hashCode() : 0);
         result = 31 * result + (outputTimeZone != null ? outputTimeZone.hashCode() : 0);
         result = 31 * result + (outputLocale != null ? outputLocale.hashCode() : 0);
+        result = 31 * result + (owner != null ? owner.hashCode() : 0);
         return result;
     }
 
@@ -231,6 +247,7 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
                 ", jrStyle=" + jrStyle +
                 ", outputTimeZone='" + outputTimeZone + '\'' +
                 ", outputLocale='" + outputLocale + '\'' +
+                ", owner='" + (owner != null? owner.getUsername() : owner) + '\'' +
                 '}';
     }
 

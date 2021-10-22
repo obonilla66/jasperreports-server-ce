@@ -70,13 +70,14 @@ public class BasicInputControlHandler implements InputControlHandler {
     protected CachedRepositoryService cachedRepositoryService;
     @Resource
     private GenericTypeProcessorRegistry genericTypeProcessorRegistry;
-
     @Resource
     protected DataConverterService dataConverterService;
     @Resource
     protected MessageSource messageSource;
     @Resource(name = "isoCalendarFormatProvider")
     protected CalendarFormatProvider calendarFormatProvider;
+    @Resource
+    protected InputControlPagination inputControlPagination;
 
     protected ToClientConverter<DataType, ClientDataType, ToClientConversionOptions> dataTypeResourceConverter;
 
@@ -286,8 +287,9 @@ public class BasicInputControlHandler implements InputControlHandler {
 
     protected void doMandatoryValidation(Object typedValue, InputControlState state) {
         // if value isn't in error state and don't has a value, then put error message
-        if (state.getError() == null && !hasValue(typedValue))
+        if (state.getError() == null && !hasValue(typedValue)) {
             state.setError(getMessage(MandatoryValidationRule.ERROR_KEY));
+        }
     }
 
     @Override
