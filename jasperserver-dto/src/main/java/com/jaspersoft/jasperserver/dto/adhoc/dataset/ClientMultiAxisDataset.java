@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +38,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id$
  */
 @XmlRootElement
-public class ClientMultiAxisDataset implements DeepCloneable<ClientMultiAxisDataset> {
+public class ClientMultiAxisDataset implements DeepCloneable<ClientMultiAxisDataset>, Serializable {
     private List<ClientAxis> axes;
 
     private List<String[]> data;

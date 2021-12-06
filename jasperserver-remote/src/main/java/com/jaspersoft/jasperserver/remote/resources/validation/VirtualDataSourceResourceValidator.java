@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataSource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -59,7 +60,7 @@ public class VirtualDataSourceResourceValidator extends GenericResourceValidator
     ProfileAttributesResolver profileAttributesResolver;
 
     @Override
-    protected void internalValidate(VirtualReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, VirtualReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (resource.getDataSourceUriMap() == null || resource.getDataSourceUriMap().isEmpty()) {
             errors.add(new IllegalParameterValueException("A virtual data source should aggregate at least 1 datasource", "SubDataSources", ""));
         } else {

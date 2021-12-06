@@ -31,20 +31,30 @@ import java.util.Date;
  * @version $Id$
  */
 public interface AccessEvent extends LoggableEvent {
+    public static final char UID_DELIMITER='|';
 
-    public User getUser();
+    public String getUserId();
 
-    public void setUser(User user);
+    public void setUserId(String user);
 
     public Date getEventDate();
 
     public void setEventDate(Date eventDate);
 
-    public Resource getResource();
+    public String getResourceUri();
 
-    public void setResource(Resource resource);
+    public void setResourceUri(String resource);
 
     public boolean isUpdating();
 
     public void setUpdating(boolean updating);
+
+    public String extractUserName();
+    public String extractTenantId();
+
+    public String getResourceType();
+    public void setResourceType(String resourceType);
+
+    public boolean isHidden();
+    public void setHidden(boolean hidden);
 }

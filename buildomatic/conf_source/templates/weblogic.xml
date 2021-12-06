@@ -70,6 +70,10 @@
 		        <jndi-name>JasperServerDataBase</jndi-name>
 		</resource-description>
 		<resource-description>
+			<res-ref-name>jdbc/jasperserverAudit</res-ref-name>
+			<jndi-name>AuditDataBase</jndi-name>
+		</resource-description>
+		<resource-description>
 		            <res-ref-name>jdbc/sugarcrm</res-ref-name>
 		            <jndi-name>SugarcrmDataBase</jndi-name>
 		</resource-description>

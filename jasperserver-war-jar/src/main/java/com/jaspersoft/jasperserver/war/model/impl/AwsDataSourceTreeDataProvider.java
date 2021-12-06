@@ -21,7 +21,6 @@
 package com.jaspersoft.jasperserver.war.model.impl;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsCredentialUtil;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;

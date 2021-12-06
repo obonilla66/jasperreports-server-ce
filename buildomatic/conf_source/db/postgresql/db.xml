@@ -29,6 +29,8 @@
     <attribute name="jdbcUrl"/>
     <attribute name="systemName" default="before"/>
     <attribute name="phase" default="before"/>
+    <attribute name="dbUsername" default="${dbUsername}"/>
+    <attribute name="dbPassword" default="${dbPassword}"/>
     <attribute name="failOnConnectionError" default="true"/>
     <attribute name="failOnDBNotExists" default="false"/>
     <attribute name="failOnUnrecoverableConnectionError" default="true"/>
@@ -42,6 +44,8 @@
 
       <runSQL jdbcUrl="@{jdbcUrl}"
           print="false"
+          dbUsername="@{dbUsername}"
+          dbPassword="@{dbPassword}"
           onerror="abort"
           failOnConnectionError="@{failOnConnectionError}"
           connectionErrorOccurredProperty="@{connectionErrorOccurredProperty}"
@@ -69,14 +73,14 @@
               <then>
                 <usernamePasswordValidationFailureListener
                     failOnUnrecoverableConnectionError="@{failOnUnrecoverableConnectionError}"
-                    userName="${dbUsername}"
-                    password="${dbPassword}"/>
+                    userName="@{dbUsername}"
+                    password="@{dbPassword}"/>
               </then>
             </elseif>
             <elseif>
               <equals arg1="${@{errorSqlStateCodeProperty}}" arg2="3D000"/>
               <then>
-                <dBExistsValidationFailureListener failOnDBNotExists="@{failOnDBNotExists}"/>
+                <dBExistsValidationFailureListener systemName="@{systemName}" failOnDBNotExists="@{failOnDBNotExists}"/>
               </then>
             </elseif>
             <else>

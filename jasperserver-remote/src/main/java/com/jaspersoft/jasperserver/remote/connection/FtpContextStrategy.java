@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.remote.connection;
 
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.common.util.FTPService;
 import com.jaspersoft.jasperserver.api.engine.common.util.impl.FTPUtil;
@@ -58,7 +59,7 @@ public class FtpContextStrategy implements ContextManagementStrategy<FtpConnecti
     private Map<String, FtpConnectionDescriptionProvider> connectionDescriptionProviders;
 
     @Override
-    public FtpConnection createContext(FtpConnection contextDescriptionOrg, Map<String, Object> data) throws IllegalParameterValueException {
+    public FtpConnection createContext(ExecutionContext ctx, FtpConnection contextDescriptionOrg, Map<String, Object> data) throws IllegalParameterValueException {
         FTPService.FTPServiceClient client = null;
         // deep copy ftp connection, so the original ftp connection will remind unchange and we can reuse that in error message
         FtpConnection contextDescription = contextDescriptionOrg.deepClone();

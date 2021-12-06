@@ -163,10 +163,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.logging.log4j.ThreadContext;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -183,22 +180,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -222,8 +204,8 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	protected static final Log log = LogFactory.getLog(EngineServiceImpl.class);
 	protected static final Log valueQueryLog = LogFactory.getLog("valueQueryLog");
 
-	public static List<String> authorizedAllExecutionsRolesList;
-	public static List<String> authorizedOrgExecutionsRolesList;
+	public List<String> authorizedAllExecutionsRolesList;
+	public List<String> authorizedOrgExecutionsRolesList;
 
 	private DataSourceServiceFactory dataSourceServiceFactories;
 	protected RepositoryUnsecure unsecureRepository;
@@ -301,7 +283,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	}
 
 	public void afterPropertiesSet() throws Exception {
-		if (repositoryContextManager == null) {
+		if (getRepositoryContextManager() == null) {
 			repositoryContextManager = new DefaultRepositoryContextManager(repository, this);
 		}
 
@@ -648,9 +630,9 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 		// resources loading in the repository context should only need execute permissions,
 		// so make sure that the execution context has the magic attribute to signal that perms change
 		context = getRuntimeExecutionContext(context);
-        if (repositoryContextManager == null) return null;
+        if (getRepositoryContextManager() == null) return null;
         if (reportUnitURI == null) return null;
-        return repositoryContextManager.setRepositoryContext(context, reportUnitURI, reportUnit);
+        return getRepositoryContextManager().setRepositoryContext(context, reportUnitURI, reportUnit);
 	}
 
 	public void resetThreadRepositoryContext(RepositoryContextHandle repositoryContextHandle)
@@ -1700,9 +1682,9 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 					continue;
 				}
 				
-				String resPathKey = repositoryContextManager.getRepositoryPathKey(
+				String resPathKey = getRepositoryContextManager().getRepositoryPathKey(
 						finalResource.getURIString());
-				String uri = repositoryContextManager.getRepositoryUriForKey(resPathKey);
+				String uri = getRepositoryContextManager().getRepositoryUriForKey(resPathKey);
 				RepositoryResourceKey resourceKey = new RepositoryResourceKey(resPathKey, 
 						uri, finalResource.getVersion(), finalResource.getCreationDate());
 				resourceBundleKeys.put(resName, resourceKey);
@@ -2075,11 +2057,13 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	 * @return
 	 */
     public ExecutionContext getRuntimeExecutionContext() {
-    	return getRuntimeExecutionContext(null);
+    	return ExecutionContextImpl.getRuntimeExecutionContext();
     }
 
     public static ExecutionContext getRuntimeExecutionContext(ExecutionContext originalContext) {
-    	return ExecutionContextImpl.getRuntimeExecutionContext(originalContext);
+    	return originalContext == null 
+				? ExecutionContextImpl.getRuntimeExecutionContext() 
+				: ExecutionContextImpl.getRuntimeExecutionContext(originalContext);
     }                                              
 
 	public <T extends Resource> T getFinalResource(ExecutionContext context, ResourceReference res, Class<T> type) {
@@ -2186,6 +2170,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 			return report;
 		} catch (JRException e) {
 			log.error("error compiling report", e);
+			java.util.Optional.ofNullable(e.getArgs()).ifPresent(args -> Arrays.stream(args).map(Objects::toString).forEach(log::error));
 			throw new JSExceptionWrapper(e);
 		}
 	}
@@ -2294,7 +2279,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 	public void clearCaches(Class resourceItf, String resourceURI) {
 		if (FileResource.class.isAssignableFrom(resourceItf)) {
 			//TODO check JRXML type
-			compiledReportsCache.clearCache(resourceURI, cacheableCompiledReports);
+			compiledReportsCache.clearCache(ExecutionContextImpl.getRuntimeExecutionContext(), resourceURI, cacheableCompiledReports);
 
 			tempJarFiles.remove(resourceURI);
 		}
@@ -2952,6 +2937,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
     }
 
     public List<ReportExecutionStatusInformation> getSchedulerReportExecutionStatusList(SchedulerReportExecutionStatusSearchCriteria searchCriteria) {
+        List<ReportExecutionStatusInformation> executions = getReportExecutionStatusList();
 
 		User loginUser = null;
 		if (SecurityContextHolder.getContext() != null && SecurityContextHolder.getContext().getAuthentication()!= null) {
@@ -2966,12 +2952,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 			}
 		}
 
-		List<ReportExecutionStatusInformation> executions = getReportExecutionStatusList();
-
-
-
-
-        if (executions == null)return null;
+		if (executions == null)return null;
         List<ReportExecutionStatusInformation> newSet = new ArrayList<ReportExecutionStatusInformation>();
 
 		for (ReportExecutionStatusInformation entry : executions) {
@@ -2991,6 +2972,8 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 			}
 			newSet.add(entry);
 		}
+
+
         return newSet;
     }
 
@@ -3009,6 +2992,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 		}
 		return false;
 	}
+
 
 
 	protected boolean includeUser(User loginUser, User currentOwner) {

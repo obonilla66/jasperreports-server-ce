@@ -73,8 +73,9 @@ public class OlapUnitValidator implements Validator {
 	    ouWrapper.getOlapUnitLabel().trim().length() == 0) {
 	    errors.rejectValue("olapUnitLabel", "OlapUnitValidator.error.not.empty");
 	} else {
-	    if (ouWrapper.getOlapUnitLabel().length() > 100) {
-		errors.rejectValue("olapUnitLabel", "OlapUnitValidator.error.too.long");
+	    if (ouWrapper.getOlapUnitLabel().length() > JasperServerConst.MAX_LENGTH_LABEL) {
+		errors.rejectValue("olapUnitLabel", "OlapUnitValidator.error.too.long"
+				, new Object[]{JasperServerConst.MAX_LENGTH_LABEL_W}, null);
 	    } else if (!ValidationUtil.regExValidateLabel(ouWrapper.getOlapUnitLabel()))
 		errors.rejectValue("olapUnitLabel", "OlapUnitValidator.error.invalid.chars");
 	}
@@ -83,8 +84,9 @@ public class OlapUnitValidator implements Validator {
 	    ouWrapper.getOlapUnitName().trim().length() == 0) {
 	    errors.rejectValue("olapUnitName", "OlapUnitValidator.error.not.empty");
 	} else {
-	    if (ouWrapper.getOlapUnitName().length() > 100) {
-		errors.rejectValue("olapUnitName", "OlapUnitValidator.error.too.long");
+	    if (ouWrapper.getOlapUnitName().length() > JasperServerConst.MAX_LENGTH_NAME) {
+		errors.rejectValue("olapUnitName", "OlapUnitValidator.error.too.long"
+				, new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 	    } else if (!ValidationUtil.regExValidateName(ouWrapper.getOlapUnitName()))
 		errors.rejectValue("olapUnitName", "OlapUnitValidator.error.invalid.chars");
 	    else {

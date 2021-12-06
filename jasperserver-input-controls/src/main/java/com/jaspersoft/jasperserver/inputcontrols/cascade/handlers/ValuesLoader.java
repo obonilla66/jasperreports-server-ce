@@ -27,6 +27,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,8 +41,16 @@ import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputCo
  */
 public interface ValuesLoader {
     String CRITERIA = "criteria";
+
     String INCLUDE_TOTAL_COUNT = "includeTotalCount";
     String SELECTED_ONLY_INTERNAL = "&selectedOnly";
+    String SKIP_FETCHING_IC_VALUES_FROM_DB = "skipFetchingICValuesFromDB";
+
+    List<String> REQUIRED_IC_PARAMETERS = Arrays.asList(
+            INCLUDE_TOTAL_COUNT,
+            SELECTED_ONLY_INTERNAL,
+            SKIP_FETCHING_IC_VALUES_FROM_DB
+    );
 
     /**
      * load input control state values from either database or cache.

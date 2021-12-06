@@ -23,6 +23,8 @@ package com.jaspersoft.jasperserver.dto.adhoc.dataset;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
@@ -30,7 +32,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNul
  * @version $Id$
  * @since 12.04.2016
  */
-public class ClientMultiAxisLevelReference implements DeepCloneable<ClientMultiAxisLevelReference> {
+public class ClientMultiAxisLevelReference implements DeepCloneable<ClientMultiAxisLevelReference>, Serializable {
 
     private String name;
     private String dimension;

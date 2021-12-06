@@ -20,16 +20,16 @@
  */
 package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 
-import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
-import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.service.DataSnapshotService;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobRepositoryDestination;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSource;
-import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobsPersistenceService;
-import com.jaspersoft.jasperserver.api.logging.context.LoggingContextProvider;
-import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,15 +43,15 @@ import org.quartz.SchedulerContext;
 import org.quartz.Trigger;
 import org.springframework.context.ApplicationContext;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
+import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
+import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
+import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobRepositoryDestination;
+import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSource;
+import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobsPersistenceService;
+import com.jaspersoft.jasperserver.api.logging.context.LoggingContextProvider;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 
 /**
  * Tests for {@link ReportExecutionJob}
@@ -98,7 +98,9 @@ public class ReportExecutionJobTest {
     @Mock
     private ReportJobRepositoryDestination reportJobRepositoryDestinationMock;
     @Mock
-    private DataSnapshotService dataSnapshotServiceMock;
+    private ReportExecutorProducer reportExecutorProducerMock;
+    @Mock
+    private ReportExecutor reportExecutorMock;
 
     @Before
     public void setUp() throws Exception {
@@ -112,8 +114,7 @@ public class ReportExecutionJobTest {
         when(schedulerContextMock.get(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_JOB_PERSISTENCE_SERVICE)).thenReturn(reportJobsPersistenceServiceMock);
         when(schedulerContextMock.get(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_REPOSITORY)).thenReturn(repositoryMock);
         when(schedulerContextMock.get(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_ENGINE_SERVICE)).thenReturn(engineServiceMock);
-        when(schedulerContextMock.getString(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_DATA_SNAPSHOT_SERVICE_BEAN)).thenReturn("dataSnapshotService");
-        when(applicationContextMock.getBean("dataSnapshotService", DataSnapshotService.class)).thenReturn(dataSnapshotServiceMock);
+        when(schedulerContextMock.get(ReportExecutionJob.SCHEDULER_CONTEXT_KEY_REPORT_EXECUTOR_PRODUCER)).thenReturn(reportExecutorProducerMock);
         when(triggerMock.getJobDataMap()).thenReturn(jobDataMapMock);
         when(jobDataMapMock.getString(ReportExecutionJob.JOB_DATA_KEY_USERNAME)).thenReturn("joeuser");
         when(reportJobsPersistenceServiceMock.loadJob(any(), any())).thenReturn(reportJobMock);
@@ -121,7 +122,7 @@ public class ReportExecutionJobTest {
         when(reportJobMock.getSource()).thenReturn(reportJobSourceMock);
         when(reportJobSourceMock.getReportUnitURI()).thenReturn(REPORT_UNIT_URI);
         when(repositoryMock.getResource(any(), eq(REPORT_UNIT_URI), eq(ReportUnit.class))).thenReturn(reportUnitMock);
-        when(dataSnapshotServiceMock.isSnapshotPersistenceEnabled()).thenReturn(false);
+        when(reportExecutorProducerMock.createReportExecutor(any())).thenReturn(reportExecutorMock);
     }
 
     @Test

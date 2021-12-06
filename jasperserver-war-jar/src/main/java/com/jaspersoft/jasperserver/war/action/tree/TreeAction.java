@@ -20,7 +20,6 @@
  */
 package com.jaspersoft.jasperserver.war.action.tree;
 
-import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;

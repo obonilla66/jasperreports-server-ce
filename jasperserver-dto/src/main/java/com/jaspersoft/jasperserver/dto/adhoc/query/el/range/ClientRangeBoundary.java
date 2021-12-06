@@ -37,6 +37,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -46,7 +48,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id $
  */
 @XmlRootElement
-public class ClientRangeBoundary implements ClientExpression<ClientRangeBoundary>, DeepCloneable<ClientRangeBoundary> {
+public class ClientRangeBoundary implements ClientExpression<ClientRangeBoundary>, DeepCloneable<ClientRangeBoundary>, Serializable {
 
     private ClientExpression boundary;
 

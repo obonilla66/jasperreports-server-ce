@@ -21,7 +21,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
        xmlns:security="http://www.springframework.org/schema/security"
@@ -97,7 +98,6 @@
                 <entry key="jobPersistenceService" value-ref="${bean.reportJobsPersistenceService}"/>
                 <entry key="reportSchedulingService" value-ref="reportSchedulingService"/>
                 <entry key="engineService" value-ref="engineService"/>
-                <entry key="virtualizerFactory" value-ref="fileVirtualizerFactory"/>
                 <entry key="repositoryService" value-ref="${bean.repositoryService}"/>
                 <entry key="exportDashboardService" value="singletonExportDashboardService"/>
                 <entry key="configurationBeanName" value="configurationBean"/>
@@ -124,10 +124,6 @@
                     <bean class="com.jaspersoft.jasperserver.api.metadata.common.util.LocalLockManager"/>
                 </entry>
                 <entry key="reportOptionsServiceName" value="${bean.reportOptionsService}"/>
-                <entry key="dataSnapshotServiceName" value="dataSnapshotService"/>
-                <entry key="dataCacheProviderName" value="engineServiceDataCacheProvider"/>
-                <entry key="outputFormatMap" value-ref="outputFormatMap"/>
-                <entry key="outputKeyMapping" value-ref="outputKeyMapping"/>
                 <entry key="administratorRole" value="ROLE_ADMINISTRATOR"/>
                 <entry key="reportExecutionJobInit" value-ref="reportExecutionJobInit"/>
                 <entry key="reportExecutionJobAlert" value-ref="reportExecutionJobAlert"/>
@@ -137,6 +133,7 @@
                 <entry key="jasperReportsContextName" value="${bean.schedulerJasperReportsContext}"/>
                 <entry key="disableSendingAlertToAdmin" value="false"/>
                 <entry key="disableSendingAlertToOwner" value="false"/>
+                <entry key="reportExecutorProducer" value-ref="${bean.schedulerReportExecutorProducer}"/>
             </map>
         </property>
         <property name="taskExecutor" ref="${bean.report.scheduler.taskExecutor}"/>
@@ -145,6 +142,16 @@
         <property name="threadRunner" ref="${bean.report.scheduler.threadRunner}"/>
         -->
     </bean>
+
+	<bean id="internalReportExecutorProducer" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.InternalReportExecutorProducer"/>
+
+	<bean id="internalReportExecutor" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.InternalReportExecutor" scope="prototype">
+		<property name="virtualizerFactory" ref="fileVirtualizerFactory"/>
+		<property name="dataSnapshotService" ref="dataSnapshotService"/>
+		<property name="dataCacheProvider" ref="engineServiceDataCacheProvider"/>
+		<property name="outputKeyMapping" ref="outputKeyMapping"/>
+		<property name="outputFormatMap" ref="outputFormatMap"/>
+	</bean>
 
     <bean id="nullTaskExecutor" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.NullTaskExecutor"/>
 
@@ -169,7 +176,7 @@
     </bean>
 
     <bean id="defaultReportJobValidator" class="com.jaspersoft.jasperserver.api.engine.scheduling.DefaultReportJobValidator">
-        <property name="repository" ref="${bean.repositoryService}"/>
+        <property name="repository" ref="${bean.unsecureRepositoryService}"/>
         <property name="engineServiceBeanName" value="${bean.engineService}"/>
         <property name="repositoryServiceSecurityChecker" ref="${bean.repositoryServiceSecurityChecker}"/>
     </bean>
@@ -196,6 +203,10 @@
 
     <bean id="schedulingReportDeleteListener" class="com.jaspersoft.jasperserver.api.engine.scheduling.SchedulingReportDeleteListener">
         <property name="schedulingService" ref="reportSchedulingService"/>
+    </bean>
+
+    <bean id="accessEventListener" class="com.jaspersoft.jasperserver.api.logging.access.service.impl.AccessEventListener">
+        <property name="accessService" ref="accessService"/>
     </bean>
 
     <bean id="schedulingReportDeleteListenerRegisterer" class="com.jaspersoft.jasperserver.api.metadata.common.service.ResourceEventListenerProcessor" lazy-init="false">
@@ -429,6 +440,7 @@
         <entry key="14" value="pptx"/>
         <entry key="15" value="json"/>
         <entry key="16" value="png"/>
+        <entry key="17" value="data_csv"/>
     </util:map>
 
 
@@ -448,17 +460,30 @@
         <value>XLS_NOPAG</value>
         <value>PDF</value>
         <value>PPTX</value>
+        <value>DATA_CSV</value>
         <!--<value>TXT</value>-->
         <value>DATA_SNAPSHOT</value> <!-- This one will not appear if data snapshot persistence is turned off  -->
     </util:list>
 
     <!-- * Dashboard output formats: -->
-    <util:list id="availableDashboardJobOutputFormats" value-type="java.lang.String">
+    <util:list id="availableDashboardJobScreenshotOutputFormats" value-type="java.lang.String">
         <value>DOCX</value>
         <value>PNG</value>
         <value>ODT</value>
         <value>PPTX</value>
         <value>PDF</value>
+    </util:list>
+
+    <util:list id="availableDashboardJobDetailedOutputFormats" value-type="java.lang.String">
+        <value>DOCX</value>
+        <value>ODT</value>
+        <value>PPTX</value>
+        <value>PDF</value>
+        <value>XLSX_NOPAG</value>
+        <value>XLS_NOPAG</value>
+        <value>RTF</value>
+        <value>CSV</value>
+        <value>ODS</value>
     </util:list>
 
 
@@ -490,6 +515,9 @@
     	<property name="compress" value="true"/>
     </bean>
     <bean id="csvOutput" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.CsvReportOutput" parent="baseReportJobExportOutput">
+        <property name="exportParams" ref="jobCsvExportParameters"/>
+    </bean>
+    <bean id="csvMetadataOutput" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.CsvMetadataReportOutput" parent="baseReportJobExportOutput">
         <property name="exportParams" ref="jobCsvExportParameters"/>
     </bean>
     <bean id="docxOutput" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.DocxReportOutput" parent="baseReportJobExportOutput"/>
@@ -531,6 +559,7 @@
         <entry key="xlsxNoPag" value-ref="xlsxNoPagOutput"/>
         <entry key="pptx" value-ref="pptxOutput"/>
         <entry key="json" value-ref="jsonOutput"/>
+        <entry key="data_csv" value-ref="csvMetadataOutput"/>
     </util:map>
 
     <bean id="contentResourceURIResolver" class="com.jaspersoft.jasperserver.api.engine.common.service.impl.DefaultContentResourceURIResolver">

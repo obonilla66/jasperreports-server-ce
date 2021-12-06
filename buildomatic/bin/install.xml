@@ -64,7 +64,7 @@
 
   <target name="install-normal-ce"
           description="Performs normal install of JasperServer CE (with sample databases and sample data)"
-          depends="gen-config, pre-install-test-ce, prepare-all-ce-dbs-normal, deploy-webapp-ce-if-needed">
+          depends="check-install-type-ce, gen-config, pre-install-test-ce, prepare-all-ce-dbs-normal, deploy-webapp-ce-if-needed">
     <echo>Installation successfully completed!</echo>
   </target>
 
@@ -76,13 +76,25 @@
 
   <target name="install-minimal-ce"
           description="Performs minimal install of JasperServer CE (no sample databases and sample data)"
-          depends="set-minimal-mode, gen-config, pre-install-test-ce, prepare-js-ce-db-minimal, deploy-webapp-ce-if-needed">
+          depends="check-install-type-ce, set-minimal-mode, gen-config, pre-install-test-ce, prepare-js-ce-db-minimal, deploy-webapp-ce-if-needed">
     <echo>Installation successfully completed!</echo>
   </target>
 
   <target name="install-minimal-pro"
           description="Performs minimal install of JasperServer Pro (no sample databases and sample data)"
           depends="set-minimal-mode, gen-config, pre-install-test-pro, prepare-js-pro-db-minimal, deploy-webapp-pro-if-needed">
+    <echo>Installation successfully completed!</echo>
+  </target>
+
+  <target name="install-docker-pro"
+          description="Performs normal install of JasperServer Pro (no databases)"
+          depends="gen-config, pre-install-test-docker, deploy-webapp-pro-if-needed">
+    <echo>Installation successfully completed!</echo>
+  </target>
+
+  <target name="install-docker-db"
+          description="Performs normal db install of JasperServer Pro (no webapp)"
+          depends="gen-config, pre-install-test-pro, prepare-all-pro-dbs-normal">
     <echo>Installation successfully completed!</echo>
   </target>
 

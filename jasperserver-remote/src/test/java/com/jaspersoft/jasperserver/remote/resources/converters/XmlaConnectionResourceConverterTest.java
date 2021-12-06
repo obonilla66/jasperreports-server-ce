@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.XMLAConnection;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.XMLAConnectionImpl;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
@@ -63,7 +64,8 @@ public class XmlaConnectionResourceConverterTest {
         clientObject.setDataSource(expectedDataSource);
         clientObject.setPassword(expectedPassword);
         clientObject.setUsername(expectedUsername);
-        final XMLAConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final XMLAConnection result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.getURI(), expectedUrl);
         assertEquals(result.getCatalog(), expectedCatalog);
@@ -78,7 +80,8 @@ public class XmlaConnectionResourceConverterTest {
         ClientXmlaConnection clientObject = new ClientXmlaConnection();
         XMLAConnection serverObject = new XMLAConnectionImpl();
         serverObject.setPassword(expectedPassword);
-        final XMLAConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final XMLAConnection result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertEquals(result.getPassword(), expectedPassword);
     }
 

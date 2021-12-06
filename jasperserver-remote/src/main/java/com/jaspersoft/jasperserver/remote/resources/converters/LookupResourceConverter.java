@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.dto.resources.ClientResourceLookup;
@@ -44,17 +45,17 @@ public class LookupResourceConverter extends ResourceConverterImpl<ResourceLooku
     private ResourceConverterProvider resourceConverterProvider;
 
     @Override
-    public ResourceDetails toServer(ClientResourceLookup clientObject, ResourceLookup resultToUpdate, ToServerConversionOptions options) {
+    public ResourceDetails toServer(ExecutionContext ctx, ClientResourceLookup clientObject, ResourceLookup resultToUpdate, ToServerConversionOptions options) {
         throw new IllegalStateException("ResourceLookup is read only object. ToServer conversion isn't supported");
     }
 
     @Override
-    protected ResourceLookup resourceSpecificFieldsToServer(ClientResourceLookup clientObject, ResourceLookup resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected ResourceLookup resourceSpecificFieldsToServer(ExecutionContext ctx, ClientResourceLookup clientObject, ResourceLookup resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         throw new IllegalStateException("ResourceLookup is read only object. ToServer conversion isn't supported");
     }
 
     @Override
-    public ResourceLookup toServer(ClientResourceLookup clientObject, ToServerConversionOptions options) {
+    public ResourceLookup toServer(ExecutionContext ctx, ClientResourceLookup clientObject, ToServerConversionOptions options) {
         throw new IllegalStateException("ResourceLookup is read only object. ToServer conversion isn't supported");
     }
 

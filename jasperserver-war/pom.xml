@@ -56,6 +56,11 @@
                         <artifactId>maven-war-plugin</artifactId>
                         <version>2.2</version>
                         <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Dependencies>jdk.unsupported</Dependencies>
+                                </manifestEntries>
+                            </archive>
                             <webResources>
                                 <resource>
                                     <directory>src/main/webappAdditions</directory>
@@ -99,6 +104,11 @@
                         <artifactId>maven-war-plugin</artifactId>
                         <version>2.2</version>
                         <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Dependencies>jdk.unsupported</Dependencies>
+                                </manifestEntries>
+                            </archive>
                             <webResources>
                                 <resource>
                                     <directory>src/main/webappAdditions</directory>
@@ -254,9 +264,9 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.velocity</groupId>
-                    <artifactId>velocity</artifactId>
+                    <artifactId>velocity-engine-core</artifactId>
                 </exclusion>
-                  <exclusion>
+                <exclusion>
                     <groupId>org.bouncycastle</groupId>
                     <artifactId>bcmail-jdk15on</artifactId>
                 </exclusion>
@@ -288,6 +298,10 @@
                 <exclusion>
                     <groupId>xml-apis</groupId>
                     <artifactId>xml-apis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -523,7 +537,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
+            <version>${javax.servlet-api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -646,27 +660,27 @@
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-anim</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-awt-util</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-bridge</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-css</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-dom</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>xml-apis</groupId>
@@ -677,22 +691,22 @@
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-ext</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-gvt</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-parser</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-script</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.xmlgraphics</groupId>
@@ -703,27 +717,27 @@
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-svg-dom</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-svggen</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-transcoder</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-util</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-xml</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <!-- END: batik dependencies -->
         <dependency>
@@ -733,14 +747,8 @@
 		</dependency>
         <dependency>
             <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity</artifactId>
-            <version>1.7</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-lang</groupId>
-                    <artifactId>commons-lang</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>velocity-engine-core</artifactId>
+            <version>2.3</version>
         </dependency>
         <dependency>
             <groupId>iReport</groupId>
@@ -836,7 +844,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-            <version>2.4.2</version>
+            <version>2.8.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
@@ -866,7 +874,7 @@
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>groovy-sandbox</artifactId>
-            <version>1.26-jaspersoft-1</version>
+            <version>1.26-jaspersoft-2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.codehaus.groovy</groupId>
@@ -912,20 +920,32 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <finalName>jasperserver-pro-${project.version}</finalName>
-                    <descriptors>
-                        <file>shared-it-resources-descriptor.xml</file>
-                    </descriptors>
-                </configuration>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <id>assembly</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>attached</goal>
+                            <goal>single</goal>
                         </goals>
+                        <configuration>
+                            <finalName>jasperserver-pro-${project.version}</finalName>
+                            <descriptors>
+                                <file>shared-it-resources-descriptor.xml</file>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>config</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <file>shared-config-descriptor.xml</file>
+                            </descriptors>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -974,6 +994,18 @@
                         </exclusions>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Dependencies>jdk.unsupported</Dependencies>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
 <!--TODO: Recheck if this commented out section is needed-->
 <!--

@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.jaxrs.permission;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InternalURI;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.PermissionUriProtocol;
@@ -93,6 +95,7 @@ public class RepositoryPermissionsJaxrsServiceTest {
 
     private final ObjectPermission serverPermission = new ObjectPermissionImpl();
     private final RepositoryPermission clientPermission = new RepositoryPermission();
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void setUp() throws Exception {
@@ -104,7 +107,7 @@ public class RepositoryPermissionsJaxrsServiceTest {
         when(permissionRecipientIdentityResolver.toIdentity(roleUri)).thenReturn(roleIdentity);
 
         when(converter.toClient(serverPermission, null)).thenReturn(clientPermission);
-        when(converter.toServer(clientPermission, null)).thenReturn(serverPermission);
+        when(converter.toServer(ctx, clientPermission, null)).thenReturn(serverPermission);
 
         mockPermissons.add(createObjectPermissionForRole(1, "repo:/", "ROLE_SUPERUSER", null));
         mockPermissons.add(createObjectPermissionForRole(0, "repo:/", "ROLE_ANONYMOUS", null));

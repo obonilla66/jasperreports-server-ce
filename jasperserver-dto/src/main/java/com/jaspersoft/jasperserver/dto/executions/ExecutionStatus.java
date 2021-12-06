@@ -27,5 +27,5 @@ package com.jaspersoft.jasperserver.dto.executions;
  * @version $Id: ExecutionStatus.java 26599 2012-12-10 13:04:23Z ykovalchyk $
  */
 public enum ExecutionStatus {
-    execution, ready, cancelled, failed, queued
+    execution, ready, cancelled, failed, queued, moved;
 }

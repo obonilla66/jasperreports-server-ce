@@ -48,6 +48,7 @@
         -->
         <%@ include file="decoratorCommonImports.jsp" %>
         <decorator:head />
+    <%@ include file="decoratorEndingImports.jsp" %>
     </head>
 
 <c:choose>

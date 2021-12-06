@@ -25,8 +25,8 @@ showUsage() {
 #
 # Validating and setting edition.
 #
-if [[ $# -lt 1 || "$1" != "ce" && "$1" != "pro" ]]; then
-  fail "JasperReports Server edition (ce|pro) expected as input"
+if [[ $# -lt 1 || "$1" != "ce" && "$1" != "pro" && "$1" != "docker" ]]; then
+  fail "JasperReports Server edition (ce|pro|docker) expected as input"
 fi
 JS_EDITION=$1
 
@@ -41,6 +41,41 @@ else
   if [ "$JS_OPTION" == "" ]; then
     JS_ANT_TARGET=install-normal-$JS_EDITION
     JS_OPTION=default
+
+  elif [ "$1" == "docker" ]; then
+    JS_EDITION=pro
+
+    case "$JS_OPTION" in
+      minimal)
+        JS_ANT_TARGET=install-docker-$JS_EDITION
+      ;;
+
+      db)
+        JS_ANT_TARGET=install-docker-db
+      ;;
+
+      regen-config)
+        JS_ANT_TARGET=refresh-config
+      ;;
+
+      drop-db)
+        JS_ANT_TARGET=drop-js-db
+      ;;
+
+      test)
+        JS_ANT_TARGET=pre-install-test-docker
+      ;;
+
+      help)
+        cat ./bin/install.help
+        exit 0
+      ;;
+
+      *)
+        fail "Invalid option specified"
+      ;;
+    esac
+
   else
     case "$JS_OPTION" in
       minimal)

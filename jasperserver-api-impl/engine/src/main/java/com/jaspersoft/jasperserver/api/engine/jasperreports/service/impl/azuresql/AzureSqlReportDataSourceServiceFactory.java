@@ -51,7 +51,6 @@ class AzureSqlReportDataSourceServiceFactory extends JdbcReportDataSourceService
     private String defaultKeyStoreType;
     private String defaultJdbcDriverClassName;
     private RepositoryService repositoryService;
-    private MessageSource messageSource;
     private AzureSqlManagementService azureSqlManagementService;
 
     @Override
@@ -71,7 +70,7 @@ class AzureSqlReportDataSourceServiceFactory extends JdbcReportDataSourceService
             sqlDs = getAutoRecoveringDs(azureSqlReportDs, sqlDs);
         }
 
-        return new JdbcDataSourceService(sqlDs, getTimeZoneByDataSourceTimeZone(azureSqlReportDs.getTimezone()));
+        return new JdbcDataSourceService(sqlDs, getTimeZoneByDataSourceTimeZone(azureSqlReportDs.getTimezone())).withTracer(tracer);
     }
 
     private AutoRecoveringAzureSqlDataSourceDecorator getAutoRecoveringDs(AzureSqlReportDataSource azureSqlReportDs,
@@ -166,10 +165,6 @@ class AzureSqlReportDataSourceServiceFactory extends JdbcReportDataSourceService
 
     public void setDefaultJdbcDriverClassName(String defaultJdbcDriverClassName) {
         this.defaultJdbcDriverClassName = defaultJdbcDriverClassName;
-    }
-
-    public void setMessageSource(MessageSource messageSource) {
-        this.messageSource = messageSource;
     }
 
     public void setAzureSqlManagementService(AzureSqlManagementService azureSqlManagementService) {

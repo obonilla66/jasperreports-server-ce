@@ -89,7 +89,7 @@ public class PptxReportOutput extends AbstractReportOutput
 				pptxDataOut.close();
 				
 				String filename = jobContext.getBaseFilename() + "." + getFileExtension();
-				return new ReportOutput(pptxData, ContentResource.TYPE_PPTX, filename);
+				return new ReportOutput(pptxData, getFileType(), filename);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -120,9 +120,15 @@ public class PptxReportOutput extends AbstractReportOutput
 		this.exportParams = exportParams;
 	}
 
-	protected String getFileExtension()
+	@Override
+	public String getFileExtension()
 	{
 		return "pptx";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_PPTX;
 	}
 	
 	@Override

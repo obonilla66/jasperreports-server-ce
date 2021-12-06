@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -39,7 +40,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id$
  */
 @XmlRootElement
-public class ErrorDescriptor implements DeepCloneable<ErrorDescriptor> {
+public class ErrorDescriptor implements DeepCloneable<ErrorDescriptor>, Serializable {
     public static final String ERROR_CODE_UNEXPECTED_ERROR = "unexpected.error";
 
     private String message;

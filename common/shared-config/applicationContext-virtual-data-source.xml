@@ -20,7 +20,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
@@ -42,6 +43,7 @@
         <property name="engineService"><ref bean="engineService"/></property>
         <property name="repositoryService"><ref bean="${bean.repositoryService}"/></property>
         <property name="poolTimeoutInMinute" value="20"/>
+        <property name="athenaPoolTimeoutInMinute" value="45"/>
         <property name="useSubDSTableList" value="true"/>
         <property name="virtualDataSourceConfigList">
             <list>
@@ -139,6 +141,16 @@
                     <property name="translatorName" value="elasticsearch-jdbc"/>
                     <property name="translatorFactoryClass" value="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.translator.jdbc.elasticsearch.ElasticsearchExecutionFactory"/>
                 </bean>
+                <bean class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig">
+                    <property name="productName" value="AWS.Athena"/>
+                    <property name="translatorName" value="awsathena-jdbc"/>
+                    <property name="translatorFactoryClass" value="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.translator.jdbc.aws.athena.AWSAthenaExecutionFactory"/>
+                </bean>
+                <bean class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig">
+                    <property name="productName" value="Snowflake"/>
+                    <property name="translatorName" value="snowflake-jdbc"/>
+                    <property name="translatorFactoryClass" value="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.translator.jdbc.snowflake.SnowflakeExecutionFactory"/>
+                </bean>
             </list>
         </property>
 
@@ -177,9 +189,9 @@
                             <entry key="importer.tableTypes" value="TABLE,VIEW,SYNONYM"/>
                         </map>
                 </entry>
-                <entry key="elasticsearch-jdbc">
+                <entry key="awsathena-jdbc">
                     <map>
-                        <entry key="importer.tableTypes" value="BASE TABLE"/>
+                        <entry key="importer.tableTypes" value="EXTERNAL_TABLE,MANAGED_TABLE,TABLE,VIEW"/>
                     </map>
                 </entry>
 
@@ -232,12 +244,13 @@
         <!-- uncomment to make objects of these types available in VDS -->
         <!-- by default only object of type TABLE are available -->
         <!-- possible values are the ones returned by java.sql.DatabaseMetaData.getTableTypes() -->
-        <!--property name="databaseObjectTypesFilter">
-          <util:set>
-            <value>TABLE</value>
-            <value>VIEW</value>
-          </util:set>
-        </property-->
+        <property name="databaseObjectTypesFilter">
+            <set>
+                <value>TABLE</value>
+                <!--<value>VIEW</value>-->
+                <value>EXTERNAL_TABLE</value><!--This value has been added for AWS athena-->
+            </set>
+        </property>
     </bean>
 
     <bean id="defaultTranslatorConfig" class="com.jaspersoft.jasperserver.api.engine.common.virtualdatasourcequery.teiid.TranslatorConfig" lazy-init="true">

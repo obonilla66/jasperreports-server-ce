@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -47,8 +48,7 @@ import org.testng.annotations.Test;
 import javax.validation.Validator;
 import java.text.SimpleDateFormat;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
@@ -87,7 +87,7 @@ public class MondrianXmlaDefinitionResourceConverterTest {
         when(calendarFormatProvider.getDatetimeFormat()).thenReturn(new SimpleDateFormat());
         when(permissionsService.getEffectivePermission(nullable(Resource.class), nullable(Authentication.class))).thenReturn(repositoryPermission);
         when(resourceReferenceConverterProvider.getConverterForType(nullable(Class.class))).thenReturn(resourceReferenceConverter);
-        when(resourceReferenceConverter.toServer(nullable(ClientMondrianConnection.class), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(serverConnection);
+        when(resourceReferenceConverter.toServer(any(ExecutionContext.class), nullable(ClientMondrianConnection.class), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(serverConnection);
         when(resourceReferenceConverter.toClient(nullable(ResourceReference.class), nullable(ToClientConversionOptions.class))).thenReturn(clientConnection);
     }
 
@@ -107,7 +107,8 @@ public class MondrianXmlaDefinitionResourceConverterTest {
 
     @Test
     public void testToServer() throws Exception{
-        MondrianXMLADefinition converted = converter.toServer(client, null);
+        MondrianXMLADefinition converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , client, null);
 
         assertEquals(converted.getMondrianConnection(), serverConnection);
         assertEquals(converted.getCatalog(), client.getCatalog());

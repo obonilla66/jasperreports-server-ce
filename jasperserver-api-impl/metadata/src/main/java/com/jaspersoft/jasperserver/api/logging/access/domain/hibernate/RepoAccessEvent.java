@@ -22,12 +22,10 @@ package com.jaspersoft.jasperserver.api.logging.access.domain.hibernate;
 
 import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEventImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.impl.IdedObject;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.PersistentObjectResolver;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
-import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEvent;
 
 import java.util.Date;
@@ -38,9 +36,28 @@ import java.util.Date;
  */
 public class RepoAccessEvent implements IdedObject {
     private long id;
-    private RepoUser user;
+    private String userId; // user|tenantId
     private Date eventDate;
-    private RepoResource resource;
+    private String resourceUri;
+    private String resourceType;
+    private boolean hidden;
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
     private boolean updating;
 
     public long getId() {
@@ -51,12 +68,10 @@ public class RepoAccessEvent implements IdedObject {
         this.id = id;
     }
 
-    public RepoUser getUser() {
-        return user;
-    }
+    public String getUserId() {return userId; }
 
-    public void setUser(RepoUser user) {
-        this.user = user;
+    public void setUserId(String user) {
+        this.userId = user;
     }
 
     public Date getEventDate() {
@@ -67,13 +82,15 @@ public class RepoAccessEvent implements IdedObject {
         this.eventDate = eventDate;
     }
 
-    public RepoResource getResource() {
-        return resource;
+    public String getResourceUri() {
+        return resourceUri;
     }
 
-    public void setResource(RepoResource resource) {
-        this.resource = resource;
+    public void setResourceUri(RepoResource resource) {
+        this.resourceUri = resource.getResourceURI();
     }
+
+    public void setResourceUri(String resourceUri) {this.resourceUri = resourceUri; }
 
     public boolean isUpdating() {
         return updating;
@@ -85,14 +102,12 @@ public class RepoAccessEvent implements IdedObject {
 
     public Object toClient(ResourceFactory clientMappingFactory) {
         AccessEvent accessEvent = (AccessEvent)clientMappingFactory.newObject(AccessEvent.class);
-        accessEvent.setUser((User)getUser().toClient(clientMappingFactory));
+        accessEvent.setUserId(getUserId());
         accessEvent.setEventDate(getEventDate());
-        try {
-            accessEvent.setResource((Resource)(getResource()).toClient(clientMappingFactory));
-        } catch (Exception ex) {
-            throw new AccessEventImpl.TranslateException(accessEvent, ((Resource)getResource()), clientMappingFactory, ex);
-        }
+        accessEvent.setResourceUri(getResourceUri());
         accessEvent.setUpdating(isUpdating());
+        accessEvent.setResourceType(getResourceType());
+        accessEvent.setHidden(isHidden());
         return accessEvent;
     }
 
@@ -100,11 +115,11 @@ public class RepoAccessEvent implements IdedObject {
 
     public void copyFromClient(Object objIdent, PersistentObjectResolver resolver) {
         AccessEvent accessEvent = (AccessEvent)objIdent;
-        RepoUser repoUser = (RepoUser)resolver.getPersistentObject(accessEvent.getUser());
-        setUser(repoUser);
+        setUserId(accessEvent.getUserId());
         setEventDate(accessEvent.getEventDate());
-        RepoResource repoResource = (RepoResource)resolver.getPersistentObject(accessEvent.getResource()); 
-        setResource(repoResource);
+        setResourceUri(accessEvent.getResourceUri());
         setUpdating(accessEvent.isUpdating());
+        setResourceType(accessEvent.getResourceType());
+        setHidden(accessEvent.isHidden());
     }
 }

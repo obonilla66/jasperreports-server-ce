@@ -240,8 +240,8 @@
                		https://jira.tibco.com/browse/JS-55716, https://jira.tibco.com/browse/JS-55746
                		changed from 1.62 to 1.64
             -->
-            <resource-root path="WEB-INF/lib/bcprov-jdk15on-1.65.jar" use-physical-code-source="true"/>
-            <resource-root path="WEB-INF/lib/bcpkix-jdk15on-1.65.jar" use-physical-code-source="true"/>
+            <resource-root path="WEB-INF/lib/bcprov-jdk15on-1.68.jar" use-physical-code-source="true"/>
+            <resource-root path="WEB-INF/lib/bcpkix-jdk15on-1.68.jar" use-physical-code-source="true"/>
 
             <!--
                2013-01-22 thorick

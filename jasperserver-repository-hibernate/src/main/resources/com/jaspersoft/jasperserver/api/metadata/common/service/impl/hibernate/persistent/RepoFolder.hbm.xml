@@ -26,6 +26,7 @@
 	<class 
 			table="JIResourceFolder" 
 			name="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFolder" batch-size="1000">
+		<cache usage = "read-write" region="folders"/>
 		<id name="id" type="long" >
 			<generator class="native"/>
 		</id>

@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.api.common.crypto;
 import com.jaspersoft.jasperserver.crypto.KeystoreManager;
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -33,6 +34,7 @@ import static java.lang.System.getProperty;
  * This factory tris to get instance of {@code KeystoreManager} and
  * fails application initialization if {@code KeystoreManager} is not initialized.
  */
+@Lazy
 @Component("keystoreManager")
 public class KeystoreManagerFactory implements FactoryBean<KeystoreManager> {
 

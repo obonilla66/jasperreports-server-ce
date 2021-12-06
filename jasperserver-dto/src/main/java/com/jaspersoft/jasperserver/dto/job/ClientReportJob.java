@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.dto.job;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+import com.jaspersoft.jasperserver.dto.common.ExportType;
 import com.jaspersoft.jasperserver.dto.common.OutputFormat;
 import com.jaspersoft.jasperserver.dto.job.adapters.OutputFormatXmlAdapter;
 import com.jaspersoft.jasperserver.dto.job.adapters.TimestampToStringXmlAdapter;
@@ -56,6 +57,7 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
     private ClientJobTrigger trigger;
     private ClientJobSource source;
     private String baseOutputFilename;
+    private ExportType exportType;
     private Set<OutputFormat> outputFormats;
     private String outputLocale;
     private String outputTimeZone;
@@ -77,6 +79,7 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
         this.creationDate = copyOf(other.getCreationDate());
         this.trigger = copyOf(other.getTrigger());
         this.source = copyOf(other.getSource());
+        this.exportType = other.getExportType();
         this.baseOutputFilename = other.getBaseOutputFilename();
         this.outputFormats = copyOf(other.getOutputFormats());
         this.outputLocale = other.getOutputLocale();
@@ -211,6 +214,15 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
         return this;
     }
 
+	public ExportType getExportType() {
+		return exportType;
+	}
+
+	public ClientReportJob setExportType(ExportType exportType) {
+		this.exportType = exportType;
+        return this;
+	}
+
     @XmlElement(name = "outputFormats")
     @XmlJavaTypeAdapter(OutputFormatXmlAdapter.class)
     public Set<OutputFormat> getOutputFormats() {
@@ -246,6 +258,9 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
         if (creationDate != null ? !creationDate.equals(that.creationDate) : that.creationDate != null) return false;
         if (trigger != null ? !trigger.equals(that.trigger) : that.trigger != null) return false;
         if (source != null ? !source.equals(that.source) : that.source != null) return false;
+        if (exportType != null ? !exportType.equals(that.exportType) : that.exportType != null) {
+            return false;
+        }
         if (baseOutputFilename != null ? !baseOutputFilename.equals(that.baseOutputFilename) : that.baseOutputFilename != null)
             return false;
         if (outputFormats != null ? !outputFormats.equals(that.outputFormats) : that.outputFormats != null)
@@ -271,6 +286,7 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
         result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
         result = 31 * result + (trigger != null ? trigger.hashCode() : 0);
         result = 31 * result + (source != null ? source.hashCode() : 0);
+        result = 31 * result + (exportType != null ? exportType.hashCode() : 0);
         result = 31 * result + (baseOutputFilename != null ? baseOutputFilename.hashCode() : 0);
         result = 31 * result + (outputFormats != null ? outputFormats.hashCode() : 0);
         result = 31 * result + (outputLocale != null ? outputLocale.hashCode() : 0);
@@ -293,6 +309,7 @@ public class ClientReportJob implements DeepCloneable<ClientReportJob>{
                 ", trigger=" + trigger +
                 ", source=" + source +
                 ", baseOutputFilename='" + baseOutputFilename + '\'' +
+                ", exportType=" + exportType +
                 ", outputFormats=" + outputFormats +
                 ", outputLocale='" + outputLocale + '\'' +
                 ", outputTimeZone='" + outputTimeZone + '\'' +

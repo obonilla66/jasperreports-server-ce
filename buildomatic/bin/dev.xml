@@ -543,7 +543,7 @@
         </parallel>
 
         <!-- generate list of third-party JARs and check against "master" list -->
-         <!--Can't be run in parallel without ensuring ${ieLib} folder has been processed first-->
+        <runtarget target="check-war-deps-ce"/> <!--Can't be run in parallel without ensuring ${ieLib} folder has been processed first-->
     </target>
 
     <target name="build-pro"
@@ -598,7 +598,7 @@
             </then>
         </if>
     	<!-- generate list of third-party JARs and check against "master" list -->
-        
+        <runtarget target="check-war-deps-pro"/>
         </parallel>
     </target>
 
@@ -643,6 +643,11 @@
            description="drop js db, create js db, build js ddl pro, initialize the js db pro">
     </target>
 
+    <target name="build-init-audit-db-pro"
+            depends="drop-audit-db,create-audit-db,init-audit-db-pro"
+            description="drop audit db, create audit db, initialize the audit db pro">
+    </target>
+
     <target name="re-init-js-db-ce"
            depends="drop-js-db,create-js-db,init-js-db-ce"
            description="drop js db, create js db, init js db for CE (handy for dev work)">
@@ -651,6 +656,11 @@
     <target name="re-init-js-db-pro"
            depends="drop-js-db,create-js-db,init-js-db-pro"
            description="drop js db, create js db, init js db for Pro (handy for dev work)">
+    </target>
+
+    <target name="re-init-audit-db-pro"
+            depends="drop-audit-db,create-audit-db,init-audit-db-pro"
+            description="drop audit db, create audit db, init audit db for Pro (handy for dev work)">
     </target>
 
     <target name="run-production-data-ce"
@@ -719,6 +729,7 @@
             <arg value="help:active-profiles"/>
             <arg value="clean"/>
             <arg value="install"/>
+            <arg value="-X"/>
             <arg value="-Denv=${env}"/>
         </runmaven>
     </target>
@@ -728,6 +739,12 @@
            description="build and run the pro integration tests">
 
         <property name="OFFLINE_ARG" value="-V"/>
+        <java classname="prop"
+              fork="true">
+            <sysproperty key="scalableQueryEngine.enabled"
+                         value="${scalableQueryEngine.enabled}"
+            />
+        </java>
 
         <!-- to enable remote debugging, add "-Dremote.debug=true" to command line, and attach debugger to port 8000 (address set in runmaven macro) -->
         <if>
@@ -738,6 +755,12 @@
             <not><isset property="env"/></not>
             <then>
                 <property name="env" value="dev"/>
+            </then>
+        </if>
+        <if>
+            <not><isset property="scalableQueryEngine.enabled"/></not>
+            <then>
+                <property name="scalableQueryEngine.enabled" value="false"/>
             </then>
         </if>
 
@@ -760,10 +783,11 @@
                         <arg value="install"/>
                         <arg value="-Denv=${env}"/>
                         <arg value="-Ddatabase=${dbType}"/>
+                        <arg value="-DscalableQueryEngine.enabled=${scalableQueryEngine.enabled}"/>
                         <arg value="${OFFLINE_ARG}"/>
                     </runmaven>
                         <parallel>
-                            <runmaven dir="${js-pro-path}/integration-tests/adhoc-integration-test">
+                           <runmaven dir="${js-pro-path}/integration-tests/adhoc-integration-test">
                                 <arg value="clean"/>
                                 <arg value="install"/>
                                 <arg value="-Denv=${env}"/>
@@ -778,8 +802,9 @@
                                 <arg value="-Ddatabase=${dbType}"/>
                                 <arg value="${OFFLINE_ARG}"/>
                                 <arg value="-Pintegration-tests-profile"/>
+                                <arg value="-DscalableQueryEngine.enabled=${scalableQueryEngine.enabled}"/>
                             </runmaven>
-                        </parallel>
+                       </parallel>
                     </sequential>
             </then>
         </if>
@@ -889,13 +914,13 @@
     <!-- NOTE: the "*-all" targets are oriented toward executing -pro targets -->
 
     <target name="build-all"
-           depends="build-src-all,build-init-js-db-pro,run-integration-tests-pro"
+           depends="build-src-all,build-init-js-db-pro,build-init-audit-db-pro,run-integration-tests-pro"
            description="(do not do svn update), clean build all src, drop-recreate db,
                         build ddl pro, init js db pro, run integration tests pro, run production data pro">
     </target>
 
     <target name="build-all-svn-update"
-           depends="update-all,build-src-all,build-init-js-db-pro,run-integration-tests-pro,run-production-data-pro"
+           depends="update-all,build-src-all,build-init-js-db-pro,build-init-audit-db-pro,run-integration-tests-pro,run-production-data-pro"
            description="(do not do svn update), clean build all src, drop-recreate db,
                         build ddl pro, init js db pro, run integration tests pro, run production data pro">
     </target>
@@ -1235,6 +1260,7 @@
         <runSQL jdbcUrl="${js.it.jdbcUrl}" print="true" onerror="${runSqlOnError}">
             <fileset dir="${currentSqlDir}">
                 <include name="js-pro-create.ddl"/>
+                <include name="js-pro-create-audit.ddl"/>
                 <include name="quartz.ddl"/>
             </fileset>
         </runSQL>
@@ -1294,6 +1320,7 @@
         <runSQL jdbcUrl="${js.it.rest.jdbcUrl}" print="true" onerror="${runSqlOnError}">
             <fileset dir="${currentSqlDir}">
                 <include name="js-pro-create.ddl"/>
+                <include name="js-pro-create-audit.ddl"/>
                 <include name="quartz.ddl"/>
             </fileset>
         </runSQL>
@@ -1358,9 +1385,9 @@
 
     <target name="get-cve-dependencies" depends="init-source-paths">
         <mkdir dir="${js-path}/target/dependency-check"/>
-        <get src="${mvn-mirror}/com/jaspersoft/dependency-check/dependency-check-ant-5.1.1.zip"
+        <get src="${mvn-mirror}/com/jaspersoft/dependency-check/dependency-check-ant-5.3.2.zip"
              dest="${js-path}/target/dependency-check" usetimestamp="true"/>
-        <unzip src="${js-path}/target/dependency-check/dependency-check-ant-5.1.1.zip"
+        <unzip src="${js-path}/target/dependency-check/dependency-check-ant-5.3.2.zip"
                dest="${js-path}/target/dependency-check">
             <patternset>
                 <include name="**/*.jar"/>
@@ -1368,8 +1395,8 @@
         </unzip>
         <property name="dependency-check.home" value="${js-path}/target/dependency-check/dependency-check-ant"/>
         <path id="dependency-check.path">
-            <pathelement location="${dependency-check.home}/dependency-check-ant-5.1.1.jar"/>
-            <fileset dir="${dependency-check.home}">
+            <pathelement location="${dependency-check.home}/dependency-check-ant.jar"/>
+            <fileset dir="${dependency-check.home}/lib">
                 <include name="*.jar"/>
             </fileset>
         </path>
@@ -1380,10 +1407,13 @@
 
 	<target name="check-cve-ce" depends="init-source-paths,get-cve-dependencies ,copy-extra-jars" description="CVE check analysis">
 	          <dependency-check  assemblyAnalyzerEnabled="false"
-                                     projectname="Jasperserver-ce"
-	                             reportformat="HTML"
+                                 projectname="Jasperserver-ce"
+	                             reportformat="ALL"
 	                             reportoutputdirectory="${js-path}/target"
-	                             failBuildOnCVSS = "0">
+	                             failBuildOnCVSS = "0"
+                                 centralAnalyzerUseCache="false"
+                                 nodeAuditAnalyzerUseCache="false"
+                                 dataDirectory="${user.home}">
 	              <suppressionfile path="suppress-cve-ce.xml" />
 	        <fileset dir="${js-path}/jasperserver-war/target/jasperserver/WEB-INF/lib">
 	            <include name="**/*.jar"/>
@@ -1396,10 +1426,13 @@
 
 	<target name="check-cve-pro" depends="init-source-paths,get-cve-dependencies,copy-extra-jars" description="CVE check analysis">
 	    <dependency-check assemblyAnalyzerEnabled="false"
-                              projectname="Jasperserver-pro"
+                          projectname="Jasperserver-pro"
 	                      reportoutputdirectory="${js-pro-path}/target"
-	                      reportformat="HTML"
-	    	 			  failBuildOnCVSS = "0">
+	                      reportformat="ALL"
+                          centralAnalyzerUseCache="false"
+                          nodeAuditAnalyzerUseCache="false"
+	    	 			  failBuildOnCVSS = "0"
+                          dataDirectory="${user.home}">
 	    	 	<suppressionfile path="suppress-cve-pro.xml" />
 	        <fileset dir="${js-pro-path}/jasperserver-war/target/jasperserver-pro/WEB-INF/lib">
 	            <include name="**/*.jar"/>

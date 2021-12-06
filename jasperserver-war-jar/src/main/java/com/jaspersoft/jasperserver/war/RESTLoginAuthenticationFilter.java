@@ -34,12 +34,20 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLDecoder;
+
+import static org.springframework.web.bind.annotation.RequestMethod.OPTIONS;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 /**
  * @author dlitvak
@@ -48,33 +56,35 @@ import java.net.URLDecoder;
 public class RESTLoginAuthenticationFilter implements Filter {
 
     private static final Log log = LogFactory.getLog(RESTLoginAuthenticationFilter.class);
-    private static final String LOGIN_PATH_INFO = "/login";
+    static final String LOGIN_PATH_INFO = "/login";
 
     private AuthenticationManager authenticationManager;
     private String userNameParam = "j_username";
     private String userPwdParam = "j_password";
-
-
 
     private boolean postOnly = true;
     private ResponseHeaderUpdater responseHeadersUpdater;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+
         if (responseHeadersUpdater != null) {
             responseHeadersUpdater.changeHeaders(httpResponse, httpRequest);
         }
+
         String pathInfo = httpRequest.getPathInfo();
         if (pathInfo != null && pathInfo.equalsIgnoreCase(LOGIN_PATH_INFO)) {
-            if (!"post".equalsIgnoreCase(httpRequest.getMethod()) && this.postOnly) {
+            if (!POST.name().equalsIgnoreCase(httpRequest.getMethod()) && this.postOnly) {
                 sendUnauthorizedResponse(httpResponse, HttpServletResponse.SC_BAD_REQUEST, "Unauthorized. Only POST is accepted per configuration.");
+                return;
+            } else if (OPTIONS.name().equalsIgnoreCase(httpRequest.getMethod())) {
+                httpResponse.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
 
@@ -89,7 +99,6 @@ public class RESTLoginAuthenticationFilter implements Filter {
                 authRequest.setDetails(new WebAuthenticationDetails(httpRequest));
 
                 Authentication authResult;
-                PrintWriter pw = httpResponse.getWriter();
                 try {
                     authResult = authenticationManager.authenticate(authRequest);
 
@@ -129,10 +138,8 @@ public class RESTLoginAuthenticationFilter implements Filter {
         pw.print(msg);
     }
 
-
     @Override
     public void destroy() {
-
     }
 
     public AuthenticationManager getAuthenticationManager() {

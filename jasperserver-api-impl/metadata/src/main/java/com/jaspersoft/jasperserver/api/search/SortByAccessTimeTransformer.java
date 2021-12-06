@@ -33,9 +33,13 @@ public class SortByAccessTimeTransformer implements ResultTransformer {
 
         if (resultList != null) {
             for (Object result : resultList) {
-                Object[] values = (Object[]) result;
+                if(result instanceof Long){
+                    idList.add((Long)result);
+                } else {
+                    Object[] values = (Object[]) result;
 
-                idList.add((Long) values[0]);
+                    idList.add((Long) values[0]);
+                }
             }
         }
 
@@ -69,5 +73,18 @@ public class SortByAccessTimeTransformer implements ResultTransformer {
             }
         }
         return count;
+    }
+
+    public List<String> transformToURIList(List resultList) {
+        List<String> uriList = new ArrayList();
+
+        if(resultList != null){
+            for (Object result : resultList) {
+                Object[] values = (Object[]) result;
+                uriList.add((String) values[0]);
+            }
+        }
+
+        return uriList;
     }
 }

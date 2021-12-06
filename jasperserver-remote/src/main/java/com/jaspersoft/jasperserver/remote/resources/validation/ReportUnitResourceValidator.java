@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
@@ -52,7 +53,7 @@ public class ReportUnitResourceValidator<T extends ReportUnit> extends GenericRe
     protected RepositoryService repositoryService;
 
     @Override
-    protected void internalValidate(T resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, T resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         final ResourceReference jrxmlReference = resource.getMainReport();
         if (empty(jrxmlReference)) {
             errors.add(new MandatoryParameterNotFoundException("JRXML"));
@@ -62,7 +63,7 @@ public class ReportUnitResourceValidator<T extends ReportUnit> extends GenericRe
             // if file resource doesn't exist yet, then it is local file creation.
             // in this case file content is mandatory
             errors.add(new MandatoryParameterNotFoundException("JRXML.content"));
-        } else if (!isJrxmlValid(jrxmlReference)) {
+        } else if (!isJrxmlValid(ctx, jrxmlReference)) {
             errors.add(new IllegalParameterValueException("Invalid JRXML", "JRXML.content", "JRXML.content"));
         }
 
@@ -96,7 +97,7 @@ public class ReportUnitResourceValidator<T extends ReportUnit> extends GenericRe
         }
     }
 
-    protected boolean isJrxmlValid(ResourceReference jrxmlReference) {
+    protected boolean isJrxmlValid(ExecutionContext ctx, ResourceReference jrxmlReference) {
         boolean isValid = true;
         try {
             byte[] data = null;
@@ -104,7 +105,7 @@ public class ReportUnitResourceValidator<T extends ReportUnit> extends GenericRe
                 data = ((FileResource) jrxmlReference.getLocalResource()).getData();
             }
             if (data == null) {
-                data = repositoryService.getResourceData(null, jrxmlReference.getTargetURI()).getData();
+                data = repositoryService.getResourceData(ctx, jrxmlReference.getTargetURI()).getData();
             }
             loadJasperDesign(data);
         } catch (Exception e) {

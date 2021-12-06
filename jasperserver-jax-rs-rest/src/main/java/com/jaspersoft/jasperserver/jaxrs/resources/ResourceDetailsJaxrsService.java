@@ -20,6 +20,12 @@
  */
 package com.jaspersoft.jasperserver.jaxrs.resources;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
@@ -52,16 +58,15 @@ import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
-import javax.ws.rs.core.HttpHeaders;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+
+import static com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl.getRuntimeExecutionContext;
 
 /**
  * <p></p>
@@ -71,6 +76,8 @@ import java.util.Set;
  */
 @Component
 public class ResourceDetailsJaxrsService {
+
+    private static Logger log = LogManager.getLogger(ResourceDetailsJaxrsService.class);
     public static final String PATH_PARAM_URI = "uri";
     @javax.annotation.Resource
     private ResourceConverterProvider resourceConverterProvider;
@@ -78,18 +85,23 @@ public class ResourceDetailsJaxrsService {
     private SingleRepositoryService singleRepositoryService;
     @javax.annotation.Resource
     private Map<String, String> contentTypeMapping;
+    @javax.annotation.Resource(name = "resourceDetailsIncludesVoter")
+    private ResourceIncludesVoter includesVoter;
+
+    @Value("${enable.secretData.forProducts:scalable-query-engine}")
+    private  String[] allowSecretDataForProducts;
 
     public Response getResourceDetails(String uri, String accept, Boolean _expanded, Set<String> expandTypes, List<String> includes,
-                                       Map<String, String[]> additionalProperties) throws ErrorDescriptorException {
+                                       Map<String, String[]> additionalProperties, HttpServletRequest request) throws ErrorDescriptorException {
         final String effectiveAccept = accept != null ? accept.split(";")[0].split(",")[0] : null;
         boolean expanded = _expanded != null ? _expanded : false;
-        Resource resource = singleRepositoryService.getResource(uri);
+        Resource resource = singleRepositoryService.getResource(uri, request.getHeader(HttpHeaders.FROM));
         if (resource == null) {
             throw new ResourceNotFoundException(uri);
         }
         Response response;
         final String clientType = ClientTypeHelper.extractClientType(accept);
-        if (clientType == null && (resource instanceof FileResource || resource instanceof ContentResource) && !ResourceMediaType.FILE_XML.equals(effectiveAccept) && !ResourceMediaType.FILE_JSON.equals(effectiveAccept)) {
+        if (request.getHeader("source") == null && clientType == null && (resource instanceof FileResource || resource instanceof ContentResource) && !ResourceMediaType.FILE_XML.equals(effectiveAccept) && !ResourceMediaType.FILE_JSON.equals(effectiveAccept)) {
             FileResourceData data = singleRepositoryService.getFileResourceData(resource);
             FileResourceData wrapper = new SelfCleaningFileResourceDataWrapper(data);
             String type = resource instanceof FileResource ? ((FileResource) resource).getFileType() : ((ContentResource) resource).getFileType();
@@ -101,16 +113,24 @@ public class ResourceDetailsJaxrsService {
                 toClientConverter = resourceConverterProvider.getToClientConverter(resource.getResourceType(), clientType);
             }
 
+            List<String> optionsIncludes = filterIncludes(includes);
             ClientResource clientResource = null;
             ToClientConverter<? super Resource, ? extends ClientResource, ToClientConversionOptions> defaultToClientConverter =
                     resourceConverterProvider.getToClientConverter(resource);
             ToClientConversionOptions options = ToClientConversionOptions.getDefault()
                     .setExpanded(expanded)
                     .setExpandTypes(expandTypes)
-                    .setIncludes(includes)
+                    .setIncludes(optionsIncludes)
                     .setAcceptMediaType(effectiveAccept)
                     .setTimeZone(TimeZoneContextHolder.getTimeZone())
                     .setAdditionalProperties(additionalProperties);
+
+            log.debug("FROM Header : "+request.getHeader(HttpHeaders.FROM) + " URI - "+uri);
+            if (request.getHeader(HttpHeaders.FROM) != null && allowSecretDataForProducts != null
+                    && Arrays.asList(allowSecretDataForProducts).contains(request.getHeader(HttpHeaders.FROM))){
+                options.setAllowSecureDataConversation(true);
+                options.setEnableEncryption(true);
+            }
 
             if (toClientConverter != null) {
                 try {
@@ -148,7 +168,21 @@ public class ResourceDetailsJaxrsService {
         return response;
     }
 
-    public Response deleteResource(String uri) throws ErrorDescriptorException {
+    protected List<String> filterIncludes(List<String> includes) {
+    	if (includes == null || includes.isEmpty()) {
+    		return includes;
+    	}
+    	
+		List<String> filteredIncludes = new ArrayList<>(includes.size());
+		for (String include : includes) {
+			if (includesVoter.allowInclude(include)) {
+				filteredIncludes.add(include);
+			}
+		}
+		return filteredIncludes.size() == includes.size() ? includes : filteredIncludes;
+	}
+
+	public Response deleteResource(String uri) throws ErrorDescriptorException {
         singleRepositoryService.deleteResource(uri);
         return Response.noContent().build();
     }
@@ -207,7 +241,7 @@ public class ResourceDetailsJaxrsService {
 
     public Response defaultPostHandler(InputStream stream, String uri, String sourceUri, String disposition,
             String description, String rawMimeType, String accept, Boolean createFolders, Boolean overwrite,
-            String renameTo, boolean dryRun, Map<String, String[]> additionalProperties) throws ErrorDescriptorException, IOException {
+            String renameTo, boolean dryRun, Map<String, String[]> additionalProperties, HttpServletRequest httpServletRequest) throws ErrorDescriptorException, IOException {
         Response response;
         if (sourceUri != null) {
             String newUri = singleRepositoryService.copyResource(sourceUri, uri, createFolders, overwrite, renameTo);
@@ -218,7 +252,7 @@ public class ResourceDetailsJaxrsService {
             } else {
                 accept = ResourceMediaType.FILE_XML;
             }
-            response = getResourceDetails(newUri, accept, false, null, null, additionalProperties);
+            response = getResourceDetails(newUri, accept, false, null, null, additionalProperties, httpServletRequest);
         } else {
             if (disposition == null || !disposition.contains("filename=") || disposition.endsWith("filename=")) {
                 throw new IllegalParameterValueException("Content-Disposition", disposition);
@@ -320,7 +354,7 @@ public class ResourceDetailsJaxrsService {
 
     public Response defaultPutHandler(InputStream stream, String uri, String sourceUri, String disposition,
             String description, String rawMimeType, String accept, Boolean createFolders, Boolean overwrite,
-            String renameTo, boolean dryRun, Map<String, String[]> additionalProperties) throws ErrorDescriptorException {
+            String renameTo, boolean dryRun, Map<String, String[]> additionalProperties, HttpServletRequest httpServletRequest) throws ErrorDescriptorException {
         Response response;
         if (sourceUri != null) {
             // uri - parent folder uri
@@ -332,7 +366,7 @@ public class ResourceDetailsJaxrsService {
             } else {
                 accept = ResourceMediaType.FILE_XML;
             }
-            response = getResourceDetails(newUri, accept, false, null, null, additionalProperties);
+            response = getResourceDetails(newUri, accept, false, null, null, additionalProperties, httpServletRequest);
         } else {
             // uri - uri of resource
             if (uri == null || uri.endsWith(Folder.SEPARATOR)) {
@@ -394,7 +428,7 @@ public class ResourceDetailsJaxrsService {
         ToServerConversionOptions serverConversionOptions = ToServerConversionOptions.getDefault().setOwnersUri(uri)
                 .setResetVersion(true).setAttachments(attachments).setAdditionalProperties(additionalProperties);
         // convert
-        Resource serverResource = resourceConverterProvider.getToServerConverter(resourceLookup).toServer(resourceLookup, serverConversionOptions);
+        Resource serverResource = resourceConverterProvider.getToServerConverter(resourceLookup).toServer(getRuntimeExecutionContext(), resourceLookup, serverConversionOptions);
 
         ToClientConverter<? super Resource, ? extends ClientResource, ToClientConversionOptions> toClientConverter = resourceConverterProvider.getToClientConverter(serverResource);
         if(accept != null && !accept.isEmpty() && ClientTypeHelper.extractClientType(accept) != null) {
@@ -423,7 +457,7 @@ public class ResourceDetailsJaxrsService {
             ToServerConversionOptions options = ToServerConversionOptions.getDefault().setOwnersUri(uri)
                     .setAttachments(attachments).setAllowReferencesOnly(attachments == null)
                     .setAdditionalProperties(additionalProperties);
-            resource = converter.toServer(resourceLookup, resource, options);
+            resource = converter.toServer(getRuntimeExecutionContext(), resourceLookup, resource, options);
         }
         resource.setURIString(uri);
 

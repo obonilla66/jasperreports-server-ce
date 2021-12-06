@@ -24,6 +24,7 @@ package com.jaspersoft.jasperserver.remote.services.impl;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
@@ -97,9 +98,25 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
 
     private DefaultCopyMoveStrategy defaultCopyMoveStrategy = new DefaultCopyMoveStrategy();
 
+    public static final String SCALABLE_QUERY_ENGINE = "scalable-query-engine";
+
     @Override
     public Resource getResource(String uri) {
         Resource resource = repositoryService.getResource(ExecutionContextImpl.getRestrictedRuntimeExecutionContext(), uri);
+        if (resource == null) {
+            resource = repositoryService.getFolder(null, uri);
+        }
+        return resource;
+    }
+
+    @Override
+    public Resource getResource(String uri, String source) {
+        ExecutionContext ctx = null;
+        if (source != null && source.equals(SCALABLE_QUERY_ENGINE))
+            ctx = ExecutionContextImpl.getRuntimeExecutionContext();
+        else
+            ctx = ExecutionContextImpl.getRestrictedRuntimeExecutionContext();
+        Resource resource = repositoryService.getResource(ctx, uri);
         if (resource == null) {
             resource = repositoryService.getFolder(null, uri);
         }
@@ -221,8 +238,8 @@ public class SingleRepositoryServiceImpl implements SingleRepositoryService {
             }
         }
         resource = ((ToServerConverter<ClientResource, Resource, ToServerConversionOptions>)resourceConverterProvider.getToServerConverter(clientResource))
-                .toServer(clientResource, resource,
-                        ToServerConversionOptions.getDefault().setOwnersUri(uri).setAdditionalProperties(additionalProperties));
+                .toServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResource,
+                        resource, ToServerConversionOptions.getDefault().setOwnersUri(uri).setAdditionalProperties(additionalProperties));
         if(resource.isNew()){
             resource = createResource(resource, resource.getParentPath(), createFolders, dryRun);
         } else {

@@ -24,7 +24,9 @@ package com.jaspersoft.jasperserver.export;
 import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEvent;
 import com.jaspersoft.jasperserver.api.logging.access.service.impl.AccessService;
 import com.jaspersoft.jasperserver.api.logging.context.LoggableEvent;
+import org.hibernate.criterion.DetachedCriteria;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -46,6 +48,34 @@ public class AccessServiceMock implements AccessService {
 
     public int getAccessEventsCount() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void deleteAccessEvent(String uri, boolean isFolder) {
+
+    }
+
+    @Override
+    public void importAccessEvent(AccessEvent accessEvent) {
+
+    }
+
+    @Override
+    public void importAccessEvents(List<AccessEvent> accessEvents) {
+    }
+    @Override
+    public List getResourceURIs(DetachedCriteria criteria, int max) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void updateAccessEventsByResourceURI(String oldURI, String newURI) {
+
+    }
+
+    @Override
+    public void deleteAccessEventsByUser(String userId) {
+        
     }
 
     public void saveEvent(LoggableEvent loggableEvent) {

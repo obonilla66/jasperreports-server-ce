@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection.jdbc;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.core.util.type.MultipleTypeProcessor;
 import com.jaspersoft.jasperserver.dto.resources.ClientJdbcDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
@@ -50,7 +51,7 @@ public class JdbcContextStrategy<ConnectionDescriptionType extends ClientResourc
     private ClientJdbcConnector clientJdbcConnector;
 
     @Override
-    public ConnectionDescriptionType createContext(ConnectionDescriptionType contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public ConnectionDescriptionType createContext(ExecutionContext ctx, ConnectionDescriptionType contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
         clientJdbcConnector.testConnection(contextDescription);
         return contextDescription;
     }

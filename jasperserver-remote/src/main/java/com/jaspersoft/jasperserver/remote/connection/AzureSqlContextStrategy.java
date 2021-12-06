@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.BaseJdbcDataSource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
@@ -50,12 +51,12 @@ public class AzureSqlContextStrategy implements ContextManagementStrategy<Client
     private SecureExceptionHandler secureExceptionHandler;
 
     @Override
-    public ClientAzureSqlDataSource createContext(ClientAzureSqlDataSource contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public ClientAzureSqlDataSource createContext(ExecutionContext ctx, ClientAzureSqlDataSource contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
         boolean passed = false;
         Exception exception = null;
 
-        AzureSqlReportDataSource azureSqlReportDataSource = azureSqlDataSourceResourceConverter.toServer(contextDescription,
-                ToServerConversionOptions.getDefault().setSuppressValidation(true));
+        AzureSqlReportDataSource azureSqlReportDataSource = azureSqlDataSourceResourceConverter.toServer(ctx,
+                contextDescription, ToServerConversionOptions.getDefault().setSuppressValidation(true));
 
         try {
             String passwordSubstitution = messageSource.getMessage("input.password.substitution", null,

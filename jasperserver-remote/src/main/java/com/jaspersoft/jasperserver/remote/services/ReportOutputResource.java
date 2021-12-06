@@ -36,6 +36,10 @@ public class ReportOutputResource {
     private String pages;
     private Boolean outputFinal;
     private Long outputTimestamp;
+    private String outputZoom;
+    private String dataTimestampMessage;
+    private Integer lastPartialPage;
+    private String snapshotSaveStatus;
 
     public String getPages() {
         return pages;
@@ -89,6 +93,46 @@ public class ReportOutputResource {
 
     public ReportOutputResource setOutputTimestamp(Long outputTimestamp) {
         this.outputTimestamp = outputTimestamp;
+        return this;
+    }
+
+    @XmlTransient
+    public String getOutputZoom() {
+        return outputZoom;
+    }
+
+    public ReportOutputResource setOutputZoom(String outputZoom) {
+        this.outputZoom = outputZoom;
+        return this;
+    }
+
+    @XmlTransient
+    public String getDataTimestampMessage() {
+        return dataTimestampMessage;
+    }
+
+    public ReportOutputResource setDataTimestampMessage(String dataTimestampMessage) {
+        this.dataTimestampMessage = dataTimestampMessage;
+        return this;
+    }
+
+    @XmlTransient
+    public Integer getLastPartialPage() {
+        return lastPartialPage;
+    }
+
+    public ReportOutputResource setLastPartialPage(Integer lastPartialPage) {
+        this.lastPartialPage = lastPartialPage;
+        return this;
+    }
+
+    @XmlTransient
+    public String getSnapshotSaveStatus() {
+        return snapshotSaveStatus;
+    }
+
+    public ReportOutputResource setSnapshotSaveStatus(String snapshotSaveStatus) {
+        this.snapshotSaveStatus = snapshotSaveStatus;
         return this;
     }
 }

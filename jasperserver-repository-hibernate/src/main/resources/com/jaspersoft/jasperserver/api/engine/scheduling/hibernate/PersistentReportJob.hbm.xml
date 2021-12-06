@@ -43,7 +43,7 @@
 			</map>
 		</component>
         <!-- reference to report (or other resource) replaces URI in source component -->
-        <many-to-one column="scheduledResource" name="scheduledResource" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResourceLight" fetch="join" not-null="true"/>
+        <many-to-one column="scheduledResource" name="scheduledResource" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResourceLight" fetch="join" not-null="true" index="idx_scheduled_res"/>
 		<many-to-one column="job_trigger" name="trigger" class="com.jaspersoft.jasperserver.api.engine.scheduling.hibernate.PersistentReportJobTrigger" not-null="true" cascade="all"/>
 		<property name="baseOutputFilename" column="base_output_name" type="string" length="100" not-null="true"/>
 		<set name="outputFormats" table="JIReportJobOutputFormat" fetch="subselect">

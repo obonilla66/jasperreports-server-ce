@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import java.io.Serializable;
 import java.util.List;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -36,7 +37,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public class JoinInfo implements DeepCloneable<JoinInfo> {
+public class JoinInfo implements DeepCloneable<JoinInfo>, Serializable {
 
     private Boolean includeAllJoinsForQueryFieldTables;
     private Boolean includeAllDataIslandJoins;

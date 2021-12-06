@@ -62,6 +62,27 @@
             <share-prepared-statements>false</share-prepared-statements>
         </statement>
     </datasource>
+    <datasource jta="false" jndi-name="java:/${audit.jndi}" pool-name="${audit.dbName}" enabled="true" use-ccm="false">
+        <connection-url>${audit.jdbcUrl}</connection-url>
+        <driver>${maven.jdbc.artifactId}-${maven.jdbc.version}.jar</driver>
+        <security>
+            <user-name>${audit.dbUsername}</user-name>
+            <password>${escapeXML:audit.dbPassword}</password>
+        </security>
+        <pool>
+            <min-pool-size>5</min-pool-size>
+            <max-pool-size>50</max-pool-size>
+            <prefill>true</prefill>
+        </pool>
+        <validation>
+            <validate-on-match>false</validate-on-match>
+            <background-validation>false</background-validation>
+            <check-valid-connection-sql>${jdbcTestTableQuery}</check-valid-connection-sql>
+        </validation>
+        <statement>
+            <share-prepared-statements>false</share-prepared-statements>
+        </statement>
+    </datasource>
     <datasource jta="false" jndi-name="java:/${foodmart.jndi}" pool-name="${foodmart.dbName}" enabled="true"
                 use-ccm="false">
         <connection-url>${foodmart.jdbcUrl}</connection-url>

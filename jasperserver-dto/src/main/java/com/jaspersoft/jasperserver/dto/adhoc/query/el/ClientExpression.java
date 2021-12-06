@@ -23,11 +23,13 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.el;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ast.ClientELVisitor;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
+
 /**
  * @author Stas Chubar <schubar@tibco.com>
  * @author Grant Bacon <gbacon@tibco.com>
  * @version $Id$
  */
-public interface ClientExpression<F extends ClientExpression<F>> extends DeepCloneable<F> {
+public interface ClientExpression<F extends ClientExpression<F>> extends DeepCloneable<F>, Serializable {
     void accept(ClientELVisitor visitor);
 }

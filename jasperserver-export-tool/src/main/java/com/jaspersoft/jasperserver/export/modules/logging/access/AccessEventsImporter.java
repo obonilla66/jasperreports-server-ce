@@ -110,7 +110,7 @@ public class AccessEventsImporter extends BaseImporterModule {
                         accessModuleConfiguration.getSerializer());
         AccessEvent accessEvent = (AccessEvent)clientClassFactory.newObject(AccessEvent.class);
         accessEventBean.copyTo(accessEvent, accessEventsImportHandler, importContext);
-        if (accessEvent.getUser() != null && accessEvent.getResource() != null) {
+        if (accessEvent.getUserId() != null && accessEvent.getResourceUri() != null) {
             accessModuleConfiguration.getAccessService().saveEvent(accessEvent);
             return true;
         } else {

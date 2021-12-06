@@ -21,13 +21,14 @@
 
 package com.jaspersoft.jasperserver.jaxrs.bundle;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jaspersoft.jasperserver.war.common.JasperServerHttpConstants;
+
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
-import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
-import com.jaspersoft.jasperserver.war.ResourceForwardingServlet;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -42,18 +43,13 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Providers;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
-import static com.jaspersoft.jasperserver.war.common.JasperServerHttpConstants.FORWARDED_PARAMETERS;
-import static org.springframework.util.DigestUtils.md5DigestAsHex;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jaspersoft.jasperserver.jaxrs.common.RestConstants;
 
 /**
  * JAX-RS service "localization bundles" implementation.
@@ -70,15 +66,12 @@ import static org.springframework.util.DigestUtils.md5DigestAsHex;
 @Service
 @Path("/bundles")
 @Scope("prototype")
-public class LocalizationBundleJaxrsService {
+public class LocalizationBundleJaxrsService extends AbstractBundleJaxrsService {
 
     protected List<String> bundleNames;
 
     @Resource(name = "exposedMessageSource")
     private ExposedResourceBundleMessageSource messageSource;
-
-    @Context
-    private Providers providers;
 
     @Resource(name = "bundlePathsList")
     public void setBundleNames(List<String> bundlePathsList) {
@@ -94,7 +87,7 @@ public class LocalizationBundleJaxrsService {
                                @Context HttpHeaders headers, @Context Request request, @Context HttpServletRequest httpRequest) {
         if (httpRequest != null && expanded == null) {
             Map<String, String[]> forwardedParameters = (Map<String, String[]>)httpRequest
-                    .getAttribute(FORWARDED_PARAMETERS);
+                    .getAttribute(JasperServerHttpConstants.FORWARDED_PARAMETERS);
             if (forwardedParameters != null && forwardedParameters.get(RestConstants.QUERY_PARAM_EXPANDED) != null) {
                 expanded = Boolean.valueOf(forwardedParameters.get(RestConstants.QUERY_PARAM_EXPANDED)[0]);
             }
@@ -141,37 +134,5 @@ public class LocalizationBundleJaxrsService {
         }
 
         return response.tag(etag).build();
-    }
-
-    public byte[] toJson(Map<String, String> messages) {
-        MediaType mediaType = MediaType.APPLICATION_JSON_TYPE;
-
-        ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
-        MessageBodyWriter<Map> messageBodyWriter = providers.getMessageBodyWriter(Map.class, Map.class, new Annotation[0], mediaType);
-
-        if (messageBodyWriter != null) {
-            try {
-                messageBodyWriter.writeTo(messages, Map.class, Map.class, new Annotation[0], mediaType, null, entityStream);
-                return entityStream.toByteArray();
-            } catch (IOException e) {  }
-        }
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        for (String key : messages.keySet()) {
-            messages.put(key, messages.get(key));
-        }
-
-        return json.toString().getBytes();
-    }
-
-    protected EntityTag generateETag(ObjectNode messagesJson) {
-        if (messagesJson == null) {
-            return null;
-        } else {
-            return generateETag(messagesJson.toString().getBytes());
-        }
-    }
-
-    protected EntityTag generateETag(byte[] bytes) {
-        return new EntityTag(md5DigestAsHex(bytes));
     }
 }

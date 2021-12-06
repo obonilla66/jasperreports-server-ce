@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
@@ -80,7 +81,7 @@ public class UserConverter implements ToServerConverter<ClientUser, User, ToServ
     }
 
     @Override
-    public User toServer(ClientUser clientObject, User user, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public User toServer(ExecutionContext ctx, ClientUser clientObject, User user, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         if (clientObject.getTenantId() != null) user.setTenantId(clientObject.getTenantId());
         if (clientObject.getUsername() != null) user.setUsername(clientObject.getUsername());
         if (clientObject.getEmailAddress() != null) user.setEmailAddress(clientObject.getEmailAddress());
@@ -98,7 +99,7 @@ public class UserConverter implements ToServerConverter<ClientUser, User, ToServ
         if (clientObject.getRoleSet() != null) {
             Set<Role> newRoles = new HashSet<Role>();
             for (ClientRole role: clientObject.getRoleSet()){
-                newRoles.add(roleConverter.toServer(role, null));
+                newRoles.add(roleConverter.toServer(ctx, role, null));
             }
             user.setRoles(newRoles);
         }
@@ -122,8 +123,8 @@ public class UserConverter implements ToServerConverter<ClientUser, User, ToServ
     }
 
     @Override
-    public User toServer(ClientUser clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, new UserImpl(), null);
+    public User toServer(ExecutionContext ctx, ClientUser clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, new UserImpl(), null);
     }
 
     @Override

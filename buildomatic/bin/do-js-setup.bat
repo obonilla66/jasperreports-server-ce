@@ -21,7 +21,7 @@ IF %ARGUMENT_COUNT% LSS 4 (
   CALL :fail "Invalid argument count"
   EXIT /b 1
 )
-IF %ARGUMENT_COUNT% GTR 8 (
+IF %ARGUMENT_COUNT% GTR 10 (
   CALL :fail "Invalid argument count"
   EXIT /b 1
 )
@@ -48,6 +48,8 @@ IF "%JS_SETUP_MODE%"=="upgrade" (
     SET _JS_ANT_OPTIONS=!_JS_ANT_OPTIONS! -DimportFile=%6
     FOR %%X IN (%*) DO (
       IF "%%X"=="include-access-events" ( SET _IMPORT_ARGS=--%%X !_IMPORT_ARGS!)
+      IF "%%X"=="include-audit-events" ( SET _IMPORT_ARGS=--%%X !_IMPORT_ARGS!)
+      IF "%%X"=="include-monitoring-events" ( SET _IMPORT_ARGS=--%%X !_IMPORT_ARGS!)
       IF "%%X"=="include-server-settings" ( SET _IMPORT_ARGS=--%%X !_IMPORT_ARGS!)
     )
     IF NOT "!_IMPORT_ARGS!"=="" (

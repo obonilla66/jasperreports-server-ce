@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.ExceptionListWrapper;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.util.TimeZoneContextHolder;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -106,16 +107,16 @@ public abstract class ResourceConverterImpl<ResourceType extends Resource, Clien
     }
 
     @Override
-    public ResourceType toServer(ClientType clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, null, options);
+    public ResourceType toServer(ExecutionContext ctx, ClientType clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, null, options);
     }
 
     @Override
-    public ResourceType toServer(ClientType clientObject, ResourceType resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public ResourceType toServer(ExecutionContext ctx, ClientType clientObject, ResourceType resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         List<Exception> exceptions = new ArrayList<Exception>();
         ClientValidator clientValidator = genericTypeProcessorRegistry.getTypeProcessor(clientObject.getClass(), ClientValidator.class, false);
         if (clientValidator != null) {
-            final List<Exception> list = (List<Exception>)clientValidator.validate(clientObject);
+            final List<Exception> list = (List<Exception>)clientValidator.validate(ctx, clientObject);
             addValidExceptions(exceptions, list, options);
         }
         Class<?>[] validationGroups = (options == null)? new Class[0] : options.getValidationGroups();
@@ -135,8 +136,8 @@ public abstract class ResourceConverterImpl<ResourceType extends Resource, Clien
 
         ResourceType resource;
         try {
-            resource = genericFieldsToServer(clientObject, resultToUpdate, options);
-            resource = resourceSpecificFieldsToServer(clientObject, resource, exceptions, options);
+            resource = genericFieldsToServer(ctx, clientObject, resultToUpdate, options);
+            resource = resourceSpecificFieldsToServer(ctx, clientObject, resource, exceptions, options);
         } catch (RuntimeException e) {
             if (exceptions.isEmpty()) {
                 log.warn("Domain converting failed. ", e);
@@ -161,7 +162,7 @@ public abstract class ResourceConverterImpl<ResourceType extends Resource, Clien
                 skipRepoFieldsValidation = options.isSkipRepoFieldsValidation();
                 if (options.getAdditionalProperties() != null) additionalProperties = options.getAdditionalProperties();
             }
-            exceptions.addAll(validateResource(resource, skipRepoFieldsValidation, additionalProperties));
+            exceptions.addAll(validateResource(ctx, resource, skipRepoFieldsValidation, additionalProperties));
         }
         if (!exceptions.isEmpty()) throw new ExceptionListWrapper(exceptions);
         return resource;
@@ -190,23 +191,23 @@ public abstract class ResourceConverterImpl<ResourceType extends Resource, Clien
     }
 
 
-    protected List<Exception> validateResource(ResourceType resource, boolean skipRepoFieldsValidation,
-            Map<String, String[]> additionalParameters) {
+    protected List<Exception> validateResource(ExecutionContext ctx, ResourceType resource, boolean skipRepoFieldsValidation,
+                                               Map<String, String[]> additionalParameters) {
         ResourceValidator<ResourceType> validator = genericTypeProcessorRegistry
                 .getTypeProcessor(resource.getResourceType(), ResourceValidator.class, false);
         List<Exception> result;
         if(validator != null){
 
         }
-        return  (validator != null ? validator : defaultValidator).validate(resource, skipRepoFieldsValidation,
-                additionalParameters);
+        return  (validator != null ? validator : defaultValidator).validate(ctx, resource,
+                skipRepoFieldsValidation, additionalParameters);
     }
 
-    protected List<Exception> validateResource(ResourceType resource, boolean skipRepoFieldsValidation) {
-        return validateResource(resource, skipRepoFieldsValidation, Collections.<String, String[]>emptyMap());
+    protected List<Exception> validateResource(ExecutionContext ctx, ResourceType resource, boolean skipRepoFieldsValidation) {
+        return validateResource(ctx, resource, skipRepoFieldsValidation, Collections.<String, String[]>emptyMap());
     }
 
-    protected ResourceType genericFieldsToServer(ClientType clientObject, ResourceType resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected ResourceType genericFieldsToServer(ExecutionContext ctx, ClientType clientObject, ResourceType resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         if (resultToUpdate == null) {
             resultToUpdate = getNewResourceInstance();
             resultToUpdate.setVersion(Resource.VERSION_NEW);
@@ -220,7 +221,7 @@ public abstract class ResourceConverterImpl<ResourceType extends Resource, Clien
         return resultToUpdate;
     }
 
-    protected abstract ResourceType resourceSpecificFieldsToServer(ClientType clientObject, ResourceType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException;
+    protected abstract ResourceType resourceSpecificFieldsToServer(ExecutionContext ctx, ClientType clientObject, ResourceType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException;
 
     @Override
     public ClientType toClient(ResourceType serverObject, ToClientConversionOptions options) {

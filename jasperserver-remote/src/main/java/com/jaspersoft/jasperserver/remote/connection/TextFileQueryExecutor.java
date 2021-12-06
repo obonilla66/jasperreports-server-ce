@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.connection;
 
 import com.jaspersoft.jasperserver.api.JSNotImplementedException;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.DataAdapterDefinition;
@@ -70,8 +71,8 @@ public class TextFileQueryExecutor implements ContextQueryExecutor<TextFileQuery
             return null;
         }
         final List<List<String>> resultSet = new ArrayList<List<String>>();
-        final CustomReportDataSource customReportDataSource = customDataSourceResourceConverter.toServer(connection,
-                ToServerConversionOptions.getDefault().setSuppressValidation(true));
+        final CustomReportDataSource customReportDataSource = customDataSourceResourceConverter.toServer(ExecutionContextImpl.getRuntimeExecutionContext(),
+                connection, ToServerConversionOptions.getDefault().setSuppressValidation(true));
         final DataAdapterDefinition definition = (DataAdapterDefinition) customDataSourceFactory.getDefinition(customReportDataSource);
         try {
             final JRCsvDataSource jrDataSource = (JRCsvDataSource) definition.getJRDataSource(customReportDataSource);

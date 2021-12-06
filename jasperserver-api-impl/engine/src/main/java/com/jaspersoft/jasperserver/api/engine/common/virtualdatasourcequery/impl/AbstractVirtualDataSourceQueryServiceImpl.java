@@ -46,10 +46,19 @@ public abstract class AbstractVirtualDataSourceQueryServiceImpl implements Virtu
 
     private PooledObjectCache dataSourceCache = new PooledObjectCache();
     private int poolTimeoutInMinute;
+    private int athenaPoolTimeoutInMinute;
     protected static final Log log = LogFactory.getLog(VirtualDataSourceQueryService.class);
     protected enum DataSourceType {
         SUB_DATASOURCE,
         MASTER_DATASOURCE;
+    }
+
+    public int getAthenaPoolTimeoutInMinute() {
+        return athenaPoolTimeoutInMinute;
+    }
+
+    public void setAthenaPoolTimeoutInMinute(int athenaPoolTimeoutInMinute) {
+        this.athenaPoolTimeoutInMinute = athenaPoolTimeoutInMinute;
     }
 
     public int getPoolTimeoutInMinute() {
@@ -73,23 +82,26 @@ public abstract class AbstractVirtualDataSourceQueryServiceImpl implements Virtu
         debug("********* getConnectionFactory [BEGIN] *********************");
         try {
         init();
+        long now = System.currentTimeMillis();
+        // remove expired sub data source and virtual data source from the pool and embedded server
+        releaseExpiredPools(now);
         StringBuffer virtualDSKey = new StringBuffer("|");
         List<String> dataSourceNames = new ArrayList<String>();
         List<String> dataSourceIDs = new ArrayList<String>();
         List<DataSource> reportDataSources = new ArrayList<DataSource>();
-        long now = System.currentTimeMillis();
+
         DataSource firstSubDataSource = null;
         for (DataSource subDataSource: dataSourceCollection) {
-                if (firstSubDataSource == null) firstSubDataSource = subDataSource;
-                // construct sub data source id
-                String dataSourceID = getDataSourceID(subDataSource);
-                // and and mark the sub data source is in used
-                addOrMarkSubDataSource(dataSourceID, subDataSource, now);
-                // construct virtual data source key
-                virtualDSKey.append(dataSourceID + getSubDataSourceInfo(subDataSource) + "|");
-                dataSourceIDs.add(dataSourceID);
-                dataSourceNames.add(subDataSource.getDataSourceName());
-                reportDataSources.add(subDataSource);
+            if (firstSubDataSource == null) firstSubDataSource = subDataSource;
+            // construct sub data source id
+            String dataSourceID = getDataSourceID(subDataSource);
+            // and and mark the sub data source is in used
+            addOrMarkSubDataSource(dataSourceID, subDataSource, now);
+            // construct virtual data source key
+            virtualDSKey.append(dataSourceID + getSubDataSourceInfo(subDataSource) + "|");
+            dataSourceIDs.add(dataSourceID);
+            dataSourceNames.add(subDataSource.getDataSourceName());
+            reportDataSources.add(subDataSource);
         }
         if (virtualReportDataSourceUri != null) {
             virtualDSKey.append(getAdditionalInformation(virtualReportDataSourceUri));
@@ -103,8 +115,6 @@ public abstract class AbstractVirtualDataSourceQueryServiceImpl implements Virtu
         // create connection factory
         ConnectionFactory connectionFactory = createConnectionFactory(virtualDSID, dataSourceNames, dataSourceIDs, reportDataSources, virtualReportDataSourceUri);
 
-            // remove expired sub data source and virtual data source from the pool and embedded server
-        releaseExpiredPools(now);
         debug("********* getConnectionFactory [END] *********************");
         return connectionFactory;
         } catch (Exception ex) {
@@ -141,6 +151,9 @@ public abstract class AbstractVirtualDataSourceQueryServiceImpl implements Virtu
     private String getJdbcDataSourceID(JdbcDataSource jdbcDataSource) {
         String key = jdbcDataSource.getConnectionUrl() + "|" + jdbcDataSource.getDriverClass() + "|" +
                 jdbcDataSource.getUsername() + "|" + jdbcDataSource.getPassword();
+        if (key.contains(PooledObjectCache.JDBC_AWSATHENA) && key.contains(PooledObjectCache.ARN_AWS_IAM))  {
+            return  key.hashCode() + "-" + PooledObjectCache.ATHENA_JDBC_DS;
+        }
         return key.hashCode() + "";
     }
 
@@ -213,22 +226,21 @@ public abstract class AbstractVirtualDataSourceQueryServiceImpl implements Virtu
     // release expired data source and remove from server
     protected void releaseExpiredPools(long now) {
         if (getPoolTimeoutInMinute() <= 0) return;
-		List expired = null;
+        List<PooledObjectEntry> expired;
 		synchronized (dataSourceCache) {
-		    expired = dataSourceCache.removeExpired(now, getPoolTimeoutInMinute() * 60);
+            expired = dataSourceCache.removeExpired(now, getPoolTimeoutInMinute() * 60, getAthenaPoolTimeoutInMinute()*60);
 		}
 
 		if (expired != null && !expired.isEmpty()) {
-			for (Iterator it = expired.iterator(); it.hasNext();) {
-				PooledVirtualDataSourceEntry ds = (PooledVirtualDataSourceEntry) it.next();
-				try {
+            for (PooledObjectEntry ds : expired) {
+                try {
                     // remove data source
-					ds.release();
-				} catch (Exception e) {
-					log.error("Error while releasing Virtual Pool Key.", e);
-					// ignore
-				}
-			}
+                    ds.release();
+                } catch (Exception e) {
+                    log.error("Error while releasing Virtual Pool Key.", e);
+                    // ignore
+                }
+            }
 		}
 	}
 

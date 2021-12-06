@@ -117,8 +117,13 @@ public class ClientFile extends ClientResource<ClientFile> implements ClientRefe
         css("text/css"),
         accessGrantSchema("application/accessGrantSchema"),
         olapMondrianSchema("application/olapMondrianSchema"),
+        mongoDbSchema("application/mongoDbSchema"),
         dashboardComponent("application/dashboardComponentsSchema+json"),
         secureFile("application/secureFile"),
+        cer("application/pfx"),
+        key("application/key"),
+        ppk("application/ppk"),
+        pub("application/pub"),
         unspecified("application/octet-stream");
 
         FileType(String mime){

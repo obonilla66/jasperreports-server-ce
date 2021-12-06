@@ -62,10 +62,30 @@ public class RepoRepositoryService implements StreamRepositoryService {
 
 	@Override
     public InputStream getInputStream(String uri) {
+		return getInputStream(null, uri);
+	}
+
+	@Override
+    public InputStream getInputStream(net.sf.jasperreports.repo.RepositoryContext context, String uri) {
         RepositoryContext repositoryContext = RepositoryUtil.getThreadRepositoryContext();
-        if (repositoryContext == null || !isReportContext(repositoryContext)) {
+        if (repositoryContext == null || repositoryContext.getCompiledReportProvider() == null) {
             if (log.isDebugEnabled()) {
                 log.debug("No repository context for resource " + uri);
+            }
+            return null;
+        }
+        
+        String contextURI = null;
+        if (context != null && context.getResourceContext() != null) {
+        	contextURI = context.getResourceContext().getContextLocation();
+        }
+        if (contextURI == null) {
+        	contextURI = repositoryContext.getContextURI();
+        }
+        
+        if (contextURI == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("No context URI for resource " + uri);
             }
             return null;
         }
@@ -109,13 +129,13 @@ public class RepoRepositoryService implements StreamRepositoryService {
             }
         }
 
-        String path = RepositoryUtils.resolveRelativePath(repositoryContext.getContextURI(), uri);
+        String path = RepositoryUtils.resolveRelativePath(contextURI, uri);
         com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService repository =
                 repositoryContext.getRepository();
 
         if (log.isDebugEnabled()) {
             log.debug("loading repository resource " + path
-                    + ", context path " + repositoryContext.getContextURI()
+                    + ", context path " + contextURI
                     + ", uri " + uri);
         }
 
@@ -159,17 +179,13 @@ public class RepoRepositoryService implements StreamRepositoryService {
         return data;
     }
 
-    protected boolean isReportContext(RepositoryContext repositoryContext) {
-		// some places (e.g. MessageSourceLoader.setupThreadRepositoryContext()) 
-		// set a thread repository context with no context URI, and do not clear the thread.
-		// we can only use reports related repository contexts (as created by 
-		// DefaultRepositoryContextManager.createRepositoryContext()).
-		return repositoryContext.getContextURI() != null 
-				&& repositoryContext.getCompiledReportProvider() != null;
+	@Override
+	public <K extends Resource> K getResource(String uri, Class<K> resourceType) {
+		return getResource(null, uri, resourceType);
 	}
 
 	@Override
-	public <K extends Resource> K getResource(String uri, Class<K> resourceType) {
+	public <K extends Resource> K getResource(net.sf.jasperreports.repo.RepositoryContext context, String uri, Class<K> resourceType) {
 		PersistenceService persistenceService = persistenceServices.get(resourceType);
 		if (persistenceService == null) {
 			if (log.isDebugEnabled()) {
@@ -179,7 +195,7 @@ public class RepoRepositoryService implements StreamRepositoryService {
 		}
 		
 		@SuppressWarnings("unchecked")
-		K resource = (K) persistenceService.load(uri, this);
+		K resource = (K) persistenceService.load(context, uri, this);
 		return resource;
 	}
 

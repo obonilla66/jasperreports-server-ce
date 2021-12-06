@@ -37,5 +37,6 @@ public enum OutputFormat {
         DATA_SNAPSHOT,
         PPTX,
         JSON,
-        PNG
+        PNG,
+        DATA_CSV
 }

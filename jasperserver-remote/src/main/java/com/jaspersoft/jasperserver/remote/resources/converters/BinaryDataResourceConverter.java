@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -72,16 +73,16 @@ public class BinaryDataResourceConverter implements ResourceConverter<Resource, 
     }
 
     @Override
-    public Resource toServer(ClientFile clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, fileResourceTypes.contains(clientObject.getType().toString()) ? new FileResourceImpl() : new ContentResourceImpl(), options);
+    public Resource toServer(ExecutionContext ctx, ClientFile clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, fileResourceTypes.contains(clientObject.getType().toString()) ? new FileResourceImpl() : new ContentResourceImpl(), options);
     }
 
     @Override
-    public Resource toServer(ClientFile clientObject, Resource resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public Resource toServer(ExecutionContext ctx, ClientFile clientObject, Resource resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         if (resultToUpdate instanceof FileResource || (resultToUpdate == null && fileResourceTypes.contains(clientObject.getType().name()))){
-            return fileResourceConverter.toServer(clientObject, resultToUpdate, options);
+            return fileResourceConverter.toServer(ctx, clientObject, resultToUpdate, options);
         } else {
-            return contentResourceConverter.toServer(clientObject, resultToUpdate, options);
+            return contentResourceConverter.toServer(ctx, clientObject, resultToUpdate, options);
         }
     }
 

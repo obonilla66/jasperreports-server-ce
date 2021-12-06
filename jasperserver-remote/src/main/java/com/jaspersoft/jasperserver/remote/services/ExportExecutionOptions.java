@@ -48,6 +48,7 @@ public class ExportExecutionOptions {
     private String markupType;
     private Boolean ignorePagination;
     private Boolean clearContextCache = false;
+    private Boolean ignoreCancelledReportExecution = false;
 
 	@Schema(
 			type="boolean", 
@@ -76,6 +77,15 @@ public class ExportExecutionOptions {
 
     public ExportExecutionOptions setClearContextCache(Boolean clearContextCache) {
         this.clearContextCache = clearContextCache;
+        return this;
+    }
+
+    public Boolean getIgnoreCancelledReportExecution() {
+        return ignoreCancelledReportExecution;
+    }
+
+    public ExportExecutionOptions setIgnoreCancelledReportExecution(Boolean ignoreCancelledReportExecution) {
+        this.ignoreCancelledReportExecution = ignoreCancelledReportExecution;
         return this;
     }
 
@@ -172,7 +182,7 @@ public class ExportExecutionOptions {
 				+ "As of JasperReports Server 6.0, it is also possible to specify `json` if your reports are designed for data "
 				+ "export. For more information, see the JasperReports Library samples documentation.", 
 		required=true,
-		allowableValues =  {"pdf", "html", "csv", "xls", "xlsx", "docx", "pptx", "odt", "ods", "rtf", "xml", "jrprint", "json"},
+		allowableValues =  {"pdf", "html", "csv", "xls", "xlsx", "docx", "pptx", "odt", "ods", "rtf", "xml", "jrprint", "json", "data_csv"},
 		example = "html"
 	)
     public String getOutputFormat() {

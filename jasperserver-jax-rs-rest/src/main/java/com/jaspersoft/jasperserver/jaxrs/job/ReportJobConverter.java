@@ -21,7 +21,9 @@
 
 package com.jaspersoft.jasperserver.jaxrs.job;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.JSValidationException;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.util.rd.DateRangeFactory;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.FTPInfo;
@@ -35,6 +37,7 @@ import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSource;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobTrigger;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.FtpTypeAdapter;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.OutputFormatConversionHelper;
+import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.ReportJobOutputFormatsWrapper;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.ReportJobSendTypeXmlAdapter;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.ReportJobTriggerCalendarDaysXmlAdapter;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.ReportJobTriggerIntervalUnitXmlAdapter;
@@ -49,6 +52,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsConta
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.dto.common.ExportType;
 import com.jaspersoft.jasperserver.dto.common.OutputFormat;
 import com.jaspersoft.jasperserver.dto.connection.FtpConnection;
 import com.jaspersoft.jasperserver.dto.job.ClientCalendarDaysType;
@@ -170,26 +174,45 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
         clientReportJob.setAlert(toClientJobAlert(serverObject.getAlert()));
 
         // convert output formats
-        clientReportJob.setOutputFormats(toClientJobOutputFormats(serverObject.getOutputFormatsSet()));
+        ReportJobOutputFormatsWrapper outputFormatsWrapper = toOutputFormatsWrapper(serverObject.getOutputFormatsSet());
+		clientReportJob.setExportType(toClientJobExportType(outputFormatsWrapper));
+		clientReportJob.setOutputFormats(toClientJobOutputFormats(outputFormatsWrapper));
 
         return clientReportJob;
     }
 
-    protected Set<OutputFormat> toClientJobOutputFormats(Set<Byte> outputFormatsSet) {
-
-        Set<OutputFormat> outputFormats = new HashSet<OutputFormat>();
+    protected ReportJobOutputFormatsWrapper toOutputFormatsWrapper(Set<Byte> outputFormatsSet) {
+        ReportJobOutputFormatsWrapper outputFormatsWrapper = null;
         if (outputFormatsSet != null) {
-            Set<String> outputFormatsStrings;
             try {
-                outputFormatsStrings = OutputFormatConversionHelper.toStrings(outputFormatsSet);
+                outputFormatsWrapper = OutputFormatConversionHelper.toOutputFormats(outputFormatsSet);
             } catch (Exception e) {
-                return outputFormats;
+                log.debug(e, e);
             }
+        }
+        return outputFormatsWrapper;
+    }
+
+    protected Set<OutputFormat> toClientJobOutputFormats(ReportJobOutputFormatsWrapper outputFormatsWrapper) {
+        Set<OutputFormat> outputFormats = new HashSet<OutputFormat>();
+        if (outputFormatsWrapper != null) {
+            Set<String> outputFormatsStrings = outputFormatsWrapper.getFormats();
             for (String outputFormatString : outputFormatsStrings) {
                 outputFormats.add(OutputFormat.valueOf(outputFormatString));
             }
         }
         return outputFormats;
+    }
+
+    protected ExportType toClientJobExportType(ReportJobOutputFormatsWrapper outputFormatsWrapper) {
+        ExportType exportType = null;
+        if (outputFormatsWrapper != null) {
+            String exportTypeString = outputFormatsWrapper.getExportType();
+            if (exportTypeString != null) {
+                exportType = ExportType.valueOf(exportTypeString);
+            }
+        }
+        return exportType;
     }
 
     protected ClientJobAlert toClientJobAlert(ReportJobAlert serverAlert) {
@@ -484,12 +507,12 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
     }
 
     @Override
-    public ReportJob toServer(ClientReportJob clientObject, Object options) {
-        return toServer(clientObject, new ReportJob(), null);
+    public ReportJob toServer(ExecutionContext ctx, ClientReportJob clientObject, Object options) {
+        return toServer(ctx, clientObject, new ReportJob(), null);
     }
 
     @Override
-    public ReportJob toServer(ClientReportJob clientObject, ReportJob resultToUpdate, Object options) {
+    public ReportJob toServer(ExecutionContext ctx, ClientReportJob clientObject, ReportJob resultToUpdate, Object options) {
         if ((clientObject.getId() != null)) {
             resultToUpdate.setId(clientObject.getId());
         }
@@ -531,7 +554,7 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
 
         // convert output formats
 
-        resultToUpdate.setOutputFormatsSet(toServerOutputFormats(clientObject.getOutputFormats()));
+        resultToUpdate.setOutputFormatsSet(toServerOutputFormats(clientObject.getOutputFormats(), clientObject.getExportType()));
 
         return resultToUpdate;
     }
@@ -930,7 +953,7 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
         return serverJobTrigger;
     }
 
-    protected Set<Byte> toServerOutputFormats(Set<OutputFormat> outputFormats) {
+    protected Set<Byte> toServerOutputFormats(Set<OutputFormat> outputFormats, ExportType exportType) {
         Set<Byte> outputFormatsSet = new HashSet<Byte>();
         if (outputFormats != null) {
             Set<String> outputFormatsString = new LinkedHashSet<String>();
@@ -938,7 +961,10 @@ public class ReportJobConverter implements ToClientConverter<ReportJob, ClientRe
                 outputFormatsString.add(outputFormat.name());
             }
             try {
-                outputFormatsSet = OutputFormatConversionHelper.toBytes(outputFormatsString);
+                outputFormatsSet = OutputFormatConversionHelper.toBytes(outputFormatsString, 
+                        exportType == null ? null : exportType.name());
+            } catch (ErrorDescriptorException e) {
+            	throw e;
             } catch (Exception e) {
                 return outputFormatsSet;
             }

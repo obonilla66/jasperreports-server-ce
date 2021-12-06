@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceLookupImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -63,6 +65,7 @@ public class GenericResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private Resource resource = new ResourceLookupImpl();
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void initialize() {
@@ -76,14 +79,14 @@ public class GenericResourceValidatorTest {
         resource.setLabel("testa");
         resource.setDescription("description");
         reset(validator);
-        doCallRealMethod().when(validator).validate(any(Resource.class));
-        doCallRealMethod().when(validator).validate(any(Resource.class), eq(false), any(Map.class));
+        doCallRealMethod().when(validator).validate(any(ExecutionContext.class), any(Resource.class));
+        doCallRealMethod().when(validator).validate(any(ExecutionContext.class), any(Resource.class), eq(false), any(Map.class));
     }
 
     @Test
     public void validate() {
-        validator.validate(resource);
-        verify(validator).internalValidate(same(resource), any(List.class), any(Map.class));
+        validator.validate(ctx, resource);
+        verify(validator).internalValidate(any(ExecutionContext.class), same(resource), any(List.class), any(Map.class));
     }
 
     @Test
@@ -92,13 +95,13 @@ public class GenericResourceValidatorTest {
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                List<Exception> validationErrors = (List<Exception>) invocation.getArguments()[1];
+                List<Exception> validationErrors = (List<Exception>) invocation.getArguments()[2];
 
                 validationErrors.add(exception);
                 return null;
             }
-        }).when(validator).internalValidate(same(resource), any(List.class), any(Map.class));
-        final List<Exception> exceptions = validator.validate(resource);
+        }).when(validator).internalValidate(any(ExecutionContext.class), same(resource), any(List.class), any(Map.class));
+        final List<Exception> exceptions = validator.validate(ctx, resource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -108,7 +111,7 @@ public class GenericResourceValidatorTest {
     @Test
     public void validate_labelContainsAttributePlaceholder_exception() throws Exception {
         when(profileAttributesResolver.containsAttribute(resource.getLabel())).thenReturn(true);
-        final List<Exception> exceptions = validator.validate(resource);
+        final List<Exception> exceptions = validator.validate(ctx, resource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -116,7 +119,7 @@ public class GenericResourceValidatorTest {
 
     @Test
     public void validate_labelIsNull_exception() throws Exception {
-        final List<Exception> exceptions = validator.validate(new ResourceLookupImpl());
+        final List<Exception> exceptions = validator.validate(ctx, new ResourceLookupImpl());
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -129,7 +132,7 @@ public class GenericResourceValidatorTest {
                 "dQoyRFOPUMhDDRtPbOdpsBxIFBIZoLgGelTeUhRWSNIHwvkkqSWtKZMGgEhoEECcZWKDmrtfwTZWtbLhkzJvZnjuy" +
                 "qQysiIApMkPuWDUcAzUEVcfZYtenGoWXqa" +
                 "YXwcaymjrZTfQYNZbNNTjxCQuTgUgXtgtUsdpEUdsEHmBfPDldcPLNSHGDKNcuPzJwjnDiHNruTaoPBGxFcP");
-        final List<Exception> exceptions = validator.validate(rli);
+        final List<Exception> exceptions = validator.validate(ctx, rli);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -139,7 +142,7 @@ public class GenericResourceValidatorTest {
     public void validate_labelIsNull_slipRepoFieldsValidation_success() throws Exception {
         Exception exception = null;
         try {
-            validator.validate(new ResourceLookupImpl(), true, new HashMap<String, String[]>());
+            validator.validate(ctx, new ResourceLookupImpl(), true, new HashMap<String, String[]>());
         } catch (Exception e){
             exception = e;
         }
@@ -149,7 +152,7 @@ public class GenericResourceValidatorTest {
     @Test
     public void validate_descriptionContainsAttributePlaceholder_exception() throws Exception {
         when(profileAttributesResolver.containsAttribute(resource.getDescription())).thenReturn(true);
-        final List<Exception> exceptions = validator.validate(resource);
+        final List<Exception> exceptions = validator.validate(ctx, resource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -158,7 +161,7 @@ public class GenericResourceValidatorTest {
     @Test
     public void validate_nameContainsAttributePlaceholder_exception() throws Exception {
         when(profileAttributesResolver.containsAttribute(resource.getName())).thenReturn(true);
-        final List<Exception> exceptions = validator.validate(resource);
+        final List<Exception> exceptions = validator.validate(ctx, resource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

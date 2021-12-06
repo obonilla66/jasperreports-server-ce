@@ -76,7 +76,7 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
         }
         try {
 			ds = (DataSource) ctx.lookup("java:comp/env/" + jndiName);
-			return new JdbcDataSourceService(ds, timeZone);
+			return new JdbcDataSourceService(ds, timeZone).withTracer(tracer);
 		} catch (NoInitialContextException e) {
 			// there's no context provider available...fall back to prop lookup
 			ctx = null;
@@ -87,7 +87,7 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
             //Jboss 7 support team recommend that you use the non-component environment namespace for such situations.
             try {
                 ds = (DataSource) ctx.lookup(jndiName);
-                return new JdbcDataSourceService(ds, timeZone);
+                return new JdbcDataSourceService(ds, timeZone).withTracer(tracer);
             } catch (NamingException ex) {
                 if (log.isDebugEnabled())
                     log.debug(e, e);
@@ -122,7 +122,7 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
                 jdbcMap.get(JndiFallbackResolver.JDBC_USERNAME),
                 jdbcMap.get(JndiFallbackResolver.JDBC_PASSWORD));
 
-        return new JdbcDataSourceService(datasource, timeZone);
+        return new JdbcDataSourceService(datasource, timeZone).withTracer(tracer);
 		
 	}
 	

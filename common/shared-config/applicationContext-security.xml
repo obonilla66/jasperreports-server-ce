@@ -21,7 +21,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:security="http://www.springframework.org/schema/security"
        xmlns:util="http://www.springframework.org/schema/util"
@@ -32,6 +33,7 @@
        http://www.springframework.org/schema/security/spring-security-4.2.xsd
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <beans profile="jrs">
     <context:component-scan base-package="com.jaspersoft.jasperserver.api.common.crypto"/>
 
     <!-- ======================== AUTHENTICATION ======================= -->
@@ -68,7 +70,8 @@
         <property name="userDetailsService"><ref bean="${bean.internalUserAuthorityService}"/></property>
         <property name="passwordEncoder"><ref bean="passwordEncoder"/></property>
     </bean>
-
+    </beans>
+    <beans profile="engine">
     <!--The fallbackFactory should never be itself like ref="passwordEncoder"-->
     <bean id="passwordEncoder" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
       <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer"/>
@@ -80,7 +83,8 @@
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer"/>
         <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).DeprecatedPasswordEncoderEnc.value().getConfId()}"/>
     </bean>
-
+    </beans>
+    <beans profile="jrs">
     <bean id="importExportCipher" class="com.jaspersoft.jasperserver.api.common.crypto.CipherFactory" lazy-init="true">
         <property name="cipherClass" value="com.jaspersoft.jasperserver.api.common.crypto.Cipherer"/>
         <property name="confId" value="#{T(com.jaspersoft.jasperserver.crypto.conf.Defaults).ImportExportEnc.value().getConfId()}"/>
@@ -1029,4 +1033,5 @@ TODO: SSU - Seems this bean is not needed
             </map>
         </property>
     </bean>
+    </beans>
 </beans>

@@ -58,4 +58,8 @@ public class DomELCommonSimpleDateFormats {
     public static SimpleDateFormat isoTimestampFormat() {
         return new SimpleDateFormat(ISO_TIMESTAMP_FORMAT_STRING);
     }
+
+    public static SimpleDateFormat isoTimestampFormatNoMilliSeconds() {
+        return new SimpleDateFormat(ISO_TIMESTAMP_FORMAT_STRING_NO_MILLISECONDS);
+    }
 }

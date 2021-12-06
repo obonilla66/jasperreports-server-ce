@@ -30,7 +30,7 @@
         <spring:message code='jsp.accessDenied.title'/>
     </t:putAttribute>
     <t:putAttribute name="bodyID" value="accessDenied"/>
-    <t:putAttribute name="moduleName" value="commons/commons.main"/>
+    <t:putAttribute name="moduleName" value="commons/commonsMain"/>
     <t:putAttribute name="bodyClass" value="oneColumn"/>
 
 		<t:putAttribute name="bodyContent" >

@@ -91,8 +91,7 @@ public class FormatDateTag extends TagSupport {
 
 	public int doStartTag() throws JspException {
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
-		WebApplicationContext applicationContext = RequestContextUtils.getWebApplicationContext(request);
-		
+		WebApplicationContext applicationContext = RequestContextUtils.findWebApplicationContext(request);
 		Locale locale = RequestContextUtils.getLocale(request);
 		TimeZone timezone = TimeZoneContextHolder.getTimeZone();
 		

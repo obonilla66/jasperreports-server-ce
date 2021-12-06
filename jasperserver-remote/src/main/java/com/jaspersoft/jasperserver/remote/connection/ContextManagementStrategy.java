@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 
 import java.util.Map;
@@ -33,11 +34,13 @@ import java.util.Map;
 public interface ContextManagementStrategy<ContextType, InternalContextType> {
     /**
      * Try to create the in-memory context by the given descriptor.
+     *
+     * @param ctx
      * @param contextDescription - description of the context to create
      * @return internal representation of the context description after successful creation
      * @throws IllegalParameterValueException in case if any description parameter is incorrect.
      */
-    InternalContextType createContext(ContextType contextDescription, Map<String, Object> contextData) throws IllegalParameterValueException;
+    InternalContextType createContext(ExecutionContext ctx, ContextType contextDescription, Map<String, Object> contextData) throws IllegalParameterValueException;
 
     /**
      * Do clean actions (if needed) before context description is removed from a memory.

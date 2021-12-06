@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import java.io.Serializable;
 import java.util.List;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -36,7 +37,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  *
  * @author Andriy Godovanets
  */
-public class ClientPathOrder implements ClientOrder {
+public class ClientPathOrder implements ClientOrder, Serializable {
     @NotNull
     private Boolean isAscending;
 

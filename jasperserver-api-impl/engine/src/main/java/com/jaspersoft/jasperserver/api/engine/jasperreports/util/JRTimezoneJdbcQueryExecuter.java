@@ -20,15 +20,9 @@
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.util;
 
-import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import com.jaspersoft.jasperserver.api.common.util.spring.StaticApplicationContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.sql.TimeZoneQueryProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
-import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
-import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchCriteria;
-import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchResult;
-import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeCategory;
-import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
 import com.jaspersoft.jasperserver.api.security.validators.Validator;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
@@ -38,11 +32,9 @@ import net.sf.jasperreports.engine.JRValueParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.query.JRJdbcQueryExecuter;
 import org.apache.log4j.Logger;
-import org.quartz.DateBuilder;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
@@ -151,7 +143,7 @@ public class JRTimezoneJdbcQueryExecuter extends JRJdbcQueryExecuter {
 				&& timezoneAdjust.timezone != null
 				&& timezoneAdjust.adjustedDates.add(new IdentityObjectWrapper(value))) {
 			Date initialDate = (Date) value;
-			Date date = DateBuilder.translateTime(initialDate,
+			Date date = DateUtil.translateTime(initialDate,
 					timezoneAdjust.timezone, TimeZone.getDefault());
             //Date date = TriggerUtils.translateTime(initialDate,
 			//		timezoneAdjust.timezone, TimeZone.getTimeZone("GMT"));

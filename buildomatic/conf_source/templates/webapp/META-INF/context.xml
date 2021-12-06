@@ -55,6 +55,17 @@
         factory="${tomcatBasicDatasourceFactory}"
         ${js.extraParams} />
 
+	<Resource name="${audit.jndi}" auth="Container" type="javax.sql.DataSource"
+        maxActive="100" maxIdle="30" maxWait="10000"
+        username="${audit.dbUsername}" password="${escapeXML:audit.dbPassword}"
+        driverClassName="${jdbcDriverClass}"
+        accessToUnderlyingConnectionAllowed = "true"
+        validationQuery="${jdbcTestTableQuery}"
+        testOnBorrow="true"
+        url="${audit.jdbcUrl}"
+        factory="${tomcatBasicDatasourceFactory}"
+        ${js.extraParams} />
+
     <Resource name="${sugarcrm.jndi}" auth="Container" type="javax.sql.DataSource"
         maxActive="100" maxIdle="30" maxWait="10000"
         username="${sugarcrm.dbUsername}" password="${escapeXML:sugarcrm.dbPassword}"

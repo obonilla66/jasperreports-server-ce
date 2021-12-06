@@ -1,3 +1,4 @@
+<%@ page import="com.jaspersoft.jasperserver.war.common.JasperServerConst" %>
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
   ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
@@ -20,8 +21,13 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
+<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
+
+<c:set var="MAX_LENGTH_NAME" value="<%=JasperServerConst.MAX_LENGTH_NAME%>" />
+<c:set var="MAX_LENGTH_LABEL" value="<%=JasperServerConst.MAX_LENGTH_LABEL%>" />
+<c:set var="MAX_LENGTH_DESC" value="<%=JasperServerConst.MAX_LENGTH_DESC%>" />
 
 <script type="text/javascript">
     <js:xssNonce type="javascript"/>
@@ -45,12 +51,12 @@
         resource.messages = {};
     }
 
-    resource.messages["labelToLong"] = '<spring:message code="ListOfValuesValidator.error.too.long.listOfValues.label" javaScriptEscape="true"/>';
+    resource.messages["labelToLong"] = '<spring:message code="ListOfValuesValidator.error.too.long.listOfValues.label" arguments="${MAX_LENGTH_LABEL}" javaScriptEscape="true"/>';
     resource.messages["labelIsEmpty"] = '<spring:message code="ListOfValuesValidator.error.not.empty.listOfValues.label" javaScriptEscape="true"/>';
-    resource.messages["resourceIdToLong"] = '<spring:message code="ListOfValuesValidator.error.too.long.listOfValues.name" javaScriptEscape="true"/>';
+    resource.messages["resourceIdToLong"] = '<spring:message code="ListOfValuesValidator.error.too.long.listOfValues.name" arguments="${MAX_LENGTH_NAME}" javaScriptEscape="true"/>';
     resource.messages["resourceIdIsEmpty"] = '<spring:message code="ListOfValuesValidator.error.not.empty.listOfValues.name" javaScriptEscape="true"/>';
     resource.messages["resourceIdInvalidChars"] = '<spring:message code="ListOfValuesValidator.error.invalid.chars.listOfValues.name" javaScriptEscape="true"/>';
-    resource.messages["descriptionToLong"] = '<spring:message code="ListOfValuesValidator.error.too.long.listOfValues.description" javaScriptEscape="true"/>';
+    resource.messages["descriptionToLong"] = '<spring:message code="ListOfValuesValidator.error.too.long.listOfValues.description" arguments="${MAX_LENGTH_DESC}" javaScriptEscape="true"/>';
     resource.messages["itemNameIsEmpty"] = '<spring:message code="ListOfValuesValidator.error.not.empty.newLabel" javaScriptEscape="true"/>';
     resource.messages["itemValueIsEmpty"] = '<spring:message code="ListOfValuesValidator.error.not.empty.newValue" javaScriptEscape="true"/>';
 

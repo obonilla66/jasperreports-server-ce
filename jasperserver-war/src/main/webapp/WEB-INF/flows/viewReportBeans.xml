@@ -202,6 +202,11 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
 		<property name="setResponseContentLength" value="true"/>
 	</bean>
 
+	<bean id="reportCsvMetadataExporter" class="com.jaspersoft.jasperserver.war.action.ReportCsvMetadataExporter" parent="baseReportExporter">
+		<property name="exportParameters" ref="csvExportParameters"/>
+		<property name="setResponseContentLength" value="true"/>
+	</bean>
+
 	<bean id="reportRtfExporter" class="com.jaspersoft.jasperserver.war.action.ReportRtfExporter" parent="baseReportExporter">
 		<property name="setResponseContentLength" value="true"/>
 	</bean>
@@ -307,6 +312,14 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
 		<property name="currentExporter" ref="reportCsvExporter"/>
 	</bean>
 
+	<bean id="csvMetadataExporterConfiguration"  class="com.jaspersoft.jasperserver.war.action.ExporterConfigurationBean">
+		<property name="descriptionKey" value="jasper.report.view.hint.export.csv.metadata"/>
+		<property name="iconSrc" value="/images/csv.gif"/>
+		<property name="parameterDialogName" value="csvMetadataExportParams"/>
+		<property name="exportParameters" ref="csvExportParameters"/>
+		<property name="currentExporter" ref="reportCsvMetadataExporter"/>
+	</bean>
+
 	<bean id="txtExporterConfiguration" class="com.jaspersoft.jasperserver.war.action.ExporterConfigurationBean">
 		<property name="descriptionKey" value="jasper.report.view.hint.export.txt"/>
 		<property name="iconSrc" value="/images/text.png"/>
@@ -364,6 +377,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
         <!-- 
         <entry key="txt" value-ref="txtExporterConfiguration"/>
         -->
+		<entry key="data_csv" value-ref="csvMetadataExporterConfiguration"/>
     </util:map>
 
     <util:list id="exportersSupportedByiPad">

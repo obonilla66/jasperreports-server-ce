@@ -49,6 +49,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -639,15 +640,15 @@ public class UserAuthorityServiceImpl extends HibernateDaoImpl implements UserDe
                     set("tenant", tenant).
                     set("roleName", roleName));
         }
-        List roleList = findByCriteria(criteria);
-        RepoRole role = null;
-        if (roleList.isEmpty()) {
+        Criteria theCriteria = criteria.getExecutableCriteria(getSession())
+                .setCacheable(true)
+                .setCacheMode(CacheMode.NORMAL);
+        RepoRole role = (RepoRole) theCriteria.uniqueResult();
+        if (role == null) {
             if (log.isDebugEnabled()) {
                 log.debug("Role not found with role name \"" + roleName + "\""
                         + (tenantId == null ? "" : (", tenant \"" + tenantId + "\"")));
             }
-        } else {
-            role = (RepoRole) roleList.get(0);
         }
         return role;
     }

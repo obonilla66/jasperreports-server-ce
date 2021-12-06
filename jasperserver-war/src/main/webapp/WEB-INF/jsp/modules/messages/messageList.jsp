@@ -47,31 +47,83 @@
 
     </t:putAttribute>
     <t:putAttribute name="bodyContent" >
+        <!-- NEW STYLE PAGE TITLE -->
+        <div class="pageHeader ">
+            <div class="pageHeader-title">
+                <div class="pageHeader-title-icon">
+                    <span class="icon messages"></span>
+                </div>
+                <div class="pageHeader-title-text"><spring:message code="messages.messageList.page.title"/></div>
+            </div>
+        </div>
 
         <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
             <t:putAttribute name="containerClass" value="column decorated primary showingToolBar"/>
-            <t:putAttribute name="containerTitle"><spring:message code="messages.messageList.header.title"/>:</t:putAttribute>
-            <t:putAttribute name="headerContent">
-                <label class="control select inline" for="messageFilter" title="<spring:message code="messages.messageList.filter.title"/>">
-                    <span class="wrap offLeft"><spring:message code="messages.messageList.filter.label"/></span>
-                    <select id="messageFilter" name="messageFilter">
-                        <option selected="selected" value="ALL" <c:if test="${messageFilter == 'ALL'}">selected</c:if>><spring:message code="messages.messageList.filter.all"/></option>
-                        <option value="UNREAD" <c:if test="${messageFilter == 'UNREAD'}">selected</c:if>><spring:message code="messages.messageList.filter.unread"/></option>
-                    </select>
-                    <span class="message warning"></span>
-                </label>
-
+            <t:putAttribute name="containerTitleEmpty" value="${true}"></t:putAttribute>
+            <t:putAttribute name="subHeaderContent">
                 <div id="toolbar" class="toolbar">
                     <ul class="list buttonSet">
 						<li class="node open">
-							<ul class="list buttonSet">
-								<li class="leaf"><button id="markAsRead" class="button capsule text up first"><span class="wrap"><spring:message code="messages.messageList.toolbar.button.markAsRead"/></span><span class="icon"></span></button></li>
-								<li class="leaf"><button id="markAsUnread" class="button capsule text up last"><span class="wrap"><spring:message code="messages.messageList.toolbar.button.markAsUnread"/></span><span class="icon"></span></button></li>
-								<li class="leaf"><button id="delete" class="button capsule text up"><span class="wrap"><spring:message code="messages.messageList.toolbar.button.delete"/></span></button></li>
-							</ul>
+                            <ul class="list buttonSet">
+                                <li class="leaf"><button id="markAsRead" class="button capsule text up first"><span class="wrap">
+                                            <spring:message code="messages.messageList.toolbar.button.markAsRead" />
+                                        </span><span class="icon"></span></button></li>
+                                <li class="leaf"><button id="markAsUnread" class="button capsule text up last"><span class="wrap">
+                                            <spring:message code="messages.messageList.toolbar.button.markAsUnread" />
+                                        </span><span class="icon"></span></button></li>
+                                <li class="leaf"><button id="delete" class="button capsule text up"><span class="wrap">
+                                            <spring:message code="messages.messageList.toolbar.button.delete" />
+                                        </span></button></li>
+                            </ul>
 						</li>
                     </ul>
+
+                    <ul id="sortMode" class="list tabSet text control horizontal" tabindex="-1" js-navtype="none" js-stdnav="false">
+                        <li js-navtype="dynamiclist" id="sortMode_item1" class="label first" tabindex="-1" disabled="disabled">
+                            <p class="wrap">
+                                <spring:message code="messages.messageList.filter.title.showMessage" />:
+                            </p>
+                        </li>
+                        <li js-navtype="dynamiclist" id="sortMode_item2" class="tab selected cursor" tabindex="-1">
+                            <p class="wrap button">
+                                <spring:message code="messages.messageList.filter.all" />
+                            </p>
+                        </li>
+                        <li js-navtype="dynamiclist" id="sortMode_item3" class="tab last" tabindex="-1">
+                            <p class="wrap button">
+                                <spring:message code="messages.messageList.filter.unread" />
+                            </p>
+                        </li>
+                    </ul>
                 </div>
+                <ul id="messageListHeader" class="list collapsible tabular type_messages fourColumn header">
+                <li id="messageListHeader_item1" class="leaf first">
+                    <div class="wrap type_messages">
+                        <div class="column one">
+                            <p class="subject" title="Message subject">
+                                <spring:message
+                                    code="messages.messageList.message.header.subject" />
+                            </p>
+                        </div>
+                        <div class="column two">
+                            <p class="date" title="Event Date">
+                                <spring:message code="messages.messageList.message.header.date" />
+                            </p>
+                        </div>
+                        <div class="column three">
+                            <p class="type" title="Event Type">
+                                <spring:message code="messages.messageList.message.header.type" />
+                            </p>
+                        </div>
+                        <div class="column four">
+                            <p class="component" title="Affected Component">
+                                <spring:message
+                                    code="messages.messageList.message.header.component" />
+                            </p>
+                        </div>
+                    </div>
+                </li>
+            </ul>
             </t:putAttribute>
             <t:putAttribute name="bodyContent">
                 <ol id="messageList" class=""></ol>

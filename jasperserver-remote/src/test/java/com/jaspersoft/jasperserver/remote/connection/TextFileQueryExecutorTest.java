@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.DataAdapterDefinition;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.CustomReportDataSourceImpl;
@@ -159,7 +160,7 @@ public class TextFileQueryExecutorTest {
     @BeforeMethod
     public void refresh() throws Exception{
         reset(customDataSourceResourceConverter, dataAdapterDefinitionMock, customDataSourceFactory, dataConverterService);
-        when(customDataSourceResourceConverter.toServer(same(connection), any(ToServerConversionOptions.class)))
+        when(customDataSourceResourceConverter.toServer(any(ExecutionContext.class), same(connection), any(ToServerConversionOptions.class)))
                 .thenReturn(serverObject);
         when(customDataSourceFactory.getDefinition(serverObject)).thenReturn(dataAdapterDefinitionMock);
         when(dataAdapterDefinitionMock.getJRDataSource(serverObject)).thenAnswer(new Answer<JRCsvDataSource>() {

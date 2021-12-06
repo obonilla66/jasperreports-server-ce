@@ -28,7 +28,7 @@
             extends="com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.impl.datasource.RepoJdbcDataSource"
             table="JIAzureSqlDatasource">
         <key column="id"/>
-        <many-to-one name="keyStoreResource" column="keyStore_id" not-null="true" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource"/>
+        <many-to-one name="keyStoreResource" column="keyStore_id" not-null="true" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource" index="idx_keyStore_id"/>
         <property name="keyStorePassword" not-null="false" length="100" type="string" column="keyStorePassword"/>
         <property name="keyStoreType" not-null="false" length="25" type="string" column="keyStoreType"/>
         <property name="subscriptionId" not-null="false" length="100" type="string" column="subscriptionId"/>

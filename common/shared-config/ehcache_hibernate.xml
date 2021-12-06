@@ -60,7 +60,52 @@
                 statistics="true">
         </cache>
 
-<!-- ******************************************************************** END of NO CLUSTERING ******************************************** -->
+	<cache name="roles"
+		   maxElementsInMemory="1000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+	<cache name="rolesByTenant"
+		   maxElementsInMemory="1000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+
+	<cache name="users"
+		   maxElementsInMemory="10000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+	<cache name="usersByTenant"
+		   maxElementsInMemory="10000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+
+	<cache name="tenants"
+		   maxElementsInMemory="1000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+	<cache name="tenantsByName"
+		   maxElementsInMemory="1000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+
+	<cache name="folders"
+		   maxElementsInMemory="100000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+
+	<cache name="profileAttributes"
+		   maxElementsInMemory="100000"
+		   eternal="true"
+		   overflowToDisk="false"
+		   diskPersistent="false"/>
+
+	<!-- ******************************************************************** END of NO CLUSTERING ******************************************** -->
 
 <!-- ********************************************************************   RMI  ********************************************************** -->
      <!-- START 

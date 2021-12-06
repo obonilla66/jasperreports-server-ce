@@ -43,8 +43,6 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsConta
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
-import com.jaspersoft.jasperserver.api.metadata.security.JasperServerPermission;
-import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
@@ -60,7 +58,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONException;
 import org.springframework.context.MessageSource;
-import org.springframework.security.acls.domain.CumulativePermission;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.webflow.action.FormAction;
@@ -313,30 +310,8 @@ public abstract class ReportParametersAction extends FormAction implements Repor
      */
     private boolean isResourceReadOnly(RequestContext context, Object resource) {
         ExecutionContext exContext = getExecutionContext(context);
-
-        Set<Integer> allUserPermissions = Collections.emptySet();
-        List<Object> currentUserRecipients = getCurrentUserRecipients();
-        if (currentUserRecipients != null && currentUserRecipients.size() > 0) {
-            allUserPermissions = new HashSet<Integer>();
-            for (Object recipient : currentUserRecipients) {
-                List<ObjectPermission> permissions = objectPermissionService.getObjectPermissionsForObjectAndRecipient(
-                        exContext, resource, recipient);
-                if (permissions != null && !permissions.isEmpty()) {
-                    ObjectPermission permissionObject = permissions.get(0);
-                    allUserPermissions.add(permissionObject.getPermissionMask());
-                } else {
-                    allUserPermissions.add(objectPermissionService.
-                        getInheritedObjectPermissionMask(exContext, resource, recipient));
-                }
-            }
-        }
-        CumulativePermission cPermission = new CumulativePermission();
-        for(Integer permission: allUserPermissions) {
-            cPermission.set(new JasperServerPermission(permission));
-        }
-        return cPermission.equals(JasperServerPermission.READ);
+        return objectPermissionService.isObjectReadOnlyAccessible(exContext, resource);
     }
-
 
     protected List<Object> getCurrentUserRecipients() {
         Authentication authenticationToken = SecurityContextHolder.getContext().getAuthentication();
@@ -430,6 +405,45 @@ public abstract class ReportParametersAction extends FormAction implements Repor
         String dashFrameParam = reqContext.getRequestParameters().get(VIEW_AS_DASHBOARD_FRAME);
         Boolean dashFlowParam = (Boolean) reqContext.getFlowScope().get(IS_DASHBOARD);
         return Boolean.valueOf(dashFrameParam) || (dashFlowParam != null && dashFlowParam);
+    }
+
+    /**
+     * Look for input control values in the request
+     * @param context
+     * @return Map<String, String[]> the formatted input control values
+     */
+    public Map<String, String[]> getFormattedInputControlValuesFromRequest(RequestContext context) {
+        ReportInputControlsInformation infos = getControlsInformation(context);
+        List<InputControl> controls = getInputControls(context);
+        String reportOptionURI = getReportOptionURI(context);
+        String inputControlsContainerURI = reportOptionURI == null ? getReportURI(context) : reportOptionURI;
+
+        Map<String, String[]> requestParametersForControlLogic = getRequestParametersForControlLogic(context, controls);
+
+        try {
+            /* Resolve values for controls. */
+            List<InputControlState> inputControlStates = inputControlsLogicService.getValuesForInputControls(inputControlsContainerURI, infos.getControlNames(), requestParametersForControlLogic, false);
+
+            // Flag only those input controls for which there has been provided a request parameter
+            ValidationErrorsImpl validationErrors = new ValidationErrorsImpl();
+            for (InputControlState state: inputControlStates) {
+                if (state.getError() != null && requestParametersForControlLogic.get(state.getId()) != null) {
+                    validationErrors.add(new InputControlValidationError(state.getError(), null, state.getError(), state.getUri(), null));
+                }
+            }
+
+            if (!validationErrors.getErrors().isEmpty()) {
+                throw new InputControlsValidationException(validationErrors);
+            }
+
+            Map<String, String[]> inputControlFormattedValues = ReportParametersUtils.getValueMapFromInputControlStates(inputControlStates);
+
+            return inputControlFormattedValues;
+        } catch (CascadeResourceNotFoundException e) {
+            throw new JSException(String.format("Resource not found URI: %s Type: %s", e.getResourceUri(), e.getResourceType()));
+        } catch (InputControlsValidationException e) {
+            throw new JSValidationException(e.getErrors());
+        }
     }
 
     /**

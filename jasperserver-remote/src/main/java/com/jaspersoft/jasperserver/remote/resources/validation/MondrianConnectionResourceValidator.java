@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianConnection;
@@ -41,7 +42,7 @@ import static com.jaspersoft.jasperserver.remote.resources.validation.Validation
 @Component
 public class MondrianConnectionResourceValidator<ConnectionType extends MondrianConnection> extends GenericResourceValidator<ConnectionType> {
     @Override
-    protected void internalValidate(ConnectionType resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, ConnectionType resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (resource.getDataSource() == null || empty(resource.getDataSource().getTargetURI())) {
             errors.add(new MandatoryParameterNotFoundException("dataSource"));
         }

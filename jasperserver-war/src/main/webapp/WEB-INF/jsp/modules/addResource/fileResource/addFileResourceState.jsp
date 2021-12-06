@@ -1,4 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
+<%@ page import="com.jaspersoft.jasperserver.war.common.JasperServerConst" %>
+
 <%--
   ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
@@ -22,6 +24,10 @@
 
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<c:set var="MAX_LENGTH_NAME" value="<%=JasperServerConst.MAX_LENGTH_NAME%>" />
+<c:set var="MAX_LENGTH_LABEL" value="<%=JasperServerConst.MAX_LENGTH_LABEL%>" />
 
 <js:out javaScriptEscape="true">
 <script type="text/javascript">
@@ -50,9 +56,9 @@
 
     resource.messages["typeIsNotValid"] = '<spring:message code="resource.file.extension" javaScriptEscape="true"/>';
     resource.messages["pathIsEmpty"] = '<spring:message code="FileResourceValidator.error.no.file.source" javaScriptEscape="true"/>';
-    resource.messages["labelToLong"] = '<spring:message code="FileResourceValidator.error.too.long.fileResource.label" javaScriptEscape="true"/>';
+    resource.messages["labelToLong"] = '<spring:message code="FileResourceValidator.error.too.long.fileResource.label" arguments="${MAX_LENGTH_LABEL}" javaScriptEscape="true"/>';
     resource.messages["labelIsEmpty"] = '<spring:message code="FileResourceValidator.error.not.empty.fileResource.label" javaScriptEscape="true"/>';
-    resource.messages["resourceIdToLong"] = '<spring:message code="FileResourceValidator.error.too.long.fileResource.name" javaScriptEscape="true"/>';
+    resource.messages["resourceIdToLong"] = '<spring:message code="FileResourceValidator.error.too.long.fileResource.name" arguments="${MAX_LENGTH_NAME}" javaScriptEscape="true"/>';
     resource.messages["resourceIdIsEmpty"] = '<spring:message code="FileResourceValidator.error.not.empty.fileResource.name" javaScriptEscape="true"/>';
     resource.messages["resourceIdInvalidChars"] = '<spring:message code="FileResourceValidator.error.invalid.chars.fileResource.name" javaScriptEscape="true"/>';
     resource.messages["descriptionToLong"] = '<spring:message code="FileResourceValidator.error.too.long.fileResource.description" javaScriptEscape="true"/>';

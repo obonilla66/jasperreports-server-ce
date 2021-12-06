@@ -21,14 +21,16 @@
 
 package com.jaspersoft.jasperserver.dto.dashboard;
 
-import com.jaspersoft.jasperserver.dto.authority.ClientUser;
-import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
-
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.List;
-
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
+
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.jaspersoft.jasperserver.dto.authority.ClientUser;
+import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
+import com.jaspersoft.jasperserver.dto.resources.ClientDashboard;
 
 /**
  * <p>DTO for dashboard executions.</p>
@@ -38,6 +40,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  */
 @XmlRootElement(name = "dashboardExportExecution")
 public class DashboardExportExecution implements DeepCloneable<DashboardExportExecution> {
+	private Boolean detailed;
     private int width;
     private int height;
     private int referenceWidth;
@@ -48,6 +51,8 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
     private DashboardParameters parameters;
     private String markup;
     private List<String> jrStyle;
+    private List<RuntimeComponent> runtimeComponents;
+    private ClientDashboard dashboard;
     private String outputTimeZone;
     private String outputLocale;
     private ClientUser owner;
@@ -57,6 +62,7 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
     public DashboardExportExecution(DashboardExportExecution other) {
         checkNotNull(other);
 
+        detailed = other.detailed;
         width = other.width;
         height = other.height;
         referenceWidth = other.referenceWidth;
@@ -67,11 +73,22 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         parameters = copyOf(other.getParameters());
         markup = other.markup;
         jrStyle = copyOf(other.getJrStyle());
+        runtimeComponents = copyOf(other.getRuntimeComponents());
+        dashboard = copyOf(other.getDashboard());
         outputTimeZone = other.outputTimeZone;
         outputLocale = other.outputLocale;
         if (other.owner != null) {
             owner = new ClientUser(other.owner);
         }
+    }
+    
+    public Boolean getDetailed() {
+    	return detailed;
+    }
+    
+    public DashboardExportExecution setDetailed(Boolean detailed) {
+        this.detailed = detailed;
+        return this;
     }
 
     public int getWidth() {
@@ -191,6 +208,22 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         return this;
     }
 
+	public List<RuntimeComponent> getRuntimeComponents() {
+		return runtimeComponents;
+	}
+
+	public void setRuntimeComponents(List<RuntimeComponent> runtimeComponents) {
+		this.runtimeComponents = runtimeComponents;
+	}
+
+	public ClientDashboard getDashboard() {
+		return dashboard;
+	}
+
+	public void setDashboard(ClientDashboard dashboard) {
+		this.dashboard = dashboard;
+	}
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -198,6 +231,7 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
 
         DashboardExportExecution that = (DashboardExportExecution) o;
 
+        if (detailed != null ? !detailed.equals(that.detailed) : that.detailed != null) return false;
         if (width != that.width) return false;
         if (height != that.height) return false;
         if (referenceWidth != that.referenceWidth) return false;
@@ -209,6 +243,12 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) return false;
         if (markup != null ? !markup.equals(that.markup) : that.markup != null) return false;
         if (jrStyle != null ? !jrStyle.equals(that.jrStyle) : that.jrStyle != null) return false;
+        if (runtimeComponents != null ? !runtimeComponents.equals(that.runtimeComponents) : that.runtimeComponents != null) {
+        	return false;
+        }
+        if (dashboard != null ? !dashboard.equals(that.dashboard) : that.dashboard != null) {
+        	return false;
+        }
         if (outputTimeZone != null ? !outputTimeZone.equals(that.outputTimeZone) : that.outputTimeZone != null)
             return false;
         return outputLocale != null ? outputLocale.equals(that.outputLocale) : that.outputLocale == null;
@@ -216,7 +256,8 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
 
     @Override
     public int hashCode() {
-        int result = width;
+        int result = (detailed != null ? detailed.hashCode() : 0);
+        result = 31 * result + width;
         result = 31 * result + height;
         result = 31 * result + referenceWidth;
         result = 31 * result + referenceHeight;
@@ -226,6 +267,8 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
         result = 31 * result + (markup != null ? markup.hashCode() : 0);
         result = 31 * result + (jrStyle != null ? jrStyle.hashCode() : 0);
+        result = 31 * result + (runtimeComponents != null ? runtimeComponents.hashCode() : 0);
+        result = 31 * result + (dashboard != null ? dashboard.hashCode() : 0);
         result = 31 * result + (outputTimeZone != null ? outputTimeZone.hashCode() : 0);
         result = 31 * result + (outputLocale != null ? outputLocale.hashCode() : 0);
         result = 31 * result + (owner != null ? owner.hashCode() : 0);
@@ -235,7 +278,8 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
     @Override
     public String toString() {
         return "DashboardExportExecution{" +
-                "width=" + width +
+                "detailed=" + detailed +
+                ", width=" + width +
                 ", height=" + height +
                 ", referenceWidth=" + referenceWidth +
                 ", referenceHeight=" + referenceHeight +
@@ -245,6 +289,8 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
                 ", parameters=" + parameters +
                 ", markup='" + markup + '\'' +
                 ", jrStyle=" + jrStyle +
+                ", runtimeComponents=" + runtimeComponents +
+                ", dashboard=" + dashboard +
                 ", outputTimeZone='" + outputTimeZone + '\'' +
                 ", outputLocale='" + outputLocale + '\'' +
                 ", owner='" + (owner != null? owner.getUsername() : owner) + '\'' +
@@ -256,7 +302,12 @@ public class DashboardExportExecution implements DeepCloneable<DashboardExportEx
         pptx("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
         docx("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
         odt("application/vnd.oasis.opendocument.text"),
-        pdf("application/pdf");
+        pdf("application/pdf"),
+        xlsx("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        xls("application/vnd.ms-excel"),
+        rtf("application/rtf"),
+        csv("application/vnd.ms-excel"),//according to com.jaspersoft.jasperserver.remote.exporters.CsvExporter
+        ods("application/vnd.oasis.opendocument.spreadsheet");
 
         private String mime;
         ExportFormat(String mime){

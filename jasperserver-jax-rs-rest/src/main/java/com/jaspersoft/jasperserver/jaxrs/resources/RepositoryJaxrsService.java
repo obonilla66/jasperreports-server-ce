@@ -203,7 +203,7 @@ public class RepositoryJaxrsService {
             @QueryParam(RestConstants.QUERY_PARAM_INCLUDE) List<String> includes,
             @Context final HttpServletRequest request) throws ErrorDescriptorException {
        return resourceDetailsJaxrsService.getResourceDetails(Folder.SEPARATOR + uri.replaceAll("/$", ""), accept,
-               expanded, expandTypes, includes, request.getParameterMap());
+               expanded, expandTypes, includes, request.getParameterMap(), request);
     }
 
     @DELETE
@@ -247,7 +247,7 @@ public class RepositoryJaxrsService {
                 // wrong media type for resource creation request, let's try default post handler
                 response = resourceDetailsJaxrsService.defaultPostHandler(stream, uri, sourceUri,
                         disposition, description, mediaType != null ? mediaType.toString() : null, accept, createFolders,
-                        overwrite, renameTo, dryRun, parameterMap);
+                        overwrite, renameTo, dryRun, parameterMap, httpServletRequest);
             }
             if (response == null) {
                 final ClientResource createdResource = resourceDetailsJaxrsService
@@ -256,7 +256,7 @@ public class RepositoryJaxrsService {
                 if (expanded != null && expanded) {
                     response = Response.fromResponse(resourceDetailsJaxrsService
                             .getResourceDetails(createdResource.getUri(), accept, true, expandTypes,  null,
-                                    parameterMap))
+                                    parameterMap, httpServletRequest))
                             .status(Response.Status.CREATED).build();
                 } else {
                     response = Response.status(Response.Status.CREATED).entity(createdResource).build();
@@ -366,7 +366,7 @@ public class RepositoryJaxrsService {
                 // wrong media type for resource creation request, let's try default put handler
                 response = resourceDetailsJaxrsService.defaultPutHandler(stream, uri, sourceUri,
                         disposition, description, mediaType != null ? mediaType.toString() : null, accept, createFolders,
-                        overwrite, renameTo, dryRun, parameterMap);
+                        overwrite, renameTo, dryRun, parameterMap, httpServletRequest);
             }
             if (response == null) {
                 if (resourceLookup == null) {
@@ -384,7 +384,7 @@ public class RepositoryJaxrsService {
 
                 if (expanded != null && expanded) {
                     response = Response.fromResponse(resourceDetailsJaxrsService.getResourceDetails(
-                            updatedResource.getUri(), mediaType.toString(), true, expandTypes, null, parameterMap))
+                            updatedResource.getUri(), mediaType.toString(), true, expandTypes, null, parameterMap, httpServletRequest))
                             .status(status).build();
                 } else {
                     response = Response.status(status).entity(updatedResource).build();

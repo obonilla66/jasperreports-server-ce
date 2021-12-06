@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.JndiJdbcReportDataSourceImpl;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
@@ -54,7 +55,8 @@ public class JndiJdbcDataSourceResourceConverterTest {
         JndiJdbcReportDataSource serverObject = new JndiJdbcReportDataSourceImpl();
         clientObject.setJndiName(expectedJndiName);
         clientObject.setTimezone(expectedTimezone);
-        final JndiJdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final JndiJdbcReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.getJndiName(), expectedJndiName);
         assertEquals(result.getTimezone(), expectedTimezone);

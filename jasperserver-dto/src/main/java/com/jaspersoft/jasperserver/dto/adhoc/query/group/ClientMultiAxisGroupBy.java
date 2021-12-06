@@ -27,6 +27,7 @@ import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +40,7 @@ import static java.util.Arrays.asList;
  * @author Andriy Godovanets
  */
 @XmlRootElement
-public class ClientMultiAxisGroupBy implements ClientGroupBy<ClientLevelAxis> {
+public class ClientMultiAxisGroupBy implements ClientGroupBy<ClientLevelAxis>, Serializable {
 
     @Valid
     protected ClientLevelAxis rows;

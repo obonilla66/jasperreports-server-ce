@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.utils.JSONSerializer;
 import com.jaspersoft.jasperserver.dto.utils.XMLSerializer;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.JAXBElement;
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertEquals;
  * @author Andriy Tivodar <ativodar@tibco>
  * @author Olexandr Dahno <odahno@tibco.com>
  */
+
 
 public abstract class BaseDTOPresentableTest<T extends DeepCloneable> extends BaseDTOTest<T> {
 

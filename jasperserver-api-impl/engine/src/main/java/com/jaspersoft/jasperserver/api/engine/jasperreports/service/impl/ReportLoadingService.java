@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ReportLoadingService {
     private static final Log log = LogFactory.getLog(ReportLoadingService.class);
@@ -397,6 +398,18 @@ public class ReportLoadingService {
 		return name;
 	}
 
+    protected List<InputControl> getInputControls(ExecutionContext context, InputControlsContainer container, Consumer<InputControl> process) {
+        List<ResourceReference> inputControlRefs = getInputControlReferences(context, container);
+        List<InputControl> inputControls = new ArrayList<InputControl>(inputControlRefs.size());
+        for (ResourceReference ref : inputControlRefs) {
+            final InputControl inputControl = getFinalResource(context, ref, InputControl.class);
+
+            if (process != null && inputControl !=null) process.accept(inputControl);
+
+            inputControls.add(inputControl);
+        }
+        return inputControls;
+    }
     /**
      * Get list of input controls from specified container and it's data source,
      * input controls with the same names get replaced, ones from container have priority over ones from the data source.
@@ -406,19 +419,12 @@ public class ReportLoadingService {
      * @return List of InputControl
      */
     public List<InputControl> getInputControls(ExecutionContext context, InputControlsContainer container) {
-        List<ResourceReference> inputControlRefs = getInputControlReferences(context, container);
-        List<InputControl> inputControls = new ArrayList<InputControl>(inputControlRefs.size());
-        for (ResourceReference ref : inputControlRefs) {
-            final InputControl inputControl = getFinalResource(context, ref, InputControl.class);
-
+        return getInputControls(context, container, (inputControl)->{
             if (SrcSets.hasUnresolved(inputControl.getSources())) {
                 Query query = getFinalResource(context, inputControl.getQuery(), Query.class);
                 resolveInputControlSources(context, inputControl, query, container);
             }
-
-            inputControls.add(inputControl);
-        }
-        return inputControls;
+        });
     }
 
     /**

@@ -42,7 +42,7 @@
             <property name="serverName" column="server_name" not-null="false" type="string" length="150"/>
             <property name="folderPath" column="folder_path" not-null="false" type="string" length="250"/>
             <!-- reference to SSH Private Key -->
-            <many-to-one name="sshPrivateKey" column="ssh_private_key" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResourceLight" fetch="join" not-null="false"/>
+            <many-to-one name="sshPrivateKey" column="ssh_private_key" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResourceLight" fetch="join" not-null="false" index="idx_ssh_private_key"/>
             <map name="propertiesMap" table="JIFTPInfoProperties" fetch="subselect">
                 <key column="repodest_id"/>
                 <map-key column="property_name" type="string" length="100"/>

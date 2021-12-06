@@ -20,7 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
-import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -113,13 +113,13 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
                                 getToClientConverter(localResource.getResourceType(), clientType)
                                 .toClient(localResource, options);
                     } else {
-                        result = new ClientReference(serverObject.getTargetURI());
+                        result = new ClientReference(serverObject.getTargetURI(), serverObject.getVersion());
                     }
                 } catch (AccessDeniedException e) {
-                    result = new ClientReference(serverObject.getTargetURI());
+                    result = new ClientReference(serverObject.getTargetURI(), serverObject.getVersion());
                 }
             } else {
-                result = new ClientReference(serverObject.getTargetURI());
+                result = new ClientReference(serverObject.getTargetURI(), serverObject.getVersion());
             }
         }
         return (T) result;
@@ -129,17 +129,17 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         return resourceConverterProvider.getToClientConverter(serverType, clientType) != null;
     }
 
-    public ResourceReference toServer(T clientObject,ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, null, options);
+    public ResourceReference toServer(ExecutionContext ctx, T clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, null, options);
     }
 
-    public ResourceReference toServer(T clientObject, ResourceReference resultToUpdate, ToServerConversionOptions options)
+    public ResourceReference toServer(ExecutionContext ctx, T clientObject, ResourceReference resultToUpdate, ToServerConversionOptions options)
             throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         final ResourceReference resourceReference;
         if (clientObject == null) {
             resourceReference = null;
         } else if (clientObject.getClass() == ClientReference.class) {
-            resourceReference = toServerReference(clientObject, resultToUpdate, options);
+            resourceReference = toServerReference(ctx, clientObject, resultToUpdate, options);
         } else if (clientObject instanceof ClientResource) {
             if (options == null || !options.isAllowReferencesOnly()) {
                 if (restrictions != null){
@@ -147,7 +147,7 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
                         restriction.validateReference((ClientResource)clientObject);
                     }
                 }
-                resourceReference = toServerLocalResource((ClientResource) clientObject, resultToUpdate, options);
+                resourceReference = toServerLocalResource(ctx,  (ClientResource) clientObject, resultToUpdate, options);
             } else {
                 throw new IllegalParameterValueException("reference", clientObject.toString());
             }
@@ -159,7 +159,7 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         return resourceReference;
     }
 
-    protected ResourceReference toServerReference(T clientObject, ResourceReference resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected ResourceReference toServerReference(ExecutionContext ctx, T clientObject, ResourceReference resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException {
         ResourceReference result;
         final String uriFromClient = clientObject.getUri();
         if (resultToUpdate != null && resultToUpdate.getTargetURI().equals(uriFromClient)) {
@@ -169,7 +169,10 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
             // if it is local resource, reference with local resource must be returned or update will fail
             // NOTE: it is always preferable to pass resultToUpdate to get actual resource from there to avoid rereading and possible errors.
             String ownersUri = options == null ? null : options.getOwnersUri();
-            Resource referencedResource = validateAndGetReference(uriFromClient, ownersUri);
+            Resource referencedResource = validateAndGetReference(ctx, uriFromClient, ownersUri);
+            if(options!=null && options.getAdditionalProperties()!=null && options.getAdditionalProperties().get("source")!=null)   {
+                return new ResourceReference(referencedResource);
+            }
             final boolean local = ownersUri != null && uriFromClient.startsWith(ownersUri + "_files" + Folder.SEPARATOR);
             result = resultToUpdate == null ? new ResourceReference(referencedResource) : resultToUpdate;
             if (!local) {
@@ -179,12 +182,12 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         return result;
     }
 
-    protected Resource validateAndGetReference(String referenceUri, String ownersUri) throws IllegalParameterValueException {
+    protected Resource validateAndGetReference(ExecutionContext ctx, String referenceUri, String ownersUri) throws IllegalParameterValueException {
         if (referenceUri == null) {
             throw new MandatoryParameterNotFoundException("resourceReference.uri");
         }
 
-        if (!isAssignable(ownersUri, referenceUri)){
+        if (!isAssignable(ctx, ownersUri, referenceUri)){
             throw new IllegalParameterValueException("resourceReference.uri", referenceUri);
         }
         // we need to update reference
@@ -193,7 +196,7 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
             throw new ReferencedResourceNotFoundException(referenceUri, "uri");
         }
 
-        final Resource resource = repositoryService.getResource(ExecutionContextImpl.getRuntimeExecutionContext(), referenceUri);
+        final Resource resource = repositoryService.getResource(ctx, referenceUri);
         if (resource == null) {
             // resource with such URI doesn't exist
             throw new ReferencedResourceNotFoundException(referenceUri, "uri");
@@ -206,10 +209,10 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         return resource;
     }
 
-    protected ResourceReference toServerLocalResource(ClientResource clientObject, ResourceReference resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected ResourceReference toServerLocalResource(ExecutionContext ctx,ClientResource clientObject, ResourceReference resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         ResourceReference result;
-        Resource localResource = resourceConverterProvider.getToServerConverter(clientObject).toServer(clientObject, options);
-        if (localResource.getName() == null && clientObject.getLabel() != null) {
+        Resource localResource = resourceConverterProvider.getToServerConverter(clientObject).toServer(ctx, clientObject, options);
+        if (localResource.getName() == null && clientObject.getLabel() != null  && configuration.getResourceIdNotSupportedSymbols()!=null) {
             localResource.setName(clientObject.getLabel().replaceAll(configuration.getResourceIdNotSupportedSymbols(), "_"));
         }
         if (options != null && options.isResetVersion()){
@@ -224,14 +227,14 @@ public class ResourceReferenceConverter<T extends ClientReferenceable> {
         return result;
     }
 
-    protected final boolean isAssignable(String parent, String child){
+    protected final boolean isAssignable(ExecutionContext ctx, String parent, String child){
         boolean res = true;
         if (parent != null){
             int suffixIndex = child.lastIndexOf("_files");
             if (suffixIndex > 0){
                 String possibleParentUri = child.substring(0, suffixIndex);
                 if (!possibleParentUri.equals(parent)){
-                    res = repositoryService.getResource(null, possibleParentUri) == null;
+                    res = repositoryService.getResource(ctx, possibleParentUri) == null;
                 }
             }
         }

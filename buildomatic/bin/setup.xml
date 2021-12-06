@@ -489,7 +489,7 @@
 
     <!-- master props copy destination -->
     <property name="masterProps" value="${currentConf}/master.properties"/>
-    
+
     <!-- db props -->
     <property name="dbProps" value="${currentConf}/db.properties"/>
 
@@ -597,6 +597,7 @@
         </then>
     </if>
 
+
     <!-- ======================================================================= -->
     <!-- filter and load properties from the template files:                     -->
     <!--                                                                         -->
@@ -675,6 +676,35 @@
         </sequential>
     </macrodef>
 
+    <macrodef name="assignAuditProps">
+        <attribute name = "type" />
+        <sequential>
+        <if>
+            <not><isset property="installType"/></not>
+            <then>
+                <if>
+                    <equals arg1="@{type}" arg2="unset" />
+                    <then>
+                        <for param="auditproperty" list="audit.dbHost,audit.dbPort,audit.dbUsername,audit.dbPassword,audit.dbName">
+                        <sequential>
+                            <var name="@{auditproperty}" unset="true"/>
+                        </sequential>
+                        </for>
+                    </then>
+                    <elseif >
+                        <equals arg1="@{type}" arg2="set" />
+                        <then>
+                            <property name="audit.dbHost" value="${dbHost}"/>
+                            <property name="audit.dbUsername" value="${dbUsername}"/>
+                            <property name="audit.dbPassword" value="${dbPassword}"/>
+                        </then>
+                    </elseif>
+                </if>
+            </then>
+        </if>
+        </sequential>
+    </macrodef>
+
     <macrodef name="setCurrentDbJDBCDir">
         <sequential>
             <if>
@@ -688,7 +718,6 @@
             </if>
         </sequential>
     </macrodef>
-
 
     <macrodef name="gen-config-if-required">
         <sequential>
@@ -737,6 +766,8 @@
                     <!-- load base props -->
                     <property file="${masterProps}"/>
 
+                    <assignAuditProps type="unset"/>
+
                     <!-- look up props for your db -->
                     <setCurrentDbDir />
 
@@ -757,6 +788,9 @@
 
                     <!-- load db template-type props -->
                     <property file="${dbTemplateProps}"/>
+
+                    <!-- Set the audit properties with jasperserver values for non-split!-->
+                    <assignAuditProps type="set" />
 
                     <!-- load db script props by calling macro (will chk for Locale props too) -->
                     <chkAndSetLocaleDbSettings />
@@ -796,6 +830,9 @@
                     <!-- copy and load default props -->
                     <filterCopyLoad file="${defaultPropsSource}" toFile="${defaultProps}"/>
 
+                    <!-- Set the audit properties with jasperserver values for non-split!-->
+                    <assignAuditProps type="set" />
+
                     <!-- copy and load db template-type props
                          TODO db-specific code doesn't belong here;
                          we should be able to handle this in the templates,
@@ -809,6 +846,8 @@
                                 <then>
                                     <var name="dbHostOrInstance" value="${dbHost};instanceName=${dbInstance}"/>
                                     <echo>dbHostOrInstance = ${dbHostOrInstance}</echo>
+                                    <var name="audit.dbHostOrInstance" value="${audit.dbHost};instanceName=${dbInstance}"/>
+                                    <echo>audit.dbHostOrInstance = ${audit.dbHostOrInstance}</echo>
                                 </then>
                                 <else>
                                     <if>
@@ -821,6 +860,18 @@
                                         <!-- don't need to do anything to the dbHost property -->
                                         <!-- user didn't set port or instance -->
                                             <echo>dbHostOrInstance = ${dbHostOrInstance} </echo>
+                                        </else>
+                                    </if>
+                                    <if>
+                                        <isset property="audit.dbPort"/>
+                                        <then>
+                                            <var name="audit.dbHostOrInstance" value="${audit.dbHost}:${audit.dbPort}"/>
+                                            <echo>audit.dbHostOrInstance = ${audit.dbHostOrInstance}</echo>
+                                        </then>
+                                        <else>
+                                            <!-- don't need to do anything to the dbHost property -->
+                                            <!-- user didn't set port or instance -->
+                                            <echo>audit.dbHostOrInstance = ${audit.dbHostOrInstance} </echo>
                                         </else>
                                     </if>
                                 </else>
@@ -863,6 +914,34 @@
                                     </if>
                                 </else>
                             </if>
+
+                            <if>
+                                <isset property="audit.serviceName"/>
+                                <then>
+                                    <var name="audit.dbSidOrServiceName" value="/${audit.serviceName}"/>
+                                    <echo>audit.dbSidOrServiceName = ${audit.dbSidOrServiceName}</echo>
+                                    <var name="audit.dbSidOrServiceNameProp" value="ServiceName=${audit.serviceName}"/>
+                                    <echo>audit.dbSidOrServiceNameProp = ${audit.dbSidOrServiceNameProp}</echo>
+                                    <var name="audit.sidOrSnParam" value="serviceName"/>
+                                    <var name="audit.sidOrSnValue" value="${audit.serviceName}"/>
+                                </then>
+                                <else>
+                                    <if>
+                                        <isset property="audit.sid"/>
+                                        <then>
+                                            <var name="audit.dbSidOrServiceName" value=":${audit.sid}"/>
+                                            <echo>audit.dbSidOrServiceName = ${audit.dbSidOrServiceName}</echo>
+                                            <var name="audit.dbSidOrServiceNameProp" value="SID=${audit.sid}"/>
+                                            <echo>audit.dbSidOrServiceNameProp = ${audit.dbSidOrServiceNameProp}</echo>
+                                            <var name="audit.sidOrSnParam" value="sid"/>
+                                            <var name="audit.sidOrSnValue" value="${audit.sid}"/>
+                                        </then>
+                                    </if>
+                                </else>
+                            </if>
+
+
+
                         </then>
                     </if>
 
@@ -1138,7 +1217,7 @@
     
         <gen-config-if-required />
     </target>
-    
+
     <target name="refresh-config" depends="clean-config, gen-config"
         description="force regeneration of config files"/>
 
@@ -1171,7 +1250,21 @@
     <target name="test-pro-all-props" description="Tests that all JasperServer Pro properties are initialized">
       <var name="listOfPropsPro" value="dbType,dbHost,dbUsername,dbPassword,dbPort,js.dbName,sugarcrm.dbName,foodmart.dbName,
       webAppNamePro" />
-
+      <if>
+          <isset property="installType"/>
+          <then>
+          <if>
+          <equals arg1="${installType}" arg2="split"></equals>
+              <then>
+                  <var name="listOfPropsPro" value="dbType,dbHost,dbUsername,dbPassword,dbPort,js.dbName,sugarcrm.dbName,foodmart.dbName,
+                    webAppNamePro,audit.dbHost,audit.dbUsername,audit.dbPassword,audit.dbPort,audit.dbName" />
+              </then>
+              <else>
+                  <fail>Error: installType is set to invalid value.</fail>
+              </else>
+          </if>
+          </then>
+      </if>
       <if>
         <not>
           <isset property="CATALINA_HOME"/>
@@ -1185,6 +1278,12 @@
         <equals arg1="${dbType}" arg2="oracle" />
         <then>
           <var name="listOfPropsPro" value="${listOfPropsPro},sysUsername,sysPassword,sid" />
+            <if>
+                <equals arg1="${installType}" arg2="split"/>
+                <then>
+                <var name="listOfPropsPro" value="${listOfPropsPro},audit.sysUsername,audit.sysPassword,audit.sid" />
+                </then>
+            </if>
         </then>
       </if>
 
@@ -1228,7 +1327,7 @@
                 <echo>Didn't find groovy JAR, downloading it</echo>
                 <runmaven dir="${basedir}">
                     <arg value="dependency:copy"/>
-                    <arg value="-Dartifact=org.codehaus.groovy:groovy-all:2.4.5:jar"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy-all:3.0.7:jar"/>
                     <arg value="-DoutputDirectory=${ant.home}/lib"/>
                 </runmaven>
                 <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy">

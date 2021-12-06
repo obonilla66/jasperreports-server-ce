@@ -39,6 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.Pair;
 
+
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -207,7 +208,7 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
             if(selectedValues.isEmpty()) {
                 // default values are not found in values list
                 // this control is mandatory, first value should be selected
-                getMandatoryValues(inputControl, info, selectedValues, selectedValuesList, values, isNothingSelected);
+                getMandatoryValues(inputControl, info, selectedValues, selectedValuesList, values.get(0), isNothingSelected);
             }
         }
 
@@ -225,13 +226,20 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         }
     }
 
-    protected void getMandatoryValues(InputControl inputControl, ReportInputControlInformation info, List<InputControlOption> selectedValues, List<Object> selectedValuesList, List<ListOfValuesItem> values, boolean isNothingSelected) throws CascadeResourceNotFoundException {
-        InputControlOption inputControlOption;
+    protected void getMandatoryValues(InputControl inputControl,
+                                      ReportInputControlInformation info,
+                                      List<InputControlOption> selectedValues,
+                                      List<Object> selectedValuesList,
+                                      ListOfValuesItem item,
+                                      boolean isNothingSelected) throws CascadeResourceNotFoundException {
         if (inputControl.isMandatory() && !isNothingSelected) {
-            inputControlOption = buildInputControlOption(values.get(0).getLabel(), dataConverterService.formatSingleValue(values.get(0).getValue(), inputControl, info));
+            final Object currentValue = getCurrentItemValue(inputControl, info, item);
+            final String formattedValue = dataConverterService.formatSingleValue(currentValue, inputControl, info);
+
+            InputControlOption inputControlOption = buildInputControlOption(item.getLabel(), formattedValue);
             inputControlOption.setSelected(null);
             selectedValues.add(inputControlOption);
-            selectedValuesList.add(values.get(0).getValue());
+            selectedValuesList.add(currentValue);
         }
     }
 

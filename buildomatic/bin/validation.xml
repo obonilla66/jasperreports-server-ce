@@ -323,6 +323,7 @@
               <or>
                   <equals arg1="@{prop}" arg2="dbPassword" />
                   <equals arg1="@{prop}" arg2="sysPassword" />
+                  <equals arg1="@{prop}" arg2="audit.dbPassword" />
               </or>
             <then>
               <echo>  @{prop}=**********</echo>
@@ -359,6 +360,8 @@
   <macrodef name="validateDB"
       description="Validates JDBC connection and checks existence of the database (written to 'dbExists' variable)">
     <attribute name="systemName" />
+    <attribute name="dbUsername" default="${dbUsername}"/>
+    <attribute name="dbPassword" default="${dbPassword}"/>
     <attribute name="phase" default="before" />
     <attribute name="failOnDBNotExists" default="${failOnDBNotExists}" />
     <attribute name="failOnUnrecoverableConnectionError" default="${failOnUnrecoverableDBMSConnectionError}" />
@@ -368,7 +371,7 @@
       <var name="connectionURLOfDBToValidate" value="${@{systemName}.jdbcUrl}" />
 
       <echo>Validating ${displayNameOfDBToValidate} database connection at ${connectionURLOfDBToValidate}. Phase: [@{phase}]</echo>
-      <validateDBMSConnection jdbcUrl="${connectionURLOfDBToValidate}" phase="@{systemName}DB@{phase}" systemName="@{systemName}"
+      <validateDBMSConnection dbUsername="@{dbUsername}" dbPassword="@{dbPassword}" jdbcUrl="${connectionURLOfDBToValidate}" phase="@{systemName}DB@{phase}" systemName="@{systemName}"
           failOnConnectionError="@{failOnConnectionError}"
           failOnDBNotExists="@{failOnDBNotExists}"
           failOnUnrecoverableConnectionError="@{failOnUnrecoverableConnectionError}">
@@ -415,13 +418,18 @@
   <macrodef name="dBExistsValidationFailureListener"
       description="Listens for db exists validation failure and prints out information about the failure">
     <attribute name="failOnDBNotExists" />
+    <attribute name="systemName" default="js"/>
 
     <sequential>
       <var name="dbExists" value="false" />
         <if>
             <and>
-                <equals arg1="${strategy}" arg2="inDatabase" />
-                <equals arg1="${js.setup.mode}" arg2="upgrade" />
+              <or>
+                <equals arg1="@{systemName}" arg2="js" />
+                <equals arg1="@{systemName}" arg2="admin" />
+              </or>
+              <equals arg1="${strategy}" arg2="inDatabase" />
+              <equals arg1="${js.setup.mode}" arg2="upgrade" />
             </and>
             <then>
                 <failIfUnrecoverable flag="true"
@@ -486,14 +494,33 @@
      <!-- comment out line below if there is a "hang" error on validateHost step -->
     <validateHostAndPort host="${dbHost}" port="${dbPort}" type="DBMS" />
     <if>
+      <isset property="installType"/>
+      <then>
+        <!-- comment out line below if there is a "hang" error on validateHost step -->
+        <validateHostAndPort host="${audit.dbHost}" port="${audit.dbPort}" type="DBMS" />
+      </then>
+    </if>
+    <if>
       <not>
         <equals arg1="${dbType}" arg2="db2" />
       </not>
       <then>
         <validateDB systemName="admin" phase="test" failOnDBNotExists="true" />
+        <if>
+          <isset property="installType"/>
+          <then>
+            <validateDB systemName="audit.admin" dbUsername="${audit.dbUsername}" dbPassword="${audit.dbPassword}" phase="test" failOnDBNotExists="true" />
+          </then>
+        </if>
       </then>
     </if>
     <validateDB systemName="js" phase="test" />
+    <if>
+      <isset property="installType"/>
+      <then>
+        <validateDB systemName="audit" dbUsername="${audit.dbUsername}" dbPassword="${audit.dbPassword}" phase="test" />
+      </then>
+    </if>
   </target>
 
   <!-- ==================================================================== -->
@@ -518,6 +545,11 @@
   <target name="pre-install-test-pro"
       depends="test-pro-all-props, check-dbtype-pro, test-appServerType-pro, do-pre-install-test"
       description="Tests system before installing JasperServer Pro">
+  </target>
+
+  <target name="pre-install-test-docker"
+          depends="test-pro-all-props, check-dbtype-pro, test-appServerType-pro"
+          description="Tests system before installing JasperServer Pro">
   </target>
 
   <target name="check-dbtype-ce"
@@ -655,4 +687,39 @@
     <validate-ks/>
     <echo>Keystore OK</echo>
   </target>
+
+  <target name="check-install-type-ce">
+    <if>
+        <isset property="installType"/>
+      <then>
+        <fail>InstallType is not supported for Community Edition.</fail>
+      </then>
+    </if>
+  </target>
+
+  <target name="check-install-type">
+    <echo>Need to check install type</echo>
+    <if>
+      <OR>
+        <not><isset property="installType"/></not>
+        <not><equals arg1="${installType}" arg2="split"></equals></not>
+      </OR>
+      <then>
+        <fail>The value of installType should be split.</fail>
+      </then>
+    </if>
+  </target>
+  <target name="check-install-type-overlay">
+    <echo>Need to check install type if present</echo>
+    <if>
+      <and>
+        <isset property="installType"/>
+        <not><equals arg1="${installType}" arg2="split"></equals></not>
+      </and>
+      <then>
+        <fail>The value of installType supports only split. If it's compact version please remove/comment installType property</fail>
+      </then>
+    </if>
+  </target>
+
 </project>

@@ -329,6 +329,8 @@
     <echo message="                                                                                                   "/>
     <echo message="     js-ant re-init-js-db-pro                                                                      "/>
     <echo message="                                                                                                   "/>
+    <echo message="     js-ant re-init-audit-db-pro (for split)                                                  "/>
+    <echo message="                                                                                                   "/>
     <echo message="     js-ant import-sample-data-pro                                                                 "/>
     <echo message="                                                                                                   "/>
     <echo message="     (or js-ant run-production-data-pro)                                                           "/>

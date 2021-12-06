@@ -20,14 +20,11 @@
  */
 package com.jaspersoft.jasperserver.inputcontrols.cascade.handlers;
 
-import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedEngineService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedRepositoryService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterResolver;
@@ -50,10 +47,11 @@ import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputCo
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.TOTAL_COUNT;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.CRITERIA;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.INCLUDE_TOTAL_COUNT;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.SKIP_FETCHING_IC_VALUES_FROM_DB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -74,15 +72,15 @@ public class QueryValuesLoaderTest {
     @Mock
     private FilterResolver filterResolver;
     @Mock
-    private CachedEngineService cachedEngineService;
+    private ValuesLoaderStrategy queryValuesLoaderStrategy;
+    @Mock
+    private ValuesLoaderStrategy parametersValuesLoaderStrategy;
 
     private final InputControl inputControl = mock(InputControl.class);
 
     private final ResourceReference dataSource = mock(ResourceReference.class);
 
     private final ReportInputControlInformation info = mock(ReportInputControlInformation.class);
-
-    private final Query query = mock(Query.class);
 
     private final Map<String, Object> parameters = new HashMap<>();
 
@@ -91,7 +89,6 @@ public class QueryValuesLoaderTest {
     @Before
     public void setUp() throws CascadeResourceNotFoundException {
         doReturn(INPUT_CONTROL_NAME).when(inputControl).getName();
-        doReturn(query).when(cachedRepositoryService).getResource(eq(Query.class), nullable(ResourceReference.class));
         doReturn("").when(valuesLoader).extractLabelFromResults(
                 any(InputControl.class),
                 any(ReportInputControlInformation.class),
@@ -136,7 +133,7 @@ public class QueryValuesLoaderTest {
             put("Mexico", new Object[]{"Mexico"});
         }};
 
-        mockExecuteQuery(results);
+        mockLoadResults(results);
         mockExtractLabelFromResults("USA", "USA|LABEL");
 
         List<ListOfValuesItem> actualResult = valuesLoader.loadValues(inputControl, dataSource, parameters, parameterTypes, info, true);
@@ -154,7 +151,7 @@ public class QueryValuesLoaderTest {
             put("Mexico", new Object[]{"Mexico"});
         }};
 
-        mockExecuteQuery(results);
+        mockLoadResults(results);
 
         List<ListOfValuesItem> actualResult = valuesLoader.loadValues(inputControl, dataSource, parameters, parameterTypes, info, true);
         assertEquals(4, actualResult.size());
@@ -172,7 +169,7 @@ public class QueryValuesLoaderTest {
             put("Mexico", new Object[]{"Mexico"});
         }};
 
-        mockExecuteQuery(results);
+        mockLoadResults(results);
         mockExtractLabelFromResults("USA", "USA|LABEL");
 
         List<ListOfValuesItem> actualResult = valuesLoader.loadValues(inputControl, dataSource, parameters, parameterTypes, info, false);
@@ -192,7 +189,7 @@ public class QueryValuesLoaderTest {
             put("Mexico", new Object[]{"Mexico"});
         }};
 
-        mockExecuteQuery(results);
+        mockLoadResults(results);
         mockExtractLabelFromResults("USA", "USA|LABEL");
         mockExtractLabelFromResults("Canada", "Canada|LABEL");
 
@@ -214,15 +211,48 @@ public class QueryValuesLoaderTest {
             put("Mexico", new Object[]{"Mexico"});
         }};
 
-        mockExecuteQuery(results);
+        mockLoadResults(results);
 
-        // TODO: remove this
         mockExtractLabelFromResults(NOTHING_SUBSTITUTION_LABEL, NOTHING_SUBSTITUTION_LABEL);
 
         List<ListOfValuesItem> actualResult = valuesLoader.loadValues(inputControl, dataSource, parameters, parameterTypes, info, true);
         assertEquals(1, actualResult.size());
         assertEquals(NOTHING_SUBSTITUTION_LABEL, actualResult.get(0).getLabel());
         assertEquals(1, parameters.get(TOTAL_COUNT));
+    }
+
+    @Test
+    public void loadValues_withSkipCriteriaSearch_unfilteredValues() throws CascadeResourceNotFoundException {
+        setIncludeTotalCount(parameters, true);
+        setCriteria(parameters, "---");
+
+        OrderedMap results = new LinkedMap() {{
+            put("USA", new Object[]{"USA"});
+            put("Canada", new Object[]{"Canada"});
+            put("Mexico", new Object[]{"Mexico"});
+        }};
+
+        mockLoadResults(results, true);
+        mockExtractLabelFromResults("USA", "USA|LABEL");
+
+        List<ListOfValuesItem> actualResult = valuesLoader.loadValues(inputControl, dataSource, parameters, parameterTypes, info, true);
+        assertEquals(4, actualResult.size());
+        assertEquals(NOTHING_SUBSTITUTION_LABEL, actualResult.get(0).getLabel());
+        assertEquals("USA|LABEL", actualResult.get(1).getLabel());
+        assertEquals(4, parameters.get(TOTAL_COUNT));
+    }
+
+    @Test
+    public void getLoaderStrategy_parametersWithSkipFetchingAttribute_parametersValuesLoaderStrategy() {
+        parameters.put(SKIP_FETCHING_IC_VALUES_FROM_DB, Boolean.TRUE.toString());
+        ValuesLoaderStrategy result = valuesLoader.getLoaderStrategy(parameters);
+        assertEquals(parametersValuesLoaderStrategy, result);
+    }
+
+    @Test
+    public void getLoaderStrategy_emptyParameters_queryValuesLoaderStrategy() {
+        ValuesLoaderStrategy result = valuesLoader.getLoaderStrategy(parameters);
+        assertEquals(queryValuesLoaderStrategy, result);
     }
 
     private void setIncludeTotalCount(Map<String, Object> parameters, boolean include) {
@@ -233,10 +263,21 @@ public class QueryValuesLoaderTest {
         parameters.put(INPUT_CONTROL_NAME + "_" + CRITERIA, criteria);
     }
 
-    private void mockExecuteQuery(OrderedMap orderedMap) throws CascadeResourceNotFoundException {
-        doReturn(orderedMap).when(cachedEngineService).executeQuery(
-                any(ExecutionContext.class), nullable(ResourceReference.class), nullable(String.class), nullable(String[].class),
-                nullable(ResourceReference.class), nullable(Map.class), nullable(Map.class), nullable(String.class)
+    private void mockLoadResults(OrderedMap orderedMap) throws CascadeResourceNotFoundException {
+        mockLoadResults(orderedMap, false);
+    }
+
+    private void mockLoadResults(OrderedMap orderedMap, boolean skipCriteriaSearch) throws CascadeResourceNotFoundException {
+        ResultsOrderedMap.Builder builder = new ResultsOrderedMap.Builder();
+        builder.setOrderedMap(orderedMap);
+        builder.setSkipCriteriaSearch(skipCriteriaSearch);
+
+        doReturn(builder.build()).when(queryValuesLoaderStrategy).resultsOrderedMap(
+                any(InputControl.class),
+                nullable(ResourceReference.class),
+                nullable(String.class),
+                anyMap(),
+                anyMap()
         );
     }
 

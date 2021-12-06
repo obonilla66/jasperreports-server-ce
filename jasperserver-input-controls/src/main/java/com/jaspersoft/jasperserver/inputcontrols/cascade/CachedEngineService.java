@@ -63,7 +63,7 @@ public class CachedEngineService {
     @Resource
     private CachedRepositoryService cachedRepositoryService;
 
-    @Resource
+    @Resource(name = "${bean.engineService}")
     protected EngineService engineService;
 
     @Resource

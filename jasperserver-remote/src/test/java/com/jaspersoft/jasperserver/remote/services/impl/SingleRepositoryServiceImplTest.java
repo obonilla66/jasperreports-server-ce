@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.remote.services.impl;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
@@ -133,6 +134,7 @@ public class SingleRepositoryServiceImplTest {
     @Spy
     protected Map<String, CopyMoveOperationStrategy> copyMoveStrategies = new HashMap<String, CopyMoveOperationStrategy>();
 
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     private ClientInputControl clientObject;
 
@@ -210,7 +212,7 @@ public class SingleRepositoryServiceImplTest {
         final ClientJndiJdbcDataSource expectedResult = new ClientJndiJdbcDataSource();
         final ArgumentCaptor<ToClientConversionOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ToClientConversionOptions.class);
         doReturn(expectedResult).when(toClientConverter).toClient(same(resource), optionsArgumentCaptor.capture());
-        doReturn(resource).when(toServerConverter).toServer(same(clientObject), isNull(Resource.class), any(ToServerConversionOptions.class));
+        doReturn(resource).when(toServerConverter).toServer(any(ExecutionContext.class), same(clientObject), isNull(Resource.class), any(ToServerConversionOptions.class));
         final HashMap<String, String[]> additionalProperties = new HashMap<String, String[]>();
         final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, true, additionalProperties);
         assertSame(result, expectedResult);
@@ -230,7 +232,7 @@ public class SingleRepositoryServiceImplTest {
         clientObject.setVersion(9);
         final ClientJndiJdbcDataSource expectedResult = new ClientJndiJdbcDataSource();
         doReturn(expectedResult).when(toClientConverter).toClient(same(resource), any(ToClientConversionOptions.class));
-        doReturn(resource).when(toServerConverter).toServer(same(clientObject), isNull(Resource.class), any(ToServerConversionOptions.class));
+        doReturn(resource).when(toServerConverter).toServer(any(ExecutionContext.class), same(clientObject), isNull(Resource.class), any(ToServerConversionOptions.class));
         final ClientResource result = service.saveOrUpdate(clientObject, true, true, null, true, null);
         assertSame(result, expectedResult);
         verify(service, never()).deleteResource(anyString());
@@ -276,7 +278,7 @@ public class SingleRepositoryServiceImplTest {
         doReturn(serverObject).when(service).getResource(uri);
         doNothing().when(service).deleteResource(uri);
         ArgumentCaptor<ToServerConversionOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ToServerConversionOptions.class);
-        when(toServerConverter.toServer(same(clientObject), isNull(), optionsArgumentCaptor.capture())).thenReturn(serverObject);
+        when(toServerConverter.toServer(any(ExecutionContext.class), same(clientObject), isNull(), optionsArgumentCaptor.capture())).thenReturn(serverObject);
         doReturn(serverObject).when(service).createResource(serverObject, serverObject.getParentPath(), true, false);
         final ToClientConverter toClientConverter = mock(ToClientConverter.class);
         when(toClientConverter.getClientResourceType()).thenReturn(ResourceMediaType.DATA_TYPE_CLIENT_TYPE);
@@ -299,7 +301,7 @@ public class SingleRepositoryServiceImplTest {
         clientObject.setVersion(1);
         doReturn(serverObject).when(service).getResource(uri);
         ArgumentCaptor<ToServerConversionOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ToServerConversionOptions.class);
-        when(toServerConverter.toServer(same(clientObject), same(serverObject), optionsArgumentCaptor.capture())).thenReturn(serverObject);
+        when(toServerConverter.toServer(any(ExecutionContext.class), same(clientObject), same(serverObject), optionsArgumentCaptor.capture())).thenReturn(serverObject);
         doReturn(serverObject).when(service).updateResource(serverObject, false);
         final ToClientConverter toClientConverter = mock(ToClientConverter.class);
         when(resourceConverterProvider.getToClientConverter(serverObject)).thenReturn(toClientConverter);
@@ -320,7 +322,7 @@ public class SingleRepositoryServiceImplTest {
         serverObject.setURIString(uri);
         doReturn(null).when(service).getResource(uri);
         ArgumentCaptor<ToServerConversionOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ToServerConversionOptions.class);
-        when(toServerConverter.toServer(same(clientObject), isNull(), optionsArgumentCaptor.capture())).thenReturn(serverObject);
+        when(toServerConverter.toServer(any(ExecutionContext.class), same(clientObject), isNull(), optionsArgumentCaptor.capture())).thenReturn(serverObject);
         doReturn(serverObject).when(service).createResource(serverObject, serverObject.getParentPath(), true, false);
         final ToClientConverter toClientConverter = mock(ToClientConverter.class);
         when(resourceConverterProvider.getToClientConverter(serverObject)).thenReturn(toClientConverter);

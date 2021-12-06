@@ -73,18 +73,13 @@
             <version>${spring.version}</version>
         </dependency>
         <dependency>
-            <groupId>xerces</groupId>
+            <groupId>org.codelibs.xerces</groupId>
             <artifactId>xercesImpl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.4.01</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-ext</artifactId>
-            <version>1.11</version>
+            <version>${batik.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>

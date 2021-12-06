@@ -23,23 +23,17 @@ package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectCache;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectEntry;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceNotFoundException;
@@ -54,6 +48,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -71,6 +68,8 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 	private static final String GOOGLE_BIG_QUERY_PROGRESS_SERVICE_ACCOUNT = "ServiceAccountEmail";
 	private static final String GOOGLE_BIG_QUERY_PROGRESS_PROJECT = "Project";
 	private static final String GOOGLE_BIG_QUERY_PROGRESS_DATASET = "Dataset";
+	protected static final String SNOWFLAKE_DRIVER_CLASS = "net.snowflake.client.jdbc.SnowflakeDriver";
+
 	protected static class PooledDataSourcesCache {
 
         protected static class DataSourceEntry extends PooledObjectEntry {
@@ -121,9 +120,9 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 			pooledObjectCache.put(key, entry, now);
 		}
 		
-		public List removeExpired(long now, int timeout) {
+		public List removeExpired(long now, int timeout, int athenaTimeOut) {
             List expired = new ArrayList();
-            List<PooledObjectEntry> expiredEntries = pooledObjectCache.removeExpired(now, timeout);
+            List<PooledObjectEntry> expiredEntries = pooledObjectCache.removeExpired(now, timeout, athenaTimeOut);
             for (PooledObjectEntry objectEntry : expiredEntries) expired.add(((DataSourceEntry)objectEntry).ds);
 			return expired;
 		}
@@ -134,6 +133,7 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 	private PooledDataSourcesCache poolDataSources;
 	private ProfileAttributesResolver profileAttributesResolver;
 	private int poolTimeout;
+	private int athenaPoolTimeOut;
     private Set<String> autoCommitUnsupportedDrivers = new HashSet<String>(); // protect from NPE
     private Map<String, String> driverAuthMethMap = new HashMap<String, String>(); // protect from NPE
     private Map<String, String> driverNoAuthMethMap = new HashMap<String, String>(); // protect from NPE
@@ -141,7 +141,9 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 	private boolean defaultAutoCommit = false;
 	private String privateKeyTempDir;
 	private RepositoryService repositoryService;
-	private MessageSource messageSource;
+	protected MessageSource messageSource;
+	@Autowired(required = false)
+	protected Tracer tracer;
 
 	public JdbcReportDataSourceServiceFactory () {
 		poolDataSources = new PooledDataSourcesCache();
@@ -158,10 +160,10 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 		if (!(reportDataSource instanceof JdbcReportDataSource)) {
 			throw new JSException("jsexception.invalid.jdbc.datasource", new Object[] {reportDataSource.getClass()});
 		}
-        JdbcReportDataSource jdbcDataSource = updateJdbcReportDataSource((JdbcReportDataSource) reportDataSource);
-        DataSource dataSource = getPoolDataSource(jdbcDataSource.getDriverClass(), jdbcDataSource.getConnectionUrl(),
-				jdbcDataSource.getUsername(), jdbcDataSource.getPassword());
-        return getDataDataServiceInstance(dataSource, getTimeZoneByDataSourceTimeZone(jdbcDataSource.getTimezone()));
+		JdbcReportDataSource jdbcDataSource = updateJdbcReportDataSource((JdbcReportDataSource) reportDataSource);
+		DataSource dataSource = getPoolDataSource(jdbcDataSource.getDriverClass(), jdbcDataSource.getConnectionUrl(),
+		jdbcDataSource.getUsername(), jdbcDataSource.getPassword());
+		return getDataDataServiceInstance(dataSource, getTimeZoneByDataSourceTimeZone(jdbcDataSource.getTimezone()));
 	}
 
 	protected JdbcReportDataSource updateJdbcReportDataSource(JdbcReportDataSource jdbcDataSource) {
@@ -210,6 +212,7 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 				connectionUrl = connectionUrl.replace(privateKeyResourcePath, privateKeyFilePath);
 			    connectionUrl = connectionUrl+";schemaMap="+getPrivateKeyTempDir()+"\\"+configFileName+".config";
 		}
+
 		connectionUrl = getRuntimeConnectionURL(connectionUrl);
 		jdbcDataSource.setConnectionUrl(connectionUrl);
 		jdbcDataSource.setUsername(userName);
@@ -271,7 +274,7 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
   }
 
     protected JdbcDataSourceService getDataDataServiceInstance(DataSource dataSource, TimeZone timezone) {
-        return new JdbcDataSourceService(dataSource, timezone);
+        return new JdbcDataSourceService(dataSource, timezone).withTracer(tracer);
     }
 
 	protected DataSource getPoolDataSource(String driverClass, String url, String username, String password) {
@@ -286,10 +289,11 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 				if (log.isDebugEnabled()) {
 					log.debug("Creating connection pool for " + poolKey + ".");
 				}
-                boolean isAutoCommit = (getAutoCommitUnsupportedDrivers().contains(driverClass) ? true : defaultAutoCommit);
+				boolean isAutoCommit = (getAutoCommitUnsupportedDrivers().contains(driverClass) ? true : defaultAutoCommit);
 				dataSource = pooledJdbcDataSourceFactory.createPooledDataSource(
 						driverClass, url, username, password,
-						defaultReadOnly, isAutoCommit);
+						isReadOnlyConnection(driverClass),
+						isAutoCommit);
 				poolDataSources.put(poolKey, dataSource, now);
 			} else {
 				if (log.isDebugEnabled()) {
@@ -301,11 +305,17 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 		return dataSource.getDataSource();
 	}
 
+	protected boolean isReadOnlyConnection(String driverClass){
+		if(driverClass != null)
+		  return driverClass.equals(SNOWFLAKE_DRIVER_CLASS) ? false : defaultReadOnly;
+		return defaultReadOnly;
+  }
+
 	protected void releaseExpiredPools(long now) {
 		List expired = null;
 		synchronized (poolDataSources.pooledObjectCache) {
 			if (getPoolTimeout() > 0) {
-				expired = poolDataSources.removeExpired(now, getPoolTimeout());
+				expired = poolDataSources.removeExpired(now, getPoolTimeout(), getAthenaPoolTimeOut());
 			}
 		}
 
@@ -398,6 +408,14 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 
 	public int getPoolTimeout() {
 		return poolTimeout;
+	}
+
+	public int getAthenaPoolTimeOut() {
+		return athenaPoolTimeOut;
+	}
+
+	public void setAthenaPoolTimeOut(int athenaPoolTimeOut) {
+		this.athenaPoolTimeOut = athenaPoolTimeOut;
 	}
 
 	public void setPoolTimeout(int poolTimeout) {

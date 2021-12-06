@@ -21,13 +21,15 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd"
-       default-lazy-init="true">
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd"
+       default-lazy-init="true" xmlns:context="http://www.springframework.org/schema/context">
 
+    <context:component-scan base-package="com.jaspersoft.jasperserver.jmx" />
     <bean id="diagnosticUsersCe" class="com.jaspersoft.jasperserver.api.logging.diagnostic.jmx.DiagnosticDynamicMBean">
         <property name="diagnosticServices">
             <set>
@@ -334,6 +336,16 @@
         <property name="beans" ref="diagnosticExportingMBeansMap"/>
     </bean>
 
+    <bean id="hibernateExporter" class="org.springframework.jmx.export.MBeanExporter" lazy-init="false">
+        <property name="exposeManagedResourceClassLoader" value="true"/>
+        <property name="server" ref="jasperJMXServer"/>
+        <property name="beans">
+            <map>
+                <entry key="Hibernate:type=Statistics" value-ref="hibernateStatisticsFactoryBean"/>
+            </map>
+        </property>
+    </bean>
+
     <bean id="diagnosticDataProvider" class="com.jaspersoft.jasperserver.api.logging.diagnostic.service.impl.DiagnosticDataProvider" lazy-init="false">
         <property name="diagnosticDataMap" ref="diagnosticExportingMBeansMap"/>
         <property name="messageSource" ref="messageSource"/>
@@ -425,7 +437,6 @@
     <bean id="cacheForStatistics" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
         <property name="cacheManager" ref="cacheManager"/>
         <property name="cacheName" value="aclCache" />
-        <property name="StatisticsEnabled" value="true"/>
     </bean>
 
     <!-- Can expose one EhCache using EhCache Diagnostic wrapper-->

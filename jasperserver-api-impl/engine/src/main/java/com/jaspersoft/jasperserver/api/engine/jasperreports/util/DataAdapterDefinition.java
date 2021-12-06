@@ -54,17 +54,14 @@ import net.sf.jasperreports.repo.DataAdapterResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import javax.annotation.Resource;
 import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -88,7 +85,8 @@ public abstract class DataAdapterDefinition extends CustomDataSourceDefinition i
     private static int REPOCUSTOMDATASOURCEPROPSIZELIMIT = 1000;
     @Resource(name = "concreteTenantService")
     private TenantService tenantService;
-    @Resource(name = "concreteRepositoryContextManager")
+    @Autowired(required = false)
+    @Qualifier("concreteRepositoryContextManager")
     private RepositoryContextManager repositoryContextManager;
     @Resource(name = "${bean.jasperReportsContext}")
     private JasperReportsContext jasperReportsContext;

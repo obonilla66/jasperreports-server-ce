@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ import static com.jaspersoft.jasperserver.remote.resources.validation.Validation
 @Component
 public class BeanDataSourceResourceValidator extends GenericResourceValidator<BeanReportDataSource> {
     @Override
-    protected void internalValidate(BeanReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, BeanReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getBeanMethod())){
             errors.add(new MandatoryParameterNotFoundException("BeanMethod"));
         }

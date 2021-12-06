@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+
 /**
  * <p></p>
  *
@@ -27,7 +29,7 @@ package com.jaspersoft.jasperserver.remote.connection;
  * @version $Id$
  */
 public interface GenericTypeMetadataBuilder<T> extends ContextMetadataBuilder<T> {
-    boolean isMetadataSupported(T connectionDescription, String metadataClientType);
+    boolean isMetadataSupported(ExecutionContext ctx, T connectionDescription, String metadataClientType);
     String getMetadataClientResourceType(T connectionDescription);
 
 }

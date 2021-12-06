@@ -73,6 +73,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,6 +97,7 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 @ContextConfiguration(loader = MockServletContextLoader.class, locations = {"classpath:applicationContext*.xml",
         "classpath:prod-tests-applicationContext-testProviders.xml"})
+@ActiveProfiles({"default","engine","jrs"})
 public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
 
     // MOD: the variable below are from the removed BaseExportTestCase class
@@ -141,6 +143,8 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
 
     private static final String XDM_WHITELIST_PROFILE_ATTRIB_NAME = "domainWhitelist";
     private static final String XDM_WHITELIST_GROUP = "XDM_WHITELIST";
+
+    private static final String AUDIT_DB_ATTR = "auditDB";
 
     protected ExecutionContext m_exContext = new ExecutionContextImpl();
 
@@ -1141,9 +1145,30 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
         final ExecutionContext executionContext = getExecutionContext();
         Tenant server = getTenantService().getTenant(executionContext, TenantService.ORGANIZATIONS);
 
+
+
         ProfileAttribute profileAttribute = createAndPutTestAttribute(XDM_WHITELIST_PROFILE_ATTRIB_NAME, "*", server, JasperServerPermission.ADMINISTRATION.getMask(), XDM_WHITELIST_GROUP);
         if (getProfileAttributeService().getProfileAttribute(executionContext, profileAttribute) == null)
             getProfileAttributeService().putProfileAttribute(executionContext, profileAttribute);
+    }
+
+    protected void addAuditDBProfileAttribute() {
+        String attributeValue = null;
+        if (getJdbcProps().getProperty("test.databaseFlavor").equals("oracle")) {
+            attributeValue = "JASPERSERVER";
+        } else if (getJdbcProps().getProperty("test.databaseFlavor").equals("db2")) {
+            attributeValue = "JSPRSRVR";
+        }
+        if (attributeValue != null) {
+            m_logger.info("addAuditDBProfileAttribute() called");
+            final ExecutionContext executionContext = getExecutionContext();
+            Tenant server = getTenantService().getTenant(executionContext, TenantService.ORGANIZATIONS);
+
+            ProfileAttribute profileAttribute = createAndPutTestAttribute(AUDIT_DB_ATTR, attributeValue, server, JasperServerPermission.ADMINISTRATION.getMask(), "custom");
+            if (getProfileAttributeService().getProfileAttribute(executionContext, profileAttribute) == null) {
+                getProfileAttributeService().putProfileAttribute(executionContext, profileAttribute);
+            }
+        }
     }
 
     protected void deleteDefaultDomainWhitelist() {
@@ -1153,5 +1178,23 @@ public class BaseServiceSetupTestNG extends AbstractTestNGSpringContextTests {
 
         getProfileAttributeService().deleteProfileAttribute(executionContext,
                 createTestAttr(server, XDM_WHITELIST_PROFILE_ATTRIB_NAME, "*", XDM_WHITELIST_GROUP));
+    }
+
+    protected void deleteAuditDBProfileAttribute() {
+        String attributeValue = null;
+        if (getJdbcProps().getProperty("test.databaseFlavor").equals("oracle")) {
+            attributeValue = "JASPERSERVER";
+        } else if (getJdbcProps().getProperty("test.databaseFlavor").equals("db2")) {
+            attributeValue = "JSPRSRVR";
+        }
+        if (attributeValue != null) {
+            m_logger.info("deleteAuditDBProfileAttribute() called");
+            ExecutionContext executionContext = getExecutionContext();
+            Tenant server = getTenantService().getTenant(executionContext, TenantService.ORGANIZATIONS);
+
+            getProfileAttributeService().deleteProfileAttribute(executionContext,
+                    createTestAttr(server, AUDIT_DB_ATTR, attributeValue, "custom"));
+        }
+
     }
 }

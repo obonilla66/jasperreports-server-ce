@@ -542,7 +542,7 @@ public class TeiidVirtualDataSourceQueryServiceImpl extends AbstractVirtualDataS
         TranslatorConfiguration translatorConfig = getTranslator(subDataSource, dataSource);
         INSTANCE.addConnectionFactory(connectionName, dataSource);
         debug("Connection Name = " + connectionName);
-		INSTANCE.addTranslator(translatorConfig.getTranslatorName(), translatorConfig.getTranslatorFactory());
+		    INSTANCE.addTranslator(translatorConfig.getTranslatorName(), translatorConfig.getTranslatorFactory());
         connectionFactoryProviderTranslatorMap.put(connectionName, translatorConfig.getTranslatorName());
     }
 

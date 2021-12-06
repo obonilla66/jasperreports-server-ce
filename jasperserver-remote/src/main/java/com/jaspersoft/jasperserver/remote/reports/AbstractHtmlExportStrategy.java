@@ -33,6 +33,8 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
+import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,7 +76,7 @@ import net.sf.jasperreports.web.util.WebHtmlResourceHandler;
  * @version $Id$
  */
 public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
-    private final static Log log = LogFactory.getLog(FullHtmlExportStrategy.class);
+    private final static Log log = LogFactory.getLog(AbstractHtmlExportStrategy.class);
     @Resource(name = "jasperReportsRemoteContext")
     private JasperReportsContext jasperReportsContext;
     @Resource
@@ -198,9 +200,16 @@ public abstract class AbstractHtmlExportStrategy implements HtmlExportStrategy {
                     }
                 });
         exporter.setParameter(ExportUtil.PARAMETER_HTTP_REQUEST, proxy);
-        exporter.setFontHandler(new WebHtmlResourceHandler(contextPath + "/reportresource?&font={0}"));// html exporter font handler no longer used in JR; consider removing
+        exporter.setFontHandler(new WebHtmlResourceHandler(contextPath + "/reportresource?&font={0}"));
 
-        ReportContext reportContext = reportExecution.getFinalReportUnitResult().getReportContext();
+        ReportUnitResult reportUnitResult;
+        Boolean ignoreCancelledReportExecution = exportExecution.getOptions().getIgnoreCancelledReportExecution();
+        if (ignoreCancelledReportExecution && ExecutionStatus.cancelled.equals(reportExecution.getStatus())) {
+            reportUnitResult = reportExecution.getReportUnitResult();
+        } else {
+            reportUnitResult = reportExecution.getFinalReportUnitResult();
+        }
+        ReportContext reportContext = reportUnitResult.getReportContext();
         if (reportContext != null) 
         {
             reportContext.setParameterValue("contextPath", contextPath);// context path to be used by the font handler in JSON exporter

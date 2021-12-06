@@ -42,11 +42,11 @@ public class ByPopularitySorter extends SearchSorter implements Serializable {
 //      please do not remove Projections.rowCount() - it's required for bug fix JRS-19427
 //      Hibernate is not properly managing columnNames for groupProperty and this will cause errors inside of Hibernate
 //      https://hibernate.atlassian.net/browse/HHH-5854
-        criteria.addProjection(Projections.projectionList().
+/*        criteria.addProjection(Projections.projectionList().
                 add(Projections.count("accessEvents"), "aec").
                 add(Projections.alias(Projections.groupProperty("accessEvents"),"aeid")).
                 add(Projections.rowCount()));
 
-        criteria.addOrder(Order.desc("aec")).addOrder(Order.asc("id"));
+        criteria.addOrder(Order.desc("aec")).addOrder(Order.asc("id"));*/
     }
 }

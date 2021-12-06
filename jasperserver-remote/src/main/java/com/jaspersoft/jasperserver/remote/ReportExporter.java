@@ -28,10 +28,12 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.Paginati
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRPropertiesHolder;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.export.ExporterInputItem;
 
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,6 +50,21 @@ public interface ReportExporter extends Serializable {
 			ExecutionContext executionContext,
 			String reportUnitURI
 			) throws Exception;
+	
+	public default Map<JRExporterParameter, Object> exportReport (
+			List<ExporterInputItem> inputItems, 
+			OutputStream output, 
+			EngineService engineService, 
+			HashMap exportParameters,
+			ExecutionContext executionContext,
+			String reportUnitURI
+			) throws Exception {
+		if (inputItems.size() != 1) {
+			throw new UnsupportedOperationException();
+		}
+		return exportReport(inputItems.get(0).getJasperPrint(), output, engineService, 
+				exportParameters, executionContext, reportUnitURI);
+	}
 
     public String getContentType();
     

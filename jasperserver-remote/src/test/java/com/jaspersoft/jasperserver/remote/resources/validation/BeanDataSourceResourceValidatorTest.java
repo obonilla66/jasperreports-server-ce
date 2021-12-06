@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.BeanReportDataSourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -49,6 +51,7 @@ public class BeanDataSourceResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private BeanReportDataSource dataSource;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init(){
@@ -66,14 +69,14 @@ public class BeanDataSourceResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
     public void testValidate_no_method() throws Exception {
         dataSource.setBeanMethod(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -83,7 +86,7 @@ public class BeanDataSourceResourceValidatorTest {
     public void testValidate_no_name() throws Exception {
         dataSource.setBeanName(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());

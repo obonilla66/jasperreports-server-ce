@@ -36,9 +36,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Locale;
+import java.util.*;
 
 import static com.jaspersoft.jasperserver.export.util.CommandUtils.requestPassword;
 import static com.jaspersoft.jasperserver.export.util.EncryptionParams.KEY_PASSWD_PARAMETER;
@@ -58,6 +56,10 @@ public abstract class BaseExportImportCommand {
 	public static final String ARG_COMMAND_BEAN = "commandBean";
 	public static final String ARG_HELP = "help";
 	public static final String ARG_UPDATE = "update";
+	public static final String ARG_TRANSFER = "transfer";
+
+	public static final String ARG_PROFILE_ATTR_NAME = "profile-attr-name";
+	public static final String ARG_PROFILE_ATTR_VALUE = "profile-attr-value";
 
 	public static final String HELP_BEAN_NAME = "helpPrintBean";
 
@@ -82,7 +84,9 @@ public abstract class BaseExportImportCommand {
 		ConfigurableApplicationContext ctx;
         if (exportParameters.hasParameter(ARG_HELP)){
             ctx = createSpringContext(exportParameters, "helpApplicationContext-export-import*.xml");
-        } else {
+        } else if (exportParameters.hasParameter(ARG_TRANSFER)){
+			ctx= createSpringContext(exportParameters,"applicationContext*.xml,transfer-audit-data-applicationContext.xml");
+		} else {
             ctx= createSpringContext(exportParameters, "applicationContext*.xml");
         }
 		try {
@@ -133,7 +137,13 @@ public abstract class BaseExportImportCommand {
 	protected ConfigurableApplicationContext createSpringContext(Parameters exportParameters, String resourceFileName) throws IOException {
 		GenericApplicationContext ctx = new GenericApplicationContext();
 		XmlBeanDefinitionReader configReader = new XmlBeanDefinitionReader(ctx);
-		Resource[] resources = ctx.getResources(resourceFileName);
+		ctx.getEnvironment().setActiveProfiles("default","engine","jrs");
+		String[] resourceFileNames=resourceFileName.split(",");
+		List<Resource> resourcesList=new ArrayList<>();
+		for(String fileName: resourceFileNames){
+			resourcesList.addAll(Arrays.asList(ctx.getResources(fileName)));
+		}
+		Resource[] resources=resourcesList.toArray(new Resource[0]);
         commandOut.info("First resource path: " + resources[0].getFile().getParent());
 		Arrays.sort(resources, new ResourceComparator());
         commandOut.info("Loading configuration resources");

@@ -43,6 +43,8 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
 
+import static com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl.getRuntimeExecutionContext;
+
 /**
  * @author: Zakhar.Tomchenco
  */
@@ -131,7 +133,7 @@ public class UsersJaxrsService {
             throw new ResourceAlreadyExistsException(clientUser.getUsername());
         }
 
-        User created = service.putUser(userConverter.toServer(clientUser, null));
+        User created = service.putUser(userConverter.toServer(getRuntimeExecutionContext(), clientUser, null));
         return Response.status(Response.Status.CREATED).entity(userConverter.toClient(created, null)).build();
 
     }
@@ -163,7 +165,7 @@ public class UsersJaxrsService {
             user = new UserImpl();
         }
 
-        user = userConverter.toServer(clientUser, user, null);
+        user = userConverter.toServer(getRuntimeExecutionContext(), clientUser, user, null);
         user.setUsername(name);
         user.setTenantId(tenantId);
 

@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientAwsDataSource;
@@ -37,8 +38,8 @@ import java.util.List;
 @Service
 public class AwsDataSourceResourceConverter extends GenericJdbcDataSourceResourceConverter<AwsReportDataSource, ClientAwsDataSource> {
     @Override
-    protected AwsReportDataSource resourceSpecificFieldsToServer(ClientAwsDataSource clientObject, AwsReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
-        final AwsReportDataSource awsReportDataSource = super.resourceSpecificFieldsToServer(clientObject, resultToUpdate, exceptions, options);
+    protected AwsReportDataSource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientAwsDataSource clientObject, AwsReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+        final AwsReportDataSource awsReportDataSource = super.resourceSpecificFieldsToServer(ctx, clientObject, resultToUpdate, exceptions, options);
         awsReportDataSource.setRoleARN(clientObject.getRoleArn());
         awsReportDataSource.setAWSAccessKey(clientObject.getAccessKey());
         awsReportDataSource.setAWSRegion(clientObject.getRegion());

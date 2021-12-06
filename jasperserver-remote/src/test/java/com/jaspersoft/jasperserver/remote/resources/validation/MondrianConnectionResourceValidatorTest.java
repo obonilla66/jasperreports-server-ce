@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FileResourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianConnection;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.MondrianConnectionImpl;
@@ -51,6 +53,7 @@ public class MondrianConnectionResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private MondrianConnection connection;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -67,13 +70,13 @@ public class MondrianConnectionResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(connection);
+        validator.validate(ctx, connection);
     }
 
     @Test
     public void testValidate_noDataSource() throws Exception {
         connection.setDataSourceReference(null);
-        final List exceptions = validator.validate(connection);
+        final List exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -82,13 +85,13 @@ public class MondrianConnectionResourceValidatorTest {
     @Test
     public void testValidate_emptyDataSource() throws Exception {
         connection.setDataSourceReference("");
-        validator.validate(connection);
+        validator.validate(ctx, connection);
     }
 
     @Test
     public void testValidate_noSchema() throws Exception {
         connection.setSchemaReference(null);
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -97,7 +100,7 @@ public class MondrianConnectionResourceValidatorTest {
     @Test
     public void testValidate_emptySchema() throws Exception {
         connection.setSchemaReference("");
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -108,7 +111,7 @@ public class MondrianConnectionResourceValidatorTest {
         final FileResourceImpl schema = new FileResourceImpl();
         schema.setURIString("/test/uri");
         connection.setSchema(schema);
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -121,7 +124,7 @@ public class MondrianConnectionResourceValidatorTest {
         schema.setVersion(10);
         connection.setSchema(schema);
         try {
-            validator.validate(connection);
+            validator.validate(ctx, connection);
         } catch (Exception e) {
             fail();
         }

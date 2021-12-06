@@ -30,12 +30,22 @@ import java.util.Set;
  */
 public class OutputFormatConversionHelper {
     public static Set<Byte> toBytes(Set<String> strings) throws Exception {
+        return toBytes(strings, null);
+    }
+
+    public static Set<Byte> toBytes(Set<String> strings, String exportType) throws Exception {
         ReportJobOutputFormatsWrapper formatsWrapper = new ReportJobOutputFormatsWrapper();
         formatsWrapper.setFormats(strings);
+        formatsWrapper.setExportType(exportType);
         return new OutputFormatXmlAdapter().unmarshal(formatsWrapper);
     }
 
     public static Set<String> toStrings(Set<Byte> bytes) throws Exception {
-        return new OutputFormatXmlAdapter().marshal(bytes).getFormats();
+        return toOutputFormats(bytes).getFormats();
+    }
+
+    public static ReportJobOutputFormatsWrapper toOutputFormats(Set<Byte> bytes) throws Exception {
+        ReportJobOutputFormatsWrapper wrapper = new OutputFormatXmlAdapter().marshal(bytes);
+		return wrapper;
     }
 }

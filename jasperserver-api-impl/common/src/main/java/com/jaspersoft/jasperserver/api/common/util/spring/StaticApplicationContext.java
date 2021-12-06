@@ -30,7 +30,7 @@ public class StaticApplicationContext {
     private static ApplicationContext ctx;
 
     /**
-     * Injected from the class "ApplicationContextProvider" which is automatically
+     * Injected from the class {@link ApplicationContextProvider} which is automatically
      * loaded during Spring-Initialization.
      */
     public static void setApplicationContext(ApplicationContext applicationContext) {
@@ -44,5 +44,9 @@ public class StaticApplicationContext {
      */
     public static ApplicationContext getApplicationContext() {
         return ctx;
+    }
+
+    public static <T extends Object> T getBean(Class<T> beanClass) {
+        return ctx.getBean(beanClass);
     }
 }

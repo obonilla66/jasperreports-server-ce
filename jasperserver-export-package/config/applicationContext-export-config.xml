@@ -65,7 +65,24 @@
     <property name="minIdle" value="0"/>
   </bean>
 
-  <!-- repositoryService bean: moved from applicationContext.xml                     -->
+    <bean id="auditDataSource" class="com.jaspersoft.jasperserver.export.datasource.ConfigurableDataSource"  destroy-method="close">
+        <property name="driverClassName" value="${audit.jdbc.driverClassName}"/>
+        <property name="url" value="${audit.jdbc.url}"/>
+        <property name="username" value="${audit.jdbc.username}"/>
+        <property name="password" value="${audit.jdbc.password}"/>
+        <property name="extraProperties">
+            <map>
+                <entry key="characterEncoding" value="UTF-8" />
+            </map>
+        </property>
+        <property name="initialSize" value="8"/>
+        <property name="maxActive" value="20"/>
+        <property name="maxIdle" value="20"/>
+        <property name="minIdle" value="0"/>
+    </bean>
+
+
+    <!-- repositoryService bean: moved from applicationContext.xml                     -->
   <!-- this is because import-export needs a non-authenticated (ie unsecure) version -->
   <!-- of this bean. Only database login is required.                                -->
     <alias name="hibernateRepositoryService" alias="repositoryService"/>

@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -72,18 +74,19 @@ public class CustomDataSourceResourceConverterTest {
     private CustomReportDataSourceServiceFactory customDataSourceFactory;
     @Mock
     private ResourceReferenceConverterProvider resourceReferenceConverterProvider;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init(){
         MockitoAnnotations.initMocks(this);
         converter.propertiesToIgnore = propertiesToIgnore;
         final ResourceReferenceConverter resourceReferenceConverterMock = mock(ResourceReferenceConverter.class);
-        when(resourceReferenceConverterMock.toServer(nullable(ClientReferenceable.class), nullable(ToServerConversionOptions.class)))
+        when(resourceReferenceConverterMock.toServer(any(ExecutionContext.class), nullable(ClientReferenceable.class), nullable(ToServerConversionOptions.class)))
                 .thenAnswer(new Answer<ResourceReference>() {
                     @Override
                     public ResourceReference answer(InvocationOnMock invocationOnMock) throws Throwable {
                         ResourceReference result = null;
-                        final ClientReferenceable clientReferenceable = (ClientReferenceable) invocationOnMock.getArguments()[0];
+                        final ClientReferenceable clientReferenceable = (ClientReferenceable) invocationOnMock.getArguments()[1];
                         if(clientReferenceable != null){
                             result = new ResourceReference(clientReferenceable.getUri());
                         }
@@ -110,9 +113,9 @@ public class CustomDataSourceResourceConverterTest {
         propertiesToIgnore.clear();
         reset(customDataSourceFactory, converter);
         when(converter.resourceSpecificFieldsToClient(nullable(ClientCustomDataSource.class), nullable(CustomReportDataSource.class), nullable(ToClientConversionOptions.class))).thenCallRealMethod();
-        when(converter.resourceSpecificFieldsToServer(nullable(ClientCustomDataSource.class), nullable(CustomReportDataSource.class), nullable(List.class), nullable(ToServerConversionOptions.class))).thenCallRealMethod();
+        when(converter.resourceSpecificFieldsToServer(any(ExecutionContext.class), nullable(ClientCustomDataSource.class), nullable(CustomReportDataSource.class), nullable(List.class), nullable(ToServerConversionOptions.class))).thenCallRealMethod();
         doCallRealMethod().when(converter).resourceSecureFieldsToClient(nullable(ClientCustomDataSource.class), nullable(CustomReportDataSource.class), nullable(ToClientConversionOptions.class));
-        when(converter.convertResourcesToServer(nullable(Map.class), nullable(ToServerConversionOptions.class))).thenCallRealMethod();
+        when(converter.convertResourcesToServer(any(ExecutionContext.class), nullable(Map.class), nullable(ToServerConversionOptions.class))).thenCallRealMethod();
         when(converter.convertResourcesToClient(nullable(Map.class), nullable(ToClientConversionOptions.class))).thenCallRealMethod();
     }
 
@@ -149,7 +152,7 @@ public class CustomDataSourceResourceConverterTest {
             put(expectedPropertyKey2, "valueToReplace");
             put(expectedPropertyKey3, "valueToStay");
         }});
-        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         // incoming serviceClass should be ignored. Value should be taken from corresponding custom data source definition.
         assertEquals(result.getServiceClass(), definedServiceClassName);
@@ -240,8 +243,8 @@ public class CustomDataSourceResourceConverterTest {
         final CustomReportDataSourceImpl serverObject = new CustomReportDataSourceImpl();
         final ToServerConversionOptions options = ToServerConversionOptions.getDefault();
         final HashMap<String, ResourceReference> serverResources = new HashMap<String, ResourceReference>();
-        when(converter.convertResourcesToServer(clientResourcesMap, options)).thenReturn(serverResources);
-        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), options);
+        when(converter.convertResourcesToServer(ctx, clientResourcesMap, options)).thenReturn(serverResources);
+        final CustomReportDataSource result = converter.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, new ArrayList<Exception>(), options);
         assertSame(result, serverObject);
         assertSame(result.getResources(), serverResources);
     }
@@ -262,7 +265,7 @@ public class CustomDataSourceResourceConverterTest {
 
     @Test
     public void convertResourcesToServer_nullSafety(){
-        assertNull(converter.convertResourcesToServer(null, null));
+        assertNull(converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), null, null));
     }
 
     @Test
@@ -273,7 +276,7 @@ public class CustomDataSourceResourceConverterTest {
         clientResources.put("/uri3", new ClientReference("/uri3"));
         clientResources.put("/uri4", new ClientReference("/uri4"));
         clientResources.put("/uri5", new ClientReference("/uri5"));
-        final Map<String, ResourceReference> result = converter.convertResourcesToServer(clientResources, ToServerConversionOptions.getDefault());
+        final Map<String, ResourceReference> result = converter.convertResourcesToServer(ctx, clientResources, ToServerConversionOptions.getDefault());
         assertNotNull(result);
         assertEquals(result.size(), clientResources.size());
         for(String key : result.keySet()){

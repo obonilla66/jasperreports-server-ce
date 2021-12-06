@@ -51,27 +51,8 @@
     </context>
 
     <context name="toolbar_options">
-        <selectAction labelKey="hidden">
-            <option labelKey="ADH_1150_TOOLBAR_MENU_TOGGLE_TITLE_BAR" action="adhocDesigner.toggleTitleBar"/>
-        </selectAction>
         <simpleAction labelKey="ADH_1213_SHOW_DISPLAY_MANAGER" clientTest="!adhocDesigner.isDisplayManagerVisible" action="adhocDesigner.toggleDisplayManager"/>
         <simpleAction labelKey="ADH_1213_HIDE_DISPLAY_MANAGER" clientTest="adhocDesigner.isDisplayManagerVisible" action="adhocDesigner.toggleDisplayManager"/>
-
-        <condition test="getIsOlapMode">
-            <selectAction labelKey="hidden">
-                <option labelKey="ADH_1213_HIDE_EMPTY_ROWS" isSelectedTest="hideEmptyRowsEquals" isSelectedTestArgs="true" action="setHideEmptyRows"/>
-                <option labelKey="ADH_1213_UNHIDE_EMPTY_ROWS" isSelectedTest="hideEmptyRowsEquals" isSelectedTestArgs="false" action="setUnhideEmptyRows"/>
-            </selectAction>
-        </condition>
-
-        <condition test="allowToggleUseDomainLabels">
-
-            <simpleAction labelKey="adhoc.designer.menu.use.domain.labels" clientTest="!adhocDesigner.isUseDomainLabels"
-                          action="adhocDesigner.toggleUseDomainLabels"/>
-            <simpleAction labelKey="adhoc.designer.menu.use.previous.labels"
-                          clientTest="adhocDesigner.isUseDomainLabels" action="adhocDesigner.toggleUseDomainLabels"/>
-        </condition>
-
     </context>
 
     <context name="toolbar_export">

@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.service.JdbcDriverService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.AwsReportDataSourceImpl;
@@ -57,6 +59,7 @@ public class AwsDataSourceResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
     @Spy
     private List<String> awsRegions = new LinkedList<String>();
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     private AwsReportDataSource dataSource;
 
@@ -89,7 +92,7 @@ public class AwsDataSourceResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -97,7 +100,7 @@ public class AwsDataSourceResourceValidatorTest {
         dataSource.setAWSAccessKey(null);
         dataSource.setAWSSecretKey("secret_key");
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -108,7 +111,7 @@ public class AwsDataSourceResourceValidatorTest {
         dataSource.setAWSSecretKey(null);
         dataSource.setAWSAccessKey("Access_key");
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -119,14 +122,14 @@ public class AwsDataSourceResourceValidatorTest {
         dataSource.setAWSAccessKey(null);
         dataSource.setAWSSecretKey(null);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
     public void testValidate_noConnection() throws Exception {
         dataSource.setConnectionUrl(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -136,7 +139,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_noDriver() throws Exception {
         dataSource.setDriverClass(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -146,7 +149,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_unknownDriver() throws Exception {
         reset(jdbcDriverService);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -156,7 +159,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_noUsername() throws Exception {
         dataSource.setUsername(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
     }
@@ -165,7 +168,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_noRegion() throws Exception {
         dataSource.setAWSRegion(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
 
         assertNotNull(errors);
@@ -176,7 +179,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_nodbName() throws Exception {
         dataSource.setDbName(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
     }
@@ -185,7 +188,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_invalidTimezione() throws Exception {
         dataSource.setTimezone("#$%^&*(OL)");
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -195,7 +198,7 @@ public class AwsDataSourceResourceValidatorTest {
     public void testValidate_invalidRegion() throws Exception {
         dataSource.setAWSRegion("#$%^&*(OL)");
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
     }
@@ -205,7 +208,7 @@ public class AwsDataSourceResourceValidatorTest {
         reset(jdbcDriverService);
         when(profileAttributesResolver.containsAttribute(dataSource.getDriverClass())).thenReturn(true);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -213,7 +216,7 @@ public class AwsDataSourceResourceValidatorTest {
         dataSource.setConnectionUrl("{attribute('name', 'category')}");
         when(profileAttributesResolver.containsAttribute(dataSource.getConnectionUrl())).thenReturn(true);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -221,7 +224,7 @@ public class AwsDataSourceResourceValidatorTest {
         dataSource.setAWSRegion("{attribute('name', 'category')}");
         when(profileAttributesResolver.containsAttribute(dataSource.getAWSRegion())).thenReturn(true);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 }
 

@@ -25,7 +25,8 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
 
-	<!-- JR data snapshots -->
+<beans profile="engine">
+<!-- JR data snapshots -->
     
     <bean id="engineServiceDataCacheProvider" 
     	class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.StandardDataCacheProvider"  lazy-init="true">
@@ -42,19 +43,21 @@
 		<property name="repository" ref="${bean.repositoryService}"/>
 		<property name="unsecureRepository" ref="${bean.unsecureRepositoryService}"/>
 	</bean>
-	
-	<bean id="dataSnapshotPersistenceService" 
+</beans>
+<beans profile="jrs">
+	<bean id="dataSnapshotPersistenceService"
 		class="com.jaspersoft.jasperserver.api.metadata.data.snapshot.hibernate.HibernateDataSnapshotService"  lazy-init="true">
 		<property name="sessionFactory" ref="sessionFactory"/>
 		<property name="contentsPersistenceService" ref="dataSnapshotContentsPersistenceService"/>
 	</bean>
-	
+
 	<bean id="dataSnapshotContentsPersistenceService"
 		class="com.jaspersoft.jasperserver.api.metadata.data.snapshot.hibernate.HibernateDataSnapshotContentsService"  lazy-init="true">
 		<property name="sessionFactory" ref="sessionFactory"/>
 		<property name="snapshotSerializer" ref="dataSnapshotSerializer"/>
 	</bean>
-	
+</beans>
+<beans profile="engine">
 	<bean id="dataSnapshotSerializer" class="com.jaspersoft.jasperserver.api.metadata.data.cache.JavaDataSnapshotSerializer"  lazy-init="true"/>
 
 	<bean id="dataSnapshotEhCacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" depends-on="sysProperties"  lazy-init="true">
@@ -88,5 +91,5 @@
 			<idref bean="dataSnapshotService"/>
 		</property>
 	</bean>
-
+</beans>
 </beans>

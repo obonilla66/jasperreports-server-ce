@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.core.util.type.GenericParametersHelper;
@@ -57,11 +58,11 @@ public class ResourceConvertingContextStrategy implements GenericTypeContextStra
     @javax.annotation.Resource
     private ResourceConverterProvider resourceConverterProvider;
     @Override
-    public Resource createContext(ClientResource contextDescription, Map<String, Object> contextData) throws IllegalParameterValueException {
+    public Resource createContext(ExecutionContext ctx, ClientResource contextDescription, Map<String, Object> contextData) throws IllegalParameterValueException {
         final String clientType = ClientTypeUtility.extractClientType(contextDescription.getClass());
         contextData.put(CLIENT_TYPE_KEY, clientType);
         return resourceConverterProvider.getToServerConverter(contextDescription)
-                .toServer(contextDescription,ToServerConversionOptions.getDefault().setSkipRepoFieldsValidation(true));
+                .toServer(ctx, contextDescription, ToServerConversionOptions.getDefault().setSkipRepoFieldsValidation(true));
     }
 
     @Override

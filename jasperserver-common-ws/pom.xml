@@ -40,7 +40,6 @@
         </includes>
       </resource>
     </resources>
-    <plugins/>
   </build>
   <dependencies>
     <dependency>

@@ -78,8 +78,8 @@ public class RtfReportOutput extends AbstractReportOutput
 				close = false;
 				rtfDataOut.close();
 
-				String fileName = jobContext.getBaseFilename() + ".rtf";
-				return new ReportOutput(rtfData, ContentResource.TYPE_RTF, fileName);
+				String fileName = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(rtfData, getFileType(), fileName);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -107,5 +107,15 @@ public class RtfReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "rtf";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_RTF;
 	}
 }

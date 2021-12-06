@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.war.validation;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
+import com.jaspersoft.jasperserver.war.common.JasperServerConst;
 import com.jaspersoft.jasperserver.war.dto.DataTypeWrapper;
 import com.jaspersoft.jasperserver.inputcontrols.util.MessagesCalendarFormatProvider;
 import org.springframework.validation.Errors;
@@ -68,8 +69,8 @@ public class DataTypeValidator implements Validator
 			if(!ValidationUtil.regExValidateName(dataType.getName())) {
 				errors.rejectValue("dataType.name", "DataTypeValidator.error.invalid.chars");
 			}
-			if (dataType.getName().length() > 100) {
-				errors.rejectValue("dataType.name", "DataTypeValidator.error.too.long");
+			if (dataType.getName().length() > JasperServerConst.MAX_LENGTH_NAME) {
+				errors.rejectValue("dataType.name", "DataTypeValidator.error.too.long", new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 			}
 
 			if (wrapper.isAloneNewMode()) {
@@ -85,8 +86,9 @@ public class DataTypeValidator implements Validator
 			if(!ValidationUtil.regExValidateLabel(dataType.getLabel())) {
 				errors.rejectValue("dataType.label", "DataTypeValidator.error.invalid.chars");
 			}
-			if (dataType.getLabel().length() > 100) {
-				errors.rejectValue("dataType.label", "DataTypeValidator.error.too.long");
+			if (dataType.getLabel().length() > JasperServerConst.MAX_LENGTH_LABEL) {
+				errors.rejectValue("dataType.label", "DataTypeValidator.error.too.long",
+						new Object[]{JasperServerConst.MAX_LENGTH_LABEL_W}, null);
 			}
 		}
 

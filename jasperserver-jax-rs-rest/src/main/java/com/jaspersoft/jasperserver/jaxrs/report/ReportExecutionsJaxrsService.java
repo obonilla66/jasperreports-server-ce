@@ -20,41 +20,33 @@
  */
 package com.jaspersoft.jasperserver.jaxrs.report;
 
+import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportExecutionStatusInformation;
 import com.jaspersoft.jasperserver.api.engine.common.service.SchedulerReportExecutionStatusSearchCriteria;
+import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
+import com.jaspersoft.jasperserver.dto.executions.ExecutionStatusObject;
+import com.jaspersoft.jasperserver.dto.executions.ExportExecutionStatusObject;
 import com.jaspersoft.jasperserver.dto.reports.ReportParameter;
 import com.jaspersoft.jasperserver.dto.reports.ReportParameters;
-import com.jaspersoft.jasperserver.dto.executions.ExecutionStatusObject;
 import com.jaspersoft.jasperserver.remote.common.CallTemplate;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceWrapper;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
-import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
-import com.jaspersoft.jasperserver.remote.services.ExportExecution;
-import com.jaspersoft.jasperserver.remote.services.ExportExecutionOptions;
-import com.jaspersoft.jasperserver.remote.services.ReportExecution;
-import com.jaspersoft.jasperserver.remote.services.ReportExecutionOptions;
-import com.jaspersoft.jasperserver.remote.services.ReportOutputPages;
-import com.jaspersoft.jasperserver.remote.services.ReportOutputResource;
-import com.jaspersoft.jasperserver.remote.services.RunReportService;
-
-import com.jaspersoft.jasperserver.remote.services.UserAndRoleService;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
+import com.jaspersoft.jasperserver.remote.services.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -66,6 +58,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -100,10 +93,10 @@ import java.util.Set;
 )
 public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReportService> {
 
-    @Resource(name = "userAndRoleService")
+	@Resource(name = "userAndRoleService")
 	UserAndRoleService userAndRoleService;
 
-    @Resource(name = "runReportService")
+	@Resource(name = "runReportService")
     public void setRemoteService(RunReportService remoteService) {
         this.remoteService = remoteService;
     }
@@ -341,9 +334,9 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
 			+ "To search for running reports, use the search arguments with this URL.\n\n"
 			+ "> For security purposes, the search for running reports is has the following restrictions:\n\n"
 			+ "> * The system administrator (`superuser`) can see and cancel any report running on the server.\n\n"
-			+ "> * An organization admin (jasperadmin) can see every running report by "
-			+ "a user of the same organization or one of its child organizations.\n\n"
-			+ "> * A regular user can see report that he initiated.",
+				+ "> * An organization admin (jasperadmin) can see every running report by "
+				+ "a user of the same organization or one of its child organizations.\n\n"
+				+ "> * A regular user can see report that he initiated.",
 		responses = {
 			@ApiResponse(
 				responseCode = "200", 
@@ -457,11 +450,24 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
         return callRemoteService(new ConcreteCaller<Response>() {
             @Override
             public Response call(RunReportService remoteService) throws ErrorDescriptorException {
-                final ExportExecution exportExecution = remoteService.getExportExecution(executionId, exportId);
-                return Response.ok( new ExecutionStatusObject()
-                                .setValue(exportExecution.getStatus())
-                                .setErrorDescriptor(exportExecution.getErrorDescriptor())
-                ).build();
+				final ExportExecution exportExecution = remoteService.getExportExecution(executionId, exportId);
+				final ExecutionStatus executionStatus = exportExecution.getStatus();
+
+				ExportExecutionStatusObject statusObject = new ExportExecutionStatusObject();
+				statusObject.setValue(executionStatus);
+				statusObject.setErrorDescriptor(exportExecution.getErrorDescriptor());
+
+				ReportOutputResource outputResource = exportExecution.getOutputResource();
+				if (executionStatus == ExecutionStatus.ready &&
+						outputResource != null &&
+						"text/html".equals(outputResource.getContentType())) {
+
+					if (outputResource.getDataTimestampMessage() != null) {
+						statusObject.setDataTimestampMessage(outputResource.getDataTimestampMessage());
+					}
+				}
+
+				return Response.ok(statusObject).build();
             }
         });
     }
@@ -648,6 +654,11 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             response = callRemoteService(new ConcreteCaller<Response>() {
                 public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                     final Boolean cancellationResult = remoteService.cancelReportExecution(executionId);
+
+                    if (statusEntity.getAsyncCancel()) {
+                    	return remoteService.getStatusForAsyncCancelledExecution(executionId);
+					}
+
                     return cancellationResult ? Response.ok(new ReportExecutionStatusEntity()).build()
                             : Response.status(Response.Status.NO_CONTENT).build();
                 }
@@ -698,6 +709,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             public Response call(RunReportService remoteService) throws ErrorDescriptorException {
                 final ReportExecutionOptions reportExecutionOptions = new ReportExecutionOptions()
                         .setIgnorePagination(reportExecutionRequest.getIgnorePagination())
+						.setReportContainerWidth(reportExecutionRequest.getReportContainerWidth())
                         .setTransformerKey(reportExecutionRequest.getTransformerKey())
                         .setFreshData(reportExecutionRequest.getFreshData())
                         .setSaveDataSnapshot(reportExecutionRequest.getSaveDataSnapshot())
@@ -706,6 +718,16 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
                         .setDefaultAttachmentsPrefixTemplate(ReportExecutionHelper
                                 .getDefaultAttachmentsPrefixTemplateFromRequest(request.getRequestURI().replace(request.getContextPath(), "") + "/"))
                         .setContextPath(request.getContextPath());
+
+                Map<String, Object> sessionParams = null;
+                if (request.getSession().getAttribute("DRILL_RESULT_SET") != null ||
+						request.getSession().getAttribute("DRILL_CELL") != null) {
+					sessionParams = new HashMap<>();
+
+					sessionParams.put("DRILL_RESULT_SET", request.getSession().getAttribute("DRILL_RESULT_SET"));
+					sessionParams.put("DRILL_CELL", request.getSession().getAttribute("DRILL_CELL"));
+				}
+
                 final ExportExecutionOptions exportOptions = new ExportExecutionOptions().setOutputFormat(reportExecutionRequest.getOutputFormat())
                         .setPages(ReportOutputPages.valueOf(reportExecutionRequest.getPages()))
                         .setMarkupType(reportExecutionRequest.getMarkupType())
@@ -716,7 +738,7 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
                 return Response.ok(remoteService.getReportExecutionFromRawParameters(reportExecutionRequest.getReportUnitUri(),
                         reportExecutionRequest.getParameters() != null ?
                                 reportExecutionRequest.getParameters().getRawParameters() :
-                                new HashMap<String, String[]>(), reportExecutionOptions, exportOptions)).build();
+                                new HashMap<String, String[]>(), reportExecutionOptions, exportOptions, sessionParams)).build();
             }
         });
     }

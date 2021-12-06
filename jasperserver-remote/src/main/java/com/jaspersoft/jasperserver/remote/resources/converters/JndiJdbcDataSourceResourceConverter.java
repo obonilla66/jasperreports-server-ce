@@ -20,13 +20,17 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
-import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
-import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import java.util.List;
+
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
+import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
+import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 
 /**
  * <p></p>
@@ -36,8 +40,12 @@ import java.util.List;
  */
 @Service
 public class JndiJdbcDataSourceResourceConverter extends ResourceConverterImpl<JndiJdbcReportDataSource, ClientJndiJdbcDataSource> {
-    @Override
-    protected JndiJdbcReportDataSource resourceSpecificFieldsToServer(ClientJndiJdbcDataSource clientObject, JndiJdbcReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+
+    @Autowired
+    private ProfileAttributesResolver profileAttributesResolver;
+
+	@Override
+    protected JndiJdbcReportDataSource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientJndiJdbcDataSource clientObject, JndiJdbcReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setJndiName(clientObject.getJndiName());
         resultToUpdate.setTimezone(clientObject.getTimezone());
         return resultToUpdate;
@@ -45,8 +53,25 @@ public class JndiJdbcDataSourceResourceConverter extends ResourceConverterImpl<J
 
     @Override
     protected ClientJndiJdbcDataSource resourceSpecificFieldsToClient(ClientJndiJdbcDataSource client, JndiJdbcReportDataSource serverObject, ToClientConversionOptions options) {
-        client.setJndiName(serverObject.getJndiName());
+
+        if (options != null && options.getIncludes() != null && options.getIncludes().contains("profileAttributesResolved")) {
+        	JndiJdbcReportDataSource updatedJndiJdbcDataSource = profileAttributesResolver.mergeResource(serverObject);
+            if (updatedJndiJdbcDataSource != null) {
+                serverObject = (JndiJdbcReportDataSource) updatedJndiJdbcDataSource;
+            }
+//            client.setPassword(serverObject.getPassword());
+        }
+
+    	client.setJndiName(serverObject.getJndiName());
         client.setTimezone(serverObject.getTimezone());
         return client;
+    }
+
+    public ProfileAttributesResolver getProfileAttributesResolver() {
+        return profileAttributesResolver;
+    }
+
+    public void setProfileAttributesResolver(ProfileAttributesResolver profileAttributesResolver) {
+        this.profileAttributesResolver = profileAttributesResolver;
     }
 }

@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FileResourceImpl;
@@ -77,6 +79,7 @@ public class GenericReportUnitResourceConverterTest {
     private ArgumentCaptor<ClientReferenceRestriction> restrictionArgumentCaptor = ArgumentCaptor.forClass(ClientReferenceRestriction.class);
 
     private ToClientConversionOptions options;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void initConverter() {
@@ -122,7 +125,7 @@ public class GenericReportUnitResourceConverterTest {
         clientObject.setControlsLayout(ClientReportUnit.ControlsLayoutType.separatePage);
         clientObject.setInputControlRenderingView(inputControlRenderingView);
         clientObject.setReportRenderingView(reportRenderingView);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.isAlwaysPromptControls(), alwaysPromptControls);
         assertEquals(result.getControlsLayout(), ReportUnit.LAYOUT_SEPARATE_PAGE);
@@ -175,8 +178,8 @@ public class GenericReportUnitResourceConverterTest {
         final ResourceReference queryReference = new ResourceReference(queryReferenceUri);
         final ClientReference clientReference = new ClientReference(queryReferenceUri);
         clientObject.setQuery(clientReference);
-        when(queryResourceReferenceConverter.toServer(eq(clientReference),nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(queryReference);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        when(queryResourceReferenceConverter.toServer(any(ExecutionContext.class), eq(clientReference), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(queryReference);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertSame(result.getQuery(), queryReference);
     }
@@ -204,9 +207,9 @@ public class GenericReportUnitResourceConverterTest {
         final String fileReferenceUri = "/jrxml/reference/uri";
         final ResourceReference fileReference = new ResourceReference(fileReferenceUri);
         final ClientReference clientReference = new ClientReference(fileReferenceUri);
-        when(fileResourceReferenceConverter.toServer(eq(clientReference),nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(fileReference);
+        when(fileResourceReferenceConverter.toServer(any(ExecutionContext.class), eq(clientReference), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(fileReference);
         clientObject.setJrxml(clientReference);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         final ResourceReference resultReference = result.getMainReport();
         assertSame(resultReference, fileReference);
@@ -235,8 +238,8 @@ public class GenericReportUnitResourceConverterTest {
         inputControls.add(new ClientReference());
         clientObject.setInputControls(inputControls);
         final ResourceReference expectedReference = new ResourceReference("");
-        when(inputControlResourceReferenceConverter.toServer(nullable(ClientReference.class), nullable(ResourceReference.class),nullable(ToServerConversionOptions.class))).thenReturn(expectedReference);
-        final ReportUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        when(inputControlResourceReferenceConverter.toServer(any(ExecutionContext.class), nullable(ClientReference.class), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(expectedReference);
+        final ReportUnit result = converter.resourceSpecificFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNotNull(result);
         final List<ResourceReference> serverInputControls = result.getInputControls();
         assertNotNull(serverInputControls);
@@ -245,7 +248,7 @@ public class GenericReportUnitResourceConverterTest {
             assertSame(reference, expectedReference);
         }
         ArgumentCaptor<ClientReference> clientReferenceArgumentCaptor = ArgumentCaptor.forClass(ClientReference.class);
-        verify(inputControlResourceReferenceConverter, times(inputControls.size())).toServer(clientReferenceArgumentCaptor.capture(), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class));
+        verify(inputControlResourceReferenceConverter, times(inputControls.size())).toServer(any(ExecutionContext.class), clientReferenceArgumentCaptor.capture(), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class));
         final List<ClientReference> allValues = clientReferenceArgumentCaptor.getAllValues();
         assertNotNull(allValues);
         assertEquals(allValues.size(), inputControls.size());
@@ -292,9 +295,9 @@ public class GenericReportUnitResourceConverterTest {
         clientObject.setFiles(clientResources);
         final ReportUnit serverObject = new ReportUnitImpl();
         final ArrayList<Exception> exceptions = new ArrayList<Exception>();
-        when(converterPartialMock.resourceSpecificFieldsToServer(clientObject, serverObject, exceptions, null)).thenCallRealMethod();
-        when(converterPartialMock.convertResourcesToServer(clientResources, serverResources, null)).thenReturn(serverResources);
-        final ReportUnit result = converterPartialMock.resourceSpecificFieldsToServer(clientObject, serverObject, exceptions, null);
+        when(converterPartialMock.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, exceptions, null)).thenCallRealMethod();
+        when(converterPartialMock.convertResourcesToServer(ctx, clientResources, serverResources, null)).thenReturn(serverResources);
+        final ReportUnit result = converterPartialMock.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, exceptions, null);
         assertSame(result, serverObject);
         assertSame(result.getResources(), serverResources);
     }
@@ -410,13 +413,13 @@ public class GenericReportUnitResourceConverterTest {
 
     @Test
     public void convertResourcesToServer_nullsProducesNull() throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        assertNull(converter.convertResourcesToServer(null, null, null));
+        assertNull(converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), null, null, null));
     }
 
     @Test
     public void convertResourcesToServer_nullAndEmptyListProducesSameEmptyList() throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         final ArrayList<ResourceReference> expectedServerReferences = new ArrayList<ResourceReference>();
-        final List<ResourceReference> result = converter.convertResourcesToServer(null, expectedServerReferences, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), null, expectedServerReferences, null);
         assertSame(result, expectedServerReferences);
         assertTrue(result.isEmpty());
     }
@@ -427,7 +430,7 @@ public class GenericReportUnitResourceConverterTest {
         expectedServerReferences.add(new ResourceReference(""));
         expectedServerReferences.add(new ResourceReference(""));
         expectedServerReferences.add(new ResourceReference(""));
-        final List<ResourceReference> result = converter.convertResourcesToServer(null, expectedServerReferences, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), null, expectedServerReferences, null);
         assertSame(result, expectedServerReferences);
         assertTrue(result.isEmpty());
     }
@@ -438,7 +441,7 @@ public class GenericReportUnitResourceConverterTest {
         expectedServerReferences.add(new ResourceReference(""));
         expectedServerReferences.add(new ResourceReference(""));
         expectedServerReferences.add(new ResourceReference(""));
-        final List<ResourceReference> result = converter.convertResourcesToServer(new HashMap<String, ClientReferenceableFile>(), expectedServerReferences, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), new HashMap<String, ClientReferenceableFile>(), expectedServerReferences, null);
         assertSame(result, expectedServerReferences);
         assertTrue(result.isEmpty());
     }
@@ -451,8 +454,8 @@ public class GenericReportUnitResourceConverterTest {
         clientResources.put(expectedName, clientFile);
         final FileResource serverFileResource = new FileResourceImpl();
         final ResourceReference expectedReference = new ResourceReference(serverFileResource);
-        when(fileResourceReferenceConverter.toServer(clientFile, null, null)).thenReturn(expectedReference);
-        final List<ResourceReference> result = converter.convertResourcesToServer(clientResources, null, null);
+        when(fileResourceReferenceConverter.toServer(ctx, clientFile, null, null)).thenReturn(expectedReference);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResources, null, null);
         assertNotNull(result);
         assertEquals(result.size(), 1);
         assertSame(result.get(0), expectedReference);
@@ -471,7 +474,7 @@ public class GenericReportUnitResourceConverterTest {
         List<ResourceReference> resourceReferences = new ArrayList<ResourceReference>();
         resourceReferences.add(new ResourceReference(serverFileResource));
         when(objectFactory.newResource(null, FileResource.class)).thenReturn(new FileResourceImpl());
-        final List<ResourceReference> result = converter.convertResourcesToServer(clientResources, resourceReferences, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResources, resourceReferences, null);
         assertNotNull(result);
         assertEquals(result.size(), 1);
         final ResourceReference resourceReference = result.get(0);
@@ -490,8 +493,8 @@ public class GenericReportUnitResourceConverterTest {
         clientResources.put(expectedResourceName, clientFile);
         final FileResourceImpl serverLocalResource = new FileResourceImpl();
         serverLocalResource.setName("resourceNameToOverride");
-        when(fileResourceReferenceConverter.toServer(eq(clientFile), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(new ResourceReference(serverLocalResource));
-        final List<ResourceReference> serverReferences = converter.convertResourcesToServer(clientResources, null, null);
+        when(fileResourceReferenceConverter.toServer(any(ExecutionContext.class), eq(clientFile), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(new ResourceReference(serverLocalResource));
+        final List<ResourceReference> serverReferences = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResources, null, null);
         assertNotNull(serverReferences);
         assertEquals(serverReferences.size(), 1);
         final ResourceReference reference = serverReferences.get(0);
@@ -513,8 +516,8 @@ public class GenericReportUnitResourceConverterTest {
         final List<ResourceReference> serverReferencesToUpdate = new ArrayList<ResourceReference>();
         final ResourceReference serverReferenceToUpdate = new ResourceReference(serverLocalResource);
         serverReferencesToUpdate.add(serverReferenceToUpdate);
-        when(fileResourceReferenceConverter.toServer(clientFile, serverReferenceToUpdate, null)).thenReturn(serverReferenceToUpdate);
-        final List<ResourceReference> serverReferences = converter.convertResourcesToServer(clientResources, serverReferencesToUpdate, null);
+        when(fileResourceReferenceConverter.toServer(ctx, clientFile, serverReferenceToUpdate, null)).thenReturn(serverReferenceToUpdate);
+        final List<ResourceReference> serverReferences = converter.convertResourcesToServer(ctx, clientResources, serverReferencesToUpdate, null);
         assertNotNull(serverReferences);
         assertEquals(serverReferences.size(), 1);
         final ResourceReference reference = serverReferences.get(0);
@@ -531,10 +534,10 @@ public class GenericReportUnitResourceConverterTest {
         final ClientReference expectedClientReference = new ClientReference(expectedReferenceUri);
         clientResources.put(expectedResourceName, expectedClientReference);
         when(objectFactory.newResource(null, FileResource.class)).thenReturn(new FileResourceImpl());
-        final List<ResourceReference> result = converter.convertResourcesToServer(clientResources, null, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResources, null, null);
         // file resource converter is called to ensure, that reference points to a valid FileResource
         final ArgumentCaptor<ClientReferenceableFile> clientReferenceableFileArgumentCaptor = ArgumentCaptor.forClass(ClientReferenceableFile.class);
-        verify(fileResourceReferenceConverter).toServer(clientReferenceableFileArgumentCaptor.capture(), nullable(ToServerConversionOptions.class));
+        verify(fileResourceReferenceConverter).toServer(any(ExecutionContext.class), clientReferenceableFileArgumentCaptor.capture(), nullable(ToServerConversionOptions.class));
         final ClientReferenceableFile clientReferenceableFile = clientReferenceableFileArgumentCaptor.getValue();
         assertSame(clientReferenceableFile, expectedClientReference);
         assertEquals(clientReferenceableFile.getUri(), expectedReferenceUri);
@@ -564,10 +567,10 @@ public class GenericReportUnitResourceConverterTest {
         localResourceOfWrongType.setName(expectedResourceName);
         final ResourceReference wrongLocalResourceReference = new ResourceReference(localResourceOfWrongType);
         serverReferencesToUpdate.add(wrongLocalResourceReference);
-        final List<ResourceReference> result = converter.convertResourcesToServer(clientResources, serverReferencesToUpdate, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResources, serverReferencesToUpdate, null);
         // file resource converter is called to ensure, that reference points to a valid FileResource
         final ArgumentCaptor<ClientReferenceableFile> clientReferenceableFileArgumentCaptor = ArgumentCaptor.forClass(ClientReferenceableFile.class);
-        verify(fileResourceReferenceConverter).toServer(clientReferenceableFileArgumentCaptor.capture(),nullable(ToServerConversionOptions.class));
+        verify(fileResourceReferenceConverter).toServer(any(ExecutionContext.class), clientReferenceableFileArgumentCaptor.capture(), nullable(ToServerConversionOptions.class));
         final ClientReferenceableFile clientReferenceableFile = clientReferenceableFileArgumentCaptor.getValue();
         assertSame(clientReferenceableFile, expectedClientReference);
         assertEquals(clientReferenceableFile.getUri(), expectedReferenceUri);
@@ -596,10 +599,10 @@ public class GenericReportUnitResourceConverterTest {
         serverFileReference.setReferenceURI("/test/uri/to/be/changed");
         final ResourceReference expectedServerReference = new ResourceReference(serverFileReference);
         serverReferencesToUpdate.add(expectedServerReference);
-        final List<ResourceReference> result = converter.convertResourcesToServer(clientResources, serverReferencesToUpdate, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ctx, clientResources, serverReferencesToUpdate, null);
         // file resource converter is called to ensure, that reference points to a valid FileResource
         final ArgumentCaptor<ClientReferenceableFile> clientReferenceableFileArgumentCaptor = ArgumentCaptor.forClass(ClientReferenceableFile.class);
-        verify(fileResourceReferenceConverter).toServer(clientReferenceableFileArgumentCaptor.capture(), nullable(ToServerConversionOptions.class));
+        verify(fileResourceReferenceConverter).toServer(any(ExecutionContext.class), clientReferenceableFileArgumentCaptor.capture(), nullable(ToServerConversionOptions.class));
         final ClientReferenceableFile clientReferenceableFile = clientReferenceableFileArgumentCaptor.getValue();
         assertSame(clientReferenceableFile, expectedClientReference);
         assertEquals(clientReferenceableFile.getUri(), expectedReferenceUri);
@@ -624,17 +627,17 @@ public class GenericReportUnitResourceConverterTest {
         final ArrayList<ResourceReference> serverResources = new ArrayList<ResourceReference>();
         final ResourceReference expectedServerReference = new ResourceReference("/test/reference/to/be/changed/" + expectedResourceName);
         serverResources.add(expectedServerReference);
-        when(fileResourceReferenceConverter.toServer(clientReference, expectedServerReference, null)).thenAnswer(new Answer<Object>() {
+        when(fileResourceReferenceConverter.toServer(ctx, clientReference, expectedServerReference, null)).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 final Object[] arguments = invocation.getArguments();
-                ClientReference clientObject = (ClientReference) arguments[0];
-                ResourceReference serverObject = (ResourceReference) arguments[1];
+                ClientReference clientObject = (ClientReference) arguments[1];
+                ResourceReference serverObject = (ResourceReference) arguments[2];
                 serverObject.setReference(clientObject.getUri());
                 return serverObject;
             }
         });
-        final List<ResourceReference> result = converter.convertResourcesToServer(clientResources, serverResources, null);
+        final List<ResourceReference> result = converter.convertResourcesToServer(ctx, clientResources, serverResources, null);
         assertNotNull(result);
         assertEquals(result.size(), 1);
         final ResourceReference reference = result.get(0);

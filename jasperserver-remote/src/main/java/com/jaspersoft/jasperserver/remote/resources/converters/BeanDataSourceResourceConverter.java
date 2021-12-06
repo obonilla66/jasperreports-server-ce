@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientBeanDataSource;
@@ -37,7 +38,7 @@ import java.util.List;
 @Service
 public class BeanDataSourceResourceConverter extends ResourceConverterImpl<BeanReportDataSource, ClientBeanDataSource> {
     @Override
-    protected BeanReportDataSource resourceSpecificFieldsToServer(ClientBeanDataSource clientObject, BeanReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected BeanReportDataSource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientBeanDataSource clientObject, BeanReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setBeanMethod(clientObject.getBeanMethod());
         resultToUpdate.setBeanName(clientObject.getBeanName());
         return resultToUpdate;

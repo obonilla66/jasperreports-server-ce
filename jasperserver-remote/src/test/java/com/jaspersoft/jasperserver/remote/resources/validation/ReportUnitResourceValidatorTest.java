@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -65,6 +67,7 @@ public class ReportUnitResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private ReportUnit report;
+    private ExecutionContext  ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
@@ -81,15 +84,15 @@ public class ReportUnitResourceValidatorTest {
     @Test
     public void testValidate() throws Exception {
         final ResourceReference mainReport = report.getMainReport();
-        doReturn(true).when(validator).isJrxmlValid(mainReport);
-        validator.validate(report);
-        verify(validator).isJrxmlValid(mainReport);
+        doReturn(true).when(validator).isJrxmlValid(ctx, mainReport);
+        validator.validate(ctx, report);
+        verify(validator).isJrxmlValid(ctx, mainReport);
     }
 
     @Test
     public void testValidate_invalidJrxml_exception() throws Exception {
-        doReturn(false).when(validator).isJrxmlValid(report.getMainReport());
-        final List<Exception> exceptions = validator.validate(report);
+        doReturn(false).when(validator).isJrxmlValid(ctx, report.getMainReport());
+        final List<Exception> exceptions = validator.validate(ctx, report);
 
         assertNotNull(exceptions);
         Assert.assertFalse(exceptions.isEmpty());
@@ -99,9 +102,9 @@ public class ReportUnitResourceValidatorTest {
     public void isJrxmlValid_nonLocalResource() throws JRException {
         final String referenceURI = "/test/uri";
         final byte[] bytes = {1, 2, 3};
-        doReturn(new FileResourceData(bytes)).when(repositoryService).getResourceData(null, referenceURI);
+        doReturn(new FileResourceData(bytes)).when(repositoryService).getResourceData(ctx, referenceURI);
         doReturn(null).when(validator).loadJasperDesign(bytes);
-        assertTrue(validator.isJrxmlValid(new ResourceReference(referenceURI)));
+        assertTrue(validator.isJrxmlValid(ctx, new ResourceReference(referenceURI)));
         verify(validator).loadJasperDesign(bytes);
     }
 
@@ -109,11 +112,11 @@ public class ReportUnitResourceValidatorTest {
     public void isJrxmlValid_localResourceWithoutData() throws JRException{
         final String referenceURI = "/test/uri";
         final byte[] bytes = {1, 2, 3};
-        doReturn(new FileResourceData(bytes)).when(repositoryService).getResourceData(null, referenceURI);
+        doReturn(new FileResourceData(bytes)).when(repositoryService).getResourceData(ctx, referenceURI);
         doReturn(null).when(validator).loadJasperDesign(bytes);
         final FileResourceImpl localResource = new FileResourceImpl();
         localResource.setURIString(referenceURI);
-        assertTrue(validator.isJrxmlValid(new ResourceReference(localResource)));
+        assertTrue(validator.isJrxmlValid(ctx, new ResourceReference(localResource)));
         verify(validator).loadJasperDesign(bytes);
     }
 
@@ -125,7 +128,7 @@ public class ReportUnitResourceValidatorTest {
         final FileResourceImpl localResource = new FileResourceImpl();
         localResource.setURIString(referenceURI);
         localResource.setData(bytes);
-        assertTrue(validator.isJrxmlValid(new ResourceReference(localResource)));
+        assertTrue(validator.isJrxmlValid(ctx, new ResourceReference(localResource)));
         verify(validator).loadJasperDesign(bytes);
         verify(repositoryService, never()).getResourceData(null, referenceURI);
     }
@@ -136,15 +139,15 @@ public class ReportUnitResourceValidatorTest {
         final byte[] bytes = "invalidJrxml".getBytes();
         localResource.setData(bytes);
         doThrow(new RuntimeException()).when(validator).loadJasperDesign(bytes);
-        assertFalse(validator.isJrxmlValid(new ResourceReference(localResource)));
+        assertFalse(validator.isJrxmlValid(ctx, new ResourceReference(localResource)));
     }
 
     @Test
     public void testValidate_noJRXML() throws Exception {
         report.setMainReport((FileResource) null);
         doThrow(new RuntimeException("Should not call isJrxmlValid()"))
-                .when(validator).isJrxmlValid(any(ResourceReference.class));
-        final List<Exception> exceptions = validator.validate(report);
+                .when(validator).isJrxmlValid(any(ExecutionContext.class), any(ResourceReference.class));
+        final List<Exception> exceptions = validator.validate(ctx, report);
 
         assertNotNull(exceptions);
         Assert.assertFalse(exceptions.isEmpty());
@@ -156,8 +159,8 @@ public class ReportUnitResourceValidatorTest {
         fileResource.setURIString("/test/uri");
         report.setMainReport(fileResource);
         doThrow(new RuntimeException("Should not call isJrxmlValid()"))
-                .when(validator).isJrxmlValid(any(ResourceReference.class));
-        final List<Exception> exceptions = validator.validate(report);
+                .when(validator).isJrxmlValid(any(ExecutionContext.class), any(ResourceReference.class));
+        final List<Exception> exceptions = validator.validate(ctx, report);
 
         assertNotNull(exceptions);
         Assert.assertFalse(exceptions.isEmpty());
@@ -170,8 +173,8 @@ public class ReportUnitResourceValidatorTest {
         localResource.setURIString("/test/uri");
         resourceReferences.add(new ResourceReference(localResource));
         report.setResources(resourceReferences);
-        doReturn(true).when(validator).isJrxmlValid(any(ResourceReference.class));
-        final List<Exception> exceptions = validator.validate(report);
+        doReturn(true).when(validator).isJrxmlValid(any(ExecutionContext.class), any(ResourceReference.class));
+        final List<Exception> exceptions = validator.validate(ctx, report);
 
         assertNotNull(exceptions);
         Assert.assertFalse(exceptions.isEmpty());

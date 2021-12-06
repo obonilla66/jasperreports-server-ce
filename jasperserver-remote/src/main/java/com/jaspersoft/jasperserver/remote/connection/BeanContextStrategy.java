@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
@@ -49,12 +50,12 @@ public class BeanContextStrategy implements ContextManagementStrategy<ClientBean
     private SecureExceptionHandler secureExceptionHandler;
 
     @Override
-    public ClientBeanDataSource createContext(ClientBeanDataSource contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public ClientBeanDataSource createContext(ExecutionContext ctx, ClientBeanDataSource contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
         // functionality of this method is copied from com.jaspersoft.jasperserver.war.action.DataSourceAction.testBeanDataSource()
         Exception exception = null;
         boolean passed = false;
         BeanReportDataSource beanReportDataSource = beanDataSourceResourceConverter.
-                toServer(contextDescription, ToServerConversionOptions.getDefault().setSuppressValidation(true));
+                toServer(ctx, contextDescription, ToServerConversionOptions.getDefault().setSuppressValidation(true));
 
         try {
             ReportDataSourceService beanReportDataSourceService = dataSourceFactory.createService(beanReportDataSource);

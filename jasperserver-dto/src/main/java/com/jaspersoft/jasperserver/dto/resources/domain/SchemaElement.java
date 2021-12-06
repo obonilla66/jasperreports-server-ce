@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -34,7 +35,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNul
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public class SchemaElement<T extends SchemaElement<T>> implements DeepCloneable<T> {
+public class SchemaElement<T extends SchemaElement<T>> implements DeepCloneable<T>, Serializable {
     public static final int ELEMENT_NAME_MAX_LENGTH = 20000;
     private String name;
 

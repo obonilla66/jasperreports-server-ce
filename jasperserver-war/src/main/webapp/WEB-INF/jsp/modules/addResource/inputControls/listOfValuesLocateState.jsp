@@ -35,7 +35,7 @@
         resourceListOfValuesLocate.messages = {};
     }
 
-    resourceListOfValuesLocate.messages["resource.ListOfValuesLocate.Title"] = '<spring:message code="resource.ListOfValuesLocate.Title" javaScriptEscape="true"/>';
+    resourceListOfValuesLocate.messages["resource.ListOfValuesLocate.Title"] = '<spring:message code="addResources.listOfValuesLocate.selectListOfValues" javaScriptEscape="true"/>';
 
     __jrsConfigs__.resourceListOfValuesLocate = resourceListOfValuesLocate;
 

@@ -24,7 +24,7 @@
 <%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
 
 <%--main menu--%>
-<div id='menu' class="menu vertical context hidden" aria-hidden="true" role="menu"></div>
+<div id='menu' class="menu vertical context hidden" aria-hidden="true" role="menuitem"></div>
 
 <div id="commonMenu" class="hidden">
     <div class="content">

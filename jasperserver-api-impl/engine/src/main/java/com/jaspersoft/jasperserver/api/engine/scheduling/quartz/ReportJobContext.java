@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 
+import java.util.Date;
 import java.util.Locale;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
@@ -27,7 +28,9 @@ import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataContainer;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 
+import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.export.JRHyperlinkProducerFactory;
 
 /**
@@ -46,9 +49,13 @@ public interface ReportJobContext {
 	
 	RepositoryService getRepositoryService();
 	
+	String getChildrenFolderName(String filename);
+	
 	EngineService getEngineService();
 	
 	String getReportUnitURI();
+
+	ReportUnit getReportUnit();
 	
 	ExecutionContext getExecutionContext();
 	
@@ -57,5 +64,15 @@ public interface ReportJobContext {
 	boolean hasOutput(byte outputFormat);
 
 	ReportJob getReportJob();
+
+	ReportExecutionJob getReportExecutionJob();
+
+	JasperReportsContext getJasperReportsContext();
+
+	Date getScheduledFireTime();
+
+	void checkCancelRequested();
+
+	void handleException(String message, Exception e);
 	
 }

@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianConnection;
@@ -93,9 +95,10 @@ public class GenericMondrianConnectionResourceConverterTest {
         final ResourceReference fileReference = new ResourceReference(fileReferenceUri);
         final ClientReference clientReference = new ClientReference(fileReferenceUri);
         final ToServerConversionOptions options = ToServerConversionOptions.getDefault();
-        when(fileResourceReferenceConverter.toServer(eq(clientReference), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(fileReference);
+        when(fileResourceReferenceConverter.toServer(any(ExecutionContext.class), eq(clientReference), nullable(ResourceReference.class), nullable(ToServerConversionOptions.class))).thenReturn(fileReference);
         clientObject.setSchema(clientReference);
-        final MondrianConnection result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), options);
+        final MondrianConnection result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), options);
         assertSame(result, serverObject);
         final ResourceReference resultReference = result.getSchema();
         assertSame(resultReference, fileReference);

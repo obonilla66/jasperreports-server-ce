@@ -64,26 +64,10 @@ Usage:
 <head>
     <title><tiles:getAsString name="pageTitle"/></title>
     <tiles:insertAttribute name="headerContent" ignore="true"/>
-
     <c:if test="${not empty moduleName}">
         <jsp:include page="../modules/commonScripts.jsp"/>
-        <script type="text/javascript">
-            <c:choose>
-                <c:when test="${moduleName == 'commons/commons.main'}">
-                    requirejs(["commons/commons.main"]);
-                </c:when>
-                <c:when test="${decorate == 'false'}">
-                    requirejs(["<tiles:insertAttribute name="moduleName"/>"]);
-                </c:when>
-                <c:otherwise>
-                    requirejs(["commons/commons.main"], function(){
-                        requirejs(["<tiles:insertAttribute name="moduleName"/>"]);
-                    });
-                </c:otherwise>
-            </c:choose>
-        </script>
+        <script language="JavaScript" src="${scriptsUri}/${moduleName}.js" defer></script>
     </c:if>
-
 </head>
 <body id="<tiles:getAsString name="bodyID"/>" class="<tiles:getAsString name="pageClass" ignore="true"/>">
 

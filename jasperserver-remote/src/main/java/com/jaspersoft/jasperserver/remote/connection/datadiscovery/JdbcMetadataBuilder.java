@@ -32,6 +32,8 @@ import com.jaspersoft.jasperserver.dto.resources.domain.SchemaElement;
 import org.apache.commons.lang3.StringUtils;
 import javax.ws.rs.BadRequestException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.support.rowset.ResultSetWrappingSqlRowSet;
 import org.springframework.stereotype.Component;
 
@@ -67,6 +69,7 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
     @Resource(name="jdbcMetaConfiguration")
     private JdbcMetaConfiguration jdbcMetaConfiguration;
     private SpecialCharacterEscape characterEscape;
+    private final static Log log = LogFactory.getLog(JdbcMetadataBuilder.class);
 
     @Override
     public SchemaElement build(Connection connection, PartialMetadataOptions options) {
@@ -174,6 +177,7 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
                 result.add(resultSetWrappingSqlRowSet.getString("TABLE_SCHEM"));
             }
         }
+        resultSet.close();
         cachedRowSet.close();
     }
 
@@ -242,10 +246,11 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
     protected List<SchemaElement> buildTablesMetadata(String schema, DatabaseMetaData metaData,
                                                       Set<String> tableNamesToExpand, String databaseProductName, boolean loadReferences) {
         List<SchemaElement> tableItems = new ArrayList<SchemaElement>();
+        ResultSet tables = null;
         try {
             final String escapedSchema = schema != null && characterEscape != null ? characterEscape.escape(schema, metaData, databaseProductName) : schema;
             checkInterrupted();
-            final ResultSet tables = metaData.getTables(null,
+            tables = metaData.getTables(null,
                     escapedSchema,
                     null, getSupportedTableTypes());
             while (tables.next()) {
@@ -260,6 +265,15 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
             }
         } catch (SQLException e) {
             throw new JSExceptionWrapper(e);
+        }
+        finally {
+            try {
+                if (tables != null) {
+                    tables.close();
+                }
+            } catch (SQLException e) {
+                log.error(e);
+            }
         }
         return tableItems;
     }
@@ -284,6 +298,7 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
                 result.setElements(columnsMetadata);
             }
         }
+        tables.close();
         cachedRowSet.close();
         return result;
     }
@@ -336,6 +351,7 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
                 while (primaryKeySet.next()) {
                     primaryKeys.add(primaryKeySet.getString(4));
                 }
+                primaryKeySet.close();
                 checkInterrupted();
                 final ResultSet foreignKeysSet = metaData.getImportedKeys(null, escapedSchema, escapedTableName);
                 while (foreignKeysSet.next()) {
@@ -347,6 +363,7 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
                             (primaryKeySchemaName != null ? primaryKeySchemaName + "." : "")
                                     + primaryKeyTableName + "." + primaryKeyColumnName);
                 }
+                foreignKeysSet.close();
             }
             final boolean hasPrimaryKeys = !primaryKeys.isEmpty();
             final boolean hasForeignKeys = !foreignKeyMap.isEmpty();
@@ -366,6 +383,7 @@ public class JdbcMetadataBuilder implements MetadataBuilder<Connection>,
                 columnsMetadata.add(columnItem);
             }
         }
+        columns.close();
         cachedRowSet.close();
         return columnsMetadata;
     }

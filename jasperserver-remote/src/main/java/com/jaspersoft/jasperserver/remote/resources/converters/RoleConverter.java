@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
@@ -54,12 +55,12 @@ public class RoleConverter implements ToServerConverter<ClientRole, Role, ToServ
     }
 
     @Override
-    public Role toServer(ClientRole clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, new RoleImpl(), null);
+    public Role toServer(ExecutionContext ctx, ClientRole clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, new RoleImpl(), null);
     }
 
     @Override
-    public Role toServer(ClientRole clientObject, Role resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public Role toServer(ExecutionContext ctx, ClientRole clientObject, Role resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         resultToUpdate.setRoleName(clientObject.getName());
         resultToUpdate.setTenantId(clientObject.getTenantId());
         resultToUpdate.setExternallyDefined(clientObject.isExternallyDefined());

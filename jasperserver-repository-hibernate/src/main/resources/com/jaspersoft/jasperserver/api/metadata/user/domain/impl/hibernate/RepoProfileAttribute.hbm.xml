@@ -26,6 +26,7 @@
 <hibernate-mapping>
     <class table="JIProfileAttribute"
            name="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoProfileAttribute" batch-size="1000">
+        <cache usage = "read-write" region="profileAttributes"/>
         <id name="id" type="long">
             <generator class="native"/>
         </id>

@@ -22,12 +22,14 @@
 package com.jaspersoft.jasperserver.dto.adhoc.datasource;
 
 
+import java.io.Serializable;
+
 /**
  * Field that belongs to some dimension
  *
  * @author Andriy Godovanets
  */
-public class ClientDataSourceLevel extends ClientDataSourceField {
+public class ClientDataSourceLevel extends ClientDataSourceField implements Serializable {
 
     private String dimensionName;
 

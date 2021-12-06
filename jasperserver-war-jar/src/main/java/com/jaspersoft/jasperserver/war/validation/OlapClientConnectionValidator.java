@@ -62,9 +62,10 @@ public class OlapClientConnectionValidator implements Validator {
 				wrapper.getConnectionLabel().trim().length() == 0) {
 			errors.rejectValue("connectionLabel", "OlapClientConnectionValidator.error.not.empty");
 		} else {
-			if (wrapper.getConnectionLabel().length() > 100) {
+			if (wrapper.getConnectionLabel().length() > JasperServerConst.MAX_LENGTH_LABEL) {
 				errors
-						.rejectValue("connectionLabel", "OlapClientConnectionValidator.error.too.long");
+						.rejectValue("connectionLabel", "OlapClientConnectionValidator.error.too.long"
+								, new Object[]{JasperServerConst.MAX_LENGTH_LABEL_W}, null);
 			} else if (!ValidationUtil.regExValidateLabel(wrapper.getConnectionLabel()))
 				errors.rejectValue("connectionLabel", "OlapClientConnectionValidator.error.invalid.chars");
 		}
@@ -73,8 +74,9 @@ public class OlapClientConnectionValidator implements Validator {
 				wrapper.getConnectionName().trim().length() == 0) {
 			errors.rejectValue("connectionName", "OlapClientConnectionValidator.error.not.empty");
 		} else {
-			if (wrapper.getConnectionName().length() > 100) {
-				errors.rejectValue("connectionName", "OlapClientConnectionValidator.error.too.long");
+			if (wrapper.getConnectionName().length() > JasperServerConst.MAX_LENGTH_NAME) {
+				errors.rejectValue("connectionName", "OlapClientConnectionValidator.error.too.long"
+						, new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 			} else if (!ValidationUtil.regExValidateName(wrapper.getConnectionName()))
 				errors.rejectValue("connectionName", "OlapClientConnectionValidator.error.invalid.chars");
 			else {

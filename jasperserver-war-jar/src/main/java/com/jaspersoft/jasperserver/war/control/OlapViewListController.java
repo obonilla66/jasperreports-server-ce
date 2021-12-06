@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
@@ -38,7 +39,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
  * @author jshih
  *
  */
-public class OlapViewListController extends JRBaseMultiActionController {
+public class OlapViewListController extends JRBaseController {
 
 	protected final Logger logger = LogManager.getLogger(getClass());
 
@@ -53,6 +54,7 @@ public class OlapViewListController extends JRBaseMultiActionController {
 	 * @param response
 	 * @return
 	 */
+	@RequestMapping("/listOlapViews.html")
 	public ModelAndView listOlapViews(HttpServletRequest request,
 									  HttpServletResponse response) {
 

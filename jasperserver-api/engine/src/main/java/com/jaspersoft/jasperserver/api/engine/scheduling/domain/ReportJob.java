@@ -183,11 +183,82 @@ public class ReportJob implements Serializable {
 	public static final byte OUTPUT_FORMAT_PNG= 16;
 
 	/**
+	 * CSV Metadata output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+
+	public static final byte OUTPUT_FORMAT_DATA_CSV= 17;
+
+	/**
 	 * Report unit with data snapshot output format.
 	 *
 	 * @see #getOutputFormats()
 	 */
 	public static final byte OUTPUT_FORMAT_DATA_SNAPSHOT = 100;
+
+	/**
+	 * Dashboard detailed PDF output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_PDF_DETAILED = 110;
+
+	/**
+	 * Dashboard detailed XLS output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_XLS_DETAILED = 111;
+
+	/**
+	 * Dashboard detailed RTF output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_RTF_DETAILED = 112;
+
+	/**
+	 * Dashboard detailed CSV output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_CSV_DETAILED = 113;
+
+	/**
+	 * Dashboard detailed ODT output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_ODT_DETAILED = 114;
+
+	/**
+	 * Dashboard detailed DOCX output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_DOCX_DETAILED = 115;
+
+	/**
+	 * Dashboard detailed ODS output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_ODS_DETAILED = 116;
+
+	/**
+	 * Dashboard detailed XLSX output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_XLSX_DETAILED = 117;
+
+	/**
+	 * Non paginated PPTX output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+	public static final byte OUTPUT_FORMAT_PPTX_DETAILED = 118;
 
 	private long id;
 	private int version = VERSION_NEW;

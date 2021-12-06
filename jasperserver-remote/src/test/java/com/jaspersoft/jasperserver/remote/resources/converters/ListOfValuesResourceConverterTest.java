@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesImpl;
@@ -44,6 +46,7 @@ import static org.testng.Assert.assertTrue;
  */
 public class ListOfValuesResourceConverterTest {
     private ListOfValuesResourceConverter converter = new ListOfValuesResourceConverter();
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @Test
     public void correctClientServerResourceType(){
@@ -63,7 +66,7 @@ public class ListOfValuesResourceConverterTest {
         items.add(new ClientListOfValuesItem(label1, value1));
         items.add(new ClientListOfValuesItem(label2, value2));
         clientObject.setItems(items);
-        final ListOfValues result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final ListOfValues result = converter.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNotNull(result);
         final ListOfValuesItem[] values = result.getValues();
         assertNotNull(values);
@@ -96,7 +99,7 @@ public class ListOfValuesResourceConverterTest {
         item.setLabel("lala");
         item.setValue("ada");
         serverObject.addValue(item);
-        final ListOfValues result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final ListOfValues result = converter.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNotNull(result);
         final ListOfValuesItem[] values = result.getValues();
         assertNotNull(values);

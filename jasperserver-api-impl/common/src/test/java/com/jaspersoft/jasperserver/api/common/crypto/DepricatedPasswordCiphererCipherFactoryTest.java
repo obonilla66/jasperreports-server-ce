@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -46,6 +47,7 @@ import static org.junit.Assert.*;
 import static org.springframework.util.ResourceUtils.getFile;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@ActiveProfiles({"default","engine","jrs"})
 @ContextConfiguration(loader= AnnotationConfigContextLoader.class)
 public class DepricatedPasswordCiphererCipherFactoryTest {
     final static String ksLocation = getenv("ks");

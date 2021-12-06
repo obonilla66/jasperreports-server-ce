@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
@@ -39,7 +40,7 @@ import java.util.List;
  *
  * @author Yuriy Plakosh
  */
-public class SystemErrorController extends JRBaseMultiActionController {
+public class SystemErrorController extends JRBaseController {
 
     public static final String DELETE = "DELETE";
 
@@ -63,6 +64,7 @@ public class SystemErrorController extends JRBaseMultiActionController {
      *
      * @return model and view.
      */
+    @RequestMapping("/404.html")
     public ModelAndView handle404(HttpServletRequest req, HttpServletResponse res) {
         return new ModelAndView("modules/system/404");
     }
@@ -75,6 +77,7 @@ public class SystemErrorController extends JRBaseMultiActionController {
      *
      * @return model and view.
      */
+    @RequestMapping("/500.html")
     public ModelAndView handle500(HttpServletRequest req, HttpServletResponse res) {
         ModelAndView mav = new ModelAndView("modules/system/500");
 

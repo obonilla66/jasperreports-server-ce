@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianXMLADefinition;
 import com.jaspersoft.jasperserver.dto.resources.ClientMondrianXmlaDefinition;
@@ -43,9 +44,9 @@ public class MondrianXmlaDefinitionResourceConverter extends ResourceConverterIm
     private ResourceReferenceConverterProvider resourceConverterProvider;
 
     @Override
-    protected MondrianXMLADefinition resourceSpecificFieldsToServer(ClientMondrianXmlaDefinition clientObject, MondrianXMLADefinition resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected MondrianXMLADefinition resourceSpecificFieldsToServer(ExecutionContext ctx, ClientMondrianXmlaDefinition clientObject, MondrianXMLADefinition resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         resultToUpdate.setCatalog(clientObject.getCatalog());
-        resultToUpdate.setMondrianConnection(resourceConverterProvider.getConverterForType(ClientReferenceableMondrianConnection.class).toServer(clientObject.getMondrianConnection(), resultToUpdate.getMondrianConnection(), options));
+        resultToUpdate.setMondrianConnection(resourceConverterProvider.getConverterForType(ClientReferenceableMondrianConnection.class).toServer(ctx, clientObject.getMondrianConnection(), resultToUpdate.getMondrianConnection(), options));
         return resultToUpdate;
     }
 

@@ -23,9 +23,13 @@ package com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb;
 import com.jaspersoft.jasperserver.api.common.domain.jaxb.AbstractEnumXmlAdapter;
 import com.jaspersoft.jasperserver.api.common.domain.jaxb.NamedPropertyHolder;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
+import com.jaspersoft.jasperserver.dto.common.ExportType;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -54,7 +58,8 @@ public class OutputFormatXmlAdapter extends XmlAdapter<ReportJobOutputFormatsWra
         DATA_SNAPSHOT(ReportJob.OUTPUT_FORMAT_DATA_SNAPSHOT),
         PPTX(ReportJob.OUTPUT_FORMAT_PPTX),
         JSON(ReportJob.OUTPUT_FORMAT_JSON),
-        PNG(ReportJob.OUTPUT_FORMAT_PNG);
+        PNG(ReportJob.OUTPUT_FORMAT_PNG),
+        DATA_CSV(ReportJob.OUTPUT_FORMAT_DATA_CSV);
 
 
         private final Byte byteValue;
@@ -69,16 +74,51 @@ public class OutputFormatXmlAdapter extends XmlAdapter<ReportJobOutputFormatsWra
         }
     }
 
+    private enum DetailedDashboardSupportedOutputFormat implements NamedPropertyHolder<Byte>{
+        PDF(ReportJob.OUTPUT_FORMAT_PDF_DETAILED),
+        XLS_NOPAG(ReportJob.OUTPUT_FORMAT_XLS_DETAILED),
+        RTF(ReportJob.OUTPUT_FORMAT_RTF_DETAILED),
+        CSV(ReportJob.OUTPUT_FORMAT_CSV_DETAILED),
+        ODT(ReportJob.OUTPUT_FORMAT_ODT_DETAILED),
+        DOCX(ReportJob.OUTPUT_FORMAT_DOCX_DETAILED),
+        ODS(ReportJob.OUTPUT_FORMAT_ODS_DETAILED),
+        XLSX_NOPAG(ReportJob.OUTPUT_FORMAT_XLSX_DETAILED),
+        PPTX(ReportJob.OUTPUT_FORMAT_PPTX_DETAILED);
+
+        private final Byte byteValue;
+
+        private DetailedDashboardSupportedOutputFormat(Byte byteValue) {
+            this.byteValue = byteValue;
+        }
+
+        public Byte getProperty() {
+            return this.byteValue;
+        }
+    }
+
+    private Map<String, SingleOutputFormatAdapter> exportTypeAdapters;
+
+    public OutputFormatXmlAdapter() {
+        exportTypeAdapters = new LinkedHashMap<>();
+        SingleOutputFormatAdapter screenshotOutputFormatAdapter = new SingleOutputFormatAdapter(SupportedOutputFormat.values());
+        exportTypeAdapters.put(ExportType.DEFAULT.name(), screenshotOutputFormatAdapter);
+        SingleOutputFormatAdapter detailedOutputFormatAdapter = new SingleOutputFormatAdapter(DetailedDashboardSupportedOutputFormat.values());
+        exportTypeAdapters.put(ExportType.DASHBOARD_DETAILED.name(), detailedOutputFormatAdapter);
+    }
+
     @Override
     public Set<Byte> unmarshal(ReportJobOutputFormatsWrapper v) throws Exception {
         Set<Byte> result = null;
         if (v != null && v.getFormats() != null && !v.getFormats().isEmpty()) {
             result = new HashSet<Byte>();
-            SingleOutputFormatAdapter adapter = new SingleOutputFormatAdapter();
+            String exportType = v.getExportType() == null ? ExportType.DEFAULT.name() : v.getExportType();
+            SingleOutputFormatAdapter adapter = exportTypeAdapters.get(exportType);
             for (String currentValue : v.getFormats()) {
                 Byte currentByteValue = adapter.unmarshal(currentValue);
-                if (currentByteValue != null)
-                    result.add(currentByteValue);
+                if (currentByteValue == null) {
+                    throw new InvalidOutputFormatException(currentValue);
+                }
+                result.add(currentByteValue);
             }
         }
         return result;
@@ -89,14 +129,19 @@ public class OutputFormatXmlAdapter extends XmlAdapter<ReportJobOutputFormatsWra
         ReportJobOutputFormatsWrapper result = null;
         if (v != null && !v.isEmpty()) {
             Set<String> set = new HashSet<String>();
-            SingleOutputFormatAdapter adapter = new SingleOutputFormatAdapter();
+            String exportType = null;
             for (Byte currentValue : v) {
-                String currentStringValue = adapter.marshal(currentValue);
-                if (currentStringValue != null)
-                    set.add(currentStringValue);
+                for (Entry<String, SingleOutputFormatAdapter> exportTypeEntry : exportTypeAdapters.entrySet()) {
+                    String currentStringValue = exportTypeEntry.getValue().marshal(currentValue);
+                    if (currentStringValue != null) {
+                        exportType = exportTypeEntry.getKey();
+                        set.add(currentStringValue);
+                    }
+                }
             }
             if(!set.isEmpty()){
                 result = new ReportJobOutputFormatsWrapper();
+                result.setExportType(exportType);
                 result.setFormats(set);
             }
         }
@@ -104,9 +149,15 @@ public class OutputFormatXmlAdapter extends XmlAdapter<ReportJobOutputFormatsWra
     }
 
     private class SingleOutputFormatAdapter extends AbstractEnumXmlAdapter<Byte> {
+        private NamedPropertyHolder<Byte>[] values;
+
+        public SingleOutputFormatAdapter(NamedPropertyHolder<Byte>[] values) {
+            this.values = values;
+        }
+
         @Override
         protected NamedPropertyHolder<Byte>[] getEnumConstantsArray() {
-            return SupportedOutputFormat.values();
+            return values;
         }
     }
 }

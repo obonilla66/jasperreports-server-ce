@@ -41,6 +41,8 @@ import net.sf.jasperreports.engine.export.GenericElementReportTransformer;
 import net.sf.jasperreports.engine.export.JRHtmlExporterParameter;
 import net.sf.jasperreports.engine.util.JRSaver;
 import net.sf.jasperreports.engine.util.JRTypeSniffer;
+import net.sf.jasperreports.export.SimpleExporterInputItem;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -265,7 +267,7 @@ public class LegacyRunReportServiceImpl implements LegacyRunReportService, Seria
 
                 Map<JRExporterParameter, Object> exporterParams;
                 try {
-                    exporterParams = reportExecutor.exportReport(reportUnitURI, jasperPrint, format, bos, exportParameters);
+                    exporterParams = reportExecutor.exportReport(reportUnitURI, Collections.singletonList(new SimpleExporterInputItem(jasperPrint)), format, bos, exportParameters);
                     if (log.isDebugEnabled()) {
                         log.debug("Exporter params: " + Arrays.asList(exporterParams.keySet().toArray()));
                     }

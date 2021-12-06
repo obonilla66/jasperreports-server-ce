@@ -89,8 +89,9 @@ public class FileResourceValidator implements Validator {
 				|| wrapper.getFileResource().getLabel().trim().length() == 0) {
 			errors.rejectValue("fileResource.label", "FileResourceValidator.error.not.empty");
 		} else {
-			if (wrapper.getFileResource().getLabel().length() > 100) {
-				errors.rejectValue("fileResource.label", "FileResourceValidator.error.too.long");
+			if (wrapper.getFileResource().getLabel().length() > JasperServerConst.MAX_LENGTH_LABEL) {
+				errors.rejectValue("fileResource.label", "FileResourceValidator.error.too.long"
+                        , new Object[]{JasperServerConst.MAX_LENGTH_LABEL_W}, null);
 			} else if (!ValidationUtil.regExValidateLabel(wrapper
 					.getFileResource().getLabel())) {
 				errors.rejectValue("fileResource.label", "FileResourceValidator.error.invalid.chars");
@@ -108,8 +109,9 @@ public class FileResourceValidator implements Validator {
                     wrapper.getFileResource().setName(name + ".properties");
             }
             
-			if (wrapper.getFileResource().getName().length() > 100) {
-				errors.rejectValue("fileResource.name", "FileResourceValidator.error.too.long");
+			if (wrapper.getFileResource().getName().length() > JasperServerConst.MAX_LENGTH_NAME) {
+				errors.rejectValue("fileResource.name", "FileResourceValidator.error.too.long"
+                        , new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 			} else if (!ValidationUtil.regExValidateName(wrapper
 					.getFileResource().getName())) {
 				errors.rejectValue("fileResource.name", "FileResourceValidator.error.invalid.chars");

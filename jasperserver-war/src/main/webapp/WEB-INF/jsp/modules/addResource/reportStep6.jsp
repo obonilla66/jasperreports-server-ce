@@ -31,7 +31,7 @@
             <c:otherwise><spring:message code="resource.report.title"/></c:otherwise>
         </c:choose>
     </t:putAttribute>
-    <t:putAttribute name="moduleName" value="commons/commons.main"/>
+    <t:putAttribute name="moduleName" value="commons/commonsMain"/>
     <t:putAttribute name="bodyID" value="addReport_Naming"/>
     <t:putAttribute name="bodyClass" value="oneColumn flow"/>
     <t:putAttribute name="bodyContent">

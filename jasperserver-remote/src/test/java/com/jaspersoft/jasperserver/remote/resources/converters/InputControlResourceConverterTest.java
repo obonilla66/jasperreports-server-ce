@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CalendarFormatProvider;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -54,8 +55,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
@@ -82,6 +82,7 @@ public class InputControlResourceConverterTest {
 
     private final List<String> visibleColumnsList = new ArrayList<String>();
     private final ObjectPermission repositoryPermission = new ObjectPermissionImpl();
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void setUp() {
@@ -131,11 +132,11 @@ public class InputControlResourceConverterTest {
 
     @Test
     public void testToServer() throws Exception {
-        when(resourceReferenceConverter.toServer(client.getDataType(), null, null)).thenReturn(server.getDataType());
-        when(resourceReferenceConverter.toServer(client.getListOfValues(), null, null)).thenReturn(server.getListOfValues());
-        when(resourceReferenceConverter.toServer(client.getQuery(), null, null)).thenReturn(server.getQuery());
+        when(resourceReferenceConverter.toServer(ctx, client.getDataType(), null, null)).thenReturn(server.getDataType());
+        when(resourceReferenceConverter.toServer(ctx, client.getListOfValues(), null, null)).thenReturn(server.getListOfValues());
+        when(resourceReferenceConverter.toServer(ctx, client.getQuery(), null, null)).thenReturn(server.getQuery());
 
-        InputControl converted = converter.toServer(client, null);
+        InputControl converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext(), client, null);
 
         assertEquals(converted.getInputControlType(), client.getType());
         assertEquals(converted.isMandatory(), client.isMandatory());

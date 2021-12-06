@@ -77,7 +77,8 @@ public class InputControlsJaxrsService extends RemoteServiceWrapper<InputControl
     @GET
     @Path("/selectedValues")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getSelectedValues(@PathParam("reportUnitURI") final String reportUnitURI, @QueryParam("freshData") @DefaultValue("false") Boolean freshData, @QueryParam(WITH_LABEL) @DefaultValue("true") Boolean withLabel) {
+    public Response getSelectedValues(@PathParam("reportUnitURI") final String reportUnitURI, @QueryParam("freshData") @DefaultValue("false") Boolean freshData, @QueryParam(WITH_LABEL) @DefaultValue("true") Boolean withLabel,
+    		@Context final HttpServletRequest request) {
         return internalGetSelectedValues(reportUnitURI, freshData, withLabel);
     }
 

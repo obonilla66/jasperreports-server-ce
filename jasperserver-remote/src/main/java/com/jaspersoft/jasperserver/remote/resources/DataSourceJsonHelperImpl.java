@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.resources;
 
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.helper.DataSourceJsonHelper;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
@@ -52,7 +53,7 @@ public class DataSourceJsonHelperImpl implements DataSourceJsonHelper {
             final ClientResource clientResource = jacksonMapperProvider.getObjectMapper()
                     .reader(clientTypeClass).readValue(dataSourceJson);
             return (ReportDataSource) resourceConverterProvider.getToServerConverter(clientResource)
-                    .toServer(clientResource, ToServerConversionOptions.getDefault());
+                    .toServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientResource, ToServerConversionOptions.getDefault());
         } catch (Exception e) {
             throw new JSExceptionWrapper(e);
         }

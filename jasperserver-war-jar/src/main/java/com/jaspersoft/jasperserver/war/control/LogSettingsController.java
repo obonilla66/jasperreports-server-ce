@@ -24,7 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.jaspersoft.jasperserver.api.common.properties.Log4jSettingsService;
+import org.apache.logging.log4j.Level;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.jaspersoft.jasperserver.api.common.properties.Log4jPropertyChanger;
@@ -52,6 +54,11 @@ public class LogSettingsController implements Controller {
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String loggerArg = request.getParameter("logger");
         String levelArg = request.getParameter("level");
+
+        if (levelArg != null && Level.getLevel(levelArg) == null) {
+            response.sendError(HttpStatus.BAD_REQUEST.value(), "Invalid level for logging: [" + levelArg + "]");
+            return null;
+        }
 
         // check if we're getting an update
         if (loggerArg != null && levelArg != null) {

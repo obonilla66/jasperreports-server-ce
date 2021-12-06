@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.QueryImpl;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
@@ -66,7 +67,8 @@ public class QueryResourceConverterTest {
         clientObject.setLanguage(expectedQueryLanguage);
         clientObject.setValue(expectedQueryValue);
         final Query expectedServerObject = new QueryImpl();
-        final Query result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, new ArrayList<Exception>(), null);
+        final Query result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, expectedServerObject, new ArrayList<Exception>(), null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getLanguage(), expectedQueryLanguage);
         assertEquals(result.getSql(), expectedQueryValue);

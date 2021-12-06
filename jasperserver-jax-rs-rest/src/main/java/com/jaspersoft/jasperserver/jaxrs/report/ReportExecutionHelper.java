@@ -53,25 +53,43 @@ public class ReportExecutionHelper {
 
     public static Response buildResponseFromOutputResource(ReportOutputResource outputResource, Boolean suppressContentDisposition) {
         final Response.ResponseBuilder responseBuilder;
-        if (outputResource.getData() == null || outputResource.getData().length == 0) {
-            responseBuilder = Response.noContent();
+        String contentType = outputResource.getContentType();
+
+        if ("text/html".equals(contentType)) {
+            if (outputResource.getData() == null || outputResource.getData().length == 0) {
+                responseBuilder = Response.noContent();
+            } else {
+                responseBuilder = Response.ok(outputResource.getData(), contentType);
+
+                if (outputResource.getOutputFinal() != null) {
+                    responseBuilder.header("output-final", outputResource.getOutputFinal());
+                }
+                if (outputResource.getOutputTimestamp() != null) {
+                    responseBuilder.header("output-timestamp", outputResource.getOutputTimestamp());
+                }
+                if (outputResource.getOutputZoom() != null) {
+                    responseBuilder.header("output-zoom", outputResource.getOutputZoom());
+                }
+                if (outputResource.getLastPartialPage() != null) {
+                    responseBuilder.header("output-lastPartialPage", outputResource.getLastPartialPage());
+                }
+                if (outputResource.getSnapshotSaveStatus() != null) {
+                    responseBuilder.header("report-snapshotSaveStatus", outputResource.getSnapshotSaveStatus());
+                }
+
+                final String pages = outputResource.getPages();
+                if (pages != null && !pages.isEmpty()) {
+                    responseBuilder.header("report-pages", pages);
+                }
+            }
         } else {
-            String contentType = outputResource.getContentType();
             responseBuilder = Response.ok(outputResource.getData(), contentType);
-            if (!suppressContentDisposition && outputResource.getFileName() != null && !"text/html".equals(contentType)) {
+
+            if (!suppressContentDisposition && outputResource.getFileName() != null) {
                 responseBuilder.header("Content-Disposition", "attachment; filename=\"" + outputResource.getFileName() + "\"");
             }
-            if (outputResource.getOutputFinal() != null) {
-                responseBuilder.header("output-final", outputResource.getOutputFinal());
-            }
-            if (outputResource.getOutputTimestamp() != null) {
-                responseBuilder.header("output-timestamp", outputResource.getOutputTimestamp());
-            }
-            final String pages = outputResource.getPages();
-            if (pages != null && !pages.isEmpty()) {
-                responseBuilder.header("report-pages", pages);
-            }
         }
+
         return responseBuilder.build();
     }
 }

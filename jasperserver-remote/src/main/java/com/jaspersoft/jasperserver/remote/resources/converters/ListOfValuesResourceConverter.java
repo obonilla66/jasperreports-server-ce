@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
@@ -42,7 +43,7 @@ import java.util.List;
 @Service
 public class ListOfValuesResourceConverter extends ResourceConverterImpl<ListOfValues, ClientListOfValues> {
     @Override
-    protected ListOfValues resourceSpecificFieldsToServer(ClientListOfValues clientObject, ListOfValues resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected ListOfValues resourceSpecificFieldsToServer(ExecutionContext ctx, ClientListOfValues clientObject, ListOfValues resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         for (ListOfValuesItem existing : resultToUpdate.getValues()){
             resultToUpdate.removeValue(existing);
         }

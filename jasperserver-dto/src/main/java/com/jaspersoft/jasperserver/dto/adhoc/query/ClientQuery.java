@@ -29,6 +29,7 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.select.ClientSelect;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.Valid;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  *
  * @version $Id$
  */
-public abstract class ClientQuery implements DeepCloneable {
+public abstract class ClientQuery implements DeepCloneable, Serializable {
     @Valid
     private ClientSelect select;
 

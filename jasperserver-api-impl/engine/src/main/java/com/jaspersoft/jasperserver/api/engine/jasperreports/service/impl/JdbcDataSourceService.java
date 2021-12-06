@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.util.JRTimezoneJdbcQ
 import com.jaspersoft.jasperserver.api.metadata.common.service.JSDataSourceConnectionFailedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Tracer;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -107,4 +108,7 @@ public class JdbcDataSourceService extends BaseJdbcDataSource {
         }
     }
 
+    public JdbcDataSourceService withTracer(Tracer tracer) {
+        return (JdbcDataSourceService) super.withTracer(tracer);
+    }
 }

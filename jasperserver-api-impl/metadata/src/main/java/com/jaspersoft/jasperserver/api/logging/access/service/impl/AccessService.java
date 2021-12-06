@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.api.logging.access.service.impl;
 
 import com.jaspersoft.jasperserver.api.logging.service.LoggingService;
 import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEvent;
+import org.hibernate.criterion.DetachedCriteria;
 
 import java.util.List;
 
@@ -33,4 +34,10 @@ public interface AccessService extends LoggingService {
     public void purgeAccessEvents();
     public List<AccessEvent> getAllEvents(int firstResult, int maxResults);
     public int getAccessEventsCount();
+    public void deleteAccessEvent(String uri, boolean isFolder);
+    public void importAccessEvent(AccessEvent accessEvent);
+    public void importAccessEvents(List<AccessEvent> accessEvents);
+    public List getResourceURIs(DetachedCriteria criteria, int max);
+    public void updateAccessEventsByResourceURI(String oldURI, String newURI);
+    public void deleteAccessEventsByUser(String userId);
 }

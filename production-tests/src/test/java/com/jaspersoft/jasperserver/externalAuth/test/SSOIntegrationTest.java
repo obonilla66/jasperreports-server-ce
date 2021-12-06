@@ -29,6 +29,7 @@ import com.jaspersoft.jasperserver.api.security.externalAuth.processors.External
 import com.jaspersoft.jasperserver.api.security.externalAuth.processors.ExternalUserSetupProcessor;
 import com.jaspersoft.jasperserver.externalAuth.mocks.MockExternalJDBCUserDetailsService;
 import com.jaspersoft.jasperserver.externalAuth.mocks.MockSsoTicketValidatorImpl;
+import org.hibernate.SessionFactory;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -36,7 +37,10 @@ import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.testng.annotations.AfterMethod;
@@ -64,6 +68,7 @@ import static org.testng.Assert.*;
 @ContextConfiguration(locations = {"classpath:sample-applicationContext-externalAuth-sso.xml",
 		"classpath:testMocks/externalAuth-test-mocks.xml"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@ActiveProfiles({"default","engine","jrs"})
 public class SSOIntegrationTest extends BaseTransactionalTestNGSpringContextTests {
 
 	@Resource(name = "authenticationAuthoirizationFilterChainProxy")
@@ -84,16 +89,20 @@ public class SSOIntegrationTest extends BaseTransactionalTestNGSpringContextTest
 	@Resource(name = "externalJDBCUserDetailsService")
 	private MockExternalJDBCUserDetailsService mockExternalJDBCUserDetailsService;
 
+	@Resource
+	private SessionFactory sessionFactory;
+
 	/**
 	 * Testing sso filter chain external user creation without external roles
 	 */
 	@Test
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void testUserWithoutExternalRoles() {
 		try {
 			logger.info("Starting testUserWithoutExternalRoles.");
 
 			createTenant("", TenantService.ORGANIZATIONS, "root", TenantService.ORGANIZATIONS, " ", "/", "/", "default");
-
+			sessionFactory.getCurrentSession().flush();
 			//test redirect to login screen
 			final MockHttpServletRequest mockRequest = new MockHttpServletRequest("GET", "/home.html");
 			mockRequest.setServletPath("/home.html");
@@ -132,6 +141,7 @@ public class SSOIntegrationTest extends BaseTransactionalTestNGSpringContextTest
 					"&" + externalAuthProperties.getServiceParameterName() + "=" + URLEncoder.encode(mockRequest2.getRequestURL().toString(), "ISO-8859-1"));
 			assertTrue(testTicketValidationUrl.equals(ticketValidationUrl), "Ticket validation url " + ticketValidationUrl + " was not as expected: " + testTicketValidationUrl);
 
+			sessionFactory.getCurrentSession().flush();
 			//check user created
 			User user = userAuthorityService.getUser(new ExecutionContextImpl(), mockSsoTicketValidator.getTestValidatedPrincipal());
 			assertNotNull(user, "External user was not added to jasperserver database after authentication.");
@@ -162,12 +172,13 @@ public class SSOIntegrationTest extends BaseTransactionalTestNGSpringContextTest
 	 * Testing sso filter chain external user creation with additional external roles
 	 */
 	@Test
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void testUserWithExternalRoles() {
 		try {
 			logger.info("Starting testUserWithExternalRoles.");
 
 			createTenant("", TenantService.ORGANIZATIONS, "root", TenantService.ORGANIZATIONS, " ", "/", "/", "default");
-
+			sessionFactory.getCurrentSession().flush();
 			final String EXTERNAL_TEST_ROLE_1 = "EXTERNAL_TEST_ROLE_1";
 			final String EXTERNAL_TEST_ROLE_2 = "EXTERNAL_TEST_ROLE_2";
 			final List<String> EXTERNAL_TEST_ROLE_LIST = new LinkedList<String>(Arrays.asList(EXTERNAL_TEST_ROLE_1, EXTERNAL_TEST_ROLE_2));
@@ -210,6 +221,7 @@ public class SSOIntegrationTest extends BaseTransactionalTestNGSpringContextTest
 					"&" + externalAuthProperties.getServiceParameterName() + "=" + URLEncoder.encode(mockRequest2.getRequestURL().toString(), "ISO-8859-1"));
 			assertTrue(testTicketValidationUrl.equals(ticketValidationUrl), "Ticket validation url " + ticketValidationUrl + " was not as expected: " + testTicketValidationUrl);
 
+			sessionFactory.getCurrentSession().flush();
 			//check user created
 			User user = userAuthorityService.getUser(new ExecutionContextImpl(), mockSsoTicketValidator.getTestValidatedPrincipal());
 			assertNotNull(user, "External user was not added to jasperserver database after authentication.");

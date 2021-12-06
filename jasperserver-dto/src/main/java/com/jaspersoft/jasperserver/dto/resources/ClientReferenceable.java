@@ -22,11 +22,16 @@ package com.jaspersoft.jasperserver.dto.resources;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
+
 /**
  * <p></p>
  *
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public interface ClientReferenceable extends ClientUriHolder, DeepCloneable {
+public interface ClientReferenceable extends ClientUriHolder, DeepCloneable, Serializable {
+    default Integer getVersion(){
+        return 0;
+    }
 }

@@ -20,33 +20,49 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.adapters.DomELCommonSimpleDateFormats;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.DatatypeConverter;
+import java.text.ParseException;
 import java.util.List;
 
 /**
  * <p></p>
  *
  * @author Yaroslav.Kovalchyk
- * @version $Id$
  */
 @Service
 public class FileResourceConverter extends ResourceConverterImpl<FileResource, ClientFile>{
-    @javax.annotation.Resource(name = "concreteRepository")
+    @Autowired
+    @Qualifier("concreteRepository")
     protected RepositoryService repositoryService;
 
+    @Lazy
+    @Autowired
+    @Qualifier(PasswordCipherer.ID)
+    private PasswordCipherer passwordCipherer;
+
+    public PasswordCipherer getPasswordCipherer() {
+        return passwordCipherer;
+    }
+
     @Override
-    protected FileResource resourceSpecificFieldsToServer(ClientFile clientObject, FileResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected FileResource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientFile clientObject, FileResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         if(resultToUpdate.getFileType() != null || resultToUpdate.isReference()){
             String type;
             if (resultToUpdate.isReference()){
-                FileResource referenced = (FileResource)repositoryService.getResource(null, resultToUpdate.getReferenceURI());
+                FileResource referenced = (FileResource)repositoryService.getResource(ctx, resultToUpdate.getReferenceURI());
                 type = referenced.getFileType();
             } else {
                 type = resultToUpdate.getFileType();
@@ -64,13 +80,19 @@ public class FileResourceConverter extends ResourceConverterImpl<FileResource, C
 
         if (clientObject.getContent() != null && !"".equals(clientObject.getContent())) {
             try {
-                resultToUpdate.setData(DatatypeConverter.parseBase64Binary(clientObject.getContent()));
+                resultToUpdate.setData(getData(clientObject));
             } catch (IllegalArgumentException e) {
                 throw new IllegalParameterValueException("content", "");
             }
             resultToUpdate.setReferenceURI(null);
             resultToUpdate.setFileType(clientObject.getType().name());
         }
+            try {
+                resultToUpdate.setCreationDate(clientObject.getCreationDate()!=null ? DomELCommonSimpleDateFormats.isoTimestampFormatNoMilliSeconds().parse(clientObject.getCreationDate()) : null);
+                resultToUpdate.setUpdateDate(clientObject.getUpdateDate()!=null ? DomELCommonSimpleDateFormats.isoTimestampFormatNoMilliSeconds().parse(clientObject.getUpdateDate()) : null);
+            } catch (ParseException e) {
+                throw new IllegalParameterValueException("Exception occured while parsing date parameter", clientObject.getCreationDate(), clientObject.getUpdateDate());
+            }
         return resultToUpdate;
     }
 
@@ -83,6 +105,8 @@ public class FileResourceConverter extends ResourceConverterImpl<FileResource, C
         } else {
             type = serverObject.getFileType();
         }
+        // Adding this condition to support existing mongo datasources with type ".config"
+        type = type.equals(".config") ? "mongoDbSchema" : type;
         ClientFile.FileType clientFileType;
         try{
             clientFileType = ClientFile.FileType.valueOf(type);
@@ -92,5 +116,13 @@ public class FileResourceConverter extends ResourceConverterImpl<FileResource, C
         }
         client.setType(clientFileType);
         return client;
+    }
+
+    private byte[] getData(ClientFile clientObject) {
+        byte[] data = DatatypeConverter.parseBase64Binary(clientObject.getContent());
+        if (clientObject.getType() == ClientFile.FileType.secureFile) {
+            data = getPasswordCipherer().encodePassword(new String(data)).getBytes();
+        }
+        return data;
     }
 }

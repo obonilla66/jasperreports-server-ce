@@ -30,6 +30,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.JdbcReportDataSourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.remote.connection.ContextCreationFailedException;
@@ -55,6 +56,12 @@ import java.util.Map;
  */
 @Service
 public class JdbcConnector<ConnectionDescriptionType extends Resource> implements Connector<Connection, ConnectionDescriptionType> {
+    private static final String CHECK_AWS_ACCESS_KEY = "The security token included in the request is invalid";
+    private static final String CHECK_AWS_SECRET_KEY =  "Check your AWS Secret Access Key and signing method";
+    private static final String CHECK_ARN_ROLE_ASSIGNED = "'roleArn' failed to satisfy constraint: Member must have length greater than or equal to 20";
+    private static final String CHECK_ARN_ASSUME_ROLE = "not authorized to perform: sts:AssumeRole";
+    private static final String AWS_ATHENA_SIMBA_DRIVER_NAME = "com.simba.athena.jdbc42.Driver";
+
     private Map<Connection, BaseJdbcDataSource> openConnections = new HashMap<Connection, BaseJdbcDataSource>();
     @javax.annotation.Resource(name = "dataSourceServiceFactories")
     private DataSourceServiceFactoryImpl dataSourceServiceFactory;
@@ -99,8 +106,17 @@ public class JdbcConnector<ConnectionDescriptionType extends Resource> implement
                 final String jndiName = ((JndiJdbcReportDataSource) connectionDescriptor).getJndiName();
                 throw new ContextCreationFailedException(jndiName, "jndiName", "Invalid JNDI name: " + jndiName,
                         exception, secureExceptionHandler);
-            } else {
-                throw new ContextCreationFailedException(connectionDescriptor, exception, secureExceptionHandler);
+            } else if(connectionDescriptor instanceof JdbcReportDataSourceImpl) {
+                if (((JdbcReportDataSource) connectionDescriptor).getDriverClass()
+                    .equals(AWS_ATHENA_SIMBA_DRIVER_NAME)) {
+                    errorMessageForAthenaDriverConnection(connectionDescriptor, exception);
+                } else{
+                    throw new ContextCreationFailedException(connectionDescriptor, exception,
+                        secureExceptionHandler);
+                }
+            } else{
+                throw new ContextCreationFailedException(connectionDescriptor, exception,
+                    secureExceptionHandler);
             }
         }
     }
@@ -133,6 +149,28 @@ public class JdbcConnector<ConnectionDescriptionType extends Resource> implement
             if (existingDs != null) {
                 jdbcDataSource.setPassword(existingDs.getPassword());
             }
+        }
+    }
+
+    private void errorMessageForAthenaDriverConnection(ConnectionDescriptionType connectionDescriptor, Throwable exception){
+        if(exception.getMessage().contains(CHECK_AWS_ACCESS_KEY)){
+            throw new ContextCreationFailedException(connectionDescriptor,
+                messageSource.getMessage("resource.dataSource.jdbc.accessKey", null, LocaleContextHolder.getLocale()),
+                messageSource.getMessage("error.aws.key.is.invalid", null, LocaleContextHolder.getLocale()),
+                exception, secureExceptionHandler);
+        } else if(exception.getMessage().contains(CHECK_AWS_SECRET_KEY)){
+            throw new ContextCreationFailedException(connectionDescriptor,
+                messageSource.getMessage("resource.dataSource.jdbc.secretKey", null, LocaleContextHolder.getLocale()),
+                messageSource.getMessage("error.aws.secret.key.is.invalid", null, LocaleContextHolder.getLocale()),
+                exception, secureExceptionHandler);
+        } else if(exception.getMessage().contains(CHECK_ARN_ASSUME_ROLE) || exception.getMessage().contains(CHECK_ARN_ROLE_ASSIGNED)){
+            throw new ContextCreationFailedException(connectionDescriptor,
+                messageSource.getMessage("resource.dataSource.jdbc.arn", null, LocaleContextHolder.getLocale()),
+                messageSource.getMessage("error.aws.arn.is.invalid", null, LocaleContextHolder.getLocale()),
+                exception, secureExceptionHandler);
+        } else{
+            throw new ContextCreationFailedException(connectionDescriptor, exception,
+                secureExceptionHandler);
         }
     }
 }

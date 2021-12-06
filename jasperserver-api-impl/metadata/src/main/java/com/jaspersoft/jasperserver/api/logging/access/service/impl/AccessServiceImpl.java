@@ -33,25 +33,22 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.Pe
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.criterion.*;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Sergey Prilukin
  * @version $Id$
  */
-@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+@Transactional(value = "auditTransactionManager", propagation = Propagation.SUPPORTS, readOnly = true)
 public class AccessServiceImpl extends HibernateDaoImpl implements AccessService, PersistentObjectResolver {
 
     private HibernateRepositoryService hibernateRepositoryService;
@@ -59,6 +56,8 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
     private int maxAccessEventAge;
     private ResourceFactory persistentClassFactory;
     private ResourceFactory clientClassFactory;
+
+
     public static final String COMMAND_OUT_LOGGER = "com.jaspersoft.jasperserver.export.command";
 
     public void setMaxAccessEventAge(int maxAccessEventAge) {
@@ -93,24 +92,32 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
         return null;
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+    private Resource getResourceFromAccessEvent_helper(final AccessEvent accessEvent){
+        return hibernateRepositoryService.getResource(null,accessEvent.getResourceUri());
+    }
+
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
     public void saveEvent(LoggableEvent loggableEvent) {
         AccessEvent accessEvent = (AccessEvent) loggableEvent;
-        if (hibernateRepositoryService.resourceExists(null, accessEvent.getResource().getURI(), accessEvent.getResource().getClass())) {
+        Resource accessEventResource = getResourceFromAccessEvent_helper(accessEvent);
+        if (
+            accessEventResource != null
+        ) {
             RepoAccessEvent repoAccessEvent = new RepoAccessEvent();
             repoAccessEvent.copyFromClient(loggableEvent, this);
             getHibernateTemplate().save(repoAccessEvent);
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
     public void saveEvents(List<LoggableEvent> loggableEvents) {
         if (loggableEvents == null || loggableEvents.isEmpty()) {
             return;
         }
-        
         //This code will collapse all events for a specific user and uri into one event
-        //to reduce the number of database calls that are caused by multiple events for
+        //to reduce the number of database call`s that are caused by multiple events for
         //same resource in the same http request
         //see Bug 35570 - [case 42185] Hibernate generating thousands of queries from dashboard 
         Map<List<String>,AccessEventImpl> map = new HashMap<List<String>,AccessEventImpl>();
@@ -118,8 +125,8 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
         	if (loggableEvent instanceof AccessEventImpl) {
         		AccessEventImpl e = (AccessEventImpl)loggableEvent;
         		List<String> key = new ArrayList<String>(2);
-        		key.add(e.getUser().getUsername()+"|"+e.getUser().getTenantId());
-        		key.add(e.getResource().getURI());
+        		key.add(e.getUserId()); // accessEvent userId is a concatenation fo user id, |, and tenantId
+        		key.add(e.getResourceUri());
         		AccessEventImpl v = map.get(key);
         		if (v==null) {
         			map.put(key, e.clone());
@@ -131,7 +138,7 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
         		saveEvent(loggableEvent);
         	}
         }
-        
+
         for (AccessEventImpl e : map.values()) {
         	saveEvent(e);
         }
@@ -152,7 +159,7 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
                 AccessEvent accessEvent = (AccessEvent) ((IdedObject) event).toClient(clientClassFactory);
                 clientEventsList.add(accessEvent);
                 } catch (AccessEventImpl.TranslateException aex) {
-                    logger.debug("Unable to translate access event:  resource = " + aex.getResource().getClass() + ", factory = " + aex.getResourceFactory().getClass(), aex.getOriginalException());
+                    logger.debug("Unable to translate access event:  resourceUri = " + aex.getResourceUri() + ", factory = " + aex.getResourceFactory().getClass(), aex.getOriginalException());
                 } catch (Exception ex) {
                     logger.debug("Unable to translate access event", ex);
                 }
@@ -160,6 +167,50 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
             return clientEventsList;
         } else {
             return Collections.emptyList();
+        }
+    }
+
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
+    public void updateAccessEventsByResourceURI(String oldURI, String newURI) {
+        final String className = persistentClassFactory.getImplementationClassName(AccessEvent.class);
+        final String queryString = "update " + className + " set resource_uri=:newURI where resource_uri=:oldURI";
+        getHibernateTemplate().execute(new HibernateCallback<Void>() {
+            public Void doInHibernate(Session session) throws HibernateException {
+              Query query = session.createQuery(queryString).
+                      setParameter("newURI",newURI).
+                      setParameter("oldURI",oldURI);
+                query.executeUpdate();
+                return null;
+            }
+        });
+    }
+
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
+    public void deleteAccessEvent(String uri, boolean isFolder){
+        DetachedCriteria criteria =
+            DetachedCriteria.forClass(persistentClassFactory.getImplementationClass(AccessEvent.class));
+        if(isFolder)
+            criteria.add(Restrictions.like("resourceUri", uri, MatchMode.START));
+        else
+            criteria.add(Restrictions.eq("resourceUri", uri));
+
+        List results = getHibernateTemplate().findByCriteria(criteria);
+        if(results != null && !results.isEmpty()){
+            getHibernateTemplate().deleteAll(results);
+        }
+    }
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
+    public void deleteAccessEventsByUser(String userId){
+        DetachedCriteria criteria =
+                DetachedCriteria.forClass(persistentClassFactory.getImplementationClass(AccessEvent.class));
+        criteria.add(Restrictions.eq("userId", userId));
+
+        List results = getHibernateTemplate().findByCriteria(criteria);
+        if(results != null && !results.isEmpty()){
+            getHibernateTemplate().deleteAll(results);
         }
     }
 
@@ -172,7 +223,8 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
         return rowCount.intValue();
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRES_NEW, readOnly = false)
+    @Qualifier("auditTransactionManager")
     public void purgeAccessEvents() {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -maxAccessEventAge);
@@ -183,14 +235,40 @@ public class AccessServiceImpl extends HibernateDaoImpl implements AccessService
         // added this on 2019-9-23 to manually clean up orphans
         // disabled cascade delete to improve performance on mass delete operations 
         // this includes import (JS-34322) and delete organization (JS-35283)
+/*
         getHibernateTemplate().bulkUpdate(
                 "delete from RepoAccessEvent " +
                 "  where id in (" +
                 "    select e.id from RepoAccessEvent e " +
-                "    left join RepoResource r on (r.id = e.resource) " +
+                "    left join RepoResource r on (r.id = e.resourceId) " +
                 "    left join RepoUser u on (u.id = e.user) " +
                 "    where r is null " +
                 "    or u is null" +
                 "  )");
+ */
+    }
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
+    public void importAccessEvent(AccessEvent accessEvent) {
+        RepoAccessEvent repoAccessEvent = new RepoAccessEvent();
+        repoAccessEvent.copyFromClient(accessEvent, this);
+        getHibernateTemplate().save(repoAccessEvent);
+    }
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = false)
+    @Qualifier("auditTransactionManager")
+    public void importAccessEvents(List<AccessEvent> accessEvents) {
+        for (AccessEvent accessEvent : accessEvents) {
+            importAccessEvent(accessEvent);
+        }
+    }
+    @Transactional(value="auditTransactionManager", propagation = Propagation.REQUIRED, readOnly = true)
+    @Qualifier("auditTransactionManager")
+    public List getResourceURIs(DetachedCriteria criteria, int max){
+        List results = getHibernateTemplate().findByCriteria(criteria, -1, max);
+
+        if(results == null || results.isEmpty()){
+            return Collections.emptyList();
+        }
+        return results;
     }
 }

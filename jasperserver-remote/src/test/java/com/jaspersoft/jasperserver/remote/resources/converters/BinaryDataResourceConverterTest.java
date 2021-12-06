@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ContentResourceImpl;
@@ -57,6 +59,7 @@ public class BinaryDataResourceConverterTest {
 
     private final ClientFile file = new ClientFile();
     private final ObjectPermission repositoryPermission = new ObjectPermissionImpl();
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void setUp() throws Exception{
@@ -67,17 +70,17 @@ public class BinaryDataResourceConverterTest {
     public void fillSampleObjects() throws Exception{
         file.setLabel("test");
         reset(contentResourceConverter, fileResourceConverter, fileResourceTypes);
-        when(fileResourceConverter.toServer(any(ClientFile.class), any(FileResource.class), any(ToServerConversionOptions.class))).thenReturn(new FileResourceImpl());
-        when(contentResourceConverter.toServer(any(ClientFile.class), any(ContentResource.class), any(ToServerConversionOptions.class))).thenReturn(new ContentResourceImpl());
+        when(fileResourceConverter.toServer(any(ExecutionContext.class), any(ClientFile.class), any(FileResource.class), any(ToServerConversionOptions.class))).thenReturn(new FileResourceImpl());
+        when(contentResourceConverter.toServer(any(ExecutionContext.class), any(ClientFile.class), any(ContentResource.class), any(ToServerConversionOptions.class))).thenReturn(new ContentResourceImpl());
     }
 
     @Test
     public void testToServer_file() throws Exception {
         file.setType(ClientFile.FileType.prop);
 
-        converter.toServer(file, new FileResourceImpl(), null);
+        converter.toServer(ctx, file, new FileResourceImpl(), null);
 
-        verify(fileResourceConverter).toServer(eq(file), nullable(FileResource.class), nullable(ToServerConversionOptions.class));
+        verify(fileResourceConverter).toServer(nullable(ExecutionContext.class), eq(file), nullable(FileResource.class), nullable(ToServerConversionOptions.class));
     }
 
     @Test
@@ -85,18 +88,18 @@ public class BinaryDataResourceConverterTest {
         file.setType(ClientFile.FileType.prop);
         when(fileResourceTypes.contains(any())).thenReturn(true);
 
-        converter.toServer(file,null);
+        converter.toServer(ctx, file, null);
 
-        verify(fileResourceConverter).toServer(eq(file), nullable(FileResource.class), nullable(ToServerConversionOptions.class));
+        verify(fileResourceConverter).toServer(nullable(ExecutionContext.class), eq(file), nullable(FileResource.class), nullable(ToServerConversionOptions.class));
     }
 
     @Test
     public void testToServer_content() throws Exception {
         file.setType(ClientFile.FileType.css);
 
-        converter.toServer(file, new ContentResourceImpl(), null);
+        converter.toServer(ctx, file, new ContentResourceImpl(), null);
 
-        verify(contentResourceConverter).toServer(eq(file), nullable(ContentResource.class), nullable(ToServerConversionOptions.class));
+        verify(contentResourceConverter).toServer(nullable(ExecutionContext.class), eq(file), nullable(ContentResource.class), nullable(ToServerConversionOptions.class));
     }
 
     @Test
@@ -104,8 +107,8 @@ public class BinaryDataResourceConverterTest {
         file.setType(ClientFile.FileType.css);
         when(fileResourceTypes.contains(any())).thenReturn(false);
 
-        converter.toServer(file, null);
+        converter.toServer(ctx, file, null);
 
-        verify(contentResourceConverter).toServer(eq(file), nullable(ContentResource.class), nullable(ToServerConversionOptions.class));
+        verify(contentResourceConverter).toServer(nullable(ExecutionContext.class), eq(file), nullable(ContentResource.class), nullable(ToServerConversionOptions.class));
     }
 }

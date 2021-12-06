@@ -121,6 +121,7 @@
 	<bean id="dataSourceValidator" class="com.jaspersoft.jasperserver.war.validation.ReportDataSourceValidator">
 		<property name="repository" ref="${bean.repositoryService}"/>
 		<property name="customDataSourceFactory" ref="customDataSourceServiceFactory"/>
+		<property name="securityChecker" ref="${bean.repositoryServiceSecurityChecker}"/>
 	</bean>
 
     <import resource="repositoryExplorerBean.xml"/>

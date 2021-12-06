@@ -64,6 +64,16 @@ public class ToClientConversionOptions {
      */
     private boolean allowSecureDataConversation;
 
+    public boolean isEnableEncryption() {
+        return enableEncryption;
+    }
+
+    public void setEnableEncryption(boolean enableEncryption) {
+        this.enableEncryption = enableEncryption;
+    }
+
+    private boolean enableEncryption;
+
     public static ToClientConversionOptions getDefault(){
         return new ToClientConversionOptions();
     }

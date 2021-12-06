@@ -26,6 +26,7 @@ import org.apache.http.Header;
 import org.apache.http.protocol.HTTP;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
@@ -112,6 +113,16 @@ public class HttpResponseHeadersAccumulator extends HttpServletResponseWrapper {
 
     public ServletOutputStreamObserver createOutputStreamObserver() throws IOException {
         return new ServletOutputStreamObserver(getResponse().getOutputStream(), this) {
+
+            public boolean isReady() {
+                return true;
+            }
+
+
+            public void setWriteListener(WriteListener writeListener) {
+
+            }
+
             @Override
             void beforeUsing(HttpResponseHeadersAccumulator response) {
                 response.applyHeadersOnce();

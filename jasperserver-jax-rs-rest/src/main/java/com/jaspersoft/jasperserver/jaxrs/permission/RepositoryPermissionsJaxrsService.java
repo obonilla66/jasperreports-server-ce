@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.jaxrs.permission;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InternalURI;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.PermissionUriProtocol;
@@ -56,6 +57,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl.getRuntimeExecutionContext;
 
 /**
  * @author Zakhar.Tomchenco
@@ -110,7 +113,7 @@ public class RepositoryPermissionsJaxrsService {
         List<RepositoryPermission> permissions = data.getPermissions();
         List<ObjectPermission> server = new ArrayList<ObjectPermission>(permissions.size());
         for (RepositoryPermission permission : permissions){
-            server.add(converter.toServer(permission, null));
+            server.add(converter.toServer(getRuntimeExecutionContext(), permission, null));
         }
 
         service.createPermissions(server);
@@ -149,7 +152,8 @@ public class RepositoryPermissionsJaxrsService {
         List<RepositoryPermission> permissions = data.getPermissions();
         List<ObjectPermission> server = new ArrayList<ObjectPermission>(permissions.size());
         for (RepositoryPermission permission : permissions){
-            server.add(converter.toServer(permission.setUri(resourceUri), null));
+            server.add(converter.toServer(getRuntimeExecutionContext()
+                    , permission.setUri(resourceUri), null));
         }
         InternalURI internalURI = new InternalURIDefinition(Folder.SEPARATOR + resourceUri, PermissionUriProtocol.RESOURCE);
         service.putPermissions(internalURI, server);
@@ -179,7 +183,7 @@ public class RepositoryPermissionsJaxrsService {
         permission.setUri(permissionComplexKey.getResourceUri());
         permission.setRecipient(permissionComplexKey.getRecipientUri());
 
-        service.putPermission(converter.toServer(permission, null));
+        service.putPermission(converter.toServer(getRuntimeExecutionContext(), permission, null));
 
         return Response.ok().entity(permission).build();
     }
@@ -196,7 +200,7 @@ public class RepositoryPermissionsJaxrsService {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response createPermission(RepositoryPermission permission) throws ErrorDescriptorException {
-        service.createPermission(converter.toServer(permission, null));
+        service.createPermission(converter.toServer(getRuntimeExecutionContext(), permission, null));
         return Response.status(Response.Status.CREATED).entity(permission).build();
     }
 

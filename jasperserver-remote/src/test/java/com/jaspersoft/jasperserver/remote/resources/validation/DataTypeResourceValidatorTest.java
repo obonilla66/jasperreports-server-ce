@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.DataTypeImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -49,6 +51,7 @@ public class DataTypeResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private DataType type;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -63,7 +66,7 @@ public class DataTypeResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(type);
+        validator.validate(ctx, type);
     }
 
 
@@ -71,7 +74,7 @@ public class DataTypeResourceValidatorTest {
     public void testValidate_maxLessThanMin() throws Exception {
         type.setMaxValue(new Integer(0));
         type.setMinValue(new Integer(10));
-        final List<Exception> errors = validator.validate(type);
+        final List<Exception> errors = validator.validate(ctx, type);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -81,7 +84,7 @@ public class DataTypeResourceValidatorTest {
     public void testValidate_type_notSpecified() throws Exception {
         type.setDataTypeType((byte) 0);
 
-        final List<Exception> errors = validator.validate(type);
+        final List<Exception> errors = validator.validate(ctx, type);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -91,14 +94,14 @@ public class DataTypeResourceValidatorTest {
     public void testValidate_regexp_valid() throws Exception {
         type.setRegularExpr("[a-z]+");
 
-        validator.validate(type);
+        validator.validate(ctx, type);
     }
 
     @Test
     public void testValidate_regexp_invalid() throws Exception {
         type.setRegularExpr("[a-z");
 
-        final List<Exception> exceptions = validator.validate(type);
+        final List<Exception> exceptions = validator.validate(ctx, type);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -108,14 +111,14 @@ public class DataTypeResourceValidatorTest {
     public void testValidate_maxLength_valid() throws Exception {
         type.setMaxLength(1);
 
-        validator.validate(type);
+        validator.validate(ctx, type);
     }
 
     @Test
     public void testValidate_maxLength_invalid() throws Exception {
         type.setMaxLength(0);
 
-        final List<Exception> exceptions = validator.validate(type);
+        final List<Exception> exceptions = validator.validate(ctx, type);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

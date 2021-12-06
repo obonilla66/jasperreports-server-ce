@@ -25,6 +25,8 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -34,7 +36,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Zakhar.Tomchenco
  * @version $Id$
  */
-public class ClientDashboardResource implements DeepCloneable<ClientDashboardResource> {
+public class ClientDashboardResource implements DeepCloneable<ClientDashboardResource>, Serializable {
     private String name;
     private String type;
     private ClientReferenceable resource;

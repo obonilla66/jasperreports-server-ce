@@ -37,7 +37,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id: ClientReportOptions.java 32880 2013-08-09 07:09:12Z inesterenko $
  */
 @XmlRootElement(name = ResourceMediaType.REPORT_OPTIONS_CLIENT_TYPE)
-public class ClientReportOptions extends ClientResource<ClientReportOptions> implements DeepCloneable<ClientReportOptions> {
+public class ClientReportOptions extends ClientResource<ClientReportOptions> implements ClientReferenceable {
     private String reportUri;
     private List<ReportParameter> reportParameters;
 

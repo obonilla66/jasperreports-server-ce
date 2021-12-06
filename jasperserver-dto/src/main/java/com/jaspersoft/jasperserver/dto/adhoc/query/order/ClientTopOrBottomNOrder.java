@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.order;
 
 import javax.validation.constraints.Min;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
 import java.util.List;
 
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorCode.Codes.QUERY_ORDERBY_TOP_OR_BOTTOM_LIMIT_NOT_VALID;
@@ -30,7 +31,7 @@ import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorCod
  * @author Andriy Godovanets
  * @version $Id$
  */
-public class ClientTopOrBottomNOrder extends ClientPathOrder {
+public class ClientTopOrBottomNOrder extends ClientPathOrder implements Serializable {
     /**
      * Order limit
      */

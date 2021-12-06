@@ -258,7 +258,6 @@ public class SingleSelectListInputControlHandlerTest extends BaseInputControlHan
         assertEquals(selectedOptions.get(0).getValue(), selectedValue.toString());
     }
 
-
     @Test
     public void fillStateOfInputControlNumberWithListOfLong() throws Exception {
         final String parameterName = "testName";
@@ -299,7 +298,7 @@ public class SingleSelectListInputControlHandlerTest extends BaseInputControlHan
         assertEquals(selectedOptions.get(0).getValue(), selectedValue.toString());
         assertEquals(inputParameters.get(parameterName), selectedValue);
     }
-
+    
     @Test
     public void populateSelectedValuesList_checkDefaultValue() throws CascadeResourceNotFoundException {
         SingleSelectListInputControlHandler selectListInputControlHandler = spy(new MultiSelectListInputControlHandler());
@@ -408,28 +407,27 @@ public class SingleSelectListInputControlHandlerTest extends BaseInputControlHan
 
     @Test
     public void getMandatoryValues_withMandatoryIC() throws CascadeResourceNotFoundException {
-
         SingleSelectListInputControlHandler selectListInputControlHandler = spy(new SingleSelectListInputControlHandler());
         DataConverterService dataConverterService = mock(DataConverterService.class);
         InputControl inputControl = mock(InputControl.class);
         ReportInputControlInformation info = null;
 
-
-        boolean isNothingSelected = false;
+        boolean  isNothingSelected = false;
         List<InputControlOption> selectedValues = new ArrayList<>();
         List<Object> selectedValuesList = new ArrayList<>();
 
         selectListInputControlHandler.setDataConverterService(dataConverterService);
 
-
         doReturn(true).when(inputControl).isMandatory();
-        doReturn("USA").when(dataConverterService).formatSingleValue(anyObject(), nullable(InputControl.class), nullable(ReportInputControlInformation.class));
-
+        doReturn("USA_Converted").when(dataConverterService).convertSingleValue(eq("USA"), eq(inputControl), eq(info));
+        doReturn("USA_Formatted").when(dataConverterService).formatSingleValue(anyObject(), nullable(InputControl.class), nullable(ReportInputControlInformation.class));
 
         selectListInputControlHandler.setDataConverterService(dataConverterService);
 
-        selectListInputControlHandler.getMandatoryValues(inputControl, info, selectedValues, selectedValuesList, values, isNothingSelected);
-        assertEquals(selectedValuesList.get(0), "USA");
+        selectListInputControlHandler.getMandatoryValues(inputControl, info, selectedValues, selectedValuesList, values.get(0), isNothingSelected);
+        assertEquals("USA_Converted", selectedValuesList.get(0));
+        assertEquals("USA", selectedValues.get(0).getLabel());
+        assertEquals("USA_Formatted", selectedValues.get(0).getValue());
     }
 
     @Test

@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.war.control;
 
 import com.jaspersoft.jasperserver.api.metadata.olap.service.OlapManagementService;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletException;
@@ -31,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author swood
  *
  */
-public class OLAPController extends JRBaseMultiActionController {
+public class OLAPController extends JRBaseController {
 
     private OlapManagementService olapManagementService;
 
@@ -39,12 +40,12 @@ public class OLAPController extends JRBaseMultiActionController {
 		throws ServletException {
 		return new ModelAndView("/modules/olap/viewOlap");
 	}
-
+	@RequestMapping("/olap/busy.html")
 	public ModelAndView busy(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
 		return new ModelAndView("/modules/olap/busy");
 	}
-
+	@RequestMapping("/olap/flush.html")
 	public ModelAndView flush(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
         try {
@@ -56,12 +57,12 @@ public class OLAPController extends JRBaseMultiActionController {
 
         return new ModelAndView("/ajax/ajaxresponse");
 	}
-
+	@RequestMapping("/olap/properties.html")
 	public ModelAndView properties(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
 		return new ModelAndView("/modules/olap/properties");
 	}
-
+	@RequestMapping("/olap/error.html")
 	public ModelAndView error(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
 		return new ModelAndView("/modules/system/prepErrorPage");

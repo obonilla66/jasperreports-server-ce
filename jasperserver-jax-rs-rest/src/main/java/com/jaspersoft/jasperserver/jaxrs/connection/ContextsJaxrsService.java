@@ -21,7 +21,9 @@
 package com.jaspersoft.jasperserver.jaxrs.connection;
 
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.api.ExceptionListWrapper;
 import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.jaxrs.common.JaxrsEntityParser;
 import com.jaspersoft.jasperserver.jaxrs.resources.ContentNegotiationHandler;
@@ -51,7 +53,6 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.ext.Providers;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class ContextsJaxrsService {
                 metadataClientType = matcher.group(1);
             }
             if(metadataClientType == null
-                    || !contextsManager.isMetadataSupported(context, metadataClientType)) {
+                    || !contextsManager.isMetadataSupported(ExecutionContextImpl.getRuntimeExecutionContext(), context, metadataClientType)) {
                 throw new NotAcceptableException();
             }
         } else if(!contentNegotiationHandler.isAcceptable(context, contentTypeString, acceptString)){

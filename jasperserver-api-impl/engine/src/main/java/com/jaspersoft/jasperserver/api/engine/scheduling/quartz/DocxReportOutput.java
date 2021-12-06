@@ -77,8 +77,8 @@ public class DocxReportOutput extends AbstractReportOutput
 				close = false;
 				docDataOut.close();
 
-				String fileName = jobContext.getBaseFilename() + ".docx";
-				return new ReportOutput(docData, ContentResource.TYPE_DOCX, fileName);
+				String fileName = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(docData, getFileType(), fileName);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -107,5 +107,15 @@ public class DocxReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "docx";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_DOCX;
 	}
 }

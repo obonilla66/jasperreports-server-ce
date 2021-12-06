@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.security.validators.Validator;
@@ -72,7 +73,7 @@ public class SqlExecutionStrategy implements ContextManagementStrategy<SqlExecut
     }
 
     @Override
-    public SqlExecutionRequest createContext(SqlExecutionRequest contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public SqlExecutionRequest createContext(ExecutionContext ctx, SqlExecutionRequest contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
         return contextDescription;
     }
 

@@ -55,6 +55,8 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -66,7 +68,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  */
 @ExpressionRepresentationRequired
 @XmlRootElement(name = "expression")
-public class ClientExpressionContainer implements DeepCloneable<ClientExpressionContainer> {
+public class ClientExpressionContainer implements DeepCloneable<ClientExpressionContainer>, Serializable {
     public static final String EXPRESSION_REPRESENTATION_PARAMETER_NAME = "expression";
     public static final String EXPRESSION_REPRESENTATION_STRING = "string";
     public static final String EXPRESSION_REPRESENTATION_OBJECT = "object";

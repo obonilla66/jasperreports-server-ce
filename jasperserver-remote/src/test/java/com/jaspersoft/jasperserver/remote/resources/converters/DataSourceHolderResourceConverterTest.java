@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -72,12 +74,13 @@ public class DataSourceHolderResourceConverterTest {
     private ResourceReference testResourceReference = new ResourceReference(TEST_REFERENCE_URI);
     private Query serverObject = new QueryImpl();
 
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
     @BeforeClass
     public void initConverter() throws Exception, MandatoryParameterNotFoundException {
         MockitoAnnotations.initMocks(this);
         when(converter.getDateTimeFormat()).thenReturn(new SimpleDateFormat());
         when(converter.genericFieldsToClient(nullable(AbstractClientDataSourceHolder.class), nullable(Resource.class), nullable(ToClientConversionOptions.class))).thenCallRealMethod();
-        when(converter.genericFieldsToServer(nullable(AbstractClientDataSourceHolder.class), nullable(Resource.class), nullable(ToServerConversionOptions.class))).thenCallRealMethod();
+        when(converter.genericFieldsToServer(any(ExecutionContext.class), nullable(AbstractClientDataSourceHolder.class), nullable(Resource.class), nullable(ToServerConversionOptions.class))).thenCallRealMethod();
         when(converter.getDataSourceFromResource(nullable(Resource.class))).thenAnswer(new Answer<ResourceReference>() {
             @Override
             public ResourceReference answer(InvocationOnMock invocation) throws Throwable {
@@ -122,8 +125,8 @@ public class DataSourceHolderResourceConverterTest {
         clientObject.setUri(TEST_RESORUCE_URI);
         serverObject.setDataSource((ResourceReference)null);
         testResourceReference.setReference(TEST_REFERENCE_URI);
-        when(resourceReferenceConverter.toServer(clientDataSource, null, null)).thenReturn(testResourceReference);
-        final Resource result = converter.genericFieldsToServer(clientObject, serverObject, null);
+        when(resourceReferenceConverter.toServer(ctx, clientDataSource, null, null)).thenReturn(testResourceReference);
+        final Resource result = converter.genericFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, null);
         assertSame(result, serverObject);
         assertSame(((Query)result).getDataSource(), testResourceReference);
         assertEquals(result.getURIString(), TEST_RESORUCE_URI);
@@ -136,8 +139,8 @@ public class DataSourceHolderResourceConverterTest {
         final ClientAwsDataSource clientDataSource = new ClientAwsDataSource();
         testResourceReference.setReference("/test/resoruce/uri");
         serverObject.setDataSource(testResourceReference);
-        when(resourceReferenceConverter.toServer(clientDataSource, null)).thenReturn(testResourceReference);
-        final Resource result = converter.genericFieldsToServer(clientObject, serverObject, null);
+        when(resourceReferenceConverter.toServer(ctx, clientDataSource, null)).thenReturn(testResourceReference);
+        final Resource result = converter.genericFieldsToServer(ctx, clientObject, serverObject, null);
         assertSame(result, serverObject);
         assertNull(((Query) result).getDataSource());
     }
@@ -149,8 +152,8 @@ public class DataSourceHolderResourceConverterTest {
         final ClientAwsDataSource clientDataSource = new ClientAwsDataSource();
         testResourceReference.setReference("/test/resoruce/uri");
         serverObject.setDataSource((ResourceReference)null);
-        when(resourceReferenceConverter.toServer(clientDataSource, null)).thenReturn(testResourceReference);
-        final Resource result = converter.genericFieldsToServer(clientObject, serverObject, null);
+        when(resourceReferenceConverter.toServer(ctx, clientDataSource, null)).thenReturn(testResourceReference);
+        final Resource result = converter.genericFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, serverObject, null);
         assertSame(result, serverObject);
         assertNull(((Query) result).getDataSource());
     }
@@ -162,10 +165,10 @@ public class DataSourceHolderResourceConverterTest {
         final ClientAwsDataSource clientDataSource = new ClientAwsDataSource();
         clientObject.setDataSource(clientDataSource);
         testResourceReference.setReference("/test/resoruce/uri");
-        when(resourceReferenceConverter.toServer(clientDataSource, null, null)).thenReturn(testResourceReference);
+        when(resourceReferenceConverter.toServer(ctx, clientDataSource, null, null)).thenReturn(testResourceReference);
         final QueryImpl newServerObject = new QueryImpl();
         when(converter.getNewResourceInstance()).thenReturn(newServerObject);
-        final Resource resource = converter.genericFieldsToServer(clientObject, null, null);
+        final Resource resource = converter.genericFieldsToServer(ExecutionContextImpl.getRuntimeExecutionContext(), clientObject, null, null);
         assertSame(resource, newServerObject);
         assertSame(((QueryImpl)resource).getDataSource(), testResourceReference);
     }

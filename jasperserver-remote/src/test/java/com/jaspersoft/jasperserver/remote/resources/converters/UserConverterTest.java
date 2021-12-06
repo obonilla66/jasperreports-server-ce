@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
@@ -28,7 +30,6 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.client.RoleImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.client.UserImpl;
 import com.jaspersoft.jasperserver.dto.authority.ClientRole;
 import com.jaspersoft.jasperserver.dto.authority.ClientUser;
-import org.junit.Ignore;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -44,6 +45,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.testng.Assert.*;
 
 /**
@@ -100,7 +102,7 @@ public class UserConverterTest {
         RequestContextHolder.setRequestAttributes(servletRequestAttributesMock, false);
         Mockito.when(httpServletRequestMock.getSession()).thenReturn(httpSessionMock);
 
-        Mockito.when(roleConverter.toServer(Mockito.nullable(ClientRole.class),  Mockito.nullable(ToServerConversionOptions.class))).thenReturn(serverRole);
+        Mockito.when(roleConverter.toServer(Mockito.any(ExecutionContext.class), Mockito.nullable(ClientRole.class), Mockito.nullable(ToServerConversionOptions.class))).thenReturn(serverRole);
         Mockito.when(roleConverter.toClient(Mockito.nullable(Role.class), Mockito.nullable(ToClientConversionOptions.class))).thenReturn(clientRole);
     }
 
@@ -121,7 +123,7 @@ public class UserConverterTest {
 
     @Test
     public void testToServer() throws Exception {
-        User converted = converter.toServer(client, null);
+        User converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext(), client, null);
 
         assertEquals(converted.getFullName(), client.getFullName());
         assertEquals(converted.getEmailAddress(), client.getEmailAddress());
@@ -136,7 +138,8 @@ public class UserConverterTest {
 
     @Test
     public void testToServer_update() throws Exception {
-        User converted = converter.toServer(client, server, null);
+        User converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , client, server, null);
 
         assertEquals(converted.getFullName(), client.getFullName());
         assertEquals(converted.getEmailAddress(), client.getEmailAddress());
@@ -151,7 +154,8 @@ public class UserConverterTest {
 
     @Test(enabled = false)
     public void testToServer_setsTimeOnPassChange() throws Exception {
-        User converted = converter.toServer(client, server, null);
+        User converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , client, server, null);
 
         assertNotNull(converted.getPreviousPasswordChangeTime());
     }

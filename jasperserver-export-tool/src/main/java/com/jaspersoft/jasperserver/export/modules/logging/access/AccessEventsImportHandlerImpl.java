@@ -61,4 +61,8 @@ public class AccessEventsImportHandlerImpl implements AccessEventsImportHandler 
     public Resource resolveResource(String uri) {
         return hibernateRepositoryService.getResource(null, uri);
     }
+
+    public boolean isLocalFolder(String uri) {
+        return hibernateRepositoryService.isLocalFolder(null, uri);
+    }
 }

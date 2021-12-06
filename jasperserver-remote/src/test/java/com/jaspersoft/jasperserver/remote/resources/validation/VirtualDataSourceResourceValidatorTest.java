@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -79,6 +80,7 @@ public class VirtualDataSourceResourceValidatorTest {
 
     private VirtualReportDataSource dataSource;
     private List<ResourceLookup> dependent = new LinkedList<ResourceLookup>();
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init(){
@@ -118,7 +120,7 @@ public class VirtualDataSourceResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -126,14 +128,14 @@ public class VirtualDataSourceResourceValidatorTest {
         dataSource.getDataSourceUriMap().remove(dataSource.getDataSourceUriMap().keySet().iterator().next());
         dataSource.getDataSourceUriMap().remove(dataSource.getDataSourceUriMap().keySet().iterator().next());
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
     public void testValidate_empty() throws Exception {
         dataSource.getDataSourceUriMap().clear();
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -143,7 +145,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_special() throws Exception {
         dataSource.getDataSourceUriMap().put("[]", new ResourceReference("/d"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -153,7 +155,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_Id() throws Exception {
         dataSource.getDataSourceUriMap().put("Hey'", new ResourceReference("/d"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -165,7 +167,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(profileAttributesResolver.containsAttribute(attributePlaceholder)).thenReturn(true);
         dataSource.getDataSourceUriMap().put(attributePlaceholder, new ResourceReference("/d"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
         assertTrue(exceptions.isEmpty());
     }
 
@@ -173,7 +175,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_duplicate_uri() throws Exception {
         dataSource.getDataSourceUriMap().put("c", new ResourceReference("/a"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -183,7 +185,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_relative_uri() throws Exception {
         dataSource.getDataSourceUriMap().put("c", new ResourceReference("a"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -193,7 +195,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_resourceNotExist() throws Exception {
         dataSource.getDataSourceUriMap().put("c", new ResourceReference("/c"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -205,7 +207,7 @@ public class VirtualDataSourceResourceValidatorTest {
 
         dataSource.getDataSourceUriMap().put("c", new ResourceReference("/c"));
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -216,7 +218,7 @@ public class VirtualDataSourceResourceValidatorTest {
         dataSource.setURIString(null);
         dataSource.setVersion(Resource.VERSION_NEW);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
 
         verify(service,never()).getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt());
     }
@@ -225,7 +227,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_noUsageValidationOnOverwriteSomeOtherTypeOfResource() throws Exception {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(new InputControlImpl());
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
 
         verify(service,never()).getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt());
     }
@@ -234,7 +236,7 @@ public class VirtualDataSourceResourceValidatorTest {
     public void testValidate_validateUsage() throws Exception {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(dataSource);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
 
         verify(service,atLeastOnce()).getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt());
     }
@@ -244,7 +246,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(dataSource);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(Collections.EMPTY_LIST);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
 
         verify(service,atLeastOnce()).getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt());
     }
@@ -254,7 +256,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(dataSource);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(dependent);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
 
         verify(service,atLeastOnce()).getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt());
     }
@@ -268,7 +270,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(dependent);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
 
         verify(service,atLeastOnce()).getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt());
     }
@@ -284,7 +286,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(dependent);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -298,7 +300,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(Collections.EMPTY_LIST);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test(expectedExceptions = {AccessDeniedException.class})
@@ -313,7 +315,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq("/a/different"))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(dependent);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -328,7 +330,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq("/a/different"))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(Collections.EMPTY_LIST);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -343,7 +345,7 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(dependent);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -358,6 +360,6 @@ public class VirtualDataSourceResourceValidatorTest {
         when(service.getResource(nullable(ExecutionContext.class), eq(dataSource.getURIString()))).thenReturn(existing);
         when(service.getDependentResources(nullable(ExecutionContext.class), anyString(), same(searchCriteriaFactory), anyInt(), anyInt())).thenReturn(Collections.EMPTY_LIST);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 }

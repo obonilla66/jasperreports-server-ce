@@ -28,7 +28,7 @@
      <t:putAttribute name="pageTitle"><spring:message code="resource.query.page.title"/></t:putAttribute>
     <t:putAttribute name="bodyID" value="addResource_query_step3"/>
     <t:putAttribute name="bodyClass" value="oneColumn flow wizard lastStep"/>
-    <t:putAttribute name="moduleName" value="commons/commons.main"/>
+    <t:putAttribute name="moduleName" value="commons/commonsMain"/>
     <t:putAttribute name="bodyContent" >
 		<form method="post" >
 		<t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">

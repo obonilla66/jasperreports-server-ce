@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.util.StaticExecutionContextProvider;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRPropertiesUtil;
 import net.sf.jasperreports.engine.ParameterContributor;
@@ -72,12 +74,13 @@ public class DataSourceWrapperParameterContributorFactory implements ParameterCo
 	 */
 	public List<ParameterContributor> getContributors(ParameterContributorContext context) throws JRException
 	{
-		List<ParameterContributor> contributors = new ArrayList<ParameterContributor>();
+		List<ParameterContributor> contributors = new ArrayList<>();
 
-		String dataSourceUri = JRPropertiesUtil.getInstance(context.getJasperReportsContext()).getProperty(context.getDataset(), PROPERTY_DATA_SOURCE_LOCATION); 
+		String dataSourceUri = JRPropertiesUtil.getInstance(context.getJasperReportsContext()).getProperty(context.getDataset(), PROPERTY_DATA_SOURCE_LOCATION);
 		if (dataSourceUri != null)
 		{
-			ReportDataSource dataSource = (ReportDataSource)repositoryService.getResource(null, dataSourceUri, Resource.class);
+			ExecutionContext executionContext = StaticExecutionContextProvider.getRuntimeExecutionContext();
+			ReportDataSource dataSource = (ReportDataSource) repositoryService.getResource(executionContext, dataSourceUri, Resource.class);
 			if (dataSource == null)
 			{
 				throw new JRException("Data source " + dataSourceUri + "not found!");

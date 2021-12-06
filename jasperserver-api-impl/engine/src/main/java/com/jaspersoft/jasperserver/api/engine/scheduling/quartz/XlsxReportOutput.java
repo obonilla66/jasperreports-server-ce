@@ -112,8 +112,8 @@ public class XlsxReportOutput extends AbstractReportOutput
 					//we have both paginated and unpaginated XLSX outputs, we need a different name
 					baseFilename += "_nopag";
 				}
-				String filename = baseFilename + ".xlsx";
-				return new ReportOutput(xlsxData, ContentResource.TYPE_XLSX, filename);
+				String filename = baseFilename + "." + getFileExtension();
+				return new ReportOutput(xlsxData, getFileType(), filename);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -155,5 +155,15 @@ public class XlsxReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "xlsx";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_XLSX;
 	}
 }

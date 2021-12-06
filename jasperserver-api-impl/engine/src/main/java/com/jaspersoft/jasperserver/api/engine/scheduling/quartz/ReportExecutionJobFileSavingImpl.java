@@ -76,13 +76,13 @@ public class ReportExecutionJobFileSavingImpl implements ReportExecutionJobFileS
 
         if (!isSaveToDisk(jobDetails) && !isSaveToFTPServer(jobDetails)) return;
 
-        Map<String, byte[]> zipOutput = null;
+        Map<String, DataContainer> zipOutput = null;
         try {
             zipOutput = zipFile(job, output, useFolderHierarchy);
         }  catch (Exception e) {
             job.handleException(job.getMessage("report.scheduling.error.creating.zip.output", new Object[]{output.getFilename()}), e);
         }
-        for (Map.Entry<String, byte[]> entry : zipOutput.entrySet()) {
+        for (Map.Entry<String, DataContainer> entry : zipOutput.entrySet()) {
             try {
                 if (isEnableSaveToHostFS())
                     saveToDisk(job, entry.getKey(), entry.getValue(), jobDetails);
@@ -188,7 +188,7 @@ public class ReportExecutionJobFileSavingImpl implements ReportExecutionJobFileS
         return ((repositoryDestination != null) && (repositoryDestination.getOutputLocalFolder() != null));
     }
 
-    protected void saveToDisk(ReportExecutionJob job, String fileName, byte[] data, ReportJob jobDetails) {
+    protected void saveToDisk(ReportExecutionJob job, String fileName, DataContainer data, ReportJob jobDetails) {
         if (!isSaveToDisk(jobDetails)) return;
          ReportJobRepositoryDestination repositoryDestination = jobDetails.getContentRepositoryDestination();
         String path = repositoryDestination.getOutputLocalFolder() + File.separator +  fileName;
@@ -214,7 +214,7 @@ public class ReportExecutionJobFileSavingImpl implements ReportExecutionJobFileS
             (repositoryDestination.getOutputFTPInfo().getServerName() != null);
     }
 
-    protected void saveToFTPServer(ReportExecutionJob job, String fileName, byte[] data, ReportJob jobDetails) {
+    protected void saveToFTPServer(ReportExecutionJob job, String fileName, DataContainer data, ReportJob jobDetails) {
         if (!isSaveToFTPServer(jobDetails)) return;
         FTPInfo ftpInfo =  jobDetails.getContentRepositoryDestination().getOutputFTPInfo();
         try {
@@ -238,8 +238,17 @@ public class ReportExecutionJobFileSavingImpl implements ReportExecutionJobFileS
             if (!jobDetails.getContentRepositoryDestination().isOverwriteFiles() && ftpServiceClient.exists(fileName)) {
                throw new JSException("jsexception.report.resource.already.exists.no.overwrite", new Object[] {ftpInfo.getServerName() + ftpInfo.getFolderPath() + "/" + fileName});
             }
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-            ftpServiceClient.putFile(fileName, inputStream);
+            
+            InputStream inputStream = data.getInputStream();
+            try {
+                ftpServiceClient.putFile(fileName, inputStream);
+            } finally {
+            	try {
+                	inputStream.close();
+            	} catch (IOException e) {
+            		log.warn("Failed to close input stream", e);
+            	}
+            }
             ftpServiceClient.disconnect();
         } catch (Exception ex) {
             job.handleException(job.getMessage("report.scheduling.error.upload.to.ftp.server", new Object[]{ftpInfo.getServerName() + ftpInfo.getFolderPath() + "/" + fileName}), ex);
@@ -258,13 +267,13 @@ public class ReportExecutionJobFileSavingImpl implements ReportExecutionJobFileS
 		job.getLockManager().unlock(lock);
 	}
 
-    private void copy(byte[] data, FileOutputStream os) throws IOException {
-      os.write(data);
+    private void copy(DataContainer data, FileOutputStream os) throws IOException {
+      DataContainerStreamUtil.pipeDataAndCloseInput(data.getInputStream(), os);
       os.flush();
       os.close();
     }
 
-    private Map<String, byte[]> zipFile(ReportExecutionJob job, ReportOutput output, boolean useFolderHierarchy) throws IOException {
+    private Map<String, DataContainer> zipFile(ReportExecutionJob job, ReportOutput output, boolean useFolderHierarchy) throws IOException {
         String attachmentName;
 		DataContainer attachmentData;
 
@@ -308,20 +317,8 @@ public class ReportExecutionJobFileSavingImpl implements ReportExecutionJobFileS
 			attachmentName = output.getFilename() + ".zip";
 		}
 
-		//read the data from attachment and put them into a result map
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		InputStream inputStream = attachmentData.getInputStream();
-		byte[] attachmentBuffer = new byte[4096];
-		int read = 0;
-		while (read != -1) {
-			read = inputStream.read(attachmentBuffer);
-			if (read > 0) {
-				baos.write(attachmentBuffer, 0, read);
-			}
-		}
-
-		Map result = new HashMap<String, InputStream>();
-		result.put(attachmentName, baos.toByteArray());
+		Map<String, DataContainer> result = new HashMap<>();
+		result.put(attachmentName, attachmentData);
 		return result;
     }
 

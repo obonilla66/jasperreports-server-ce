@@ -21,6 +21,8 @@
 package com.jaspersoft.jasperserver.remote.connection;
 
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.metadata.common.service.JsonMarshaller;
@@ -96,6 +98,8 @@ public class CustomDataSourceContextStrategyTest {
     private ClientCustomDataSource customDataSource;
     private CustomReportDataSource serverCustomReportDataSource;
 
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
+
     @BeforeClass
     public void init(){
         MockitoAnnotations.initMocks(this);
@@ -110,11 +114,11 @@ public class CustomDataSourceContextStrategyTest {
         serverCustomReportDataSource = new CustomReportDataSourceImpl();
         serverCustomReportDataSource.setURIString("/some/resource/uri");
         serverCustomReportDataSource.setPropertyMap(new HashMap());
-        when(customDataSourceResourceConverter.toServer(same(customDataSource), any(ToServerConversionOptions.class)))
+        when(customDataSourceResourceConverter.toServer(any(ExecutionContext.class), same(customDataSource), any(ToServerConversionOptions.class)))
                 .thenReturn(serverCustomReportDataSource);
         when(customDataSourceFactory.createService(serverCustomReportDataSource)).thenReturn(customReportDataSourceService);
         when(secureExceptionHandlerMock.handleException(isA(Throwable.class), isA(ErrorDescriptor.class))).thenReturn(new ErrorDescriptor().setMessage("test"));
-        doReturn(serverCustomReportDataSource).when(strategySpy).toServer(customDataSource);
+        doReturn(serverCustomReportDataSource).when(strategySpy).toServer(ExecutionContextImpl.getRuntimeExecutionContext(),customDataSource);
     }
 
     @Test
@@ -138,7 +142,7 @@ public class CustomDataSourceContextStrategyTest {
     @Test
     public void createConnection_noPasswordProperty_success() throws Exception {
         doReturn(true).when(customReportDataSourceService).testConnection();
-        final ClientCustomDataSource connection = strategy.createContext(customDataSource, null);
+        final ClientCustomDataSource connection = strategy.createContext(ctx, customDataSource, null);
         assertSame(connection, customDataSource);
     }
 
@@ -146,21 +150,23 @@ public class CustomDataSourceContextStrategyTest {
     public void createConnection_noTestConnection_success() throws JRException {
         reset(customDataSourceFactory);
         when(customDataSourceFactory.createService(serverCustomReportDataSource)).thenReturn(mock(ReportDataSourceService.class));
-        final ClientCustomDataSource connection = strategy.createContext(customDataSource, null);
+        final ClientCustomDataSource connection = strategy.createContext(ctx, customDataSource, null);
         assertSame(connection, customDataSource);
     }
 
     @Test(expectedExceptions = ContextCreationFailedException.class)
     public void createConnection_testConnectionReturnsFalse_failure() throws Exception {
         doReturn(false).when(customReportDataSourceService).testConnection();
-        final ClientCustomDataSource connection = strategy.createContext(customDataSource, null);
+        final ClientCustomDataSource connection = strategy.createContext(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , customDataSource, null);
         assertSame(connection, customDataSource);
     }
 
     @Test(expectedExceptions = ContextCreationFailedException.class)
     public void createConnection_testConnectionThrowsException_failure() throws Exception {
         doThrow(new RuntimeException()).when(customReportDataSourceService).testConnection();
-        final ClientCustomDataSource connection = strategy.createContext(customDataSource, null);
+        final ClientCustomDataSource connection = strategy.createContext(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , customDataSource, null);
         assertSame(connection, customDataSource);
     }
 
@@ -177,7 +183,8 @@ public class CustomDataSourceContextStrategyTest {
         reset(customDataSourceFactory);
         ArgumentCaptor<CustomReportDataSource> argumentCaptor = ArgumentCaptor.forClass(CustomReportDataSource.class);
         doReturn(customReportDataSourceService).when(customDataSourceFactory).createService(argumentCaptor.capture());
-        final ClientCustomDataSource connection = strategy.createContext(customDataSource, null);
+        final ClientCustomDataSource connection = strategy.createContext(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , customDataSource, null);
         assertSame(connection, customDataSource);
         final CustomReportDataSource reportDataSource = argumentCaptor.getValue();
         assertNotNull(reportDataSource);

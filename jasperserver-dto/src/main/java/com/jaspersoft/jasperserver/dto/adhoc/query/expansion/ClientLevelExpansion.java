@@ -25,12 +25,14 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.ClientFieldReference;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Andriy Godovanets
  */
-public class ClientLevelExpansion implements ClientExpandable<String>, ClientFieldReference {
+public class ClientLevelExpansion implements ClientExpandable<String>, ClientFieldReference, Serializable {
     private boolean isExpanded;
     private Boolean isAggregationLevel = false;
 

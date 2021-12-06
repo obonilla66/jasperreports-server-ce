@@ -29,6 +29,7 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckAllGroupPosit
 import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +42,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Andriy Godovanets
  */
 @XmlRootElement
-public class ClientQueryGroupBy implements ClientGroupBy<ClientGroupAxis> {
+public class ClientQueryGroupBy implements ClientGroupBy<ClientGroupAxis>, Serializable {
     @Valid
     @CheckAllGroupPosition
     private List<ClientQueryGroup> groups;

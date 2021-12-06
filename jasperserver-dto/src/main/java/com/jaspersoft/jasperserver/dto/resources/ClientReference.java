@@ -24,6 +24,8 @@ import com.jaspersoft.jasperserver.dto.common.ResourceLocation;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import java.util.Objects;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
@@ -38,6 +40,8 @@ public class ClientReference implements ClientReferenceableDataSource, ClientRef
         ClientReferenceableMondrianConnection, ClientReferenciableOlapConnection, ResourceLocation {
 
     private String uri;
+    // intentionally an object
+    private Integer version;
 
     public ClientReference() {
     }
@@ -46,10 +50,16 @@ public class ClientReference implements ClientReferenceableDataSource, ClientRef
         this.uri = uri;
     }
 
+    public ClientReference(String uri, int version) {
+        this.uri = uri;
+        this.version = version;
+    }
+
     public ClientReference(ClientReference other) {
         checkNotNull(other);
 
         this.uri = other.getUri();
+        this.version = other.getVersion();
     }
 
     public String getUri() {
@@ -61,27 +71,33 @@ public class ClientReference implements ClientReferenceableDataSource, ClientRef
         return this;
     }
 
+    public Integer getVersion() {
+        return version;
+    }
+
+    public ClientReference setVersion(Integer version) {
+        this.version = version;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof ClientReference)) return false;
         ClientReference that = (ClientReference) o;
-
-        if (uri != null ? !uri.equals(that.uri) : that.uri != null) return false;
-
-        return true;
+        return Objects.equals(version, that.version) && Objects.equals(uri, that.uri);
     }
 
     @Override
     public int hashCode() {
-        return uri != null ? uri.hashCode() : 0;
+        return Objects.hash(uri, version);
     }
 
     @Override
     public String toString() {
         return "ClientReference{" +
                 "uri='" + uri + '\'' +
+                (version != null ? ", version ='" + version + '\'' : "") +
                 '}';
     }
 

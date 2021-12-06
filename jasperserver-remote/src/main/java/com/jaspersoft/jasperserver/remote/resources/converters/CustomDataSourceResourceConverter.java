@@ -20,11 +20,13 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.impl.datasource.RepoCustomDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientCustomDataSource;
 import com.jaspersoft.jasperserver.dto.resources.ClientProperty;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableFile;
@@ -54,7 +56,7 @@ public class CustomDataSourceResourceConverter extends ResourceConverterImpl<Cus
     protected ResourceReferenceConverterProvider resourceReferenceConverterProvider;
 
     @Override
-    protected CustomReportDataSource resourceSpecificFieldsToServer(ClientCustomDataSource clientObject, CustomReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected CustomReportDataSource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientCustomDataSource clientObject, CustomReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setDataSourceName(clientObject.getDataSourceName());
         final CustomDataSourceDefinition definition = customDataSourceFactory.getDefinitionByName(clientObject.getDataSourceName());
         // let's fill service class by dataSourceName. If dataSourceName is incorrect and no such definition,
@@ -87,18 +89,18 @@ public class CustomDataSourceResourceConverter extends ResourceConverterImpl<Cus
             }
         }
         resultToUpdate.setPropertyMap(properties.isEmpty() ? null : properties);
-        resultToUpdate.setResources(convertResourcesToServer(clientObject.getResources(), options));
+        resultToUpdate.setResources(convertResourcesToServer(ctx, clientObject.getResources(), options));
         return resultToUpdate;
     }
 
-    protected Map<String, ResourceReference> convertResourcesToServer(Map<String, ClientReferenceableFile> resources, ToServerConversionOptions options){
+    protected Map<String, ResourceReference> convertResourcesToServer(ExecutionContext ctx, Map<String, ClientReferenceableFile> resources, ToServerConversionOptions options){
         Map<String, ResourceReference> serverResources = null;
         if(resources != null && !resources.isEmpty()){
             serverResources = new HashMap<String, ResourceReference>();
             final ResourceReferenceConverter<ClientReferenceableFile> referenceConverter =
                     resourceReferenceConverterProvider.getConverterForType(ClientReferenceableFile.class);
             for(String key : resources.keySet()){
-                serverResources.put(key, referenceConverter.toServer(resources.get(key), options));
+                serverResources.put(key, referenceConverter.toServer(ctx, resources.get(key), options));
             }
         }
         return serverResources;
@@ -127,7 +129,7 @@ public class CustomDataSourceResourceConverter extends ResourceConverterImpl<Cus
             properties = new ArrayList<ClientProperty>(propertyMap.size());
             final Set<String> set = propertyMap.keySet();
             for(String key : set){
-                if (!propertiesToIgnore.contains(key)) {
+				if (includePropertyToClient(options, key)) {
                     properties.add(new ClientProperty(key, (String)propertyMap.get(key)));
                 }
             }
@@ -136,6 +138,15 @@ public class CustomDataSourceResourceConverter extends ResourceConverterImpl<Cus
         client.setResources(convertResourcesToClient(serverObject.getResources(), options));
         return client;
     }
+
+	private boolean includePropertyToClient(ToClientConversionOptions options, String key) {
+		//same check for password as in GenericJdbcDataSourceResourceConverter
+		if (RepoCustomDataSource.PASSWORD_DS_PARAM.equals(key)
+				&& options != null && options.getIncludes() != null && options.getIncludes().contains("profileAttributesResolved")) {
+			return true;
+		}
+		return !propertiesToIgnore.contains(key);
+	}
 
     @Override
     protected void resourceSecureFieldsToClient(ClientCustomDataSource client, CustomReportDataSource serverObject, ToClientConversionOptions options) {

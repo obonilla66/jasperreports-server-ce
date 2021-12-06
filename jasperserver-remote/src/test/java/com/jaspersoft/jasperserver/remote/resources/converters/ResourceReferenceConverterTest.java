@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
@@ -71,6 +72,7 @@ import static org.testng.Assert.assertTrue;
  * @version $Id$
  */
 public class ResourceReferenceConverterTest {
+    public static final ExecutionContext CTX = ExecutionContextImpl.getRuntimeExecutionContext();
     private String testUri = "/test/resource/uri";
     private ResourceReferenceConverter converter;
     private ResourceConverterProvider resourceConverterProvider;
@@ -80,7 +82,7 @@ public class ResourceReferenceConverterTest {
     private ToServerConversionOptions options = ToServerConversionOptions.getDefault();
     private Resource localResource;
     private final ClientDataType expectedClientObject = new ClientDataType().setUri(testUri);
-    private final ClientReference expectedClientReference = new ClientReference().setUri(testUri);
+    private final ClientReference expectedClientReference = new ClientReference().setUri(testUri).setVersion(0);
     private ResourceReference resourceReferenceWithLocalResource;
     private ResourceReference resourceReference;
 
@@ -265,7 +267,7 @@ public class ResourceReferenceConverterTest {
     public void toClient_reference() {
         final String expectedReferenceUri = "/test/reference/uri";
         final ResourceReference serverObject = new ResourceReference(expectedReferenceUri);
-        final ClientReference expectedReference = new ClientReference();
+        final ClientReference expectedReference = new ClientReference().setVersion(0);
         expectedReference.setUri(expectedReferenceUri);
         final ClientUriHolder result = converter.toClient(serverObject, null);
         assertTrue(new ReflectionEquals(expectedReference).matches(result));
@@ -303,7 +305,7 @@ public class ResourceReferenceConverterTest {
         when(options.isExpanded(DATA_TYPE_CLIENT_TYPE, true)).thenReturn(false);
 
         final ClientReferenceable result = converter.toClient(resourceReferenceWithLocalResource, options);
-        assertEquals(result, expectedClientReference);
+        assertEquals(result, expectedClientReference.deepClone().setVersion(-1));
     }
 
     @Test
@@ -338,34 +340,34 @@ public class ResourceReferenceConverterTest {
     public void toServer_create_noInitialReference() throws Exception {
         final ClientJdbcDataSource clientObject = new ClientJdbcDataSource();
         final ResourceReferenceConverter referenceConverter = mock(ResourceReferenceConverter.class);
-        when(referenceConverter.toServer(clientObject, null)).thenCallRealMethod();
-        final ResourceReference resourceReference = referenceConverter.toServer(clientObject, null);
+        when(referenceConverter.toServer(CTX, clientObject, null)).thenCallRealMethod();
+        final ResourceReference resourceReference = referenceConverter.toServer(CTX, clientObject, null);
         assertNull(resourceReference);
-        verify(referenceConverter).toServer(clientObject, null);
+        verify(referenceConverter).toServer(CTX, clientObject, null);
     }
 
     @Test
     public void toServer() throws Exception {
         final ClientReference reference = new ClientReference();
         final ResourceReferenceConverter converterMock = mock(ResourceReferenceConverter.class);
-        when(converterMock.toServer(any(ClientReferenceable.class), isNull(ResourceReference.class), any(ToServerConversionOptions.class))).thenCallRealMethod();
-        converterMock.toServer(reference, null, options);
-        verify(converterMock).toServerReference(same(reference), isNull(ResourceReference.class), same(options));
+        when(converterMock.toServer(any(ExecutionContext.class), any(ClientReferenceable.class), isNull(ResourceReference.class), any(ToServerConversionOptions.class))).thenCallRealMethod();
+        converterMock.toServer(CTX, reference, null, options);
+        verify(converterMock).toServerReference(any(ExecutionContext.class), same(reference), isNull(ResourceReference.class), same(options));
         final ClientDataType dataType = new ClientDataType();
-        converterMock.toServer(dataType, null, options);
-        verify(converterMock).toServerLocalResource(same(dataType), isNull(ResourceReference.class), same(options));
-        final ResourceReference result = converter.toServer(null, null);
+        converterMock.toServer(CTX, dataType, null, options);
+        verify(converterMock).toServerLocalResource(any(ExecutionContext.class), same(dataType), isNull(ResourceReference.class), same(options));
+        final ResourceReference result = converter.toServer(CTX, null, null);
         assertNull(result);
     }
 
     @Test(expectedExceptions = MandatoryParameterNotFoundException.class)
     public void validateReference_uriIsNull_exception() throws Exception {
-        converter.validateAndGetReference(null, options.getOwnersUri());
+        converter.validateAndGetReference(ExecutionContextImpl.getRuntimeExecutionContext(), null, options.getOwnersUri());
     }
 
     @Test(expectedExceptions = ReferencedResourceNotFoundException.class)
     public void validateReference_resourceDoesntExist() throws Exception {
-        converter.validateAndGetReference("/test/resource/uri", options.getOwnersUri());
+        converter.validateAndGetReference(ExecutionContextImpl.getRuntimeExecutionContext(), "/test/resource/uri", options.getOwnersUri());
     }
 
     @Test()
@@ -395,7 +397,7 @@ public class ResourceReferenceConverterTest {
         }).when(restriction).validateReference(clientTargetResource);
         IllegalParameterValueException exception = null;
         try {
-            converter.addReferenceRestriction(restriction).validateAndGetReference(referenceUri, options.getOwnersUri());
+            converter.addReferenceRestriction(restriction).validateAndGetReference(ExecutionContextImpl.getRuntimeExecutionContext(), referenceUri, options.getOwnersUri());
         } catch (IllegalParameterValueException e) {
             exception = e;
         }
@@ -408,7 +410,7 @@ public class ResourceReferenceConverterTest {
         final ClientReference clientObject = new ClientReference();
         clientObject.setUri(expectedResourceUri);
         final ResourceReference resultToUpdate = new ResourceReference(expectedResourceUri);
-        final ResourceReference result = converter.toServerReference(clientObject, resultToUpdate, options);
+        final ResourceReference result = converter.toServerReference(CTX, clientObject, resultToUpdate, options);
         assertSame(result, resultToUpdate);
         assertFalse(result.isLocal());
         assertEquals(result.getReferenceURI(), expectedResourceUri);
@@ -420,9 +422,9 @@ public class ResourceReferenceConverterTest {
         final String referenceUri = "/test/resource/uri";
         reference.setUri(referenceUri);
         final ResourceReferenceConverter converterMock = mock(ResourceReferenceConverter.class);
-        when(converterMock.toServerReference(reference, null, options)).thenCallRealMethod();
-        converterMock.toServerReference(reference, null, options);
-        verify(converterMock).validateAndGetReference(referenceUri, options.getOwnersUri());
+        when(converterMock.toServerReference(CTX, reference, null, options)).thenCallRealMethod();
+        converterMock.toServerReference(CTX, reference, null, options);
+        verify(converterMock).validateAndGetReference(CTX, referenceUri, options.getOwnersUri());
     }
 
     @Test
@@ -433,7 +435,7 @@ public class ResourceReferenceConverterTest {
         // let repository mock find resource with our test URI
         when(repositoryService.getResource(any(ExecutionContext.class), eq(expectedResourceUri))).thenReturn(mock(Resource.class));
         // new ResourceReference is created if initially is null and client object contains referenceUri
-        ResourceReference result = converter.toServerReference(clientObject, null, options);
+        ResourceReference result = converter.toServerReference(CTX, clientObject, null, options);
         assertNotNull(result);
         assertFalse(result.isLocal());
         assertEquals(result.getReferenceURI(), expectedResourceUri);
@@ -447,7 +449,7 @@ public class ResourceReferenceConverterTest {
         // let repository mock find resource with our test URI
         when(repositoryService.getResource(any(ExecutionContext.class), eq(expectedResourceUri))).thenReturn(mock(Resource.class));
         final ResourceReference resultToUpdate = new ResourceReference("/another/resource/uri");
-        ResourceReference result = converter.toServerReference(clientObject, resultToUpdate, options);
+        ResourceReference result = converter.toServerReference(CTX, clientObject, resultToUpdate, options);
         assertSame(result, resultToUpdate);
         assertFalse(result.isLocal());
         // existing ResourceReference instance is updated with new reference URI
@@ -466,7 +468,7 @@ public class ResourceReferenceConverterTest {
     public void toServerReference_dataSourceReferenceUri_invalid(final String invalidResourceUri) throws Exception {
         final ClientReference clientObject = new ClientReference();
         clientObject.setUri(invalidResourceUri);
-        converter.toServerReference(clientObject, null, options);
+        converter.toServerReference(CTX, clientObject, null, options);
     }
 
     @Test
@@ -479,7 +481,7 @@ public class ResourceReferenceConverterTest {
         // reference to update is local resource.
         final ResourceReference resultToUpdate = new ResourceReference(new DataTypeImpl());
         resultToUpdate.getLocalResource().setURIString(expectedResourceUri);
-        ResourceReference result = converter.toServerReference(clientObject, resultToUpdate, options);
+        ResourceReference result = converter.toServerReference(CTX, clientObject, resultToUpdate, options);
         assertSame(result, resultToUpdate);
         assertTrue(result.isLocal());
     }
@@ -496,7 +498,7 @@ public class ResourceReferenceConverterTest {
         // reference some another resource
         final ResourceReference resultToUpdate = new ResourceReference(new DataTypeImpl());
         resultToUpdate.getLocalResource().setURIString("/some/another/resource");
-        ResourceReference result = converter.toServerReference(clientObject, resultToUpdate, options);
+        ResourceReference result = converter.toServerReference(CTX, clientObject, resultToUpdate, options);
         assertEquals(result.getTargetURI(), expectedResourceUri);
         assertFalse(result.isLocal());
     }
@@ -511,7 +513,7 @@ public class ResourceReferenceConverterTest {
         testResource.setURIString(expectedResourceUri);
         // let repository mock find resource with our test URI
         when(repositoryService.getResource(any(ExecutionContext.class), eq(expectedResourceUri))).thenReturn(testResource);
-        ResourceReference result = converter.toServerReference(clientObject, null, options);
+        ResourceReference result = converter.toServerReference(CTX, clientObject, null, options);
         assertEquals(result.getTargetURI(), expectedResourceUri);
         assertFalse(result.isLocal());
     }
@@ -529,7 +531,7 @@ public class ResourceReferenceConverterTest {
         // reference some another resource
         final ResourceReference resultToUpdate = new ResourceReference(new DataTypeImpl());
         resultToUpdate.getLocalResource().setURIString("/some/another/resource");
-        ResourceReference result = converter.toServerReference(clientObject, null, ToServerConversionOptions.getDefault().setOwnersUri(parentUri));
+        ResourceReference result = converter.toServerReference(CTX, clientObject, null, ToServerConversionOptions.getDefault().setOwnersUri(parentUri));
         assertEquals(result.getTargetURI(), expectedResourceUri);
         assertTrue(result.isLocal());
     }
@@ -547,7 +549,7 @@ public class ResourceReferenceConverterTest {
         // reference some another resource
         final ResourceReference resultToUpdate = new ResourceReference(new DataTypeImpl());
         resultToUpdate.getLocalResource().setURIString("/some/another/resource");
-        ResourceReference result = converter.toServerReference(clientObject, null, ToServerConversionOptions.getDefault().setOwnersUri(parentUri));
+        ResourceReference result = converter.toServerReference(CTX, clientObject, null, ToServerConversionOptions.getDefault().setOwnersUri(parentUri));
         assertEquals(result.getTargetURI(), expectedResourceUri);
         assertFalse(result.isLocal());
     }
@@ -558,8 +560,8 @@ public class ResourceReferenceConverterTest {
         final AwsReportDataSource expectedLocalResource = new AwsReportDataSourceImpl();
         final AwsDataSourceResourceConverter awsDataSourceResourceConverter = mock(AwsDataSourceResourceConverter.class);
         when(resourceConverterProvider.getToServerConverter(localResource)).thenReturn((ToServerConverter) awsDataSourceResourceConverter);
-        when(awsDataSourceResourceConverter.toServer(localResource, options)).thenReturn(expectedLocalResource);
-        final ResourceReference result = converter.toServerLocalResource(localResource, null, options);
+        when(awsDataSourceResourceConverter.toServer(CTX, localResource, options)).thenReturn(expectedLocalResource);
+        final ResourceReference result = converter.toServerLocalResource(CTX,localResource, null, options);
         assertNotNull(result);
         assertTrue(result.isLocal());
         assertSame(result.getLocalResource(), expectedLocalResource);
@@ -572,8 +574,8 @@ public class ResourceReferenceConverterTest {
         final AwsReportDataSource expectedLocalResource = new AwsReportDataSourceImpl();
         final AwsDataSourceResourceConverter awsDataSourceResourceConverter = mock(AwsDataSourceResourceConverter.class);
         when(resourceConverterProvider.getToServerConverter(localResource)).thenReturn((ToServerConverter) awsDataSourceResourceConverter);
-        when(awsDataSourceResourceConverter.toServer(localResource, options)).thenReturn(expectedLocalResource);
-        final ResourceReference result = converter.toServerLocalResource(localResource, referenceToUpdate, options);
+        when(awsDataSourceResourceConverter.toServer(CTX, localResource, options)).thenReturn(expectedLocalResource);
+        final ResourceReference result = converter.toServerLocalResource(CTX,  localResource, referenceToUpdate, options);
         assertSame(result, referenceToUpdate);
         assertTrue(result.isLocal());
         assertSame(result.getLocalResource(), expectedLocalResource);
@@ -586,8 +588,8 @@ public class ResourceReferenceConverterTest {
         final AwsReportDataSource expectedLocalResource = new AwsReportDataSourceImpl();
         final AwsDataSourceResourceConverter awsDataSourceResourceConverter = mock(AwsDataSourceResourceConverter.class);
         when(resourceConverterProvider.getToServerConverter(localResource)).thenReturn((ToServerConverter) awsDataSourceResourceConverter);
-        when(awsDataSourceResourceConverter.toServer(localResource, options)).thenReturn(expectedLocalResource);
-        final ResourceReference result = converter.toServerLocalResource(localResource, referenceToUpdate, options);
+        when(awsDataSourceResourceConverter.toServer(CTX, localResource, options)).thenReturn(expectedLocalResource);
+        final ResourceReference result = converter.toServerLocalResource(CTX, localResource, referenceToUpdate, options);
         assertSame(result, referenceToUpdate);
         assertTrue(result.isLocal());
         assertSame(result.getLocalResource(), expectedLocalResource);
@@ -601,8 +603,8 @@ public class ResourceReferenceConverterTest {
         final AwsReportDataSource expectedLocalResource = new AwsReportDataSourceImpl();
         final AwsDataSourceResourceConverter awsDataSourceResourceConverter = mock(AwsDataSourceResourceConverter.class);
         when(resourceConverterProvider.getToServerConverter(localResource)).thenReturn((ToServerConverter) awsDataSourceResourceConverter);
-        when(awsDataSourceResourceConverter.toServer(eq(localResource), any(ToServerConversionOptions.class))).thenReturn(expectedLocalResource);
-        final ResourceReference result = converter.toServerLocalResource(localResource, referenceToUpdate, ToServerConversionOptions.getDefault().setResetVersion(true));
+        when(awsDataSourceResourceConverter.toServer(any(ExecutionContext.class), eq(localResource), any(ToServerConversionOptions.class))).thenReturn(expectedLocalResource);
+        final ResourceReference result = converter.toServerLocalResource(CTX, localResource, referenceToUpdate, ToServerConversionOptions.getDefault().setResetVersion(true));
         assertSame(result, referenceToUpdate);
         assertTrue(result.isLocal());
         assertSame(result.getLocalResource(), expectedLocalResource);

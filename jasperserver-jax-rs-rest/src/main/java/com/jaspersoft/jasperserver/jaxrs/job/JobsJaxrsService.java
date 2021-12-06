@@ -60,6 +60,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import static com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl.getRuntimeExecutionContext;
+
 /**
  * JAX-RS service "jobs" implementation
  *
@@ -142,7 +144,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     public Response scheduleJobWithProcessedParameters(final ClientReportJob clientReportJob) {
         return callRemoteService(new ConcreteCaller<Response>() {
             public Response call(JobsService service) throws ErrorDescriptorException {
-                return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
+                return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(getRuntimeExecutionContext(), clientReportJob, null)), null)).build();
             }
         });
     }
@@ -153,7 +155,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
     public Response scheduleJob(final ClientReportJob clientReportJob) {
         return callRemoteService(new ConcreteCaller<Response>() {
             public Response call(JobsService service) throws ErrorDescriptorException {
-                return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
+                return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(getRuntimeExecutionContext(), clientReportJob, null)), null)).build();
             }
         });
     }
@@ -168,7 +170,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
                 if (clientReportJob.getId() == null || id != clientReportJob.getId())
                     clientReportJob.setId(id);
 
-                return Response.ok(reportJobConverter.toClient(service.updateJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
+                return Response.ok(reportJobConverter.toClient(service.updateJob(reportJobConverter.toServer(getRuntimeExecutionContext(), clientReportJob, null)), null)).build();
             }
         });
     }
@@ -182,7 +184,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
             public Response call(JobsService service) throws ErrorDescriptorException {
                 if (clientReportJob.getId() == null || id != clientReportJob.getId())//null safe
                     clientReportJob.setId(id);
-                return Response.ok(reportJobConverter.toClient(service.updateJob(reportJobConverter.toServer(clientReportJob, null)), null)).build();
+                return Response.ok(reportJobConverter.toClient(service.updateJob(reportJobConverter.toServer(getRuntimeExecutionContext(), clientReportJob, null)), null)).build();
             }
         });
     }
@@ -202,7 +204,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
                                                       @QueryParam("replaceTriggerIgnoreType") @DefaultValue("false") final Boolean replaceTriggerIgnoreType) {
         return callRemoteService(new ConcreteCaller<Response>() {
             public Response call(JobsService remoteService) throws ErrorDescriptorException {
-                remoteService.updateJobs(jobIds, reportJobModelConverter.toServer(clientReportJobModel, null), replaceTriggerIgnoreType);
+                remoteService.updateJobs(jobIds, reportJobModelConverter.toServer(getRuntimeExecutionContext(), clientReportJobModel, null), replaceTriggerIgnoreType);
                 return Response.ok(new ClientJobIdListWrapper(jobIds)).build();
             }
         });
@@ -223,7 +225,7 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
                                @QueryParam("replaceTriggerIgnoreType") @DefaultValue("false") final Boolean replaceTriggerIgnoreType) {
         return callRemoteService(new ConcreteCaller<Response>() {
             public Response call(JobsService remoteService) throws ErrorDescriptorException {
-                List<Long> updatedJobIds = remoteService.updateJobs(jobIds, reportJobModelConverter.toServer(clientReportJobModel, null), replaceTriggerIgnoreType);
+                List<Long> updatedJobIds = remoteService.updateJobs(jobIds, reportJobModelConverter.toServer(getRuntimeExecutionContext(), clientReportJobModel, null), replaceTriggerIgnoreType);
                 return Response.ok(new ClientJobIdListWrapper(updatedJobIds)).build();
             }
         });

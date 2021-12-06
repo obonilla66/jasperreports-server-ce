@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.List;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -36,7 +37,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id$
  */
 @XmlRootElement(name = "multiLevelDataset")
-public class ClientMultiLevelDataset implements DeepCloneable<ClientMultiLevelDataset> {
+public class ClientMultiLevelDataset implements DeepCloneable<ClientMultiLevelDataset>, Serializable {
     private Integer counts;
     private List<AbstractClientDatasetLevel> levels;
     private List<AbstractClientDatasetLevelNode> levelDataNodes;

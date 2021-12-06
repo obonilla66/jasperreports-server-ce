@@ -30,9 +30,9 @@ import java.util.Map;
  * @version $Id$
  */
 public class PooledObjectCache {
-
-
-
+    public static final String ATHENA_JDBC_DS = "athena-jdbc-ds";
+    public static final String JDBC_AWSATHENA = "jdbc:awsathena";
+    public static final String ARN_AWS_IAM = "arn:aws:iam";
     final Map cache;
     PooledObjectEntry first, last;
     PooledObjectCacheLog log;
@@ -52,11 +52,9 @@ public class PooledObjectCache {
 
     public PooledObjectEntry get(Object key, long now) {
         PooledObjectEntry entry = (PooledObjectEntry) cache.get(key);
-
         if (entry == null) {
             return null;
         }
-
         moveFirst(entry);
         entry.access(now);
         return entry;
@@ -84,26 +82,30 @@ public class PooledObjectCache {
     public void put(Object key, PooledObjectEntry entry, long now) {
         addFirst(entry);
         entry.access(now);
+        entry.created(now);
         cache.put(key, entry);
     }
 
-    public List<PooledObjectEntry> removeExpired(long now, int timeout) {
+    public List<PooledObjectEntry> removeExpired(long now, int timeout, int athenaTimeOut) {
         List expired = new ArrayList();
         long expTime = now - timeout * 1000;
+        long athenaExpTime = now - athenaTimeOut*1000;
 
         PooledObjectEntry entry = last;
-        while (entry != null && entry.lastAccess < expTime) {
-            if (entry.isActive()) {
-                if (log != null) log.debug(entry.key, PooledObjectCacheLog.DebugCode.STILL_ACTIVE);
-            } else {
-                if (log != null) log.debug(entry.key, PooledObjectCacheLog.DebugCode.EXPIRING);
-                expired.add(entry);
-                remove(entry);
+        while (entry != null ) {
+            String entryKey = entry.getKey().toString();
+            if (entry.lastAccess < expTime ||
+                ((entryKey.contains(ATHENA_JDBC_DS) || (entryKey.contains(JDBC_AWSATHENA) && entryKey.contains(ARN_AWS_IAM))) && entry.created < athenaExpTime)) {
+                if (entry.isActive()) {
+                    if (log != null) log.debug(entry.key, PooledObjectCacheLog.DebugCode.STILL_ACTIVE);
+                } else {
+                    if (log != null) log.debug(entry.key, PooledObjectCacheLog.DebugCode.EXPIRING);
+                    expired.add(entry);
+                    remove(entry);
+                }
             }
-
             entry = entry.prev;
         }
-
         return expired;
     }
 

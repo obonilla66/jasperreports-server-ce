@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
@@ -50,6 +52,7 @@ public class ListOfValuesValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     ListOfValues lov;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -69,7 +72,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("lala");
         lov.addValue(item);
 
-        validator.validate(lov);
+        validator.validate(ctx, lov);
     }
 
     @Test
@@ -78,7 +81,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("lala");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -90,7 +93,7 @@ public class ListOfValuesValidatorTest {
         item.setLabel("lala");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -103,7 +106,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("lala");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -116,7 +119,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -129,7 +132,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("      ");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -142,7 +145,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("a");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -155,7 +158,7 @@ public class ListOfValuesValidatorTest {
         item.setValue("a");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -168,7 +171,7 @@ public class ListOfValuesValidatorTest {
         item.setLabel("<>");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -181,7 +184,7 @@ public class ListOfValuesValidatorTest {
         item.setLabel("a");
         lov.addValue(item);
 
-        final List<Exception> exceptions = validator.validate(lov);
+        final List<Exception> exceptions = validator.validate(ctx, lov);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

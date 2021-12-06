@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InternalURI;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
@@ -72,6 +74,7 @@ public class UserAttributesConverterTest {
     private ProfileAttributeService profileAttributeService;
 
     private final ObjectPermission permission = new ObjectPermissionImpl();
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -121,7 +124,7 @@ public class UserAttributesConverterTest {
 
     @Test
     public void testToServer() throws Exception {
-        ProfileAttribute converted = converter.toServer(client, null);
+        ProfileAttribute converted = converter.toServer(ctx, client, null);
 
         assertEquals(converted.getAttrName(), client.getName());
         assertEquals(converted.getAttrValue(), client.getValue());
@@ -130,7 +133,7 @@ public class UserAttributesConverterTest {
 
     @Test
     public void testToServer_update() throws Exception {
-        ProfileAttribute converted = converter.toServer(client, server, null);
+        ProfileAttribute converted = converter.toServer(ctx, client, server, null);
 
         assertEquals(converted.getAttrName(), client.getName());
         assertEquals(converted.getAttrValue(), client.getValue());

@@ -75,6 +75,10 @@
                         </li>
                     </ul>
                 </div>
+                <div id="exportLoadingIndicator" class="export hidden">
+                    <div id="exportIndicator" class="icon"></div>
+                    <div id="exportMessage"><spring:message code="label.report.export.progress"/></div>
+                </div>
                 <div id="reportPartsController" class="hidden">
                     <ul id="reportPartsContainer" class="list buttonSet j-toolbar" tabindex="5" js-navtype="toolbar">
 
@@ -211,6 +215,20 @@
                                     <span class="wrap">
                                         <span class="icon"></span>
                                         <span class="indicator"></span>
+                                    </span>
+                                </button>
+                            </li>
+                            <li class="leaf">
+                                <button id="embed" data-title="true" class="button capsule up middle" disabled="disabled" aria-label="<spring:message code="button.embed"/>" tabindex="-1">
+                                    <span class="wrap">
+                                        <span class="icon"></span>
+                                    </span>
+                                </button>
+                            </li>
+                            <li class="leaf">
+                                <button id="schedule" data-title="true" class="button capsule up  middle" disabled="disabled" aria-label="<spring:message code="button.schedule"/>" tabindex="-1">
+                                    <span class="wrap">
+                                        <span class="icon"></span>
                                     </span>
                                 </button>
                             </li>
@@ -370,6 +388,7 @@
                             {"key": "fit_page", "value": "<spring:message code="button.zoomOptions.option.fitPage" htmlEscape="true"/>"}
                         ]
                     </script>
+                    <jsp:include page="toolbarText.jsp"/>
                 <!-- ========== END VIEWER TOOLBAR =========== -->
 
                 <%--ajax buffer--%>
@@ -433,10 +452,14 @@
                     </t:putAttribute>
                 </t:insertTemplate>
 
+                <c:if test="${hasInvisibleICValidationErrors}">
+                    <div id="iicValidationErrorMessagesHolder" class="hidden">${invisibleICValidationErrorMessages}</div>
+                </c:if>
+
                 <%--c:if test="${empty param.frame}">
                     <center>
                 </c:if--%>
-                <div id="reportContainer" class="" style="position:relative;"></div>
+                <div id="reportContainer" class="" style="position:relative;height:100%;overflow:auto"></div>
                 <%--c:if test="${empty param.frame}">
                     </center>
                 </c:if--%>

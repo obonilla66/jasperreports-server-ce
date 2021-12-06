@@ -21,12 +21,7 @@
 
 package com.jaspersoft.jasperserver.search.transformer;
 
-import com.jaspersoft.jasperserver.api.search.SearchFilter;
-import com.jaspersoft.jasperserver.api.search.SearchSorter;
-import com.jaspersoft.jasperserver.api.search.ResultTransformer;
-import com.jaspersoft.jasperserver.api.search.SortByAccessTimeTransformer;
-import com.jaspersoft.jasperserver.api.search.TransformerFactory;
-import com.jaspersoft.jasperserver.api.search.BasicTransformer;
+import com.jaspersoft.jasperserver.api.search.*;
 import com.jaspersoft.jasperserver.search.sorter.ByAccessTimeSorter;
 import com.jaspersoft.jasperserver.search.sorter.ByPopularitySorter;
 

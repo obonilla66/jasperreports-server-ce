@@ -88,8 +88,8 @@ public class CsvReportOutput extends AbstractReportOutput
 				close = false;
 				csvDataOut.close();
 
-				String fileName = jobContext.getBaseFilename() + ".csv";
-				return new ReportOutput(csvData, ContentResource.TYPE_CSV, fileName);
+				String fileName = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(csvData, getFileType(), fileName);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -130,5 +130,15 @@ public class CsvReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "csv";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_CSV;
 	}
 }

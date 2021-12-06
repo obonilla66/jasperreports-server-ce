@@ -35,12 +35,6 @@
     alter table JIAdhocStateProperty 
        drop constraint FKcc6y167w7n3u3ketxtmlwpsqr;
 
-    alter table JIAuditEventProperty 
-       drop constraint FK74sb8dic688mlyencffek40iw;
-
-    alter table JIAuditEventPropertyArchive 
-       drop constraint FK1lo2yra6fdwxqxo9769vyf4to;
-
     alter table JIAwsDatasource 
        drop constraint FKa2q6ho769d4h6k1inqfw0avbi;
 
@@ -302,8 +296,6 @@
     alter table ProfilingRecord 
        drop constraint FKct2sphgl7gfep2dl9ub4npyge;
 
-    drop table if exists JIAccessEvent cascade;
-
     drop table if exists JIAdhocDataView cascade;
 
     drop table if exists JIAdhocDataViewBasedReports cascade;
@@ -317,14 +309,6 @@
     drop table if exists JIAdhocState cascade;
 
     drop table if exists JIAdhocStateProperty cascade;
-
-    drop table if exists JIAuditEvent cascade;
-
-    drop table if exists JIAuditEventArchive cascade;
-
-    drop table if exists JIAuditEventProperty cascade;
-
-    drop table if exists JIAuditEventPropertyArchive cascade;
 
     drop table if exists JIAwsDatasource cascade;
 
@@ -415,8 +399,6 @@
     drop table if exists JIReportJobSimpleTrigger cascade;
 
     drop table if exists JIReportJobTrigger cascade;
-
-    drop table if exists JIReportMonitoringFact cascade;
 
     drop table if exists JIReportOptions cascade;
 
@@ -522,15 +504,11 @@
 
     DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
 
-    DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
+    DROP INDEX idx19_mondrianConnectionId_idx ON JIMondrianConnectionGrant;
 
     DROP INDEX JIFileResource_reference_index ON JIFileResource;
 
-    DROP INDEX idx18_accessGrant_idx ON JIMondrianConnectionGrant;
-
     DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
-
-    DROP INDEX idx19_mondrianConnectionId_idx ON JIMondrianConnectionGrant;
 
     DROP INDEX JIResourceFolder_version_index ON JIResourceFolder;
 
@@ -554,20 +532,20 @@
 
     DROP INDEX JIReportJob_alert_index ON JIReportJob;
 
-    DROP INDEX idx7_audit_event_id_idx ON JIAuditEventProperty;
+    DROP INDEX JIReportOptions_report_id_idx ON JIReportOptions;
 
     DROP INDEX idx25_content_destination_idx ON JIReportJob;
 
-    DROP INDEX idx8_audit_event_id_idx ON JIAuditEventPropertyArchive;
+    DROP INDEX ProfilingRecord_parent_id_idx ON ProfilingRecord;
 
     DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
 
     DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
 
-    DROP INDEX JIReportOptions_report_id_idx ON JIReportOptions;
+    DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
 
     DROP INDEX idx26_mail_notification_idx ON JIReportJob;
 
     DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
 
-    DROP INDEX ProfilingRecord_parent_id_idx ON ProfilingRecord;
+    DROP INDEX idx18_accessGrant_idx ON JIMondrianConnectionGrant;

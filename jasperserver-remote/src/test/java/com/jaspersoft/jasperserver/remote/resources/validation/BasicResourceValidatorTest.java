@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -49,6 +51,7 @@ public class BasicResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private Folder resource;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -65,7 +68,7 @@ public class BasicResourceValidatorTest {
         resource.setLabel("Label");
         resource.setDescription("description");
 
-        validator.validate(resource);
+        validator.validate(ctx, resource);
     }
 
     @Test
@@ -73,7 +76,7 @@ public class BasicResourceValidatorTest {
         resource.setLabel("Label");
         resource.setDescription("LabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabel1LabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabel12345678901234567890-");
 
-        final List<Exception> errors = validator.validate(resource);
+        final List<Exception> errors = validator.validate(ctx, resource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -84,7 +87,7 @@ public class BasicResourceValidatorTest {
         resource.setLabel("LabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabel12345678901234567890-");
         resource.setDescription("tion");
 
-        final List<Exception> errors = validator.validate(resource);
+        final List<Exception> errors = validator.validate(ctx, resource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());

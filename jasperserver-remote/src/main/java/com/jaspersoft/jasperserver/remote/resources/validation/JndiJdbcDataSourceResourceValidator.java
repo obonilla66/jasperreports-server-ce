@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ import static com.jaspersoft.jasperserver.remote.resources.validation.Validation
 @Component
 public class JndiJdbcDataSourceResourceValidator extends GenericResourceValidator<JndiJdbcReportDataSource> {
     @Override
-    protected void internalValidate(JndiJdbcReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, JndiJdbcReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getJndiName())){
             errors.add(new MandatoryParameterNotFoundException("JNDIName"));
         }

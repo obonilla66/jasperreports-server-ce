@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
@@ -39,12 +40,12 @@ public class OlapUnitResourceConverter extends ResourceConverterImpl<OlapUnit, C
     @javax.annotation.Resource
     protected ResourceReferenceConverterProvider resourceReferenceConverterProvider;
     @Override
-    protected OlapUnit resourceSpecificFieldsToServer(ClientOlapUnit clientObject, OlapUnit resultToUpdate,
-            List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected OlapUnit resourceSpecificFieldsToServer(ExecutionContext ctx, ClientOlapUnit clientObject, OlapUnit resultToUpdate,
+                                                      List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         resultToUpdate.setMdxQuery(clientObject.getMdxQuery());
         final ResourceReference serverOlapConnection = resourceReferenceConverterProvider
                 .getConverterForType(ClientReferenciableOlapConnection.class)
-                .toServer(clientObject.getOlapConnection(), resultToUpdate.getOlapClientConnection(), options);
+                .toServer(ctx, clientObject.getOlapConnection(), resultToUpdate.getOlapClientConnection(), options);
         resultToUpdate.setOlapClientConnection(serverOlapConnection);
         return resultToUpdate;
     }

@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.service.JdbcDriverService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -50,7 +51,7 @@ public class AwsDataSourceResourceValidator extends GenericResourceValidator<Aws
     private List<String> awsRegions;
 
     @Override
-    protected void internalValidate(AwsReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, AwsReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getAWSAccessKey()) && !empty(resource.getAWSSecretKey())){
             errors.add(new MandatoryParameterNotFoundException("AccessKey"));
         }

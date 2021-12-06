@@ -94,7 +94,7 @@ public class DefaultRepositoryContextManager implements
 		repositoryContext.setDataSource(getDataSource(inMemoryReportUnit));
 
 		repositoryContext.setExecutionContext(context);
-		repositoryContext.setCompiledReportProvider(compiledReportProvider);
+		repositoryContext.setCompiledReportProvider(getCompiledReportProvider());
 		return repositoryContext;
 	}
 

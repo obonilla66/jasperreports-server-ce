@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
@@ -63,7 +64,7 @@ public class GenericReportUnitResourceConverter
     }
 
     @Override
-    protected ServerReportUnitType resourceSpecificFieldsToServer(ClientReportUnitType clientObject, ServerReportUnitType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected ServerReportUnitType resourceSpecificFieldsToServer(ExecutionContext ctx, ClientReportUnitType clientObject, ServerReportUnitType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         resultToUpdate.setAlwaysPromptControls(clientObject.isAlwaysPromptControls());
         final byte controlsLayout;
         if (clientObject.getControlsLayout() != null) {
@@ -88,10 +89,10 @@ public class GenericReportUnitResourceConverter
         resultToUpdate.setInputControlRenderingView(clientObject.getInputControlRenderingView());
         resultToUpdate.setReportRenderingView(clientObject.getReportRenderingView());
         resultToUpdate.setQuery(resourceReferenceConverterProvider.getConverterForType(ClientReferenceableQuery.class)
-                .toServer(clientObject.getQuery(), resultToUpdate.getQuery(), options));
+                .toServer(ctx, clientObject.getQuery(), resultToUpdate.getQuery(), options));
         resultToUpdate.setMainReport(resourceReferenceConverterProvider.getConverterForType(ClientReferenceableFile.class)
                 .addReferenceRestriction(new ResourceReferenceConverter.FileTypeRestriction(ClientFile.FileType.jrxml))
-                .toServer(clientObject.getJrxml(), resultToUpdate.getMainReport(), options));
+                .toServer(ctx, clientObject.getJrxml(), resultToUpdate.getMainReport(), options));
         List<ResourceReference> inputControls = null;
         final List<ClientReferenceableInputControl> clientInputControls = clientObject.getInputControls();
         if (clientInputControls != null && !clientInputControls.isEmpty()) {
@@ -99,20 +100,20 @@ public class GenericReportUnitResourceConverter
             final ResourceReferenceConverter<ClientReferenceableInputControl> inputControlReferenceConverter =
                     resourceReferenceConverterProvider.getConverterForType(ClientReferenceableInputControl.class);
             for (ClientReferenceableInputControl inputControlReference : clientInputControls) {
-                inputControls.add(inputControlReferenceConverter.toServer(inputControlReference,
-                        findReference(resultToUpdate.getInputControls(), inputControlReference.getUri()), options));
+                inputControls.add(inputControlReferenceConverter.toServer(ctx,
+                        inputControlReference, findReference(resultToUpdate.getInputControls(), inputControlReference.getUri()), options));
             }
         }
         resultToUpdate.setInputControls(inputControls);
         // Raw List is used in core classes, but it is of type List<ResourceReference>. So, cast is safe.
         @SuppressWarnings("unchecked")
         final List<ResourceReference> resources = resultToUpdate.getResources();
-        resultToUpdate.setResources(convertResourcesToServer(clientObject.getFiles(), resources, options));
+        resultToUpdate.setResources(convertResourcesToServer(ctx, clientObject.getFiles(), resources, options));
         return resultToUpdate;
     }
 
-    protected List<ResourceReference> convertResourcesToServer(Map<String, ClientReferenceableFile> clientResources,
-            List<ResourceReference> serverReferencesToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected List<ResourceReference> convertResourcesToServer(ExecutionContext ctx, Map<String, ClientReferenceableFile> clientResources,
+                                                               List<ResourceReference> serverReferencesToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         List<ResourceReference> result = new ArrayList<ResourceReference>();
         if (clientResources != null && !clientResources.isEmpty()) {
             Map<String, ResourceReference> serverResourcesMap = getServerResourcesAsMap(serverReferencesToUpdate);
@@ -145,7 +146,7 @@ public class GenericReportUnitResourceConverter
                     if (serverObjectToUpdate == null) {
                         // new local FileResource-reference should be created
                         // ensure, that reference points to a valid file resource
-                        fileResourceReferenceConverter.toServer(clientObject, options);
+                        fileResourceReferenceConverter.toServer(ctx, clientObject, options);
                         FileResource fileResourceReference = (FileResource) objectFactory.newResource(null, FileResource.class);
                         fileResourceReference.setName(currentResourceName);
                         fileResourceReference.setLabel(currentResourceName);
@@ -156,14 +157,14 @@ public class GenericReportUnitResourceConverter
                         if (localResource.isReference() && !clientObject.getUri().equals(localResource.getReferenceURI())) {
                             // reference URI is changed. Let's validate reference target
                             // ensure, that reference points to a valid file resource
-                            fileResourceReferenceConverter.toServer(clientObject, options);
+                            fileResourceReferenceConverter.toServer(ctx, clientObject, options);
                             // update reference if conversion above succeed
                             ((FileResource) serverObjectToUpdate.getLocalResource()).setReferenceURI(clientObject.getUri());
                         }
                     }
                 } else {
                     // normal file reference case.
-                    serverObjectToUpdate = fileResourceReferenceConverter.toServer(clientObject, serverObjectToUpdate, options);
+                    serverObjectToUpdate = fileResourceReferenceConverter.toServer(ctx, clientObject, serverObjectToUpdate, options);
                     if (serverObjectToUpdate != null && serverObjectToUpdate.getLocalResource() != null) {
                         // explicitly set file resource name. It is required for the case if local resource should be created.
                         // In update case the name is the same, in create case original name doesn't matter,

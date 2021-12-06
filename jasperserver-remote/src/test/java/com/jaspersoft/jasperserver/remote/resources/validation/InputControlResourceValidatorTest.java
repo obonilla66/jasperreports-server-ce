@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -64,6 +66,7 @@ public class InputControlResourceValidatorTest {
     private Map<String, Object> configuration;
 
     private InputControl control;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init(){
@@ -133,14 +136,14 @@ public class InputControlResourceValidatorTest {
 
     @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
     public void testValidate() throws Exception {
-        validator.validate(control);
+        validator.validate(ctx, control);
     }
 
     @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
     public void testValidate_unknownType() throws Exception {
         reset(inputControlTypeConfiguration);
 
-        final List<Exception> exceptions = validator.validate(control);
+        final List<Exception> exceptions = validator.validate(ctx, control);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -150,7 +153,7 @@ public class InputControlResourceValidatorTest {
     public void testValidate_simpleType_nothingShouldBeSet() throws Exception {
         control.setDataTypeReference("/a");
 
-        final List<Exception> exceptions = validator.validate(control);
+        final List<Exception> exceptions = validator.validate(ctx, control);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -163,7 +166,7 @@ public class InputControlResourceValidatorTest {
         when(configuration.get(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn("dataType");
         when(configuration.containsKey(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn(true);
 
-        validator.validate(control);
+        validator.validate(ctx, control);
     }
 
     @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
@@ -174,7 +177,7 @@ public class InputControlResourceValidatorTest {
         when(configuration.get(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn("dataType");
         when(configuration.containsKey(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn(true);
 
-        final List<Exception> exceptions = validator.validate(control);
+        final List<Exception> exceptions = validator.validate(ctx, control);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -188,7 +191,7 @@ public class InputControlResourceValidatorTest {
         when(configuration.get(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn("dataType;listOfValues");
         when(configuration.containsKey(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn(true);
 
-        validator.validate(control);
+        validator.validate(ctx, control);
     }
 
     @Test(groups = {"VALIDATE"}, dependsOnGroups = {"INIT"})
@@ -198,7 +201,7 @@ public class InputControlResourceValidatorTest {
         when(configuration.get(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn("listOfValues");
         when(configuration.containsKey(InputControlResourceValidator.PROPERTY_REQUIRED)).thenReturn(true);
 
-        final List<Exception> exceptions = validator.validate(control);
+        final List<Exception> exceptions = validator.validate(ctx, control);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

@@ -64,18 +64,18 @@ public class BaseClientExecutionValidator implements ClientValidator<AbstractCli
     private DefaultMessageApplier defaultMessageApplier;
 
     @Override
-    public List<Exception> validate(AbstractClientExecution value) {
+    public List<Exception> validate(ExecutionContext ctx, AbstractClientExecution value) {
         List<Exception> exceptions = new ArrayList<Exception>();
 
         if (value.getDataSource() != null && value.getDataSource() instanceof ClientReference) {
-            validate(value.getDataSource().getUri(), exceptions);
+            validate(ctx, value.getDataSource(), exceptions);
         }
 
         return exceptions;
     }
 
-    private void validate(String dataSourceUri, List<Exception> exceptions) {
-        ExecutionContext context = ExecutionContextImpl.getRuntimeExecutionContext();
+    private void validate(ExecutionContext context, ClientReferenceable dataSource, List<Exception> exceptions) {
+        String dataSourceUri = dataSource.getUri();
 
         if (StringUtils.isEmpty(dataSourceUri)) {
             exceptions.add(new MandatoryParameterNotFoundException("reference.uri"));
@@ -89,7 +89,7 @@ public class BaseClientExecutionValidator implements ClientValidator<AbstractCli
 
                     // Used "getResource()" call instead of "resourceExists()" because it
                     // throws AccessDeniedException
-                } else if ((resource = repositoryService.getResource(context, dataSourceUri)) == null) {
+                } else if ((resource = getResource(context, dataSource)) == null) {
                     exceptions.add(badRequestException(QUERY_DATASOURCE_NOT_FOUND.createDescriptor(dataSourceUri)));
                 } else {
                     boolean canBeConverted = false;
@@ -109,6 +109,15 @@ public class BaseClientExecutionValidator implements ClientValidator<AbstractCli
             } catch (org.springframework.security.access.AccessDeniedException e) {
                 exceptions.add(badRequestException(QUERY_DATASOURCE_ACCESS_DENIED.createDescriptor(dataSourceUri)));
             }
+        }
+    }
+
+    private Resource getResource(ExecutionContext context, ClientReferenceable dataSource){
+        try {
+            context.getAttributes().add(dataSource);
+            return repositoryService.getResource(context, dataSource.getUri());
+        } finally {
+            context.getAttributes().remove(dataSource);
         }
     }
 

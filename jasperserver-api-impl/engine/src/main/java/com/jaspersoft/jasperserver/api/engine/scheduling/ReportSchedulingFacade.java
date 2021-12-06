@@ -658,16 +658,20 @@ public class ReportSchedulingFacade
 
     @Override
     public List<Long> pauseJobs(ExecutionContext context, List<ReportJobIdHolder> jobs, boolean all) {
-        scheduler.pauseById(jobs, all); // for now this method is not in the interface
         ArrayList<Long> pausedIds = new ArrayList<Long>();
+        List<ReportJobIdHolder> accessableJobs = new ArrayList<ReportJobIdHolder>();
         for (Iterator<ReportJobIdHolder> iterator = jobs.iterator(); iterator.hasNext(); ) {
-            long id = iterator.next().getId();
+            ReportJobIdHolder currentJob = iterator.next();
             try {
-                addParamsToAuditEvent(getScheduledJob(context, id), PAUSE_REPORT_SCHEDULING.toString());
-                pausedIds.add(id);
+                addParamsToAuditEvent(getScheduledJob(context, currentJob.getId()), PAUSE_REPORT_SCHEDULING.toString());
+                pausedIds.add(currentJob.getId());
+                accessableJobs.add(currentJob);
             } catch (ReportJobNotFoundException e) {
                 iterator.remove();
             }
+        }
+        if (!accessableJobs.isEmpty()) {
+            scheduler.pauseById(accessableJobs, all); // for now this method is not in the interface
         }
         return pausedIds;
     }

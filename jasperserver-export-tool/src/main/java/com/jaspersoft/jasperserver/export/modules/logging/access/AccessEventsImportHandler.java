@@ -31,4 +31,5 @@ import com.jaspersoft.jasperserver.export.modules.common.TenantQualifiedName;
 public interface AccessEventsImportHandler {
     public User resolveUser(TenantQualifiedName userName);
     public Resource resolveResource(String uri);
+    public boolean isLocalFolder(String uri);
 }

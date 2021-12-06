@@ -27,6 +27,8 @@ import com.jaspersoft.jasperserver.dto.resources.domain.validation.ValidEnumValu
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -36,7 +38,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Yaroslav.Kovalchyk
  * @version $Id$
  */
-public class Join implements DeepCloneable<Join> {
+public class Join implements DeepCloneable<Join>, Serializable {
     public static final String ERROR_CODE_DOMAIN_SCHEMA_JOIN_TYPE_INVALID = "domain.schema.resources.join.type";
     @NotNull
     private String left;

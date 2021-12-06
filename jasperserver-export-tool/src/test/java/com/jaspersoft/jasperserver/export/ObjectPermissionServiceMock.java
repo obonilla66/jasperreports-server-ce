@@ -73,6 +73,10 @@ public class ObjectPermissionServiceMock implements ObjectPermissionService {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    public boolean isObjectReadOnlyAccessible(ExecutionContext context, Object targetObject) {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
     public void putObjectPermission(ExecutionContext context, ObjectPermission objPerm) {
         //To change body of implemented methods use File | Settings | File Templates.
     }

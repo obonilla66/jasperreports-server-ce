@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationDetail;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationResult;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
@@ -49,7 +50,7 @@ public class OlapUnitValidator extends GenericResourceValidator<OlapUnit> {
     private OlapConnectionService olapConnectionService;
 
     @Override
-    protected void internalValidate(OlapUnit resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, OlapUnit resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getMdxQuery())){
             errors.add(new MandatoryParameterNotFoundException("mdxQuery"));
         }

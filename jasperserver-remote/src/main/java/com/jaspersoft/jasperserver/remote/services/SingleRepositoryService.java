@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.services;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
@@ -43,6 +44,8 @@ import java.util.Map;
  */
 public interface SingleRepositoryService {
     Resource getResource(String uri);
+
+    Resource getResource(String uri, String source);
 
     FileResourceData getFileResourceData(String uri);
 

@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.Map;
  * @version $Id$
  */
 public interface ResourceValidator<ResourceType extends Resource> {
-    List<Exception> validate(ResourceType resource);
-    List<Exception> validate(ResourceType resource, boolean skipRepoFieldsValidation,
-            Map<String, String[]> additionalParameters);
+    List<Exception> validate(ExecutionContext ctx, ResourceType resource);
+    List<Exception> validate(ExecutionContext ctx, ResourceType resource, boolean skipRepoFieldsValidation,
+                             Map<String, String[]> additionalParameters);
 }

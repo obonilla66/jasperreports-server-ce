@@ -37,11 +37,14 @@ public class ByAccessTimeSorter extends SearchSorter {
 
     @Override
     protected void addProjection(String type, ExecutionContext context, SearchCriteria criteria) {
+        return;
+ /*
         String alias = criteria.getAlias("accessEvents", "ae");
         criteria.addProjection(Projections.projectionList().
                 add(Projections.max(alias + ".eventDate"), "aed").
                 add(Projections.groupProperty("id")));
 
         criteria.addOrder(Order.desc("aed"));
+*/
     }
 }

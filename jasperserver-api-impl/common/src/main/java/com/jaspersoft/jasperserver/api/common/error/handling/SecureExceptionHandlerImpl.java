@@ -77,6 +77,7 @@ public final class SecureExceptionHandlerImpl implements SecureExceptionHandler 
     }
 
     private ErrorDescriptor handleException(Throwable t, String errorCode, String errorMessage, Locale locale) {
+//        logger.error(t);
         final Locale loc = locale != null ? locale : LocaleContextHolder.getLocale();
         if (errorMessage == null && errorCode != null)
 			errorMessage = extractErrorMessageForErrorCode(errorCode, null, loc);
@@ -113,8 +114,16 @@ public final class SecureExceptionHandlerImpl implements SecureExceptionHandler 
 
             errorDescriptor.addParameters(stackTraceBuffer);
         }
-        if (logger != null) logger.error(errorDescriptor.getMessage(), errorDescriptor.getException());
 		errorDescriptor.setException(t);
+        if (logger != null) {
+            final String message;
+            if (t != null) {
+                message = errorDescriptor.getMessage()  + (t.getCause() != null ? ". " + t.getCause().getMessage() : "");
+            } else {
+                message = errorDescriptor.getMessage();
+            }
+            logger.error(message, errorDescriptor.getException());
+        }
         return errorDescriptor;
     }
 

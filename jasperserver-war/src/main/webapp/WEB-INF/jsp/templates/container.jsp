@@ -77,7 +77,7 @@ NOTES:
 <tx:useAttribute id="containerAttributes" name="containerAttributes" classname="java.lang.String" ignore="true"/>
 <tx:useAttribute id="containerElements" name="containerElements" classname="java.lang.String" ignore="true"/>
 <tx:useAttribute id="containerTitle" name="containerTitle" classname="java.lang.String" ignore="true"/>
-
+<tx:useAttribute id="containerTitleEmpty" name="containerTitleEmpty" classname="java.lang.Boolean" ignore="true"/>
 <tx:useAttribute id="contentID" name="contentID" classname="java.lang.String" ignore="true"/>
 <tx:useAttribute id="contentClass" name="contentClass" classname="java.lang.String" ignore="true"/>
 <tx:useAttribute id="contentAttributes" name="contentAttributes" classname="java.lang.String" ignore="true"/>
@@ -132,9 +132,11 @@ NOTES:
     </c:if>
     <c:if test="${(containerTitle != null) || (headerContent != null) || (headerClass != null)|| (headerID != null)|| (headerAttributes != null)}">
 		<div <c:if test="${headerID != null}">id="${headerID}"</c:if> class="header ${headerClass}" ${headerAttributes}>
-            <div class="title">
-                ${containerTitle}
-            </div>
+            <c:if test="${(containerTitleEmpty != true)}">
+                <div class="title">
+                    ${containerTitle}
+                </div>
+            </c:if>
             ${headerContent}
             <%--
             <c:choose>

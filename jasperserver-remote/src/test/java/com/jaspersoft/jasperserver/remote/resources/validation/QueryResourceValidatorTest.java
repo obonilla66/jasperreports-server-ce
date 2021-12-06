@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.QueryImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -54,6 +56,7 @@ public class QueryResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     Query query;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init(){
@@ -75,14 +78,14 @@ public class QueryResourceValidatorTest {
     @Test
     public void testValidate() throws Exception {
 
-        validator.validate(query);
+        validator.validate(ctx, query);
     }
 
     @Test
     public void testValidate_emtyLanguage() throws Exception {
         query.setLanguage("");
 
-        final List<Exception> exceptions = validator.validate(query);
+        final List<Exception> exceptions = validator.validate(ctx, query);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -92,7 +95,7 @@ public class QueryResourceValidatorTest {
     public void testValidate_emptyQuery() throws Exception {
         query.setSql("");
 
-        final List<Exception> exceptions = validator.validate(query);
+        final List<Exception> exceptions = validator.validate(ctx, query);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

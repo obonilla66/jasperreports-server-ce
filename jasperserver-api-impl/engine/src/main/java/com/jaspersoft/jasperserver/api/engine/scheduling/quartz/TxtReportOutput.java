@@ -89,8 +89,8 @@ public class TxtReportOutput extends AbstractReportOutput
 				close = false;
 				txtDataOut.close();
 
-				String fileName = jobContext.getBaseFilename() + ".txt";
-				return new ReportOutput(txtData, ContentResource.TYPE_TXT, fileName);
+				String fileName = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(txtData, getFileType(), fileName);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -133,5 +133,15 @@ public class TxtReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "txt";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_TXT;
 	}
 }

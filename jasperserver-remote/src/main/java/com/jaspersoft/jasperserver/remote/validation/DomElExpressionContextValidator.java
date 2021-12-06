@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.dto.domain.DomElExpressionContext;
 import org.springframework.stereotype.Component;
 
@@ -39,8 +40,8 @@ public class DomElExpressionContextValidator implements ClientValidator<DomElExp
     ConsistentExpressionRepresentationsValidator representationsValidator;
 
     @Override
-    public List<Exception> validate(DomElExpressionContext value) {
-        return representationsValidator.validate(value.getExpression());
+    public List<Exception> validate(ExecutionContext ctx, DomElExpressionContext value) {
+        return representationsValidator.validate(ctx, value.getExpression());
     }
 
 }

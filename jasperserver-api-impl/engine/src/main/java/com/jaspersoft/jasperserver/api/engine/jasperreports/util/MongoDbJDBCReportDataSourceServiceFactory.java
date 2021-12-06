@@ -91,7 +91,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
                 jdbcReportDataSource.getUsername(), jdbcReportDataSource.getPassword());
 
         String timeZone = ((String) ((CustomReportDataSource) reportDataSource).getPropertyMap().get("timeZone"));
-        return new MongoDbJDBCReportDataSourceService(dataSource, getTimeZoneByDataSourceTimeZone(timeZone));
+        return new MongoDbJDBCReportDataSourceService(dataSource, getTimeZoneByDataSourceTimeZone(timeZone)).withTracer(tracer);
 
 	}
 
@@ -221,7 +221,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
         debug("SAVE FILE TO RESOURCE...");
         String diskFile = getPropertyValue(jdbcReportDataSource.getConnectionUrl(), "SchemaDefinition");
         FileResourceImpl fileResourceImpl = new FileResourceImpl();
-        fileResourceImpl.setFileType(".config");
+        fileResourceImpl.setFileType("mongoDbSchema");
         fileResourceImpl.setName(customReportDataSource.getName() + "_SCHEMA");
         fileResourceImpl.setLabel(customReportDataSource.getName() + "_SCHEMA");
         fileResourceImpl.setParentFolder(customReportDataSource.getParentFolder());
@@ -374,7 +374,7 @@ public class MongoDbJDBCReportDataSourceServiceFactory extends JdbcReportDataSou
         if (getMongoDBJDBCSchemaDefinitionTimeoutInMinute() <= 0) return;
         List expired = null;
         synchronized (jdbcSchemaCache) {
-            expired = jdbcSchemaCache.removeExpired(now, getMongoDBJDBCSchemaDefinitionTimeoutInMinute() * 60);
+            expired = jdbcSchemaCache.removeExpired(now, getMongoDBJDBCSchemaDefinitionTimeoutInMinute() * 60,getAthenaPoolTimeOut() * 60);
         }
 
         if (expired != null && !expired.isEmpty()) {

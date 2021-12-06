@@ -34,8 +34,18 @@ import java.util.Set;
 @XmlRootElement(name = "outputFormats")
 public class ReportJobOutputFormatsWrapper {
 
+	private String exportType;
     private Set<String> formats;
-    @XmlElement(name = "outputFormat")
+
+	public String getExportType() {
+		return exportType;
+	}
+
+	public void setExportType(String exportType) {
+		this.exportType = exportType;
+	}
+
+	@XmlElement(name = "outputFormat")
     public Set<String> getFormats() {
         return formats;
     }

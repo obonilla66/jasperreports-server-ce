@@ -52,19 +52,8 @@
 
     <!--menu for toolbar options-->
     <context name="toolbar_options">
-        <selectAction labelKey="hidden">
-            <option labelKey="ADH_1150_TOOLBAR_MENU_TOGGLE_TITLE_BAR" action="adhocDesigner.toggleTitleBar"/>
-        </selectAction>
         <simpleAction labelKey="ADH_1213_SHOW_DISPLAY_MANAGER" clientTest="!adhocDesigner.isDisplayManagerVisible" action="adhocDesigner.toggleDisplayManager"/>
         <simpleAction labelKey="ADH_1213_HIDE_DISPLAY_MANAGER" clientTest="adhocDesigner.isDisplayManagerVisible" action="adhocDesigner.toggleDisplayManager"/>
-
-        <condition test="allowToggleUseDomainLabels">
-
-            <simpleAction labelKey="adhoc.designer.menu.use.domain.labels" clientTest="!adhocDesigner.isUseDomainLabels"
-                          action="adhocDesigner.toggleUseDomainLabels"/>
-            <simpleAction labelKey="adhoc.designer.menu.use.previous.labels"
-                          clientTest="adhocDesigner.isUseDomainLabels" action="adhocDesigner.toggleUseDomainLabels"/>
-        </condition>
     </context>
 
     <!--menu for toolbar export-->
@@ -144,7 +133,7 @@
         <simpleAction clientTest="AdHocTable.canMoveGroupUp" labelKey="ADH_084_MOVE_UP" action="AdHocTable.moveGroupUp"/>
         <simpleAction clientTest="AdHocTable.canMoveGroupDown" labelKey="ADH_085_MOVE_DOWN" action="AdHocTable.moveGroupDown"/>
     </context>
-    
+
     <!--Display Manager column clicked-->
     <context name="displayManagerColumn">
         <condition test="getIsDesignView">
@@ -242,17 +231,4 @@
     <context name="availableMeasuresMenu">
         <simpleAction labelKey="ADH_400_MENU_CREATE_CALCULATED_MEASURE" action="adhocDesigner.createCalculatedMeasure"/>
     </context>
-
-    <!--menu located in table header-->
-    <context name="tableOptions_mutton">
-        <selectAction labelKey="ADH_1235_MENU_GRID_SELECTOR">
-            <option labelKey="ADH_1232_MENU_DETAILED_DATA" action="AdHocTable.toggleGridMode" actionArgs="d" isSelectedTest="AdHocTable.isSelectedGridMode" isSelectedTestArgs="d" />
-            <option labelKey="ADH_1233_MENU_TOTALS_DATA" action="AdHocTable.toggleGridMode" actionArgs="t" isSelectedTest="AdHocTable.isSelectedGridMode" isSelectedTestArgs="t" />
-            <option labelKey="ADH_1234_MENU_DETAILS_AND_TOTALS" action="AdHocTable.toggleGridMode" actionArgs="dt" isSelectedTest="AdHocTable.isSelectedGridMode" isSelectedTestArgs="dt" />
-        </selectAction>
-        <separator />
-        <simpleAction labelKey="ADH_1239_MENU_SHOW_DUPLICATE_ROWS" clientTest="AdHocTable.isShowDistinctRowValues" action="AdHocTable.toggleDuplicateTableRows" actionArgs="false"/>
-        <simpleAction labelKey="ADH_1238_MENU_HIDE_DUPLICATE_ROWS" clientTest="AdHocTable.isHideDistinctRowValues" action="AdHocTable.toggleDuplicateTableRows" actionArgs="true"/>
-    </context>
-
 </actions>

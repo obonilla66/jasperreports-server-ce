@@ -47,4 +47,12 @@ public interface Output extends Serializable
 			JasperPrint jasperPrint) throws JobExecutionException;
 
 	public Boolean isPaginationPreferred(JRPropertiesHolder propertiesHolder);
+	
+	default public String getFileExtension() {
+		throw new UnsupportedOperationException();
+	}
+	
+	default public String getFileType() {
+		throw new UnsupportedOperationException();
+	}
 }

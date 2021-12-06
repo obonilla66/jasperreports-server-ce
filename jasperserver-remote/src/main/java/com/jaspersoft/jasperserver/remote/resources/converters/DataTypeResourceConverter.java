@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.dto.resources.ClientDataType;
@@ -43,7 +44,7 @@ public class DataTypeResourceConverter extends ResourceConverterImpl<DataType, C
     private DataConverterService dataConverterService;
 
     @Override
-    protected DataType resourceSpecificFieldsToServer(ClientDataType clientObject, DataType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected DataType resourceSpecificFieldsToServer(ExecutionContext ctx, ClientDataType clientObject, DataType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         byte type;
         if (clientObject.getType() != null) {
             switch (clientObject.getType()) {

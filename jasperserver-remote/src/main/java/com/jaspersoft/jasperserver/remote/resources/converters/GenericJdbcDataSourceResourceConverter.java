@@ -20,10 +20,14 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import com.jaspersoft.jasperserver.dto.resources.AbstractClientJdbcDataSource;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
@@ -34,21 +38,38 @@ import java.util.List;
  * @version $Id$
  */
 public class GenericJdbcDataSourceResourceConverter<JdbcDataSourceType extends JdbcReportDataSource, ClientJdbcDataSourceType extends AbstractClientJdbcDataSource<ClientJdbcDataSourceType>> extends ResourceConverterImpl<JdbcDataSourceType, ClientJdbcDataSourceType> {
+
+    @Autowired
+    private ProfileAttributesResolver profileAttributesResolver;
+
     @Override
-    protected JdbcDataSourceType resourceSpecificFieldsToServer(ClientJdbcDataSourceType clientObject, JdbcDataSourceType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected JdbcDataSourceType resourceSpecificFieldsToServer(ExecutionContext ctx, ClientJdbcDataSourceType clientObject, JdbcDataSourceType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setConnectionUrl(clientObject.getConnectionUrl());
         resultToUpdate.setDriverClass(clientObject.getDriverClass());
         resultToUpdate.setUsername(clientObject.getUsername());
         resultToUpdate.setTimezone(clientObject.getTimezone());
 
         if (clientObject.getPassword() != null) {
-            resultToUpdate.setPassword(clientObject.getPassword());
+            if (options != null && options.isEnableDecryption())
+                resultToUpdate.setPassword(PasswordCipherer.getInstance().decodePassword(clientObject.getPassword()));
+            else
+                resultToUpdate.setPassword(clientObject.getPassword());
         }
         return resultToUpdate;
     }
 
     @Override
     protected ClientJdbcDataSourceType resourceSpecificFieldsToClient(ClientJdbcDataSourceType client, JdbcDataSourceType serverObject, ToClientConversionOptions options) {
+
+        if (options != null && options.getIncludes() != null && options.getIncludes().contains("profileAttributesResolved")) {
+            JdbcReportDataSource updatedJdbcDataSource = profileAttributesResolver.mergeResource(serverObject);
+            if (updatedJdbcDataSource != null) {
+                serverObject = (JdbcDataSourceType) updatedJdbcDataSource;
+            }
+            // copy password
+            client.setPassword(serverObject.getPassword());
+        }
+
         client.setConnectionUrl(serverObject.getConnectionUrl());
         client.setDriverClass(serverObject.getDriverClass());
         client.setUsername(serverObject.getUsername());
@@ -58,6 +79,17 @@ public class GenericJdbcDataSourceResourceConverter<JdbcDataSourceType extends J
 
     @Override
     protected void resourceSecureFieldsToClient(ClientJdbcDataSourceType client, JdbcDataSourceType serverObject, ToClientConversionOptions options) {
-        client.setPassword(serverObject.getPassword());
+        if (options != null && options.isEnableEncryption())
+            client.setPassword(PasswordCipherer.getInstance().encodePassword(serverObject.getPassword()));
+        else
+            client.setPassword(serverObject.getPassword());
+    }
+
+    public ProfileAttributesResolver getProfileAttributesResolver() {
+        return profileAttributesResolver;
+    }
+
+    public void setProfileAttributesResolver(ProfileAttributesResolver profileAttributesResolver) {
+        this.profileAttributesResolver = profileAttributesResolver;
     }
 }

@@ -23,11 +23,12 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.expansion;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * @author Andriy Godovanets
  */
-public interface ClientExpandable<T> extends DeepCloneable<ClientExpandable> {
+public interface ClientExpandable<T> extends DeepCloneable<ClientExpandable>, Serializable {
     /**
      * Is item (member/level) expanded
      * @return boolean value

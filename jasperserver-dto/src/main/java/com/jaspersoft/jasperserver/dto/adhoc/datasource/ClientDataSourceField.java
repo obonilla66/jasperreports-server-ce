@@ -29,12 +29,14 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Andriy Godovanets
  */
-public class ClientDataSourceField implements ClientField, ClientAggregate, ClientFormattable, DeepCloneable<ClientDataSourceField> {
+public class ClientDataSourceField implements ClientField, ClientAggregate, ClientFormattable, DeepCloneable<ClientDataSourceField>, Serializable {
     @NotNull
     private String name;
     private String type;

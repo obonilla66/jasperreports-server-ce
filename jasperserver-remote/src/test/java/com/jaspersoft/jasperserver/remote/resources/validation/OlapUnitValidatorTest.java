@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.remote.resources.validation;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationResult;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationDetailImpl;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationResultImpl;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
@@ -59,6 +60,7 @@ public class OlapUnitValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private OlapUnit unit;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -82,13 +84,13 @@ public class OlapUnitValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(unit);
+        validator.validate(ctx, unit);
     }
 
     @Test
     public void testValidate_noQuery() throws Exception {
         unit.setMdxQuery(null);
-        final List<Exception> exceptions = validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(ctx, unit);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -97,7 +99,7 @@ public class OlapUnitValidatorTest {
     @Test
     public void testValidate_emptyQuery() throws Exception {
         unit.setMdxQuery("");
-        final List<Exception> exceptions = validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(ctx, unit);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -106,7 +108,7 @@ public class OlapUnitValidatorTest {
     @Test
     public void testValidate_noConnection() throws Exception {
         unit.setOlapClientConnectionReference(null);
-        final List<Exception> exceptions = validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(ctx, unit);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -127,7 +129,7 @@ public class OlapUnitValidatorTest {
         ValidationResultImpl validationResult = new ValidationResultImpl();
         validationResult.addValidationDetail(detail);
         when(olapConnectionService.validate(nullable(ExecutionContext.class), any(OlapUnit.class))).thenReturn(validationResult);
-        final List<Exception> exceptions = validator.validate(unit);
+        final List<Exception> exceptions = validator.validate(ctx, unit);
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
     }

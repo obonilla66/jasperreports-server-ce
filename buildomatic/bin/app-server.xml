@@ -39,12 +39,14 @@
         <element name="transactions" implicit="yes" optional="true"/>
 
         <sequential>
-
+            <script language="javascript">
+                project.setProperty("jdbcUrl","@{jdbcUrl}".split("amp;").join(""));
+            </script>
             <validateJdbcJar calling-target-context="runSQL" />  <!-- chk for existence of jdbc jar -->
 
             <advanced-sql
                     driver="${jdbcDriverClass}"
-                    url="@{jdbcUrl}"
+                    url="${jdbcUrl}"
                     userid="@{dbUsername}"
                     password="@{dbPassword}"
                     print="@{print}"
@@ -309,6 +311,30 @@
             description="Deploy for developer special ui setup using Tomcat 7 virtual directories">
     </target>
 
+    <target name="scalableAdhoc-refinement">
+        <if>
+            <equals arg1="${jsEdition}" arg2="pro" />
+        	<then>
+        	    <if>
+        	    	<equals arg1="${scalableQueryEngine.enabled}" arg2="true" />
+                    <then>
+                        <if>
+                            <isset property="scalableQueryEngine.url"/>
+                            <then>
+                                <replace file="${warTargetDir}/WEB-INF/web.xml" token="http://adhoc-kubernetes-ingress.default.svc.cluster.local/query-engine" value="${scalableQueryEngine.url}"/>
+                            </then>
+                        </if>
+                    </then>
+                    <else>
+                        <xslt in="${warTargetDir}/WEB-INF/web.xml" out="${warTargetDir}/WEB-INF/web-temp.xml" style="bin/web-xml-cleanup.xsl"/>
+                        <delete file="${warTargetDir}/WEB-INF/web.xml"/>
+                        <move file="${warTargetDir}/WEB-INF/web-temp.xml" tofile="${warTargetDir}/WEB-INF/web.xml"/>
+                    </else>
+        		</if>
+        	</then>
+        </if>
+    </target>
+
     <target name="delete-folders-for-ui-setup"
             description="Tomcat 7 can setup virtual directories.
                        delete ui folders inside of tomcat.
@@ -404,10 +430,8 @@ tomcat copies to this location from the jasperserver war file META-INF/context.x
                 </if>
             </then>
         </if>
-
-
     </target>
-    
+
     <target name="deploy-webapp"
             depends="deploy-jdbc-jar"
             description="copy webapp to app server with template files">
@@ -699,7 +723,7 @@ tomcat copies to this location from the jasperserver war file META-INF/context.x
                               tofile="${fixedAppServerDir}/modules/jaspersoft/org/apache/batik/main/module.xml"
                               overwrite="true"/>
                         <copy toDir="${fixedAppServerDir}/modules/jaspersoft/org/apache/batik/main">
-                              <fileset dir="${warTargetDir}/WEB-INF/lib" includes="batik-anim-1.11.jar, batik-awt-util-1.11.jar, batik-bridge-1.11.jar, batik-constants-1.11.jar, batik-css-1.11.jar, batik-dom-1.11.jar, batik-ext-1.11.jar, batik-gvt-1.11.jar, batik-i18n-1.11.jar, batik-parser-1.11.jar, batik-script-1.11.jar, batik-svg-dom-1.11.jar, batik-svggen-1.11.jar, batik-transcoder-1.11.jar, batik-util-1.11.jar, batik-xml-1.11.jar, xml-apis-ext-1.3.04.jar, xmlgraphics-commons-2.3.jar"/>
+                              <fileset dir="${warTargetDir}/WEB-INF/lib" includes="batik-anim-1.14.jar, batik-awt-util-1.14.jar, batik-bridge-1.14.jar, batik-constants-1.14.jar, batik-css-1.14.jar, batik-dom-1.14.jar, batik-ext-1.14.jar, batik-gvt-1.14.jar, batik-i18n-1.14.jar, batik-parser-1.14.jar, batik-script-1.14.jar, batik-svg-dom-1.14.jar, batik-svggen-1.14.jar, batik-transcoder-1.14.jar, batik-util-1.14.jar, batik-xml-1.14.jar, batik-shared-resources-1.14.jar, xml-apis-ext-1.3.04.jar, xmlgraphics-commons-2.6.jar"/>
                         </copy>
 
                         <copy file="${currentConf}/../../install_resources/jboss7/module_descriptors/module_javax_validation_api.xml"
@@ -853,7 +877,7 @@ tomcat copies to this location from the jasperserver war file META-INF/context.x
                         <!--  JRS jars that overlap JBoss Modules -->
                         <delete>
                             <fileset dir="${warTargetDir}/WEB-INF/lib"
-                                     includes="commons-io-1.4.jar, serializer-2.7.2.jar, xalan-2.7.2.jar, xercesImpl-2.12.0.jar, xml-apis-1.4.01.jar, narayana-jta-5.2.12.Final.jar"/>
+                                     includes="commons-io-1.4.jar, serializer-2.7.2.jar, xalan-2.7.2.jar, xercesImpl-2.12.1-sp1.jar, xml-apis-1.4.01.jar, narayana-jta-5.2.12.Final.jar"/>
                         </delete>
 
                         <!-- http://bugzilla.jaspersoft.com/show_bug.cgi?id=31907
@@ -865,7 +889,7 @@ tomcat copies to this location from the jasperserver war file META-INF/context.x
                         -->
                         <delete>
                              <fileset dir="${warTargetDir}/WEB-INF/lib"
-                                      includes="batik-anim-1.11.jar, batik-awt-util-1.11.jar, batik-bridge-1.11.jar, batik-constants-1.11.jar, batik-css-1.11.jar, batik-dom-1.11.jar, batik-ext-1.11.jar, batik-gvt-1.11.jar, batik-i18n-1.11.jar, batik-parser-1.11.jar, batik-script-1.11.jar, batik-svg-dom-1.11.jar, batik-svggen-1.11.jar, batik-transcoder-1.11.jar, batik-util-1.11.jar, batik-xml-1.11.jar, xml-apis-ext-1.3.04.jar, xmlgraphics-commons-2.3.jar"/>
+                                      includes="batik-anim-1.14.jar, batik-awt-util-1.14.jar, batik-bridge-1.14.jar, batik-constants-1.14.jar, batik-css-1.14.jar, batik-dom-1.14.jar, batik-ext-1.14.jar, batik-gvt-1.14.jar, batik-i18n-1.14.jar, batik-parser-1.14.jar, batik-script-1.14.jar, batik-svg-dom-1.14.jar, batik-svggen-1.14.jar, batik-transcoder-1.14.jar, batik-util-1.14.jar, batik-xml-1.14.jar, batik-shared-resources-1.14.jar, xml-apis-ext-1.3.04.jar, xmlgraphics-commons-2.6.jar"/>
                         </delete>
                         <!--   http://bugzilla.jaspersoft.com/show_bug.cgi?id=32933
                                2013-06-24  thorick
@@ -912,6 +936,7 @@ tomcat copies to this location from the jasperserver war file META-INF/context.x
             </then>
         </if>
 
+        <runtarget target="scalableAdhoc-refinement"/>
     </target>
 
 	<macrodef name="minimizeContextXml">

@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.XMLAConnection;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.client.XMLAConnectionImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -49,6 +51,7 @@ public class XmlaConnectionResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private XMLAConnection connection;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -68,13 +71,13 @@ public class XmlaConnectionResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(connection);
+        validator.validate(ctx, connection);
     }
 
     @Test
     public void testValidate_noCatalog() throws Exception {
         connection.setCatalog(null);
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -83,7 +86,7 @@ public class XmlaConnectionResourceValidatorTest {
     @Test
     public void testValidate_emptyDataSource() throws Exception {
         connection.setDataSource("");
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -92,13 +95,13 @@ public class XmlaConnectionResourceValidatorTest {
     @Test
     public void testValidate_noUri() throws Exception {
         connection.setURI(null);
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
     }
 
     @Test
     public void testValidate_emptyUsername() throws Exception {
         connection.setUsername("");
-        final List<Exception> exceptions = validator.validate(connection);
+        final List<Exception> exceptions = validator.validate(ctx, connection);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

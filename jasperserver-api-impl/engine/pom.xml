@@ -232,11 +232,15 @@
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
-            <version>0.13.0</version>
+            <version>0.14.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>tomcat-embed-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -372,6 +376,10 @@
             <artifactId>jasperserver-api-metadata-impl</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jaspersoft.jasperserver.api.common-ds</groupId>
+            <artifactId>common-ds</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.jaspersoft.jasperserver.api.common.impl</groupId>
             <artifactId>jasperserver-api-common-impl</artifactId>
             <scope>compile</scope>
@@ -498,7 +506,7 @@
         <dependency>
           <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
+            <version>${javax.servlet-api.version}</version>
           <scope>provided</scope>
         </dependency>
         <dependency>
@@ -553,6 +561,11 @@
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.54</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-sleuth-api</artifactId>
+            <version>3.0.3</version>
         </dependency>
     </dependencies>
     <build>

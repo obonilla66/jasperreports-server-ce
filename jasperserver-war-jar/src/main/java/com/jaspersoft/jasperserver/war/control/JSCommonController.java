@@ -33,10 +33,12 @@ import com.jaspersoft.jasperserver.war.common.LocalesList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.multiaction.NoSuchRequestHandlingMethodException;
+import org.springframework.web.servlet.View;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -45,13 +47,15 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.Locale;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 
 /**
  * @author aztec
  * @version $Id$
  */
-public class JSCommonController extends JRBaseMultiActionController {
-	public static final String JSP_REQUEST_HANDLING_PREFIX = "jsp:";
+public class JSCommonController extends JRBaseController {
     public static final String IS_DEVELOPMENT_ENVIRONMENT_TYPE = "isDevelopmentEnvironmentType";
     public static final String USERS_EXCEEDED = "usersExceeded";
     public static final String BAN_USER = "banUser";
@@ -78,14 +82,14 @@ public class JSCommonController extends JRBaseMultiActionController {
 			throws ServletException {
 		return new ModelAndView("modules/home");
 	}
-
+	@RequestMapping("/login.html")
     public ModelAndView login(HttpServletRequest req, HttpServletResponse res)
             throws ServletException {
         setupLoginPage(req);
 
         return new ModelAndView("modules/login/login");
     }
-
+	@RequestMapping("/externallogin.html")
     public ModelAndView externalLogin(HttpServletRequest req, HttpServletResponse res)
             throws ServletException {
 		req.setAttribute("externalAuthPropertiesBean", getExternalAuthPropertiesBean());
@@ -139,7 +143,7 @@ public class JSCommonController extends JRBaseMultiActionController {
         req.setAttribute(BAN_USER, false);
         req.setAttribute("isEncryptionOn", SecurityConfiguration.isEncryptionOn());
     }
-
+	@RequestMapping("/heartbeat.html")
     public ModelAndView heartbeat(HttpServletRequest req, HttpServletResponse res) throws ServletException {
         boolean isCallPermitted = false;
 
@@ -152,56 +156,74 @@ public class JSCommonController extends JRBaseMultiActionController {
 
         return new ModelAndView("ajax/ajaxresponse");
     }
-
+	@RequestMapping("/heartbeatInfo.html")
     public ModelAndView heartbeatInfo(HttpServletRequest req, HttpServletResponse res) throws ServletException {
-        final HeartbeatClientInfo info = new HeartbeatClientInfo();
+		final HeartbeatClientInfo info = new HeartbeatClientInfo();
 
-        info.setNavigatorAppName(req.getParameter("navAppName"));
-        info.setNavigatorAppVersion(req.getParameter("navAppVersion"));
-        info.setNavigatorLocale(req.getLocale());
-        info.setUserLocale(LocaleContextHolder.getLocale());
-        if (req.getParameter("scrWidth") != null) {
-            info.setScreenWidth(new Integer(req.getParameter("scrWidth")));
-        }
-        if (req.getParameter("scrHeight") != null) {
-            info.setScreenHeight(new Integer(req.getParameter("scrHeight")));
-        }
-        if (req.getParameter("scrColorDepth") != null) {
-            info.setScreenColorDepth(new Integer(req.getParameter("scrColorDepth")));
-        }
-        info.setUserAgent(req.getHeader("user-agent"));
+		info.setNavigatorAppName(req.getParameter("navAppName"));
+		info.setNavigatorAppVersion(req.getParameter("navAppVersion"));
+		info.setNavigatorLocale(req.getLocale());
+		info.setUserLocale(LocaleContextHolder.getLocale());
 
-        new Thread(
-                new Runnable() {
-                    public void run() {
-                        heartbeat.updateClientInfo(info);
-                    }
-                }
-        ).start();
+		String errorParam = null;
+		try {
+			info.setScreenWidth(getIntegerParameter(req, "scrWidth"));
+		} catch (NumberFormatException ex) {
+			errorParam = "scrWidth";
+		}
+		try {
+			info.setScreenHeight(getIntegerParameter(req, "scrHeight"));
+		} catch (NumberFormatException ex) {
+			errorParam = "scrHeight";
+		}
+		try {
+			info.setScreenColorDepth(getIntegerParameter(req, "scrColorDepth"));
+		} catch (NumberFormatException ex) {
+			errorParam = "scrColorDepth";
+		}
+		if (errorParam != null) {
+			try {
+				res.sendError(HttpStatus.BAD_REQUEST.BAD_REQUEST.value(), "Invalid value for " + errorParam + ": [" + req.getParameter(errorParam) + "]");
+				return null;
+			} catch (Exception ex2) {
+				log.error("Failed to send error response", ex2);
+			}
+		}
+
+		info.setUserAgent(req.getHeader("user-agent"));
+
+		new Thread(
+				new Runnable() {
+					public void run() {
+						heartbeat.updateClientInfo(info);
+					}
+				}
+		).start();
 
         return new ModelAndView("ajax/ajaxresponse");
     }
 
+    private Integer getIntegerParameter(HttpServletRequest req, String param) throws NumberFormatException {
+		if (req.getParameter(param) != null) {
+			return (new Integer(req.getParameter(param)));
+		} else return null;
+	}
 
+	@RequestMapping(value = "/exituser.html", method = {POST, GET})
     public ModelAndView exitUser(HttpServletRequest req, HttpServletResponse res) {
 		String redirectURL = "/logout.html";
-		if (req.getParameter("showPasswordChange") == null){
-			if (req.getParameter("weakPassword") != null){
-				redirectURL += "?weakPassword=" + req.getParameter("weakPassword");
-			}
-		} else {
-			redirectURL += "?showPasswordChange=" + req.getParameter("showPasswordChange");
-			if (req.getParameter("weakPassword") != null){
-				redirectURL += "&weakPassword=" + req.getParameter("weakPassword");
-			}
+		redirectURL = buildRedirectUrl(req, redirectURL);
+
+		if (UserAuthorityServiceImpl.isUserSwitched()) {
+			redirectURL = "/j_acegi_exit_user";
+			req.setAttribute(View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.TEMPORARY_REDIRECT);
 		}
 
-	if (UserAuthorityServiceImpl.isUserSwitched()) {
-	    redirectURL = "/j_acegi_exit_user";
-	}
-	return new ModelAndView("redirect:" + redirectURL);
+		return new ModelAndView("redirect:" + redirectURL);
     }
 
+
+	@RequestMapping("/logout.html")
 	public ModelAndView logout(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException {
 		// invalidate session
@@ -232,19 +254,24 @@ public class JSCommonController extends JRBaseMultiActionController {
 		}
 		else {
 			String redirectURL = "redirect:/login.html";
-			if (req.getParameter("showPasswordChange") == null){
-				if (req.getParameter("weakPassword") != null){
-					redirectURL += "?weakPassword=" + req.getParameter("weakPassword");
-				}
-			} else {
-				redirectURL += "?showPasswordChange=" + req.getParameter("showPasswordChange");
-				if (req.getParameter("weakPassword") != null){
-					redirectURL += "&weakPassword=" + req.getParameter("weakPassword");
-				}
-			}
+			redirectURL = buildRedirectUrl(req, redirectURL);
 
 			return new ModelAndView(redirectURL);
 		}
+	}
+
+	protected String buildRedirectUrl(HttpServletRequest req, String redirectURL) {
+		if (req.getParameter("showPasswordChange") == null) {
+			if (req.getParameter("weakPassword") != null) {
+				redirectURL += "?weakPassword=" + req.getParameter("weakPassword");
+			}
+		} else {
+			redirectURL += "?showPasswordChange=" + req.getParameter("showPasswordChange");
+			if (req.getParameter("weakPassword") != null) {
+				redirectURL += "&weakPassword=" + req.getParameter("weakPassword");
+			}
+		}
+		return redirectURL;
 	}
 
 	protected ExternalAuthProperties getExternalAuthPropertiesBean() {
@@ -258,13 +285,13 @@ public class JSCommonController extends JRBaseMultiActionController {
 		}
 		return externalAuthPropertiesBean;
 	}
-
+	@RequestMapping("/loginerror.html")
 	public ModelAndView loginError(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
 		log.warn("There was a login error");
 		return new ModelAndView("modules/loginError");
 	}
-
+	@RequestMapping("/error.html")
 	public ModelAndView securityError(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
 		log.warn("There was a security error");
@@ -275,24 +302,10 @@ public class JSCommonController extends JRBaseMultiActionController {
 	 * @args req, res
 	 * @returns ModelAndView - menutest.jsp
 	 */
+	@RequestMapping("/menutest.html")
 	public ModelAndView menuTest(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException {
 		return new ModelAndView("menutest");
-	}
-
-	@Override
-	protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response)
-			throws Exception {
-		try {
-			String methodName = this.getMethodNameResolver().getHandlerMethodName(request);
-			if (methodName.startsWith(JSP_REQUEST_HANDLING_PREFIX))
-				return new ModelAndView(methodName.substring(JSP_REQUEST_HANDLING_PREFIX.length()));
-
-			return invokeNamedMethod(methodName, request, response);
-		}
-		catch (NoSuchRequestHandlingMethodException ex) {
-			return handleNoSuchRequestHandlingMethod(ex, request, response);
-		}
 	}
 
 	public LocalesList getLocales()
@@ -362,6 +375,7 @@ public class JSCommonController extends JRBaseMultiActionController {
 	 * @args HttpServletRequest, HttpServletResponse
 	 * @returns ModelAndView - Home Page
 	 */
+	@RequestMapping("/encrypt.html")
 	public ModelAndView encryptionPage(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException {
 		return new ModelAndView("modules/encrypt");

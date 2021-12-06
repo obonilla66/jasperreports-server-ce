@@ -58,6 +58,8 @@
     Report._messages["jasper.report.view.report.save.confirm.overwrite"]  = '<spring:message code="jasper.report.view.report.save.confirm.overwrite" javaScriptEscape="true"/>';
     Report._messages["jasper.report.view.confirmLeave"]  = '<spring:message code="jasper.report.view.confirmLeave" javaScriptEscape="true"/>';
     Report._messages["jasper.report.view.in.progress.confirm.leave"]  = '<spring:message code="jasper.report.view.in.progress.confirm.leave" javaScriptEscape="true"/>';
+    Report._messages["jasper.report.view.export.in.progress.confirm.leave"]  = '<spring:message code="jasper.report.view.export.in.progress.confirm.leave" javaScriptEscape="true"/>';
+    Report._messages["jasper.report.view.export.in.progress.confirm.continue"]  = '<spring:message code="jasper.report.view.export.in.progress.confirm.continue" javaScriptEscape="true"/>';
     Report._messages["jasper.report.view.report.save.destination.not.report"]  = '<spring:message code="jasper.report.view.report.save.destination.not.report" javaScriptEscape="true"/>';
 	ControlsBase._messages["report.options.option.saved"] = '<spring:message code="report.options.option.saved" javaScriptEscape="true"/>';
 	ControlsBase._messages["report.options.option.removed"] = '<spring:message code="report.options.option.removed" javaScriptEscape="true"/>';
@@ -77,10 +79,14 @@
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_DUAL_LEVEL_PIE" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_HEAT_MAP_NON_OLAP" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_HEAT_MAP_OLAP" javaScriptEscape="true"/>',
+        '<spring:message code="ADH_1214_ICHARTS_NO_DATA_TILE_MAP_NON_OLAP" javaScriptEscape="true"/>',
+        '<spring:message code="ADH_1214_ICHARTS_NO_DATA_TILE_MAP_OLAP" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_TIME_SERIES_HEAT_MAP" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_DUAL_MEASURE_TREE_MAP" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_TREE_MAP" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_ONE_PARENT_TREE_MAP" javaScriptEscape="true"/>',
+        '<spring:message code="ADH_1214_ICHARTS_NO_DATA_TILE_MAP_NON_OLAP" javaScriptEscape="true"/>',
+        '<spring:message code="ADH_1214_ICHARTS_NO_DATA_TILE_MAP_OLAP" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_SPEEDOMETER" javaScriptEscape="true"/>',
         '<spring:message code="ADH_1214_ICHARTS_NO_DATA_GAUGE" javaScriptEscape="true"/>'
     ];
@@ -88,7 +94,7 @@
     <js:out javaScriptEscape="true">
     Report.flowExecutionKey = '${flowExecutionKey}';
     Report.reportUnitURI = '${requestScope.reportUnit}'.replace(/^repo:/, "");
-    Report.reportOptionsURI = '${requestScope.reportOptionsURI}'.replace(/^repo:/, "");  
+    Report.reportOptionsURI = '${requestScope.reportOptionsURI}'.replace(/^repo:/, "");;
     Report.reportLabel = '${reportUnitObject.label}';
     Report.reportDescription = '${reportUnitObject.description}';
     Report.reportForceControls = ${reportForceControls};
@@ -99,9 +105,11 @@
     Report.organizationId = '${organizationId}';
     Report.publicFolderUri = '${publicFolderUri}';
     Report.reportParameterValues = JSON.parse('${reportParameterValues}');
+    Report.inputControlValuesFromRequest = JSON.parse('${inputControlValuesFromRequest}');
     Report.allRequestParameters = JSON.parse('${allRequestParameters}');
     Report.parametersWithoutDefaultValues = JSON.parse('${parametersWithoutDefaultValues}');
     Report.tempFolderUri = '${tempFolderUri}';
+    Report.hasInvisibleICValidationErrors = ${hasInvisibleICValidationErrors};
     </js:out>
 
     if (typeof __jrsConfigs__.reportViewer === "undefined") {

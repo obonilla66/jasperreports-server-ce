@@ -22,7 +22,9 @@
 package com.jaspersoft.jasperserver.remote.exporters;
 
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -32,6 +34,8 @@ import net.sf.jasperreports.engine.JRPropertiesHolder;
 import net.sf.jasperreports.engine.JRPropertiesUtil;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.export.ExporterInputItem;
+import net.sf.jasperreports.export.SimpleExporterInputItem;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -62,8 +66,24 @@ public class PdfExporter implements ReportExporter {
 	@Resource(name = "jasperReportsRemoteContext")
     private JasperReportsContext jasperReportsContext;
 
+	@SuppressWarnings("deprecation")
+	@Override
 	public Map<JRExporterParameter, Object> exportReport(
 			JasperPrint jasperPrint,
+			OutputStream output,
+			EngineService engineService,
+			HashMap exportParameters,
+			ExecutionContext executionContext,
+			String reportUnitURI
+			) throws Exception {
+		return exportReport(Collections.singletonList(new SimpleExporterInputItem(jasperPrint)), 
+				output, engineService, exportParameters, executionContext, reportUnitURI);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public Map<JRExporterParameter, Object> exportReport(
+			List<ExporterInputItem> inputItems,
 			OutputStream output,
 			EngineService engineService,
 			HashMap exportParameters,
@@ -72,7 +92,7 @@ public class PdfExporter implements ReportExporter {
 			) throws Exception
 	{
 		//set the input/output parameters in the map
-		exportParameters.put(JRExporterParameter.JASPER_PRINT, jasperPrint);
+		exportParameters.put(JRExporterParameter.INPUT_ITEM_LIST, inputItems);
 		exportParameters.put(JRExporterParameter.OUTPUT_STREAM, output);
 
 		//use the PDF export params bean

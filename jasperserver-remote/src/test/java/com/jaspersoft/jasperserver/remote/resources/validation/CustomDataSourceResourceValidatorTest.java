@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
@@ -57,6 +59,7 @@ public class CustomDataSourceResourceValidatorTest {
     @Mock
     private ProfileAttributesResolver profileAttributesResolver;
 
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
     private CustomReportDataSource dataSource;
 
     @BeforeClass
@@ -80,12 +83,12 @@ public class CustomDataSourceResourceValidatorTest {
     @Test
     public void testValidate() throws Exception {
         when(customDataSourceFactory.getDefinition(dataSource)).thenReturn(mock(CustomDataSourceDefinition.class));
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
     public void testValidate_no_definition() throws Exception {
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -94,7 +97,7 @@ public class CustomDataSourceResourceValidatorTest {
     @Test
     public void testValidate_no_ServiceClass() throws Exception {
         dataSource.setServiceClass(null);
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
         assertEquals(errors.size(), 1);
         assertEquals(errors.get(0).getMessage(), "Value of parameter 'ServiceClass or DataSourceName' invalid");
     }
@@ -105,7 +108,7 @@ public class CustomDataSourceResourceValidatorTest {
 
         dataSource.setDataSourceName(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -120,7 +123,7 @@ public class CustomDataSourceResourceValidatorTest {
 
         dataSource.setServiceClass(null);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -130,7 +133,7 @@ public class CustomDataSourceResourceValidatorTest {
 
         dataSource.setServiceClass(null);
 
-        final List<Exception> errors = validator.validate(dataSource);
+        final List<Exception> errors = validator.validate(ctx, dataSource);
 
         assertNotNull(errors);
         assertFalse(errors.isEmpty());

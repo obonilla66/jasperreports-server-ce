@@ -107,7 +107,9 @@ public class VirtualReportDataSourceServiceFactory extends JdbcReportDataSourceS
         // DO NOT use the JDBC data source pooling in JdbcReportDataSourceServiceFactory for JDBC sub data source
         boolean isAutoCommit = (getAutoCommitUnsupportedDrivers().contains(driverClass) ? true : getDefaultAutoCommit());
         dataSource = getPooledJdbcDataSourceFactory().createPooledDataSource(
-                driverClass, url, username, password, getDefaultReadOnly(), isAutoCommit);
+                driverClass, url, username, password,
+            isReadOnlyConnection(driverClass),
+            isAutoCommit);
         return dataSource.getDataSource();
     }
 

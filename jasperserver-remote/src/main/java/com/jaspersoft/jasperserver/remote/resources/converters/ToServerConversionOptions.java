@@ -40,6 +40,16 @@ public class ToServerConversionOptions {
     private Class<?>[] validationGroups;
     public static final String SKIP_DATA_BASE_METADATA_CHECK = "skipDataBaseMetadataCheck";
 
+    public boolean isEnableDecryption() {
+        return enableDecryption;
+    }
+
+    public void setEnableDecryption(boolean enableDecryption) {
+        this.enableDecryption = enableDecryption;
+    }
+
+    private boolean enableDecryption;
+
     public static ToServerConversionOptions getDefault() {
         return new ToServerConversionOptions();
     }

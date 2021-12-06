@@ -60,6 +60,10 @@ public interface JasperServerConst {
     String TYPE_RSRC_CONTENT_RESOURCE=	"resource.com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource.label";
     String TYPE_RSRC_MONGODB_JDBC_CONFIG= "resourceTypes.mongodb.jdbc.config";
     String TYPE_RSRC_AZURE_CERTIFICATE= "resourceTypes.azure.certificate.file";
+    String TYPE_RSRC_MONGODB_SCHEMA= "resourceTypes.mongodb.schema";
+    String TYPE_RSRC_KEY= "resourceTypes.key";
+    String TYPE_RSRC_PUB= "resourceTypes.pub";
+    String TYPE_RSRC_PPK= "resourceTypes.ppk";
     String TYPE_SECURE_FILE = "resourceTypes.secure.file";
     String TYPE_RSRC_ACCESS_GRANT_SCHEMA=	"resourceTypes.access.grant.schema"; // pro-only
     String TYPE_RSRC_STYLE_TEMPLATE	=	"resourceTypes.style.template";
@@ -84,9 +88,9 @@ public interface JasperServerConst {
 	String REQUEST_PARAMETER_EDIT_RESOURCE_URI = "resource";
 	
 	//	Max field lengths for validation
-	int MAX_LENGTH_NAME = 30;
-	int MAX_LENGTH_LABEL = 30;
-	int MAX_LENGTH_DESC = 100;
+	int MAX_LENGTH_NAME = 100;
+	int MAX_LENGTH_LABEL = 100;
+	int MAX_LENGTH_DESC = 250;
 
     int MAX_LENGTH_VARCHAR = 255;
 

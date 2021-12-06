@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.FolderImpl;
@@ -160,7 +161,7 @@ public class ResourceConverterProviderImplTest {
     private class TestClientFolder extends ClientResource<TestClientFolder> {}
     private class TestFolderConverter extends ResourceConverterImpl<Folder, TestClientFolder> {
         @Override
-        protected Folder resourceSpecificFieldsToServer(TestClientFolder clientObject, Folder resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        protected Folder resourceSpecificFieldsToServer(ExecutionContext ctx, TestClientFolder clientObject, Folder resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
             return resultToUpdate;
         }
 

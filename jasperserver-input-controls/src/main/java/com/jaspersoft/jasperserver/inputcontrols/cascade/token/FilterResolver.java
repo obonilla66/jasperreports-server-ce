@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.inputcontrols.cascade.token;
 
+import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 
 import java.util.LinkedHashSet;
@@ -94,5 +95,7 @@ public interface FilterResolver {
      * @return Ordered set of names
      */
     public LinkedHashSet<String> resolveCascadingOrder(Map<String, Set<String>> masterDependencies);
+
+	public String updateQueryWithNewSearchCriteria(String query, Map<String, Object> providedParameters, String queryValueColumn, String criteria) throws JSException;
 
 }

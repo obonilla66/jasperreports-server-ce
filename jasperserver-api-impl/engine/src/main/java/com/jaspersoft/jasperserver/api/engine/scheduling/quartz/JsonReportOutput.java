@@ -75,8 +75,8 @@ public class JsonReportOutput extends AbstractReportOutput
 				close = false;
 				dataOut.close();
 
-				String fileName = jobContext.getBaseFilename() + ".json";
-				return new ReportOutput(dataContainer, ContentResource.TYPE_JSON, fileName);
+				String fileName = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(dataContainer, getFileType(), fileName);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -94,9 +94,15 @@ public class JsonReportOutput extends AbstractReportOutput
 		}
 	}
 
-	protected String getFileExtension()
+	@Override
+	public String getFileExtension()
 	{
 		return "json";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_JSON;
 	}
 	
 	@Override

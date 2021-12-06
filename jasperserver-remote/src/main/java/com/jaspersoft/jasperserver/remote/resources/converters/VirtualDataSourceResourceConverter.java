@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
@@ -47,7 +48,7 @@ public class VirtualDataSourceResourceConverter extends ResourceConverterImpl<Vi
     protected RepositoryService repositoryService;
 
     @Override
-    protected VirtualReportDataSource resourceSpecificFieldsToServer(ClientVirtualDataSource clientObject, VirtualReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected VirtualReportDataSource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientVirtualDataSource clientObject, VirtualReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         final List<ClientSubDataSourceReference> subDataSources = clientObject.getSubDataSources();
         Map<String,ResourceReference> dataSourceUriMap = Collections.EMPTY_MAP;
         if(subDataSources != null && !subDataSources.isEmpty()){

@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.jaxrs.job;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.FTPInfo;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobAlert;
@@ -34,6 +35,7 @@ import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobTrigger
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ContentResourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.dto.common.ExportType;
 import com.jaspersoft.jasperserver.dto.common.OutputFormat;
 import com.jaspersoft.jasperserver.dto.connection.FtpConnection;
 import com.jaspersoft.jasperserver.dto.job.ClientCalendarDaysType;
@@ -122,6 +124,8 @@ public class ReportJobConverterTest {
     private TimeZone losAngelesTimezone = TimeZone.getTimeZone(AMERICA_LOS_ANGELES);
     private TimeZone newYorkTimezone = TimeZone.getTimeZone(AMERICA_NEW_YORK);
 
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
+
     @BeforeMethod
     public void setUp() throws InputControlsValidationException, CascadeResourceNotFoundException {
         initMocks(this);
@@ -162,7 +166,8 @@ public class ReportJobConverterTest {
                 setCreationDate(timestamp).
                 setBaseOutputFilename("outputDirectory").
                 setOutputLocale("en").
-                setOutputTimeZone("America/Los_Angeles");
+                setOutputTimeZone("America/Los_Angeles").
+                setExportType(ExportType.DEFAULT);
 
         ClientJobSource clientJobSource = new ClientJobSource();
         clientJobSource.
@@ -408,7 +413,7 @@ public class ReportJobConverterTest {
         Mockito.doReturn(new InputControlImpl()).when(repositoryService).getResource(any(ExecutionContext.class), anyString());
         Mockito.doReturn(serverSourceParameters).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
 
-        ReportJob reportJob = converter.toServer(clientJobWithCalendarTrigger, null);
+        ReportJob reportJob = converter.toServer(ctx, clientJobWithCalendarTrigger, null);
 
         assertEquals(reportJob.getId(), serverJobWithCalendarTrigger.getId());
         assertEquals(reportJob.getVersion(), serverJobWithCalendarTrigger.getVersion());
@@ -549,7 +554,7 @@ public class ReportJobConverterTest {
         Mockito.doReturn(new InputControlImpl()).when(repositoryService).getResource(any(ExecutionContext.class), anyString());
         Mockito.doReturn(serverSourceParameters).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
 
-        ReportJob reportJob = converter.toServer(clientJobWithCalendarTrigger, null);
+        ReportJob reportJob = converter.toServer(ctx, clientJobWithCalendarTrigger, null);
 
         ReportJobSource resultSource = reportJob.getSource();
         ReportJobSource expectedSource = serverJobWithCalendarTrigger.getSource();
@@ -569,7 +574,7 @@ public class ReportJobConverterTest {
         Mockito.doReturn(new ContentResourceImpl()).when(repositoryService).getResource(any(ExecutionContext.class), anyString());
         Mockito.doReturn(serverSourceParameters).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
 
-        ReportJob reportJob = converter.toServer(clientJobWithCalendarTrigger, null);
+        ReportJob reportJob = converter.toServer(ctx, clientJobWithCalendarTrigger, null);
 
         ReportJobSource resultSource = reportJob.getSource();
         ReportJobSource expectedSource = serverJobWithCalendarTrigger.getSource();
@@ -588,7 +593,7 @@ public class ReportJobConverterTest {
         Mockito.doReturn(null).when(repositoryService).getResource(any(ExecutionContext.class), anyString());
         Mockito.doReturn(serverSourceParameters).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
 
-        ReportJob reportJob = converter.toServer(clientJobWithCalendarTrigger, null);
+        ReportJob reportJob = converter.toServer(ctx, clientJobWithCalendarTrigger, null);
 
         ReportJobSource resultSource = reportJob.getSource();
         ReportJobSource expectedSource = serverJobWithCalendarTrigger.getSource();
@@ -607,7 +612,7 @@ public class ReportJobConverterTest {
     public void testConvertClientObjectWithSimpleTriggerToServer() throws InputControlsValidationException, CascadeResourceNotFoundException {
         Mockito.doReturn(serverSourceParameters).when(inputControlsLogicService).getTypedParameters(anyString(), anyMap());
 
-        ReportJob reportJob = converter.toServer(clientJobWithSimpleTrigger, null);
+        ReportJob reportJob = converter.toServer(ctx, clientJobWithSimpleTrigger, null);
 
         assertEquals(reportJob.getId(), serverJobWithSimpleTrigger.getId());
         assertEquals(reportJob.getVersion(), serverJobWithSimpleTrigger.getVersion());
@@ -757,7 +762,7 @@ public class ReportJobConverterTest {
 
     @Test
     public void testConvertClientObjectWithDefaultValuesToServer() {
-        ReportJob resultReportJob = converter.toServer(new ClientReportJob(), null);
+        ReportJob resultReportJob = converter.toServer(ctx, new ClientReportJob(), null);
         assertNotNull(resultReportJob);
     }
 
@@ -769,7 +774,7 @@ public class ReportJobConverterTest {
         clientJobWithCalendarTrigger.getSource().setReferenceHeight(300);
         clientJobWithCalendarTrigger.getSource().setReferenceWidth(400);
 
-        ReportJob resultReportJob = converter.toServer(new ClientReportJob(), null);
+        ReportJob resultReportJob = converter.toServer(ctx, new ClientReportJob(), null);
         assertNotNull(resultReportJob);
     }
 
@@ -794,7 +799,7 @@ public class ReportJobConverterTest {
                 .setSource(source)
                 .setOutputTimeZone(AMERICA_NEW_YORK);
 
-        ReportJob resultReportJob = converter.toServer(job, null);
+        ReportJob resultReportJob = converter.toServer(ctx, job, null);
 
         RelativeTimestampRange actual = (RelativeTimestampRange) resultReportJob.getSource().getParameters().get("relativeTS");
         RelativeTimestampRange expected = new RelativeTimestampRange(expression, newYorkTimezone, 0);
@@ -826,7 +831,7 @@ public class ReportJobConverterTest {
                 .setSource(source)
                 .setOutputTimeZone(AMERICA_NEW_YORK);
 
-        ReportJob resultReportJob = converter.toServer(job, null);
+        ReportJob resultReportJob = converter.toServer(ctx, job, null);
 
         FixedTimestamp actual = (FixedTimestamp) resultReportJob.getSource().getParameters().get("fixedTS");
 
@@ -855,7 +860,7 @@ public class ReportJobConverterTest {
                 .setSource(source)
                 .setOutputTimeZone(AMERICA_NEW_YORK);
 
-        ReportJob resultReportJob = converter.toServer(job, null);
+        ReportJob resultReportJob = converter.toServer(ctx, job, null);
 
         FixedDate actual = (FixedDate) resultReportJob.getSource().getParameters().get("fixedDate");
 
@@ -882,7 +887,7 @@ public class ReportJobConverterTest {
         ClientReportJob job = new ClientReportJob()
                 .setSource(source);
 
-        ReportJob resultReportJob = converter.toServer(job, null);
+        ReportJob resultReportJob = converter.toServer(ctx, job, null);
 
         RelativeTimestampRange actual = (RelativeTimestampRange) resultReportJob.getSource().getParameters().get("relativeTS");
         RelativeTimestampRange expected = new RelativeTimestampRange(expression, null, 0);
@@ -894,7 +899,7 @@ public class ReportJobConverterTest {
     public void toServer_defaultLocale_null() {
         ClientReportJob job = new ClientReportJob();
 
-        ReportJob resultReportJob = converter.toServer(job, null);
+        ReportJob resultReportJob = converter.toServer(ctx, job, null);
 
         assertEquals(resultReportJob.getOutputLocale(), LocaleContextHolder.getLocale().toString());
     }
@@ -909,7 +914,7 @@ public class ReportJobConverterTest {
         ClientReportJob job = new ClientReportJob()
                 .setSource(source);
 
-        ReportJob resultReportJob = converter.toServer(job, null);
+        ReportJob resultReportJob = converter.toServer(ctx, job, null);
 
         assertEquals(resultReportJob.getSource().getReferenceHeight(), source.getReferenceHeight());
         assertEquals(resultReportJob.getSource().getReferenceWidth(), source.getReferenceWidth());

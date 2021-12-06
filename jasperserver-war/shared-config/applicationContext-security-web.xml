@@ -19,7 +19,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:security="http://www.springframework.org/schema/security"
        xmlns:util="http://www.springframework.org/schema/util"
@@ -27,7 +28,7 @@
        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
        http://www.springframework.org/schema/security
        http://www.springframework.org/schema/security/spring-security-4.2.xsd
-       http://www.springframework.org/schema/util 
+       http://www.springframework.org/schema/util
        http://www.springframework.org/schema/util/spring-util-4.2.xsd">
 
     <!-- ======================== FILTER CHAIN =======================
@@ -46,10 +47,69 @@
     <bean id="authenticationAuthoirizationFilterChainProxy" class="org.springframework.security.web.FilterChainProxy">
         <constructor-arg index="0">
             <list>
-                <security:filter-chain pattern="/xmla" filters="httpSessionContextIntegrationFilter,${bean.loggingFilter},${bean.basicProcessingFilter},JIAuthenticationSynchronizer,anonymousProcessingFilter,basicAuthExceptionTranslationFilter,filterInvocationInterceptor"/>
-                <security:filter-chain pattern="/services/**" filters="httpSessionContextIntegrationFilter,${bean.loggingFilter},delegatingCASSingleSignOutFilter,delegatingPreAuthenticatedFilter,${bean.portletAuthenticationProcessingFilter},delegatingBasicProcessingFilter,${bean.passwordExpirationProcessingFilter},JIAuthenticationSynchronizer,anonymousProcessingFilter,wsBasicAuthExceptionTranslationFilter,filterInvocationInterceptor"/>
-                <security:filter-chain pattern="/rest_v2/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,textOnlyResponseWebAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationRestProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRestRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,restExceptionTranslationFilter,filterInvocationInterceptor"/>
-                <security:filter-chain pattern="/**" filters="httpSessionContextIntegrationFilter,encryptionFilter,delegatingCASSingleSignOutFilter,delegatingCASPreAuthCORSFilter,multipartRequestWrapperFilter,webAppSecurityFilter,${bean.loggingFilter},${bean.userPreferencesFilter},delegatingPreAuthenticatedFilter,delegatingAuthenticationProcessingFilter,${bean.userPreferencesFilter},delegatingBasicProcessingFilter,delegatingRequestParameterAuthenticationFilter,JIAuthenticationSynchronizer,anonymousProcessingFilter,corsDelegatingFilter,corsAuthRedirectionFilter,delegatingExceptionTranslationFilter,filterInvocationInterceptor,iPadSupportFilter"/>
+                <security:filter-chain pattern="/xmla" filters="
+                	httpSessionContextIntegrationFilter,
+                	${bean.loggingFilter},
+                	${bean.basicProcessingFilter},
+                	JIAuthenticationSynchronizer,
+                	anonymousProcessingFilter,
+                	basicAuthExceptionTranslationFilter,
+                	filterInvocationInterceptor"/>
+                <security:filter-chain pattern="/services/**" filters="
+                	httpSessionContextIntegrationFilter,
+                	${bean.loggingFilter},
+                	delegatingCASSingleSignOutFilter,
+                	delegatingPreAuthenticatedFilter,
+                	${bean.portletAuthenticationProcessingFilter},
+                	delegatingBasicProcessingFilter,
+                	${bean.passwordExpirationProcessingFilter},
+                	JIAuthenticationSynchronizer,
+                	anonymousProcessingFilter,
+                	wsBasicAuthExceptionTranslationFilter,
+                	filterInvocationInterceptor"/>
+                <security:filter-chain pattern="/rest_v2/**" filters="
+                	httpSessionContextIntegrationFilter,
+                	encryptionFilter,
+                	delegatingCASSingleSignOutFilter,
+                	textOnlyResponseWebAppSecurityFilter,
+                	${bean.loggingFilter},
+                	${bean.userPreferencesFilter},
+                	delegatingPreAuthenticatedFilter,
+                	corsPreAuthDelegatingFilter,
+                	delegatingAuthenticationRestProcessingFilter,
+                	${bean.userPreferencesFilter},
+                	delegatingBasicProcessingFilter,
+                	delegatingTokenValidationFilter,
+                	delegatingRestRequestParameterAuthenticationFilter,
+                	JIAuthenticationSynchronizer,
+                	anonymousProcessingFilter,
+                	corsDelegatingFilter,
+                	corsAuthRedirectionFilter,
+                	restExceptionTranslationFilter,
+                	filterInvocationInterceptor,
+                	${bean.jrioForwardingFilter},
+                    #{'${scalableQueryEngine.enabled}' &amp;&amp; '${bean.adhocworkerForwardingFilter}'=='adhocworkerForwardingFilter' ? 'adhocworkerForwardingFilter' : 'nullFilter' }"/>
+                <security:filter-chain pattern="/**" filters="
+                	httpSessionContextIntegrationFilter,
+                	encryptionFilter,
+                	delegatingCASSingleSignOutFilter,
+                	delegatingCASPreAuthCORSFilter,
+                	multipartRequestWrapperFilter,
+                	webAppSecurityFilter,
+                	${bean.loggingFilter},
+                	${bean.userPreferencesFilter},
+                	delegatingPreAuthenticatedFilter,
+                	delegatingAuthenticationProcessingFilter,
+                	${bean.userPreferencesFilter},
+                	delegatingBasicProcessingFilter,
+                	delegatingRequestParameterAuthenticationFilter,
+                	JIAuthenticationSynchronizer,
+                	anonymousProcessingFilter,
+                	corsDelegatingFilter,
+                	corsAuthRedirectionFilter,
+                	delegatingExceptionTranslationFilter,
+                	filterInvocationInterceptor,
+                	iPadSupportFilter"/>
             </list>
         </constructor-arg>
         <property name="firewall">
@@ -463,6 +523,8 @@
                 <security:intercept-url pattern="/rest_v2/permissions/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/reports/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/resources/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
+                <security:intercept-url pattern="/rest_v2/reportFonts/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
+                <security:intercept-url pattern="/rest_v2/reportResources/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/api/resources/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/connections/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/contexts/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
@@ -638,6 +700,17 @@
             </constructor-arg>
             </bean>
         </property>
+    </bean>
+
+    <bean id="corsPreAuthDelegatingFilter"
+          class="com.jaspersoft.jasperserver.api.security.externalAuth.JSDelegatingFilterProxy">
+        <property name="targetBeanName" value="preAuthCorsFilter"/>
+        <property name="defaultFilter" ref="nullFilter"/>
+    </bean>
+
+    <bean id="delegatingTokenValidationFilter" class="com.jaspersoft.jasperserver.api.security.externalAuth.JSDelegatingFilterProxy">
+        <property name="targetBeanName" value="${bean.tokenValidationFilter}"/>
+        <property name="defaultFilter" ref="nullFilter"/>
     </bean>
 
     <bean id="nullFilter" class="com.jaspersoft.jasperserver.war.NullFilter"/>

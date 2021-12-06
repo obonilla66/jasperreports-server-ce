@@ -21,11 +21,27 @@
 
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
+import com.amazonaws.auth.AWSSessionCredentials;
 import com.jaspersoft.jasperserver.api.common.util.TibcoDriverManager;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.AwsCredentialUtil;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.PooledObjectCache;
+import java.sql.DriverManager;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.sql.Connection;
 
 public class JdbcDriverManagerConnectionFactory extends DriverManagerConnectionFactory {
+
+    private static final Log log = LogFactory.getLog(JdbcDriverManagerConnectionFactory.class);
+
+    private static final String AWS_CREDENTIALS_PROVIDER_CLASS_KEY = "AwsCredentialsProviderClass";
+    private static final String AWS_CREDENTIALS_PROVIDER_CLASS_VALUE = "com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.AthenaCustomSessionCredentialsProvider";
+    private static final String AWS_CREDENTIALS_PROVIDER_CLASS_ARGUMENTS = "AwsCredentialsProviderArguments";
+    private static final String AWS_ARN = "arn";
+    private static final String AWS_ACCESS_KEY = "AccessKey";
+    private static final String AWS_SECRET_KEY = "SecretKey";
 
     public JdbcDriverManagerConnectionFactory(java.lang.String connectUri, java.lang.String uname, java.lang.String passwd) {
         super(connectUri, uname, passwd);
@@ -33,11 +49,56 @@ public class JdbcDriverManagerConnectionFactory extends DriverManagerConnectionF
 
     public Connection createConnection() throws java.sql.SQLException {
         TibcoDriverManager tibcoDriverManager = TibcoDriverManagerImpl.getInstance();
-        Connection connection = super.createConnection();
+        Connection connection = null;
+        if(_connectUri.contains(PooledObjectCache.JDBC_AWSATHENA)){
+            String newConnectionUri = modifiedUrlForAthenaJDBCDriver(_connectUri);
+            connection = DriverManager.getConnection(newConnectionUri);
+        } else {
+            connection = super.createConnection();
+        }
+
         tibcoDriverManager.unlockConnection(connection);
         return connection;
 
     }
 
+    private String modifiedUrlForAthenaJDBCDriver(String uri){
+        String connectionUrl = uri;
+        String connParams[] = connectionUrl.split(";");
+        String roleARN = null, accessKey = null, secretKey = null;
+        for (String param : connParams) {
+            if (param.startsWith(AWS_ARN)) {
+                connectionUrl = connectionUrl.replace(param + ";", "");
+                roleARN = param.split("=").length > 1 ? param.split("=")[1] : "";
+            }
+            if (param.startsWith(AWS_ACCESS_KEY)) {
+                connectionUrl = connectionUrl.replace(param + ";", "");
+                accessKey = param.split("=")[1];
+            }
+            if (param.startsWith(AWS_SECRET_KEY)) {
+                connectionUrl = connectionUrl.replace(param + ";", "");
+                secretKey = param.split("=")[1];
+            }
+        }
+
+        if (roleARN != null && !roleARN.isEmpty()) {
+            AwsCredentialUtil awsCredentialUtil = new AwsCredentialUtil();
+            AWSSessionCredentials awsCredentials = (AWSSessionCredentials) awsCredentialUtil
+                .getAWSCredentials(accessKey, secretKey, roleARN);
+            String providerArgs = null;
+            if (awsCredentials != null) {
+                providerArgs =
+                    awsCredentials.getAWSAccessKeyId() + "," + awsCredentials.getAWSSecretKey() + ","
+                        + awsCredentials.getSessionToken();
+            }
+            connectionUrl = connectionUrl + AWS_CREDENTIALS_PROVIDER_CLASS_KEY + "="
+                + AWS_CREDENTIALS_PROVIDER_CLASS_VALUE + ";"
+                + AWS_CREDENTIALS_PROVIDER_CLASS_ARGUMENTS + "=" + providerArgs + ";";
+        } else {
+            connectionUrl = connectionUrl + "User=" + accessKey + ";Password=" + secretKey + ";";
+        }
+
+        return connectionUrl;
+    }
 
 }

@@ -24,7 +24,6 @@ package com.jaspersoft.jasperserver.remote.exporters;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.common.PdfExportParametersBean;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.PaginationParameters;
 import com.jaspersoft.jasperserver.api.metadata.xml.domain.impl.Argument;
 import com.jaspersoft.jasperserver.remote.ReportExporter;
@@ -35,10 +34,14 @@ import net.sf.jasperreports.engine.JRPropertiesHolder;
 import net.sf.jasperreports.engine.JRPropertiesUtil;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.export.ExporterInputItem;
+import net.sf.jasperreports.export.SimpleExporterInputItem;
 
 import javax.annotation.Resource;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -60,12 +63,21 @@ public abstract class AbstractExporter implements ReportExporter {
     	this.paginatedProperty = paginatedProperty;
     }
 
+    @SuppressWarnings("deprecation")
+	@Override
     public Map<JRExporterParameter, Object> exportReport(JasperPrint jasperPrint, OutputStream output, EngineService engineService, HashMap exportParameters, ExecutionContext executionContext, String reportUnitURI) throws Exception {
+    	return exportReport(Collections.singletonList(new SimpleExporterInputItem(jasperPrint)), 
+    			output, engineService, exportParameters, executionContext, reportUnitURI);
+    }
+
+    @SuppressWarnings("deprecation")
+	@Override
+    public Map<JRExporterParameter, Object> exportReport(List<ExporterInputItem> inputItems, OutputStream output, EngineService engineService, HashMap exportParameters, ExecutionContext executionContext, String reportUnitURI) throws Exception {
 
         final JRExporter exporter = createExporter();
 
         // Handle generic parameters....
-        exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+        exporter.setParameter(JRExporterParameter.INPUT_ITEM_LIST, inputItems);
         exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, output);
 
         // Be sure the page number is correctly set, so PAGE 1 is PAGE 1...

@@ -67,6 +67,7 @@ public class FullDataDeleteTestNG extends BaseServiceSetupTestNG {
         deleteHibernateRepositoryReportResources();
         deleteHibernateRepositoryDataSourceResources();
         deleteDefaultDomainWhitelist();
+        deleteAuditDBProfileAttribute();
     }
 
     // move this to configuration file if people want to use

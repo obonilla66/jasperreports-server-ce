@@ -90,8 +90,8 @@ public class PdfReportOutput extends AbstractReportOutput
 			}
 		}
 		
-		String filename = jobContext.getBaseFilename() + ".pdf";
-		return new ReportOutput(pdfData, ContentResource.TYPE_PDF, filename);
+		String filename = jobContext.getBaseFilename() + "." + getFileExtension();
+		return new ReportOutput(pdfData, getFileType(), filename);
 	}
 
 	/**
@@ -139,5 +139,15 @@ public class PdfReportOutput extends AbstractReportOutput
 					propertiesHolder, PdfExportParametersBean.PROPERTY_PDF_MAX_PAGE_WIDTH);
 		}
 		return maxPageWidth;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "pdf";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_PDF;
 	}
 }

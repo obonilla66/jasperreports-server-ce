@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.expansion;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +33,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 /**
  * @author Andriy Godovanets
  */
-public class ClientMemberExpansion implements ClientExpandable<List<String>> {
+public class ClientMemberExpansion implements ClientExpandable<List<String>>, Serializable  {
     public static final String PATH_SEPARATOR = "/";
 
     private boolean isExpanded;

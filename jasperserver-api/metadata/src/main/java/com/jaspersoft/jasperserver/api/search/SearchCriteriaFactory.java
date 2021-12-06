@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.api.search;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 
+import java.util.AbstractMap;
 import java.util.List;
 
 /**
@@ -57,4 +58,6 @@ public interface SearchCriteriaFactory {
      * @return
      */
     SearchCriteriaFactory newFactory(String type);
+
+    SearchCriteria create(ExecutionContext context, List<SearchFilter> filters, AbstractMap.SimpleEntry<String, String> accessType);
 }

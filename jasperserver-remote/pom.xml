@@ -72,13 +72,17 @@
           <artifactId>jasperserver-common-ws</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jaspersoft.jasperserver.api.common</groupId>
+            <artifactId>jasperserver-api-common</artifactId>
+        </dependency>
+        <dependency>
           <groupId>com.jaspersoft.jasperserver</groupId>
           <artifactId>jasperserver-search</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
+            <version>${javax.servlet-api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

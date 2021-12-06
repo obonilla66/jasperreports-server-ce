@@ -78,29 +78,14 @@
     <jsp:include page="../common/jrsConfigs.jsp"/>
     <%@ include file="ViewReportState.jsp" %>
 
-    <%--
-        Performance optimization:
-        we do not wait until requirejs will load this module,
-        instead we load it by ourself (but only if optimization is turned on)
-        thus when requirejs will request it it already will be loaded.
-    --%>
-    <c:if test="${optimizeJavascript == true}">
-        <script type="text/javascript" src="${scriptsUri}/${moduleName}.js"></script>
-    </c:if>
-
     <script type="text/javascript">
         <c:if test="${!pageContext.request.requestedSessionIdValid and pageContext.request.method == 'GET'}">
         <%--[18280] HTTP redirect can't be applied here because it adds jsessionid parameter --%>
         window.location.reload();
         </c:if>
-
-        require.onError = function (err) {
-            //block errors because of Bug 34818 with frequent refresh of iFrames,
-            //throw err;
-        };
-
-        require(["${moduleName}"]);
     </script>
+
+    <script type="text/javascript" src="${scriptsUri}/${moduleName}.js" defer></script>
 </head>
 
 <body id="reportViewer" class="oneColumn">

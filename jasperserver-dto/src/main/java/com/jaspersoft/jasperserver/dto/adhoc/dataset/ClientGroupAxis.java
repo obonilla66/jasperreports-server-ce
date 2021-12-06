@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.isListsOfAr
 * @since 05.04.2016
 */
 @XmlRootElement
-public class ClientGroupAxis implements DeepCloneable<ClientGroupAxis> {
+public class ClientGroupAxis implements DeepCloneable<ClientGroupAxis>, Serializable {
     private List<String[]> level = new ArrayList<String[]>();
 
     public ClientGroupAxis() {}

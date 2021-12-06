@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.reports;
 
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
+import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
 import com.jaspersoft.jasperserver.remote.services.*;
 import com.jaspersoft.jasperserver.api.engine.export.HyperlinkProducerFactoryFlowFactory;
 import net.sf.jasperreports.engine.*;
@@ -85,11 +86,23 @@ public class EmbeddableHtmlExportStrategy extends AbstractHtmlExportStrategy {
         exporter.setParameter(JRHtmlExporterParameter.HTML_FOOTER, "");
         // there is no valid request and response in the async export context.
         // Let's proxy request to forward required parameters to hyperlink producers
-        HttpServletRequest requestProxy = createRequestProxy(reportExecution);
+        HttpServletRequest requestProxy = createRequestProxy(reportExecution, contextPath);
         exporter.setParameter(JRExporterParameter.HYPERLINK_PRODUCER_FACTORY, hyperlinkProducerFactory.getHyperlinkProducerFactory(requestProxy, null));
-        ReportContext reportContext = reportExecution.getFinalReportUnitResult().getReportContext();
+
+        ReportUnitResult reportUnitResult;
+        Boolean ignoreCancelledReportExecution = exportExecution.getOptions().getIgnoreCancelledReportExecution();
+        if (ignoreCancelledReportExecution && ExecutionStatus.cancelled.equals(reportExecution.getStatus())) {
+            reportUnitResult = reportExecution.getReportUnitResult();
+        } else {
+            reportUnitResult = reportExecution.getFinalReportUnitResult();
+        }
+        ReportContext reportContext = reportUnitResult.getReportContext();
+
         if (reportContext != null) {
             reportContext.setParameterValue(ReportContext.REQUEST_PARAMETER_APPLICATION_DOMAIN, exportExecution.getOptions().getBaseUrl());
+            if (exportExecution.getOptions().getClearContextCache()) {
+                reportContext.setParameterValue("net.sf.jasperreports.search.term.highlighter", null);
+            }
             exporter.setReportContext(reportContext);
         }
         return exporter;
@@ -137,7 +150,7 @@ public class EmbeddableHtmlExportStrategy extends AbstractHtmlExportStrategy {
         output.setResourceHandler(new WebHtmlResourceHandler(contextPath + "/rest_v2/resources" + reportExecution.getReportURI() + "_files/{0}"));
         exporter.setExporterOutput(output);
 
-        HttpServletRequest requestProxy = createRequestProxy(reportExecution);
+        HttpServletRequest requestProxy = createRequestProxy(reportExecution, contextPath);
         configuration.setHyperlinkProducerFactory(hyperlinkProducerFactory.getHyperlinkProducerFactory(requestProxy, null));
         exporter.setConfiguration(configuration);
 
@@ -155,7 +168,7 @@ public class EmbeddableHtmlExportStrategy extends AbstractHtmlExportStrategy {
         return attachment;
     }
 
-    private HttpServletRequest createRequestProxy(ReportExecution reportExecution) {
+    private HttpServletRequest createRequestProxy(ReportExecution reportExecution, String contextPath) {
         return (HttpServletRequest) Proxy.newProxyInstance(this.getClass().getClassLoader(),
             new Class<?>[]{HttpServletRequest.class}, new InvocationHandler() {
                 @Override
@@ -163,6 +176,8 @@ public class EmbeddableHtmlExportStrategy extends AbstractHtmlExportStrategy {
                     Object result = null;
                     if ("getAttribute".equals(method.getName())) {
                         result = "reportResult".equals(args[0]) ? reportExecution.getReportUnitResult() : null;
+                    } else if ("getContextPath".equals(method.getName())) {
+                        result = contextPath;
                     }
                     return result;
                 }

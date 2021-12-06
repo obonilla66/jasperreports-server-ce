@@ -58,6 +58,8 @@ import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.ReportContext;
 import net.sf.jasperreports.engine.SimpleReportContext;
+import net.sf.jasperreports.export.ExporterInputItem;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -65,6 +67,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -166,7 +169,7 @@ public class ReportExecutorImpl implements ReportExecutor {
      * the report.
      *
      * @param reportUnitURI    - the report unit URI
-     * @param jasperPrint      - jasperPring object
+     * @param jasperPrintList  - list of JasperPrint objects
      * @param format           - format
      * @param output           - output stream to write to
      * @param exportParameters - parameters for export procedure
@@ -174,7 +177,7 @@ public class ReportExecutorImpl implements ReportExecutor {
      * @throws com.jaspersoft.jasperserver.remote.ServiceException
      *
      */
-    public Map<JRExporterParameter, Object> exportReport(String reportUnitURI, JasperPrint jasperPrint, String format, OutputStream output,
+    public Map<JRExporterParameter, Object> exportReport(String reportUnitURI, List<ExporterInputItem> inputItems, String format, OutputStream output,
             HashMap exportParameters) throws ServiceException {
         ReportExporter exporter = servicesConfiguration.getExporter(format.toLowerCase());
         if (exporter == null) {
@@ -183,14 +186,15 @@ public class ReportExecutorImpl implements ReportExecutor {
         try {
             InputControlsContainer report = getResource(InputControlsContainer.class, reportUnitURI);
             final RunReportStrategy strategyForReport = getStrategyForReport(report);
-            return exporter.exportReport(jasperPrint, output, engine, exportParameters, createExecutionContext(),
+            return exporter.exportReport(inputItems, output, engine, exportParameters, createExecutionContext(),
                     strategyForReport.getConcreteReportURI(report));
         } catch (JRRuntimeException e){
             if(JRAbstractExporter.EXCEPTION_MESSAGE_KEY_PAGE_INDEX_OUT_OF_RANGE.equals(e.getMessageKey())
             		|| JRAbstractExporter.EXCEPTION_MESSAGE_KEY_START_PAGE_INDEX_OUT_OF_RANGE.equals(e.getMessageKey())
             		|| JRAbstractExporter.EXCEPTION_MESSAGE_KEY_END_PAGE_INDEX_OUT_OF_RANGE.equals(e.getMessageKey())){
                 final String pages = exportParameters.get(Argument.RUN_OUTPUT_PAGES).toString();
-                final int totalPages = jasperPrint.getPages().size();
+                Object[] exceptionArgs = e.getArgs();
+				final int totalPages = ((Integer) exceptionArgs[exceptionArgs.length - 1]) + 1;
                 throw new ExportExecutionRejectedException(new ErrorDescriptor().setMessage(
                         "Page number out of range : " + pages + " of " + totalPages + " (while exporting the report)")
                         .setErrorCode("page.number.out.of.range").setParameters(pages, "" + totalPages));
@@ -300,6 +304,8 @@ public class ReportExecutorImpl implements ReportExecutor {
                 final SimpleReportContext reportContext = new SimpleReportContext();
                 reportContext.setParameterValue(JRParameter.REPORT_LOCALE, LocaleContextHolder.getLocale());
                 executionOptions.setReportContext(reportContext);
+            } else {
+                executionOptions.getReportContext().setParameterValue(JRParameter.REPORT_LOCALE, LocaleContextHolder.getLocale());
             }
             if(executionOptions.getJasperReportsContext() == null){
                 executionOptions.setJasperReportsContext(context);
@@ -307,6 +313,9 @@ public class ReportExecutorImpl implements ReportExecutor {
             requestParams.put(JRParameter.REPORT_CONTEXT, executionOptions.getReportContext());
             if(options.isFreshData()){
                 requestParams.put(Request.PARAM_NAME_FRESH_DATA, "true");
+            }
+            if(executionOptions.getReportContainerWidth() != null) {
+                requestParams.put("REPORT_CONTAINER_WIDTH", executionOptions.getReportContainerWidth());
             }
             ReportUnitRequest request = new ReportUnitRequest(getConcreteReportURI(reportResource), requestParams);
             if(options.getRequestId() != null){
@@ -321,7 +330,7 @@ public class ReportExecutorImpl implements ReportExecutor {
             request.setJasperReportsContext(executionOptions.getJasperReportsContext());
 
             // recording is enabled for first-time saves
-            request.setRecordDataSnapshot(dataSnapshotService.isSnapshotPersistenceEnabled());
+            request.setRecordDataSnapshot(dataSnapshotService.isSnapshotRecordingEnabled());
 
             // fresh data if requested or saving
             request.setUseDataSnapshot(!(options.isFreshData() || options.isSaveDataSnapshot()));

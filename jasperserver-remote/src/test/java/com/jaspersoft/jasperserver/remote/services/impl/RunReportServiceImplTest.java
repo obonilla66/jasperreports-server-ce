@@ -66,7 +66,7 @@ import static org.mockito.Mockito.verify;
 @ActiveProfiles("test")
 public class RunReportServiceImplTest extends AbstractTestNGSpringContextTests {
 
-    private class TestClass extends RunReportServiceImpl {
+    private static class TestClass extends RunReportServiceImpl {
         /**
          * Thanks, Eclipse!
          */
@@ -123,7 +123,7 @@ public class RunReportServiceImplTest extends AbstractTestNGSpringContextTests {
     }
 
     @Test(groups = {"verifyCorrectParameterValuesForNonCascadingControls"})
-    public void verifyCorrectParameterValuesForNonCascadingControls_SingleNothing_Exception() throws Exception {
+    public void verifyCorrectParameterValuesForNonCascadingControls_SingleNothing() throws Exception {
         Map<String, String[]> initial = new HashMap<String, String[]>(), processed = new HashMap<String, String[]>();
 
         initial.put("a", new String[]{"a 1"});
@@ -269,6 +269,46 @@ public class RunReportServiceImplTest extends AbstractTestNGSpringContextTests {
         initial.put("c", new String[]{"c 1", "c 2"});
 
         processed.put("c", new String[]{"c 2", "c 1"});
+
+        service.verifyCorrectParameterValuesForNonCascadingControlsEntryPoint(controlsCascade, initial, processed);
+    }
+
+    @Test(groups = {"verifyCorrectParameterValuesForNonCascadingControls"}, expectedExceptions = InputControlsValidationException.class)
+    public void verifyCorrectParameterValuesForNonCascadingControls_emptyProcessed_Exception() throws Exception {
+        Map<String, String[]> initial = new HashMap<>(), processed = new HashMap<>();
+
+        initial.put("a", new String[]{"a 1", "a 2"});
+
+        service.verifyCorrectParameterValuesForNonCascadingControlsEntryPoint(controlsCascade, initial, processed);
+    }
+
+    @Test(groups = {"verifyCorrectParameterValuesForNonCascadingControls"})
+    public void verifyCorrectParameterValuesForNonCascadingControls_nothingSubstitutionAndEmptyProcessed() throws Exception {
+        Map<String, String[]> initial = new HashMap<>(), processed = new HashMap<>();
+
+        initial.put("a", new String[]{NOTHING_SUBSTITUTION_VALUE});
+        initial.put("b", new String[]{NOTHING_SUBSTITUTION_VALUE});
+
+        service.verifyCorrectParameterValuesForNonCascadingControlsEntryPoint(controlsCascade, initial, processed);
+    }
+
+    @Test(groups = {"verifyCorrectParameterValuesForNonCascadingControls"})
+    public void verifyCorrectParameterValuesForNonCascadingControls_singleWithNothingSubstitution() throws Exception {
+        Map<String, String[]> initial = new HashMap<>(), processed = new HashMap<>();
+
+        initial.put("a", new String[]{NOTHING_SUBSTITUTION_VALUE});
+        initial.put("b", new String[]{"b 1"});
+
+        processed.put("b", new String[]{"b 1"});
+
+        service.verifyCorrectParameterValuesForNonCascadingControlsEntryPoint(controlsCascade, initial, processed);
+    }
+
+    @Test(groups = {"verifyCorrectParameterValuesForNonCascadingControls"}, expectedExceptions = InputControlsValidationException.class)
+    public void verifyCorrectParameterValuesForNonCascadingControls_singleWithNothingSubstitutionAndValue_Exception() throws Exception {
+        Map<String, String[]> initial = new HashMap<>(), processed = new HashMap<>();
+
+        initial.put("a", new String[]{NOTHING_SUBSTITUTION_VALUE, "a 1"});
 
         service.verifyCorrectParameterValuesForNonCascadingControlsEntryPoint(controlsCascade, initial, processed);
     }

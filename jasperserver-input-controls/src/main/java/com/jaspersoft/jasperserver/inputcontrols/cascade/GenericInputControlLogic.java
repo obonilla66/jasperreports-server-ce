@@ -34,21 +34,29 @@ import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlV
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlValuesInformation;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlsInformation;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.EhcacheEngineService;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.*;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControlsContainer;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.QueryParameterDescriptor;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.InputControlImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.RefSets;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService;
 import com.jaspersoft.jasperserver.api.security.internalAuth.InternalAuthenticationTokenImpl;
+import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValue;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.SelectedValuesListWrapper;
-import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManager;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValueFormattingUtils;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.InputControlValueClassResolver;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterResolver;
 import org.apache.commons.logging.Log;
@@ -65,8 +73,6 @@ import java.util.*;
 import static com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver.SKIP_PROFILE_ATTRIBUTES_RESOLVING;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_LABEL;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.WITH_NO_LABEL;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.INCLUDE_TOTAL_COUNT;
-import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.SELECTED_ONLY_INTERNAL;
 
 
 /**
@@ -204,7 +210,9 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
 
     protected ReportInputControlsInformation getReportInputControlsInformation(T container) throws CascadeResourceNotFoundException {
         Map<String, Object> initialParameters = getDefaultValues(container);
-        ExecutionContext originalContext = ExecutionContextImpl.create(LocaleContextHolder.getLocale(), TimeZoneContextHolder.getTimeZone());
+        ExecutionContext originalContext = Optional
+                .ofNullable(ExecutionContextImpl.getThreadLocal().get())
+                .orElseGet(() -> ExecutionContextImpl.create(LocaleContextHolder.getLocale(), TimeZoneContextHolder.getTimeZone()));
         ExecutionContext context = ExecutionContextImpl.getRuntimeExecutionContext(originalContext);
         return cachedEngineService.getReportInputControlsInformation(context, container, initialParameters);
     }
@@ -581,7 +589,7 @@ public class GenericInputControlLogic<T extends InputControlsContainer> implemen
     }
 
     private void setAdditionalParameters(Map<String, String[]> requestParameters, Map<String, Object> result) {
-        for (String parameter : Arrays.asList(INCLUDE_TOTAL_COUNT, SELECTED_ONLY_INTERNAL)) {
+        for (String parameter : ValuesLoader.REQUIRED_IC_PARAMETERS) {
             if (requestParameters.containsKey(parameter)) {
                 result.put(parameter, requestParameters.get(parameter)[0]);
             }

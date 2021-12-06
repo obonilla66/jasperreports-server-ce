@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.dto.connection.LfsConnection;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ import java.util.Map;
 @Service
 public class LfsContextStrategy implements ContextManagementStrategy<LfsConnection, LfsConnection> {
     @Override
-    public LfsConnection createContext(LfsConnection contextDescription, Map<String, Object> data) {
+    public LfsConnection createContext(ExecutionContext ctx, LfsConnection contextDescription, Map<String, Object> data) {
         final String path = contextDescription.getPath();
         File file = new File(path);
         if (!file.exists() || !file.isDirectory() || !canWriteToDirectory(path)) {

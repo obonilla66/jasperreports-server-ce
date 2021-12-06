@@ -32,13 +32,15 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
 /**
  * @author Andriy Godovanets
  */
-public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>, IExpressionContainer, DeepCloneable<ClientQueryGroup> {
+public class ClientQueryGroup implements ClientField, ClientIdentifiable<String>, IExpressionContainer, DeepCloneable<ClientQueryGroup>, Serializable {
 
     private String id;
     // TODO Andriy G: remove field type. It doesn't affect the query resultset

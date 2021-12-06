@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.customdatasources;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDomainMetaDataImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
@@ -71,12 +72,12 @@ public class TableMetadataConverter implements ToServerConverter<TableMetadata, 
     }
 
     @Override
-    public CustomDomainMetaDataImpl toServer(TableMetadata clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, new CustomDomainMetaDataImpl(), options);
+    public CustomDomainMetaDataImpl toServer(ExecutionContext ctx, TableMetadata clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, new CustomDomainMetaDataImpl(), options);
     }
 
     @Override
-    public CustomDomainMetaDataImpl toServer(TableMetadata clientObject, CustomDomainMetaDataImpl resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public CustomDomainMetaDataImpl toServer(ExecutionContext ctx, TableMetadata clientObject, CustomDomainMetaDataImpl resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         resultToUpdate.setQueryLanguage(clientObject.getQueryLanguage());
         final List<String> fieldNames = new ArrayList<String>();
         final Map<String, String> fieldMapping = new HashMap<String, String>();

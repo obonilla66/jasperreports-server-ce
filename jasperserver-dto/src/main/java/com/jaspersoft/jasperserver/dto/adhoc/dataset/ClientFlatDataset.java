@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +39,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.isListsOfAr
  * @version $Id$
  */
 @XmlRootElement(name = "flatDataset")
-public class ClientFlatDataset implements DeepCloneable<ClientFlatDataset> {
+public class ClientFlatDataset implements DeepCloneable<ClientFlatDataset>, Serializable {
     private int counts;
     private List<ClientFlatDatasetFieldReference> fields = new ArrayList<ClientFlatDatasetFieldReference>();
     private List<String[]> rows;

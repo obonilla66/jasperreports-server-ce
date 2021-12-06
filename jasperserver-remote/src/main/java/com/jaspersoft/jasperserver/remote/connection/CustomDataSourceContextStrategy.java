@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.connection;
 
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
@@ -78,12 +79,12 @@ public class CustomDataSourceContextStrategy implements
     private JdbcDataSourceMetadataBuilder jdbcDataSourceMetadataBuilder;
 
     @Override
-    public ClientCustomDataSource createContext(ClientCustomDataSource contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public ClientCustomDataSource createContext(ExecutionContext ctx, ClientCustomDataSource contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
         boolean passed = false;
         Exception exception = null;
 
         try {
-            final CustomReportDataSource reportDataSource = toServer(contextDescription);
+            final CustomReportDataSource reportDataSource = toServer(ctx, contextDescription);
             ReportDataSourceService service = customDataSourceFactory.createService(reportDataSource);
 
             if (service instanceof ConnectionTestingDataSourceService) {
@@ -109,9 +110,9 @@ public class CustomDataSourceContextStrategy implements
         return contextDescription;
     }
 
-    protected CustomReportDataSource toServer(ClientCustomDataSource clientCustomDataSource) {
+    protected CustomReportDataSource toServer(ExecutionContext ctx,ClientCustomDataSource clientCustomDataSource) {
         CustomReportDataSource ds = customDataSourceResourceConverter.
-                toServer(clientCustomDataSource, ToServerConversionOptions.getDefault().setSuppressValidation(true));
+                toServer(ctx, clientCustomDataSource, ToServerConversionOptions.getDefault().setSuppressValidation(true));
         // On edit data source we set the null as value for the password if not changed
         // If we get the null from client then set the password from original data source (if it exists)
         if (ds.getPropertyMap() != null && ds.getPropertyMap().get("password") == null && clientCustomDataSource.getUri() != null) {
@@ -142,7 +143,7 @@ public class CustomDataSourceContextStrategy implements
         return copy;
     }
 
-    public boolean isMetadataSupported(ClientCustomDataSource clientCustomDataSource, String metadataClientType) {
+    public boolean isMetadataSupported(ExecutionContext ctx, ClientCustomDataSource clientCustomDataSource, String metadataClientType) {
         // disabling metadata building for now. Let file data source project put
         // specific logic for enabling of metadata for file custom data source only
         return false;

@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.AwsReportDataSourceImpl;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
@@ -68,7 +69,8 @@ public class AwsDataSourceResourceConverterTest {
         clientObject.setRoleArn(expectedRoleArn);
         clientObject.setSecretKey(expectedSecretKey);
         clientObject.setDriverClass(expectedDriverClass);
-        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.getAWSSecretKey(), expectedSecretKey);
         assertEquals(result.getAWSAccessKey(), expectedAccessKey);
@@ -132,7 +134,8 @@ public class AwsDataSourceResourceConverterTest {
 
         ClientAwsDataSource clientObject = new ClientAwsDataSource();
 
-        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final AwsReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNull(result.getAWSSecretKey());
     }
 

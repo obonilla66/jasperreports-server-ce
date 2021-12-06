@@ -115,7 +115,7 @@
 </script>
 
 <script id="singleSelectRadio" type="template/mustache">
-    <div id="{{-id}}" class="leaf">
+    <div id="{{-id}}" class="leaf visibleOverflow">
         <js:xssNonce/>
         <fieldset class="control select multiple radio" title="{{-description}}">
             <legend>{{if (mandatory) { }}* {{ } }}{{-label}}</legend>
@@ -192,6 +192,8 @@
         </label>
     </div>
 </script>
+
+<!-- ${sessionScope.XSS_NONCE} do not remove -->
 
 
 

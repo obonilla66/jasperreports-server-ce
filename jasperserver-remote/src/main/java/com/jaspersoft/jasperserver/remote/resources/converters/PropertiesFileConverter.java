@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.SelfCleaningFileResourceDataWrapper;
@@ -56,7 +57,7 @@ public class PropertiesFileConverter extends ResourceConverterImpl<FileResource,
     private SingleRepositoryService singleRepositoryService;
 
     @Override
-    protected FileResource resourceSpecificFieldsToServer(ClientPropertiesFile clientObject, FileResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected FileResource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientPropertiesFile clientObject, FileResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         throw new UnsupportedOperationException();
     }
 

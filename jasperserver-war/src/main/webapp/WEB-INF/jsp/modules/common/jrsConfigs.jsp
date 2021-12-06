@@ -51,6 +51,7 @@
         defaultTemplateUri: '${not empty defaultTemplateUri ? defaultTemplateUri : templateProperties.defaultTemplateUri}',
         advNotSelected: "<spring:message code="ADH_162_NULL_SAVE_REPORT_SOURCE" javaScriptEscape="true"/>",
         templateNotSelected: "<spring:message code="ADH_162_NULL_SELECT_TEMPLATE_SOURCE" javaScriptEscape="true"/>",
+        version: "<spring:message code='PRO_VERSION'/>",
         calendar: {
 
             userLocale: "${userLocale}",
@@ -84,16 +85,13 @@
         serverIsNotResponding: "<spring:message code='confirm.slow.server'/>"
     };
 
-    // dirty hack to get path to current theme
-    __jrsConfigs__.currentThemePath = "<spring:theme code='theme.css'/>".split("/").slice(0, -1).join("/");
-
     __jrsConfigs__.isProVersion = "${isProVersion}" === "true" ? true : false;
 
     __jrsConfigs__.userLocale = "${userLocale}";
     __jrsConfigs__.userTimezone = "<%= TimeZoneContextHolder.getTimeZone().getID() %>";
 
-    __jrsConfigs__.avaliableLocales = [<c:forEach items="${userLocales}" var="locale" varStatus="sts">"${locale.code}"<c:if test="${!sts.last}">, </c:if></c:forEach>];
-    __jrsConfigs__.avaliableLocalesFullName = [<c:forEach items="${userLocales}" var="locale" varStatus="sts">"<spring:message code="locale.option" arguments='${locale.code},${locale.description}'/>"<c:if test="${!sts.last}">, </c:if></c:forEach>];
+    __jrsConfigs__.availableLocales = [<c:forEach items="${userLocales}" var="locale" varStatus="sts">"${locale.code}"<c:if test="${!sts.last}">, </c:if></c:forEach>];
+    __jrsConfigs__.availableLocalesFullName = [<c:forEach items="${userLocales}" var="locale" varStatus="sts">"<spring:message code="locale.option" arguments='${locale.code},${locale.description}'/>"<c:if test="${!sts.last}">, </c:if></c:forEach>];
 
     __jrsConfigs__.localeSettings = {
         locale: "${userLocale}",

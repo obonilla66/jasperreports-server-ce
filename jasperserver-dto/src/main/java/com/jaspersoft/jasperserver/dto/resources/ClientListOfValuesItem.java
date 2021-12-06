@@ -24,6 +24,8 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
@@ -33,7 +35,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNul
  * @version $Id$
  */
 @XmlRootElement(name = "item")
-public class ClientListOfValuesItem implements DeepCloneable<ClientListOfValuesItem> {
+public class ClientListOfValuesItem implements DeepCloneable<ClientListOfValuesItem>, Serializable {
     private String label;
     private String value;
 

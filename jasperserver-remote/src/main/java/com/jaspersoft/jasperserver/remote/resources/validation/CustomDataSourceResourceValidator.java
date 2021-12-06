@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.CustomReportDataSource;
@@ -47,7 +48,7 @@ public class CustomDataSourceResourceValidator extends GenericResourceValidator<
     private CustomReportDataSourceServiceFactory customDataSourceFactory;
 
     @Override
-    protected void internalValidate(CustomReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, CustomReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getServiceClass()) && empty(resource.getDataSourceName())){
             errors.add(new MandatoryParameterNotFoundException("ServiceClass or DataSourceName"));
         } else {

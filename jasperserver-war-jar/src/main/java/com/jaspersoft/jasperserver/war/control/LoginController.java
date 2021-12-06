@@ -34,6 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
@@ -45,7 +46,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.Metadata
  * @author swood
  *
  */
-public class LoginController extends JRBaseMultiActionController {
+public class LoginController extends JRBaseController {
 	
 	private static Log log = LogFactory.getLog(LoginController.class);
 
@@ -61,6 +62,7 @@ public class LoginController extends JRBaseMultiActionController {
 	 * @args HttpServletRequest, HttpServletResponse
 	 * @returns ModelAndView - Home Page
 	 */
+	@RequestMapping("/home.html")
 	public ModelAndView homePage(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException {
 
@@ -96,6 +98,7 @@ public class LoginController extends JRBaseMultiActionController {
 	 * @return
 	 * @throws ServletException
 	 */
+	@RequestMapping("/loginsuccess.html")
 	public ModelAndView loginSuccess(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException {
 

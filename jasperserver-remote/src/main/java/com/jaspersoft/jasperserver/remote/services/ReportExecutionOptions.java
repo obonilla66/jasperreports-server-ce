@@ -45,6 +45,7 @@ public class ReportExecutionOptions implements Serializable {
     private Boolean interactive = false;
     private PaginationParameters paginationParameters;
     private Boolean defaultIgnorePagination;
+    private Integer reportContainerWidth;
     private Boolean async = false;
     private String transformerKey;
     private String contextPath;
@@ -70,6 +71,7 @@ public class ReportExecutionOptions implements Serializable {
         reportContext = source.getReportContext();
         jasperReportsContext = source.getJasperReportsContext();
         defaultIgnorePagination = source.getDefaultIgnorePagination();
+        reportContainerWidth = source.getReportContainerWidth();
     }
     
     public JasperReportsContext getJasperReportsContext() {
@@ -98,6 +100,15 @@ public class ReportExecutionOptions implements Serializable {
      */
     public ReportExecutionOptions setDefaultIgnorePagination(Boolean defaultIgnorePagination) {
         this.defaultIgnorePagination = defaultIgnorePagination;
+        return this;
+    }
+
+    public Integer getReportContainerWidth() {
+        return reportContainerWidth;
+    }
+
+    public ReportExecutionOptions setReportContainerWidth(Integer reportContainerWidth) {
+        this.reportContainerWidth = reportContainerWidth;
         return this;
     }
     

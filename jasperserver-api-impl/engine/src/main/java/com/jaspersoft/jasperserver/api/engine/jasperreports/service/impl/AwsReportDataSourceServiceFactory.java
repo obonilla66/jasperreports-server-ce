@@ -26,6 +26,8 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AwsReportDa
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.Tracer;
 
 import javax.sql.DataSource;
 import java.util.Map;
@@ -36,6 +38,8 @@ import java.util.Map;
 public class AwsReportDataSourceServiceFactory extends JdbcReportDataSourceServiceFactory {
 
     private AwsDataSourceRecovery awsDataSourceRecovery;
+    @Autowired(required = false)
+    protected Tracer tracer;
 
     @Override
     public ReportDataSourceService createService(ReportDataSource reportDataSource) {
@@ -48,7 +52,7 @@ public class AwsReportDataSourceServiceFactory extends JdbcReportDataSourceServi
                 awsDataSource.getUsername(), awsDataSource.getPassword());
 
         return new AwsDataSourceService(dataSource, getTimeZoneByDataSourceTimeZone(awsDataSource.getTimezone()),
-                awsDataSource, awsDataSourceRecovery);
+                awsDataSource, awsDataSourceRecovery).withTracer(tracer);
     }
 
     public void setAwsDataSourceRecovery(AwsDataSourceRecovery awsDataSourceRecovery) {

@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.AwsDataSourceService;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.AwsReportDataSourceServiceFactory;
@@ -80,6 +82,7 @@ public class AwsConnectionStrategyTest {
     private ClientAwsDataSource awsDataSource;
     private AwsReportDataSourceImpl awsReportDataSource;
 
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init(){
@@ -95,14 +98,14 @@ public class AwsConnectionStrategyTest {
         doReturn(true).when(awsDataSourceService).testConnection();
         awsReportDataSource = new AwsReportDataSourceImpl();
         doReturn(awsReportDataSource).when(awsDataSourceResourceConverter)
-                .toServer(same(awsDataSource), any(ToServerConversionOptions.class));
+                .toServer(any(ExecutionContext.class), same(awsDataSource), any(ToServerConversionOptions.class));
         doReturn(awsDataSourceService).when(awsDataSourceFactory).createService(awsReportDataSource);
         when(secureExceptionHandlerMock.handleException(isA(Throwable.class), isA(ErrorDescriptor.class))).thenReturn(new ErrorDescriptor().setMessage("test"));
     }
 
     @Test
     public void createConnection_withPasswordAndSecretKey_success() throws Exception {
-        final ClientAwsDataSource result = strategy.createContext(awsDataSource, null);
+        final ClientAwsDataSource result = strategy.createContext(ctx, awsDataSource, null);
         assertSame(result, awsDataSource);
     }
 
@@ -115,7 +118,7 @@ public class AwsConnectionStrategyTest {
         awsReportDataSource.setPassword("realPassword");
         awsReportDataSource.setAWSSecretKey("realSecretKey");
         doReturn(awsReportDataSource).when(repository).getResource(null, awsDataSource.getUri());
-        final ClientAwsDataSource result = strategy.createContext(awsDataSource, null);
+        final ClientAwsDataSource result = strategy.createContext(ctx, awsDataSource, null);
         assertSame(result, awsDataSource);
         assertEquals(result.getPassword(), passwordSubstitution);
         assertEquals(result.getSecretKey(), passwordSubstitution);
@@ -127,7 +130,7 @@ public class AwsConnectionStrategyTest {
         awsReportDataSource.setPassword("realPassword");
         awsReportDataSource.setAWSSecretKey("realSecretKey");
         doReturn(awsReportDataSource).when(repository).getResource(null, awsDataSource.getUri());
-        final ClientAwsDataSource result = strategy.createContext(awsDataSource, null);
+        final ClientAwsDataSource result = strategy.createContext(ctx, awsDataSource, null);
         assertSame(result, awsDataSource);
         assertNull(result.getPassword());
         assertNull(result.getSecretKey());
@@ -137,13 +140,13 @@ public class AwsConnectionStrategyTest {
     @Test(expectedExceptions = ContextCreationFailedException.class)
     public void createConnection_createConnectionReturnsNull_exception() throws Exception{
         when(awsDataSourceService.testConnection()).thenReturn(false);
-        strategy.createContext(awsDataSource, null);
+        strategy.createContext(ctx, awsDataSource, null);
     }
 
     @Test(expectedExceptions = ContextCreationFailedException.class)
     public void createConnection_createConnectionThrowsException_exception() throws Exception{
         doThrow(new RuntimeException()).when(awsDataSourceService).testConnection();
-        strategy.createContext(awsDataSource, null);
+        strategy.createContext(ctx, awsDataSource, null);
     }
 
 

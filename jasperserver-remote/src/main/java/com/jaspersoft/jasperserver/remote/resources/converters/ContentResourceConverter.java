@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
@@ -40,7 +41,7 @@ import java.util.List;
 public class ContentResourceConverter extends ResourceConverterImpl<ContentResource, ClientFile>{
 
         @Override
-    protected ContentResource resourceSpecificFieldsToServer(ClientFile clientObject, ContentResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected ContentResource resourceSpecificFieldsToServer(ExecutionContext ctx, ClientFile clientObject, ContentResource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         if(resultToUpdate.getFileType() != null &&
                 (!resultToUpdate.getFileType().equals(clientObject.getType().name()) &&
                         !(ContentResource.TYPE_UNSPECIFIED.equals(resultToUpdate.getFileType()) && clientObject.getType().equals(ClientFile.FileType.unspecified)))){

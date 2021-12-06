@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Set;
 
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceVersionNotMatchException;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -117,6 +118,8 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
 				
 			}
 			return ret;
+		} catch (JSResourceVersionNotMatchException e) {
+			throw e;
 		} catch (RuntimeException e){
 			log.debug("************** HibernateDaoImpl.executeWriteCallback EXCEPTION ********** ", e);
 			throw new JSExceptionWrapper(e);
@@ -202,9 +205,6 @@ public class HibernateDaoImpl extends HibernateDaoSupport {
     protected Session getSession() {
     	return getSessionFactory().getCurrentSession();
 	}
-	public ActiveMQBlobMessage test() {
-	    return new ActiveMQBlobMessage();
-    }
 }
 
 interface HibernateDaoFlushModeHandle {

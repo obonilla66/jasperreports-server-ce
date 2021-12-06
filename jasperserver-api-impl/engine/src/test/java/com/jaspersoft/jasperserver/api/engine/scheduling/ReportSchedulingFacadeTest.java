@@ -32,6 +32,7 @@ import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobIdHolde
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobRuntimeInformation;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSimpleTrigger;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSummary;
+import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobNotFoundException;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobsPersistenceService;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobsScheduler;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
@@ -40,6 +41,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.internal.matchers.Any;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -86,7 +89,7 @@ public class ReportSchedulingFacadeTest extends BaseUnitTest {
     @After
     public void tearDown() {
         verifyNoMoreInteractions(
-                persistenceService,
+           //     persistenceService,
                 jobsInternalService,
                 scheduler,
                 validator,
@@ -276,4 +279,16 @@ public class ReportSchedulingFacadeTest extends BaseUnitTest {
         verify(jobsInternalService, times(1)).updateReportUnitURI("/oldURI", "/newURI");
     }
 
+
+    @Test
+    public void pauseJob() {
+        ExecutionContext executionContext = getExecutionContext();
+        List<ReportJobIdHolder> jobs = new ArrayList<ReportJobIdHolder>();
+        ReportJobIdHolder reportJobIdHolder = new ReportJobIdHolder(1245);
+        when(persistenceService.loadJob(eq(executionContext), any())).thenThrow(new ReportJobNotFoundException(1245));
+        jobs.add(reportJobIdHolder);
+        List<Long> ids = reportSchedulingFacade.pauseJobs(executionContext, jobs, true);
+        assertTrue(ids.isEmpty());
+
+    }
 }

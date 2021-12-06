@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.XMLAConnection;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ import static com.jaspersoft.jasperserver.remote.resources.validation.Validation
 @Component
 public class XmlaConnectionResourceValidator extends GenericResourceValidator<XMLAConnection> {
     @Override
-    protected void internalValidate(XMLAConnection resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, XMLAConnection resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getDataSource())) {
             errors.add(new MandatoryParameterNotFoundException("DataSource"));
         }

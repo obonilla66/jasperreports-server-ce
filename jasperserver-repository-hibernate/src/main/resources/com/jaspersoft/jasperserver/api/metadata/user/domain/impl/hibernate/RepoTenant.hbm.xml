@@ -20,10 +20,14 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping>
+<hibernate-mapping
+        xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping
+        http://www.hibernate.org/xsd/hibernate-mapping/hibernate-mapping-4.0.xsd">
   <class table="JITenant" name="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoTenant" batch-size="1000">
+    <cache usage = "read-write" region="tenants"/>
+    <natural-id-cache region="tenantsByName"/>
     <id type="long" column="id" name="id" unsaved-value="-1">
       <generator class="native"/>
     </id>

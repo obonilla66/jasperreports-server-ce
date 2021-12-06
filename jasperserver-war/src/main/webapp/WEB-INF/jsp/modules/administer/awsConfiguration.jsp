@@ -73,6 +73,7 @@ function externalLinks() {
         if (anchor.getAttribute("href") &&
                 anchor.getAttribute("rel") == "external") {
             anchor.target = "_blank";
+            anchor.setAttribute("rel", "external noopener noreferrer");
         }
     }
 }

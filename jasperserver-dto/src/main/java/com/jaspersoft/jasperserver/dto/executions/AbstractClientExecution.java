@@ -20,26 +20,21 @@
  */
 package com.jaspersoft.jasperserver.dto.executions;
 
+import com.jaspersoft.jasperserver.dto.adhoc.component.ClientGenericComponent;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.executions.validation.CheckInMemoryDataSourceType;
-import com.jaspersoft.jasperserver.dto.resources.ClientAdhocDataView;
-import com.jaspersoft.jasperserver.dto.resources.ClientAwsDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientAzureSqlDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientBeanDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientCustomDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientJdbcDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientReference;
-import com.jaspersoft.jasperserver.dto.resources.ClientReferenceable;
-import com.jaspersoft.jasperserver.dto.resources.ClientSemanticLayerDataSource;
-import com.jaspersoft.jasperserver.dto.resources.ClientTopic;
-import com.jaspersoft.jasperserver.dto.resources.ClientVirtualDataSource;
+import com.jaspersoft.jasperserver.dto.resources.*;
 import com.jaspersoft.jasperserver.dto.resources.domain.ClientDomain;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.jaspersoft.jasperserver.dto.resources.ResourceMediaType.ADHOC_DATA_VIEW_CLIENT_TYPE;
 import static com.jaspersoft.jasperserver.dto.resources.ResourceMediaType.AWS_DATA_SOURCE_CLIENT_TYPE;
@@ -70,6 +65,11 @@ public abstract class AbstractClientExecution<T extends AbstractClientExecution<
     private ClientReferenceable dataSource;
     private String id;
     private ExecutionStatusObject status;
+
+    /**
+     * Optional. Used as hint to the executor
+     */
+    private List<ClientReferenceable> resources;
 
     public AbstractClientExecution() {
     }
@@ -142,6 +142,29 @@ public abstract class AbstractClientExecution<T extends AbstractClientExecution<
         return (T) this;
     }
 
+    @XmlElementWrapper(name = "resources")
+    @XmlElements({
+            @XmlElement(name = "reference", type = ClientReference.class),
+            @XmlElement(name = "file", type = ClientFile.class),
+            @XmlElement(name = "reportUnit", type = ClientReportUnit.class),
+            @XmlElement(name = "adhocDataView", type = ClientAdhocDataView.class),
+            @XmlElement(name = "semanticLayerDataSource", type = ClientSemanticLayerDataSource.class),
+            @XmlElement(name = "customDataSource", type = ClientCustomDataSource.class),
+            @XmlElement(name = "jdbcDataSource", type = ClientJdbcDataSource.class),
+            @XmlElement(name = "jndiJdbcDataSource", type = ClientJndiJdbcDataSource.class),
+            @XmlElement(name = "azureSqlDataSource", type = ClientAzureSqlDataSource.class),
+            @XmlElement(name = "awsDataSource", type = ClientAwsDataSource.class),
+            @XmlElement(name = TOPIC_TYPE, type = ClientTopic.class)
+    })
+    public List<ClientReferenceable> getResources() {
+        return resources;
+    }
+
+    public T setResources(List<ClientReferenceable> resources) {
+        this.resources = resources;
+        return (T) this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -153,6 +176,7 @@ public abstract class AbstractClientExecution<T extends AbstractClientExecution<
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (params != null ? !params.equals(that.params) : that.params != null) return false;
         if (status != null ? !status.equals(that.status) : that.status != null) return false;
+        if (resources != null ? !resources.equals(that.resources) : that.resources != null) return false;
 
         return true;
     }
@@ -163,6 +187,7 @@ public abstract class AbstractClientExecution<T extends AbstractClientExecution<
         result = 31 * result + (dataSource != null ? dataSource.hashCode() : 0);
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (resources != null ? resources.hashCode() : 0);
         return result;
     }
 
@@ -173,6 +198,7 @@ public abstract class AbstractClientExecution<T extends AbstractClientExecution<
                 ", dataSource=" + dataSource +
                 ", id='" + id + '\'' +
                 ", status=" + status +
+                ", resources=" + resources +
                 '}';
     }
 

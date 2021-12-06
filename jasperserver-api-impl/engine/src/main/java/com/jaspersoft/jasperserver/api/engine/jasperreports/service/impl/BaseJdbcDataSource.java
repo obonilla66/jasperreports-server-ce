@@ -20,34 +20,55 @@
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import net.sf.jasperreports.engine.JRParameter;
-
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ConnectionTestingDataSourceService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
+import net.sf.jasperreports.engine.JRParameter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
  * @version $Id$
  */
 public abstract class BaseJdbcDataSource implements ReportDataSourceService, ConnectionTestingDataSourceService {
-
-
 	private static final Log log = LogFactory.getLog(BaseJdbcDataSource.class);
 	
 	private Connection conn;
-	
+	private Optional<Tracer> tracer = Optional.empty();
+	private Optional<Span> connSpan;
+	private Optional<Tracer.SpanInScope> connScope;
 
 	public void setReportParameterValues(Map parameterValues) {
-		conn = createConnection();
-		parameterValues.put(JRParameter.REPORT_CONNECTION, conn);
+		connSpan = this.tracer.map(t -> t.nextSpan().name("dbConnection"));
+		try {
+			connScope = this.tracer.flatMap(t -> connSpan.map(span -> t.withSpan(span.start())));;
+
+			conn = createConnection();
+			parameterValues.put(JRParameter.REPORT_CONNECTION, conn);
+
+			connSpan.ifPresent(span -> {
+				try {
+					span.tag("url", conn.getMetaData().getURL());
+				} catch (Exception ignore) {}
+			});
+			connSpan.ifPresent(span -> span.event("connectionCreated"));
+		} catch (Exception e){
+			// This will allow collecting the span to send it to a distributed tracing system e.g. Zipkin
+			connSpan.ifPresent(span -> {
+				span.error(e);
+				connScope.ifPresent(Tracer.SpanInScope::close);
+				span.end();
+			});
+			throw e;
+		}
 	}
 
 	public void closeConnection() {
@@ -55,12 +76,21 @@ public abstract class BaseJdbcDataSource implements ReportDataSourceService, Con
 		{
 			try {
 				conn.close();
-                if (log.isDebugEnabled()) {
+
+				connSpan.ifPresent(span -> span.event("connectionClosed"));
+				if (log.isDebugEnabled()) {
                     log.debug("Connection successfully closed");
                 }
             } catch (SQLException e) {
 				log.error("Error closing connection.", e);
+				connSpan.ifPresent(span -> span.error(e));
 				throw new JSExceptionWrapper(e);
+			} finally {
+				// Once done remember to end the span. This will allow collecting
+				// the span to send it to a distributed tracing system e.g. Zipkin
+
+				connScope.ifPresent(Tracer.SpanInScope::close);
+				connSpan.ifPresent(Span::end);
 			}
 
 			conn = null;
@@ -68,4 +98,9 @@ public abstract class BaseJdbcDataSource implements ReportDataSourceService, Con
 	}
 	
 	protected abstract Connection createConnection();
+
+	public BaseJdbcDataSource withTracer(Tracer tracer) {
+		this.tracer = Optional.ofNullable(tracer);
+		return this;
+	}
 }

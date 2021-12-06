@@ -31,6 +31,8 @@ import com.jaspersoft.jasperserver.dto.adhoc.query.validation.CheckGenericOrderF
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -38,7 +40,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Andriy Godovanets
  */
 @CheckGenericOrderFieldReference
-public class ClientGenericOrder implements ClientOrder, ClientFieldReference, ClientField, IExpressionContainer {
+public class ClientGenericOrder implements ClientOrder, ClientFieldReference, ClientField, IExpressionContainer, Serializable {
     public static final Boolean IS_AGGREGATION_DEFAULT = false;
 
     private Boolean isAscending = true;

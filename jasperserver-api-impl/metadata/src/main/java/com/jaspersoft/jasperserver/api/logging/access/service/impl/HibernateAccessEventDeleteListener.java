@@ -21,40 +21,37 @@
 package com.jaspersoft.jasperserver.api.logging.access.service.impl;
 
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateBeforeDeleteListener;
-import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
-import com.jaspersoft.jasperserver.api.logging.access.domain.hibernate.RepoAccessEvent;
+import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import org.hibernate.event.spi.DeleteEvent;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
-import java.util.Iterator;
 
 /**
  * @author Sergey Prilukin
  * @version $Id$
  */
 public class HibernateAccessEventDeleteListener implements HibernateBeforeDeleteListener {
+    private AccessService accessService;
+
+    public AccessService getAccessService() {
+        return accessService;
+    }
+
+    public void setAccessService(AccessService accessService) {
+        this.accessService = accessService;
+    }
 
     public void beforeDelete(DeleteEvent event) {
         Object o = event.getObject();
         if (o instanceof RepoUser) {
-            deleteAccessEventsByUser((RepoUser) o, event.getSession());
+            deleteAccessEventsByUser((RepoUser) o);
         }
     }
 
-    protected void deleteAccessEventsByUser(RepoUser user, EventSource session) {
-        Criteria criteria = session.createCriteria(RepoAccessEvent.class);
-        criteria.add(Restrictions.eq("user", user));
-        List accessEvents = criteria.list();
-        if (accessEvents != null && !accessEvents.isEmpty()) {
-            for (Iterator it = accessEvents.iterator(); it.hasNext();) {
-                RepoAccessEvent accessEvent = (RepoAccessEvent) it.next();
-                session.delete(accessEvent);
-            }
-        }
+    protected void deleteAccessEventsByUser(RepoUser user) {
+        String tenantId = user.getTenantId();
+        String userId = user.getUsername() + ( tenantId != null && !tenantId.equals(TenantService.ORGANIZATIONS) ? "|" + tenantId : "");
+        accessService.deleteAccessEventsByUser(userId);
     }
 
 }

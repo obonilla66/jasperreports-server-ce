@@ -80,6 +80,7 @@ public class RunReportsJaxrsService extends RemoteServiceWrapper<RunReportServic
             @QueryParam("pages") final String pages,
             @QueryParam("transformerKey") final String transformerKey,
             @QueryParam("ignorePagination") final Boolean ignorePagination,
+            @QueryParam("reportContainerWidth") final Integer reportContainerWidth,
             @QueryParam("attachmentsPrefix") final String attachmentsPrefix,
             @QueryParam("allowInlineScripts") @DefaultValue("true") final Boolean allowInlineScripts,
             @QueryParam("markupType") final String markupType,
@@ -110,6 +111,7 @@ public class RunReportsJaxrsService extends RemoteServiceWrapper<RunReportServic
                         .setFreshData(freshData)
                         .setSaveDataSnapshot(saveDataSnapshot)
                         .setInteractive(interactive)
+                        .setReportContainerWidth(reportContainerWidth)
                         .setContextPath(request.getContextPath());
                 if(ignorePagination != null){
                     reportExecutionOptions.setIgnorePagination(ignorePagination);

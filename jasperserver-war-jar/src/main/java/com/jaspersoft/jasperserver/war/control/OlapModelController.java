@@ -56,6 +56,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletException;
@@ -77,7 +78,7 @@ import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventTyp
  * @revision $Id$
  *
  */
-public class OlapModelController extends JRBaseMultiActionController {
+public class OlapModelController extends JRBaseController {
 
     private static final Logger log = LogManager.getLogger(OlapModelController.class);
     private Resources resources = Resources.instance(OlapModelController.class);
@@ -134,7 +135,7 @@ public class OlapModelController extends JRBaseMultiActionController {
             }
         });
     }
-
+    @RequestMapping("/olap/viewOlap.html")
     public ModelAndView viewOlap(HttpServletRequest req,
                  HttpServletResponse res) throws ServletException {
 

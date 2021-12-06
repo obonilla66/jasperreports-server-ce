@@ -28,6 +28,12 @@
         <res-type>javax.sql.DataSource</res-type>
         <jndi-name>java:/${js.jndi}</jndi-name>
     </resource-ref>
+
+    <resource-ref>
+        <res-ref-name>${audit.jndi}</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <jndi-name>java:/${audit.jndi}</jndi-name>
+    </resource-ref>
     
     <resource-ref>
         <res-ref-name>${sugarcrm.jndi}</res-ref-name>

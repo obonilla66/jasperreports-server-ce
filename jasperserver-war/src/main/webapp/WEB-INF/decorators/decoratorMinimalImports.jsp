@@ -55,21 +55,9 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="webPageView.css"/>" type="text/css" media="screen,print"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="notifications.css"/>" type="text/css" media="screen,print"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="attributes.css"/>" type="text/css" media="screen,print"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="importExport.css"/>" type="text/css" media="screen,print"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="manageTenants.css"/>" type="text/css" media="screen,print"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="pagination.css"/>" type="text/css" media="screen,print"/>
-
-    <%--
-        In order to not have this check we need to move all dashboard css to jasper-ui.css.
-        Ideally, we should have a separate build of css for CE, because CE does not have dashboard.
-    --%>
-    <c:if test="${isProVersion}">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="dashboard/designer.css"/>" type="text/css" media="screen,print"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="dashboard/viewer.css"/>" type="text/css" media="screen,print"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="dashboard/canvas.css"/>" type="text/css" media="screen,print"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="dashboard/toolbar.css"/>" type="text/css" media="screen,print"/>
+    <c:if test="${param.decorate == 'no'}">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="overrides_custom.css"/>" type="text/css" media="screen"/>
     </c:if>
-
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="overrides_custom.css"/>" type="text/css" media="screen"/>
-
 <%@ include file="../jsp/modules/common/jrsConfigs.jsp" %>

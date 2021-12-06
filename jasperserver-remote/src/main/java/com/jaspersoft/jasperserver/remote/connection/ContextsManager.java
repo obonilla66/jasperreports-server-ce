@@ -22,6 +22,8 @@ package com.jaspersoft.jasperserver.remote.connection;
 
 import com.jaspersoft.jasperserver.api.ExceptionListWrapper;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import com.jaspersoft.jasperserver.core.util.type.GenericParametersHelper;
 import com.jaspersoft.jasperserver.core.util.type.GenericTypeProcessorRegistry;
@@ -99,32 +101,34 @@ public class ContextsManager {
         if (contextDescription == null) {
             throw new MandatoryParameterNotFoundException("body");
         }
+        final ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
+
         final ContextManagementStrategy<Object, Object> strategy = (ContextManagementStrategy<Object, Object>) getStrategy(contextDescription.getClass());
         if (strategy.getClass().getAnnotation(SupportsValidation.class) == null) {
             jrsBeanValidator.validate(contextDescription);
             // generic type processor registry assures safety of unchecked assignment
             ClientValidator clientValidator = genericTypeProcessorRegistry.getTypeProcessor(contextDescription.getClass(), ClientValidator.class, false);
             if (clientValidator != null) {
-                final List<Exception> exceptions = clientValidator.validate(contextDescription);
+                final List<Exception> exceptions = clientValidator.validate(ctx, contextDescription);
                 if (!exceptions.isEmpty()) {
                     throw new ExceptionListWrapper(exceptions);
                 }
             }
         }
         final Map<String, Object> data = new HashMap<String, Object>();
-        final Object context = strategy.createContext(contextDescription, data);
+        final Object context = strategy.createContext(ctx, contextDescription, data);
         ContextDataPair item = new ContextDataPair(context, data).setExternalContextClass(contextDescription.getClass());
         return contextDataStorage.save(item);
     }
 
-    public boolean isMetadataSupported(Object contextDescription, String metadataClientType) {
+    public boolean isMetadataSupported(ExecutionContext ctx, Object contextDescription, String metadataClientType) {
         final ContextMetadataBuilder<?> metadataBuilder = getMetadataBuilder(contextDescription);
         boolean result = false;
         if (metadataBuilder instanceof GenericTypeMetadataBuilder) {
             // some context strategies serves data sources of multiple types, described by generic model.
             final GenericTypeMetadataBuilder genericTypeMetadataBuilder = (GenericTypeMetadataBuilder) metadataBuilder;
             try {
-                result = genericTypeMetadataBuilder.isMetadataSupported(contextDescription, metadataClientType);
+                result = genericTypeMetadataBuilder.isMetadataSupported(ctx, contextDescription, metadataClientType);
             } catch (ClassCastException e) {
                 final ToServerConverter typeProcessor = genericTypeProcessorRegistry
                         .getTypeProcessor(contextDescription.getClass(), ToServerConverter.class, false);
@@ -132,8 +136,8 @@ public class ContextsManager {
                     // it's a case with internal representation of resource. Let's try to convert it and check
                     // if metadata is supported
                     try {
-                        result = genericTypeMetadataBuilder.isMetadataSupported(
-                                typeProcessor.toServer(contextDescription, null), metadataClientType);
+                        result = genericTypeMetadataBuilder.isMetadataSupported(ctx,
+                                typeProcessor.toServer(ctx, contextDescription, null), metadataClientType);
                     } catch (Exception ex) {
                         // do nothing. Don't support this case
                     }
@@ -185,7 +189,7 @@ public class ContextsManager {
                     // it's a case with internal representation of resource. Let's try to convert it
                     // and get metadata client type
                     try {
-                        result = genericTypeMetadataBuilder.getMetadataClientResourceType(typeProcessor.toServer(contextDescription, null));
+                        result = genericTypeMetadataBuilder.getMetadataClientResourceType(typeProcessor.toServer(ExecutionContextImpl.getRuntimeExecutionContext(), contextDescription, null));
                     } catch (Exception ex) {
                         // do nothing. Don't support this case
                     }

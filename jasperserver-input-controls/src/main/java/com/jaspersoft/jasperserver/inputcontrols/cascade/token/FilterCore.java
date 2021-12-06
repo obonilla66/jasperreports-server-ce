@@ -383,4 +383,10 @@ public class FilterCore implements FilterResolver, Serializable {
             throw new JSException("Order cannot be resolved because of circular or non-existing dependencies.");
         }
     }
+
+    @Override
+    public String updateQueryWithNewSearchCriteria(String query, Map<String, Object> providedParameters, String queryValueColumn, String criteria)
+        throws JSException {
+	    return null;
+    }
 }

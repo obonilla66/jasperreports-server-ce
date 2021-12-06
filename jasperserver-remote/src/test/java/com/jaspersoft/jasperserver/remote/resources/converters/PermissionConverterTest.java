@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.client.ObjectPermissionImpl;
@@ -107,7 +108,8 @@ public class PermissionConverterTest {
 
     @Test
     public void testToServer() throws Exception {
-        ObjectPermission converted = converter.toServer(client, null);
+        ObjectPermission converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , client, null);
 
         assertEquals(converted.getPermissionMask(), (int)client.getMask());
         assertEquals(converted.getPermissionRecipient(), userIdentity);
@@ -117,7 +119,8 @@ public class PermissionConverterTest {
     @Test
     public void testToServer_slash() throws Exception {
         client.setUri("public");
-        ObjectPermission converted = converter.toServer(client, null);
+        ObjectPermission converted = converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , client, null);
 
         assertEquals(converted.getPermissionMask(), (int)client.getMask());
         assertEquals(converted.getPermissionRecipient(), userIdentity);

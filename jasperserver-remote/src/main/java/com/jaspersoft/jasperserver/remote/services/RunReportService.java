@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.remote.services;
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportExecutionStatusInformation;
 import com.jaspersoft.jasperserver.api.engine.common.service.SchedulerReportExecutionStatusSearchCriteria;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.PaginationParameters;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 
@@ -64,7 +65,8 @@ public interface RunReportService {
      * @throws ErrorDescriptorException in case if report execution metadata generation fails.
      *                          See RemoteException.getErrorDesctiptor() to get detailed error descriptions.
      */
-    ReportExecution getReportExecutionFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters, ReportExecutionOptions executionOptions, ExportExecutionOptions exportOptions) throws ErrorDescriptorException, JSValidationException;
+    ReportExecution getReportExecutionFromRawParameters(String reportUnitURI, Map<String, String[]> rawParameters,
+            ReportExecutionOptions executionOptions, ExportExecutionOptions exportOptions, Map<String, Object> sessionParams) throws ErrorDescriptorException, JSValidationException;
 
     /**
      * Starting of report execution according to given ReportExecution object.
@@ -90,6 +92,8 @@ public interface RunReportService {
      * @throws ResourceNotFoundException if required resource isn't found
      */
     ReportExecution getReportExecution(String executionId) throws ResourceNotFoundException;
+    
+    ReportExecution getRelatedExecution(ReportExecution reportExecution, PaginationParameters paginationParameters) throws ResourceNotFoundException;
 
     /**
      * Get report output resource. Synchronous export.
@@ -132,6 +136,10 @@ public interface RunReportService {
      */
    Response getReportExecutionPageStatus(String executionId, String pages);
 
+    /**
+     * Get the execution status and additional report info when cancelling the async execution
+     */
+    Response getStatusForAsyncCancelledExecution(String executionId);
         
     /**
      * Run a report action such as sort/filter/format/etc.

@@ -66,12 +66,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.acls.model.AccessControlEntry;
-import org.springframework.security.acls.model.Acl;
-import org.springframework.security.acls.model.AclService;
-import org.springframework.security.acls.model.ObjectIdentity;
-import org.springframework.security.acls.model.Sid;
-import org.springframework.security.acls.model.SidRetrievalStrategy;
+import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -761,12 +756,26 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
     /* (non-Javadoc)
      * @see com.jaspersoft.jasperserver.api.metadata.user.service.ObjectPermissionService#isObjectAdministrable(com.jaspersoft.jasperserver.api.common.domain.ExecutionContext, java.lang.Object)
      */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean isObjectAdministrable(ExecutionContext context, Object targetObject) {
+		return doesObjectHaveRequestedPermission(context, targetObject, JasperServerPermission.ADMINISTRATION);
+	}
+
+	public boolean isObjectReadOnlyAccessible(ExecutionContext context, Object targetObject) {
+		return doesObjectHaveRequestedPermission(context, targetObject, JasperServerPermission.READ) &&
+				!isObjectAdministrable(context, targetObject) &&
+				!doesObjectHaveRequestedPermission(context, targetObject, JasperServerPermission.WRITE);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	protected boolean doesObjectHaveRequestedPermission(ExecutionContext context, Object targetObject, Permission requestedPermission) {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if ((targetObject == null) || (auth == null)) {
             return true;
         }
+        if (requestedPermission == null) {
+        	return false;
+		}
         JasperServerSidRetrievalStrategyImpl localStrategy =  new JasperServerSidRetrievalStrategyImpl();
         List<Sid> sids = localStrategy.getSids(auth);
         List objectPermissions = new ArrayList();
@@ -812,7 +821,7 @@ public class ObjectPermissionServiceImpl extends HibernateDaoImpl implements
             if (obj instanceof ObjectPermission) {
                 Sid permissionSid = localStrategy.getSid(((ObjectPermission) obj).getPermissionRecipient());
                 if (sids.contains(permissionSid)) {
-                    if (JasperServerPermission.ADMINISTRATION.getMask()==((ObjectPermission) obj).getPermissionMask()) {
+                    if (requestedPermission.getMask()==((ObjectPermission) obj).getPermissionMask()) {
                         return true;
                     } else {
                         // Remove current SID from future checks - because we already found that this Sid don`t have Admin access

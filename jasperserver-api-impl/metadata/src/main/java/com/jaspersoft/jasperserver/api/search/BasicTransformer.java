@@ -32,9 +32,13 @@ public class BasicTransformer implements ResultTransformer {
 
         if (resultList != null) {
             for (Object result : resultList) {
-                Object[] values = (Object[]) result;
+                if(result instanceof Long){
+                    idList.add((Long)result);
+                } else {
+                    Object[] values = (Object[]) result;
 
-                idList.add((Long) values[0]);
+                    idList.add((Long) values[0]);
+                }
             }
         }
 

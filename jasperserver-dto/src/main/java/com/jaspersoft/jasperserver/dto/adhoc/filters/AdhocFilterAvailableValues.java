@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.dto.adhoc.filters;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 
+import java.io.Serializable;
 import java.util.List;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -33,7 +34,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Sergey Prilukin
  * @version $Id$
  */
-public class AdhocFilterAvailableValues implements DeepCloneable<AdhocFilterAvailableValues> {
+public class AdhocFilterAvailableValues implements DeepCloneable<AdhocFilterAvailableValues>, Serializable {
     private Integer total;
     private List<InputControlOption> data;
 

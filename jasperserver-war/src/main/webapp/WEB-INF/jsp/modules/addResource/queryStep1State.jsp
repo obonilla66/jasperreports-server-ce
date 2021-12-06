@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=utf-8" %>
+<%@ page import="com.jaspersoft.jasperserver.war.common.JasperServerConst" %>
 <%--
   ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
@@ -20,8 +21,12 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   --%>
 
+<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core_rt" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib prefix="js" uri="/WEB-INF/jasperserver.tld" %>
+
+<c:set var="MAX_LENGTH_NAME" value="<%=JasperServerConst.MAX_LENGTH_NAME%>" />
+<c:set var="MAX_LENGTH_LABEL" value="<%=JasperServerConst.MAX_LENGTH_LABEL%>" />
 
 <script type="text/javascript">
     <js:xssNonce type="javascript"/>
@@ -44,9 +49,9 @@
         resource.messages = {};
     }
 
-    resource.messages["labelToLong"] = '<spring:message code="QueryValidator.error.too.long.query.label" javaScriptEscape="true"/>';
+    resource.messages["labelToLong"] = '<spring:message code="QueryValidator.error.too.long.query.label" arguments="${MAX_LENGTH_LABEL}" javaScriptEscape="true"/>';
     resource.messages["labelIsEmpty"] = '<spring:message code="QueryValidator.error.not.empty.query.label" javaScriptEscape="true"/>';
-    resource.messages["resourceIdToLong"] = '<spring:message code="QueryValidator.error.too.long.query.name" javaScriptEscape="true"/>';
+    resource.messages["resourceIdToLong"] = '<spring:message code="QueryValidator.error.too.long.query.name" arguments="${MAX_LENGTH_NAME}" javaScriptEscape="true"/>';
     resource.messages["resourceIdIsEmpty"] = '<spring:message code="QueryValidator.error.not.empty.query.name" javaScriptEscape="true"/>';
     resource.messages["resourceIdInvalidChars"] = '<spring:message code="QueryValidator.error.invalid.chars.query.name" javaScriptEscape="true"/>';
     resource.messages["descriptionToLong"] = '<spring:message code="QueryValidator.error.too.long.query.description" javaScriptEscape="true"/>';

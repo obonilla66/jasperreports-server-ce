@@ -23,12 +23,14 @@ package com.jaspersoft.jasperserver.dto.adhoc.dataset;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
+
 /**
  * @author Vasyl Spachynskyi
  * @version $Id: Id $
  * @since 09.12.2016
  */
-public class ClientFlatDatasetFieldReference extends ClientDatasetFieldReference implements DeepCloneable<ClientDatasetFieldReference> {
+public class ClientFlatDatasetFieldReference extends ClientDatasetFieldReference implements DeepCloneable<ClientDatasetFieldReference>, Serializable {
 
     public enum FlatDatasetFieldKind {
         GROUP_KIND("group"), AGGREGATION_KIND("aggregation"), DETAIL_KIND("detail");

@@ -46,7 +46,7 @@
 
     <!-- Enable annotation-based wiring -->
     <context:annotation-config/>
-
+    <mvc:annotation-driven/>
     <!-- ENTRIES FOR JASPER SERVER BEGINS HERE -->
 
     <mvc:view-controller path="/awsconfiguration.html" view-name="modules/administer/awsConfiguration"/>
@@ -73,51 +73,13 @@
                  -->
 				<prop key="/fileview/**">jsFileViewContr</prop>
 
-                <!-- anonymous pages -->
-                <prop key="/login.html">jsCommContr</prop>
-                <prop key="/logout.html">jsCommContr</prop>
-                <prop key="/exituser.html">jsCommContr</prop>
-                <prop key="/loginerror.html">jsCommContr</prop>
-                <prop key="/error.html">jsCommContr</prop>
-                <prop key="/encrypt.html">jsCommContr</prop>
-                <prop key="/externallogin.html">jsCommContr</prop>
-
-                <!-- user pages -->
-                <prop key="/loginsuccess.html">loginController</prop>
-                <prop key="/home.html">loginController</prop>
-
-                <!-- OLAP pages -->
-                <prop key="/olap/viewOlap.html">olapModelController</prop>
-                <prop key="/olap/error.html">olapContr</prop>
-                <prop key="/olap/busy.html">olapContr</prop>
-                <prop key="/olap/flush.html">olapContr</prop>
-                <prop key="/olap/properties.html">olapContr</prop>
-                <prop key="/listOlapViews.html">olapViewListController</prop>
 
                 <!-- admin pages -->
                 <prop key="/**/flow.html">flowController</prop>
                 <prop key="/**/flowFile/**">flowController</prop>
-                <prop key="/menutest.html">jsCommContr</prop>
-                <prop key="/heartbeat.html">jsCommContr</prop>
-                <prop key="/heartbeatInfo.html">jsCommContr</prop>
 				<prop key="/reportimage">reportImageController</prop>
 				<prop key="/reportresource/**">reportResourceController</prop>
 
-				<!-- report execution cancel -->
-				<prop key="/viewReportCancel.html">reportExecutionController</prop>
-				<prop key="/viewReportAsyncCancel.html">reportExecutionController</prop>
-				<prop key="/viewReportPageUpdateCheck.html">reportExecutionController</prop>
-
-				<prop key="/getReportComponents.html">reportExecutionController</prop>
-				<prop key="/getRequirejsConfig.html">reportExecutionController</prop>
-				<prop key="/runReportAction.html">reportExecutionController</prop>
-
-                <!--scheduler-->
-                <prop key="/scheduler/main.html">schedulerController</prop>
-
-                <!-- System error pages -->
-                <prop key="/404.html">systemErrorController</prop>
-                <prop key="/500.html">systemErrorController</prop>
 
                 <prop key="/themeMinimalCss.css">urlViewController</prop>
             </props>
@@ -161,8 +123,7 @@
     </bean>
 
     <!-- js common controller -->
-    <bean id="jsCommContr" class="com.jaspersoft.jasperserver.war.control.JSCommonController">
-        <property name="methodNameResolver" ref="paramResolver"/>
+    <bean id="jsCommContr" class="${class.JSCommonController}" >
         <property name="repository">
             <ref bean="${bean.repositoryService}"/>
         </property>
@@ -190,7 +151,6 @@
 
     <!-- Controller for login success -->
     <bean id="loginController" class="com.jaspersoft.jasperserver.war.control.LoginController">
-        <property name="methodNameResolver" ref="paramResolver"/>
         <property name="repository">
             <ref bean="${bean.repositoryService}"/>
         </property>
@@ -265,58 +225,6 @@
     <bean id="adminImportController" class="com.jaspersoft.jasperserver.war.control.AdminImportController"/>
     <bean id="adminExportController" class="com.jaspersoft.jasperserver.war.control.AdminExportController"/>
 
-	<!-- List of Validators used in JS -->
-
-
-    <!-- js mac method name resolver -->
-    <bean id="paramResolver" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
-        <property name="mappings">
-            <props>
-                <prop key="/home.html">homePage</prop>
-                <prop key="/login.html">login</prop>
-                <prop key="/loginsuccess.html">loginSuccess</prop>
-                <prop key="/externallogin.html">externalLogin</prop>
-                <prop key="/logout.html">logout</prop>
-                <prop key="/exituser.html">exitUser</prop>
-                <prop key="/loginerror.html">modules/loginError</prop>
-                <prop key="/error.html">securityError</prop>
-                <prop key="/menutest.html">menuTest</prop>
-                <prop key="/heartbeat.html">heartbeat</prop>
-                <prop key="/heartbeatInfo.html">heartbeatInfo</prop>
-                <prop key="/olap/viewOlap.html">modules/olap/viewOlap</prop>
-                <prop key="/olap/busy.html">modules/olap/busy</prop>
-                <prop key="/olap/flush.html">modules/olap/flush</prop>
-                <prop key="/olap/properties.html">modules/olap/properties</prop>
-                <prop key="/olap/error.html">modules/system/prepErrorPage</prop>
-                <prop key="/404.html">handle404</prop>
-                <prop key="/500.html">handle500</prop>
-                <prop key="/encrypt.html">encryptionPage</prop>
-                <prop key="/viewReportCancel.html">viewReportCancel</prop>
-                <prop key="/viewReportAsyncCancel.html">viewAsyncReportCancel</prop>
-                <prop key="/viewReportPageUpdateCheck.html">viewReportPageUpdateCheck</prop>
-                <prop key="/getReportComponents.html">getReportComponents</prop>
-                <prop key="/getRequirejsConfig.html">getRequirejsConfig</prop>
-                <prop key="/runReportAction.html">runReportAction</prop>
-
-                <!--scheduler-->
-                <prop key="/scheduler/main.html">schedulerController</prop>
-            </props>
-        </property>
-    </bean>
-
-    <!--<bean id="flowExecutorTarget" class="org.springframework.webflow.config.FlowExecutorFactoryBean">-->
-        <!--<property name="flowDefinitionLocator" ref="flowRegistry"/>-->
-        <!--<property name="executionAttributes">-->
-        	<!--<map>-->
-        		<!--<entry key="alwaysRedirectOnPause">-->
-        			<!--<value type="java.lang.Boolean">false</value>-->
-        		<!--</entry>-->
-        	<!--</map>-->
-        <!--</property>-->
-        <!--<property name="repositoryType" value="CONTINUATION"/>-->
-        <!--<property name="maxFlowExecutions" value="-1"/>-->
-        <!--<property name="maxFlowExecutionSnapshots" value="500"/>-->
-    <!--</bean>-->
 
     <webflow:flow-executor id="flowExecutorTarget" flow-registry="flowRegistry">
 
@@ -415,15 +323,14 @@
         <property name="enableSaveToHostFS" value="#{configurationBean.enableSaveToHostFS}"/>
         <property name="enableDataSnapshot" value="#{dataSnapshotService.snapshotPersistenceEnabled}"/>
         <property name="availableReportJobOutputFormats" ref="availableReportJobOutputFormats"/>
-        <property name="availableDashboardJobOutputFormats" ref="availableDashboardJobOutputFormats"/>
+        <property name="availableDashboardJobScreenshotOutputFormats" ref="availableDashboardJobScreenshotOutputFormats"/>
+        <property name="availableDashboardJobDetailedOutputFormats" ref="availableDashboardJobDetailedOutputFormats"/>
         <property name="reportJobDefaults" ref="reportJobDefaults"/>
         <property name="repository" ref="${bean.repositoryService}"/>
         <property name="profileAttributeService" ref="profileAttributeService"/>
     </bean>
 
-    <bean id="systemErrorController" class="com.jaspersoft.jasperserver.war.control.SystemErrorController">
-        <property name="methodNameResolver" ref="paramResolver"/>
-    </bean>
+    <bean id="systemErrorController" class="com.jaspersoft.jasperserver.war.control.SystemErrorController"/>
 
 	<bean id="httpUtils" class="com.jaspersoft.jasperserver.war.util.DefaultHttpUtils">
 		<property name="characterEncodingProvider" ref="encodingProvider"/>

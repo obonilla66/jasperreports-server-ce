@@ -1,10 +1,4 @@
 
-    alter table JIAccessEvent 
-       drop constraint FK7caj87u72rymu6805gtek03y8;
-
-    alter table JIAccessEvent 
-       drop constraint FK8lqavxfshc29dnw97io0t6wbf;
-
     alter table JIAwsDatasource 
        drop constraint FKa2q6ho769d4h6k1inqfw0avbi;
 
@@ -323,33 +317,21 @@
 
     drop sequence if exists hibernate_sequence;
 
-    DROP INDEX idx25_content_destination_idx ON JIReportJob;
+    DROP INDEX JIQuery_dataSource_index ON JIQuery;
 
     DROP INDEX idx28_resource_id_idx ON JIReportThumbnail;
 
-    DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
-
     DROP INDEX JIReportUnit_mainReport_index ON JIReportUnit;
-
-    DROP INDEX idx26_mail_notification_idx ON JIReportJob;
 
     DROP INDEX JIReportUnit_query_index ON JIReportUnit;
 
-    DROP INDEX JIReportJob_owner_index ON JIReportJob;
+    DROP INDEX idx29_reportDataSource_idx ON JIReportUnit;
 
-    DROP INDEX idx24_alert_id_idx ON JIReportAlertToAddress;
+    DROP INDEX idx30_input_ctrl_id_idx ON JIReportUnitInputControl;
 
-    DROP INDEX JIRole_tenantId_index ON JIRole;
-
-    DROP INDEX JIInputControl_list_query_idx ON JIInputControl;
-
-    DROP INDEX JIUserRole_roleId_index ON JIUserRole;
-
-    DROP INDEX idx15_input_ctrl_id_idx ON JIInputControlQueryColumn;
+    DROP INDEX idx31_report_unit_id_idx ON JIReportUnitInputControl;
 
     DROP INDEX JIUserRole_userId_index ON JIUserRole;
-
-    DROP INDEX idx16_mondrianSchema_idx ON JIMondrianConnection;
 
     DROP INDEX JITenant_parentId_index ON JITenant;
 
@@ -359,15 +341,17 @@
 
     DROP INDEX idx20_mondrianConnection_idx ON JIMondrianXMLADefinition;
 
-    DROP INDEX JILogEvent_userId_index ON JILogEvent;
-
     DROP INDEX idx23_olapClientConnection_idx ON JIOlapUnit;
 
-    DROP INDEX JIReportJob_alert_index ON JIReportJob;
+    DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
 
-    DROP INDEX JIQuery_dataSource_index ON JIQuery;
+    DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
 
-    DROP INDEX idx22_recipientobjid_idx ON JIObjectPermission;
+    DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
+
+    DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
+
+    DROP INDEX idx36_resource_id_idx ON JIVirtualDataSourceUriMap;
 
     DROP INDEX JIResourceFolder_version_index ON JIResourceFolder;
 
@@ -379,32 +363,42 @@
 
     DROP INDEX JIInputControl_data_type_index ON JIInputControl;
 
+    DROP INDEX idx22_recipientobjid_idx ON JIObjectPermission;
+
     DROP INDEX JIInputCtrl_list_of_values_idx ON JIInputControl;
 
-    DROP INDEX idx29_reportDataSource_idx ON JIReportUnit;
+    DROP INDEX JIRole_tenantId_index ON JIRole;
 
-    DROP INDEX idx30_input_ctrl_id_idx ON JIReportUnitInputControl;
+    DROP INDEX JIInputControl_list_query_idx ON JIInputControl;
 
-    DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
+    DROP INDEX JIUserRole_roleId_index ON JIUserRole;
 
-    DROP INDEX idx31_report_unit_id_idx ON JIReportUnitInputControl;
+    DROP INDEX idx15_input_ctrl_id_idx ON JIInputControlQueryColumn;
 
-    DROP INDEX idx14_repodest_id_idx ON JIFTPInfoProperties;
+    DROP INDEX idx16_mondrianSchema_idx ON JIMondrianConnection;
+
+    DROP INDEX JILogEvent_userId_index ON JILogEvent;
+
+    DROP INDEX JIReportJob_alert_index ON JIReportJob;
+
+    DROP INDEX idx25_content_destination_idx ON JIReportJob;
+
+    DROP INDEX JIReportJob_job_trigger_index ON JIReportJob;
 
     DROP INDEX idx32_report_unit_id_idx ON JIReportUnitResource;
 
-    DROP INDEX idx34_item_reference_idx ON JIRepositoryCache;
+    DROP INDEX idx26_mail_notification_idx ON JIReportJob;
 
     DROP INDEX idx33_resource_id_idx ON JIReportUnitResource;
+
+    DROP INDEX JIReportJob_owner_index ON JIReportJob;
 
     DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
 
     DROP INDEX JIResource_childrenFolder_idx ON JIResource;
 
+    DROP INDEX idx24_alert_id_idx ON JIReportAlertToAddress;
+
     DROP INDEX JIFileResource_reference_index ON JIFileResource;
 
     DROP INDEX JIResource_parent_folder_index ON JIResource;
-
-    DROP INDEX idx35_parent_folder_idx ON JIResourceFolder;
-
-    DROP INDEX idx36_resource_id_idx ON JIVirtualDataSourceUriMap;

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author Sergey Prilukin
@@ -39,13 +40,27 @@ public class LoggingFacade implements LoggingService {
 
     @Resource(name="${bean.routingMap}")
     private Map<Class<? extends LoggableEvent>, LoggingService> routingMap;
+    private ExecutorService asyncExecutor;
+
+    public void setAsyncExecutor(ExecutorService asyncExecutor) {
+        this.asyncExecutor = asyncExecutor;
+    }
 
     public void saveEvent(LoggableEvent loggableEvent) {
         for (Class<? extends LoggableEvent> clazz: routingMap.keySet()) {
             if (clazz.isAssignableFrom(loggableEvent.getClass())) {
                 LoggingService loggingService = routingMap.get(clazz);
                 if (loggingService != null) {
-                    loggingService.saveEvent(loggableEvent);
+                    if (asyncExecutor != null) {
+                        asyncExecutor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                loggingService.saveEvent(loggableEvent);
+                            }
+                        });
+                    } else {
+                        loggingService.saveEvent(loggableEvent);
+                    }
                 }
             }
         }
@@ -75,8 +90,19 @@ public class LoggingFacade implements LoggingService {
         for (Class<? extends LoggableEvent> clazz: eventsByTypeMap.keySet()) {
             LoggingService loggingService = routingMap.get(clazz);
             if (loggingService != null) {
-                loggingService.saveEvents(eventsByTypeMap.get(clazz));
+                if (asyncExecutor != null) {
+                    asyncExecutor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            loggingService.saveEvents(eventsByTypeMap.get(clazz));
+                        }
+                    });
+                } else {
+                    loggingService.saveEvents(eventsByTypeMap.get(clazz));
+                }
             }
         }
     }
+
+
 }

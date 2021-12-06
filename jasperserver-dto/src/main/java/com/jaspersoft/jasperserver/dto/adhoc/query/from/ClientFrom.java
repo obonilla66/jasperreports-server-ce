@@ -22,13 +22,15 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.from;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
  * @author Andriy Godovanets
  * @version $Id: ClientFrom.java 54107 2015-09-28 22:16:32Z schubar $
  */
-public class ClientFrom implements DeepCloneable<ClientFrom> {
+public class ClientFrom implements DeepCloneable<ClientFrom>, Serializable {
     private String dataSource;
     private String olapCube;
 

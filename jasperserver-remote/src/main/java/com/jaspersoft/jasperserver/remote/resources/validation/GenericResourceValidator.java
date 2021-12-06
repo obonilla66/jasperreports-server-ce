@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
@@ -43,18 +44,18 @@ public abstract class GenericResourceValidator<ResourceType extends Resource> im
     private ProfileAttributesResolver profileAttributesResolver;
 
     @Override
-    public List<Exception> validate(ResourceType resource, boolean skipRepoFieldsValidation, Map<String, String[]> additionalParameters) {
+    public List<Exception> validate(ExecutionContext ctx, ResourceType resource, boolean skipRepoFieldsValidation, Map<String, String[]> additionalParameters) {
         final List<Exception> validationErrors = new ArrayList<Exception>();
         if(!skipRepoFieldsValidation) {
             genericValidate(resource, validationErrors);
         }
-        internalValidate(resource, validationErrors, additionalParameters);
+        internalValidate(ctx, resource, validationErrors, additionalParameters);
         return validationErrors;
     }
 
     @Override
-    public List<Exception> validate(ResourceType resource) {
-        return validate(resource, false, new HashMap<String, String[]>());
+    public List<Exception> validate(ExecutionContext ctx, ResourceType resource) {
+        return validate(ctx, resource, false, new HashMap<String, String[]>());
     }
 
     private void genericValidate(Resource resource, List<Exception> errors) {
@@ -83,5 +84,5 @@ public abstract class GenericResourceValidator<ResourceType extends Resource> im
         }
     }
 
-    protected abstract void internalValidate(ResourceType resource, List<Exception> errors, Map<String, String[]> additionalParameters);
+    protected abstract void internalValidate(ExecutionContext ctx, ResourceType resource, List<Exception> errors, Map<String, String[]> additionalParameters);
 }

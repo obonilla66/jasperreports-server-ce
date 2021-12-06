@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.XMLAConnection;
 import com.jaspersoft.jasperserver.dto.resources.ClientXmlaConnection;
@@ -37,7 +38,7 @@ import java.util.List;
 @Service
 public class XmlaConnectionResourceConverter extends ResourceConverterImpl<XMLAConnection, ClientXmlaConnection> {
     @Override
-    protected XMLAConnection resourceSpecificFieldsToServer(ClientXmlaConnection clientObject, XMLAConnection resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected XMLAConnection resourceSpecificFieldsToServer(ExecutionContext ctx, ClientXmlaConnection clientObject, XMLAConnection resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setURI(clientObject.getUrl());
         resultToUpdate.setCatalog(clientObject.getCatalog());
         resultToUpdate.setDataSource(clientObject.getDataSource());

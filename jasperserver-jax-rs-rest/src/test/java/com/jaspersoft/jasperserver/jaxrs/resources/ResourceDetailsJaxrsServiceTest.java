@@ -17,7 +17,8 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+ *//*
+
 package com.jaspersoft.jasperserver.jaxrs.resources;
 
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
@@ -88,12 +89,14 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
+*/
 /**
  * <p></p>
  *
  * @author Yaroslav.Kovalchyk
  * @version $Id$
- */
+ *//*
+
 public class ResourceDetailsJaxrsServiceTest {
     @InjectMocks
     private ResourceDetailsJaxrsService service = new ResourceDetailsJaxrsService();
@@ -852,3 +855,4 @@ public class ResourceDetailsJaxrsServiceTest {
         assertEquals(response.getStatus(), 204);
     }
 }
+*/

@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.remote.services.impl;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
@@ -114,6 +115,7 @@ public class AttributesServiceImplTest {
     private final ClientAttribute clientAttributeB = new ClientAttribute();
     private final ClientAttribute clientAttributeC = new ClientAttribute();
     private final ClientAttribute clientAttributeD = new ClientAttribute();
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
 
     /**
@@ -178,13 +180,13 @@ public class AttributesServiceImplTest {
         when(recipientIdentityResolver.resolveRecipientObject(RECIPIENT_URI))
                 .thenReturn(recipient);
 
-        when(attributesConverter.toServer(clientAttributeA, null))
+        when(attributesConverter.toServer(ctx, clientAttributeA, null))
                 .thenReturn(attributeA);
-        when(attributesConverter.toServer(clientAttributeB, null))
+        when(attributesConverter.toServer(ctx, clientAttributeB, null))
                 .thenReturn(attributeB);
-        when(attributesConverter.toServer(clientAttributeC, null))
+        when(attributesConverter.toServer(ctx, clientAttributeC, null))
                 .thenReturn(attributeC);
-        when(attributesConverter.toServer(clientAttributeD, null))
+        when(attributesConverter.toServer(ctx, clientAttributeD, null))
                 .thenReturn(attributeD);
         when(attributesConverter.toClient(attributeA, null))
                 .thenReturn(clientAttributeA);
@@ -338,7 +340,7 @@ public class AttributesServiceImplTest {
         )).thenReturn(new AttributesSearchResultImpl<ProfileAttribute>());
 
         for (int i = 0; i < ATTRIBUTES_COUNT; i++) {
-            when(attributesConverter.toServer(clientAttributes.get(i), null))
+            when(attributesConverter.toServer(ctx, clientAttributes.get(i), null))
                     .thenReturn(attributes.get(i));
             when(attributesConverter.toClient(attributes.get(i), null))
                     .thenReturn(clientAttributes.get(i));
@@ -599,13 +601,13 @@ public class AttributesServiceImplTest {
         clientAttribute4.setHolder(RECIPIENT_URI);
         clientAttribute4.setPermissionMask(1);
 
-        when(attributesConverter.toServer(clientAttribute1, null))
+        when(attributesConverter.toServer(ctx, clientAttribute1, null))
                 .thenReturn(attribute1);
-        when(attributesConverter.toServer(clientAttribute2, null))
+        when(attributesConverter.toServer(ctx, clientAttribute2, null))
                 .thenReturn(attribute2);
-        when(attributesConverter.toServer(clientAttribute3, null))
+        when(attributesConverter.toServer(ctx, clientAttribute3, null))
                 .thenReturn(attribute3);
-        when(attributesConverter.toServer(clientAttribute4, null))
+        when(attributesConverter.toServer(ctx, clientAttribute4, null))
                 .thenReturn(attribute4);
         when(attributesConverter.toClient(attribute1, null))
                 .thenReturn(clientAttribute1);
@@ -630,9 +632,9 @@ public class AttributesServiceImplTest {
         HypermediaAttribute hypermediaAttribute2 = new HypermediaAttribute(clientAttribute2);
         hypermediaAttribute2.setEmbedded(embeddedContainer2);
 
-        when(attributesConverter.toServer(hypermediaAttribute1, null))
+        when(attributesConverter.toServer(ctx, hypermediaAttribute1, null))
                 .thenReturn(attribute1);
-        when(attributesConverter.toServer(hypermediaAttribute2, null))
+        when(attributesConverter.toServer(ctx, hypermediaAttribute2, null))
                 .thenReturn(attribute2);
 
         AttributesSearchResult<ProfileAttribute> searchResult = new AttributesSearchResultImpl<ProfileAttribute>();
@@ -645,9 +647,9 @@ public class AttributesServiceImplTest {
                 nullable(ExecutionContext.class), eq(recipient), eq(searchCriteria)))
                 .thenReturn(searchResult);
 
-        when(permissionConverter.toServer(repositoryPermission1, null))
+        when(permissionConverter.toServer(ctx, repositoryPermission1, null))
                 .thenReturn(createObjectPermission(attribute1.getURI(), roleAdministratorIdentity, 1));
-        when(permissionConverter.toServer(repositoryPermission2, null))
+        when(permissionConverter.toServer(ctx, repositoryPermission2, null))
                 .thenReturn(createObjectPermission(attribute2.getURI(), roleAdministratorIdentity, 1));
 
         ObjectPermission objectPermission = createObjectPermission(attribute1.getURI(), administratorRole, 1);

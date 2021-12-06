@@ -47,6 +47,7 @@ public class ReportExecutionRequest {
     /* reports are interactive by default in v2 services*/
     private Boolean interactive = true;
     private Boolean ignorePagination;
+    private Integer reportContainerWidth;
     private Boolean async = false;
     private String transformerKey;
     private String outputFormat;
@@ -182,6 +183,20 @@ public class ReportExecutionRequest {
         this.ignorePagination = ignorePagination;
     }
 
+    @Schema(
+            type="integer",
+            description = "Reports that declare the REPORT_CONTAINER_WIDTH parameter will have this value injected " +
+                    "into it. ",
+            defaultValue = "null"
+    )
+    public Integer getReportContainerWidth() {
+        return reportContainerWidth;
+    }
+
+    public void setReportContainerWidth(Integer reportContainerWidth) {
+        this.reportContainerWidth = reportContainerWidth;
+    }
+
 	@Schema(
 			type="boolean", 
 			description = "Determines whether reportExecution is synchronous or asynchronous. When set to true, "
@@ -220,7 +235,7 @@ public class ReportExecutionRequest {
 					+ "As of JasperReports Server 6.0, it is also possible to specify `json` if your reports are designed for data "
 					+ "export. For more information, see the JasperReports Library samples documentation.", 
 			required=true,
-			allowableValues =  {"pdf", "html", "csv", "xls", "xlsx", "docx", "pptx", "odt", "ods", "rtf", "xml", "jrprint", "json"},
+			allowableValues =  {"pdf", "html", "csv", "xls", "xlsx", "docx", "pptx", "odt", "ods", "rtf", "xml", "jrprint", "json", "data_csv"},
 			example = "html"
 			)
     public String getOutputFormat() {

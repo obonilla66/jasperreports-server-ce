@@ -61,6 +61,7 @@ import java.util.*;
 
 import static com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver.SKIP_PROFILE_ATTRIBUTES_RESOLVING;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ParametersHelper.*;
+import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.ValuesLoader.SKIP_FETCHING_IC_VALUES_FROM_DB;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.utils.CascadeTestHelper.*;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -325,6 +326,17 @@ public class GenericInputControlLogicNewTest  {
                 entry(CASCADE_INDUSTRY, "Engineering"), entry(CASCADE_NAME, "EngBureau, Ltd"), entry(CASCADE_ACCOUNT_TYPE, null));
 
         assertThat(expected, equalTo(expected));
+    }
+
+    @Test
+    public void getTypedParametersContainsSkipFetchingICValuesParameter() throws Exception {
+        Map<String, String[]> requestParameters = Collections.singletonMap(
+                SKIP_FETCHING_IC_VALUES_FROM_DB,
+                new String[]{Boolean.TRUE.toString()}
+        );
+        Map<String, Object> result = genericInputControlLogic.getTypedParameters((InputControlsContainer) null, requestParameters, false);
+        assertTrue(result.containsKey(SKIP_FETCHING_IC_VALUES_FROM_DB));
+        assertEquals(Boolean.TRUE.toString(), result.get(SKIP_FETCHING_IC_VALUES_FROM_DB));
     }
 
     /**

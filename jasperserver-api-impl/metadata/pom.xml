@@ -39,6 +39,10 @@
             <artifactId>jasperserver-api-common-impl</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jaspersoft.jasperserver</groupId>
+            <artifactId>jasperserver-web-common-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.jaspersoft.jasperserver.api.metadata</groupId>
             <artifactId>jasperserver-api-metadata</artifactId>
         </dependency>
@@ -174,13 +178,13 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>xerces</groupId>
+            <groupId>org.codelibs.xerces</groupId>
             <artifactId>xercesImpl</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
+            <version>${javax.servlet-api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -369,6 +373,11 @@
         </dependency>
         <!-- OWASP csrfguard: STOP -->
         <!-- SECURITY DEPENDENCIES: STOP -->
+        <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
     <!-- This pluging showing that all found classes was succesfully enhanced,
     but realy enhancing only classes with javax.persistence.Entity annotation-->
@@ -470,6 +479,7 @@
 
                 </dependencies>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

@@ -20,38 +20,25 @@
  */
 package com.jaspersoft.jasperserver.inputcontrols.cascade.handlers;
 
-import com.jaspersoft.jasperserver.api.JSMissingDataSourceFieldsException;
-import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
-import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.common.service.ReportInputControlInformation;
-import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.EhcacheEngineService;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
-import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ListOfValuesItemImpl;
-import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedEngineService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CachedRepositoryService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.token.FilterResolver;
-import com.jaspersoft.jasperserver.inputcontrols.cascade.token.ParameterTypeLookup;
 import org.apache.commons.collections.OrderedMap;
 import org.apache.commons.collections.OrderedMapIterator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,70 +48,41 @@ import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputCo
 
 /**
  * @author Yaroslav.Kovalchyk
- * @version $Id$
  */
 @Service
 public class QueryValuesLoader implements ValuesLoader {
-
     public static final String COLUMN_VALUE_SEPARATOR = " | ";
-
-    private static final Log log = LogFactory.getLog(QueryValuesLoader.class);
 
     @javax.annotation.Resource
     protected FilterResolver filterResolver;
     @javax.annotation.Resource
     protected CachedRepositoryService cachedRepositoryService;
     @javax.annotation.Resource
-    protected CachedEngineService cachedEngineService;
-    @javax.annotation.Resource
-    protected EngineService engineService;
+    private AuditContext concreteAuditContext;
     @javax.annotation.Resource
     private DataConverterService dataConverterService;
     @javax.annotation.Resource
-    private AuditContext concreteAuditContext;
+    private InputControlDataSourceResolver inputControlDataSourceResolver;
     @javax.annotation.Resource
-    protected ParameterTypeLookup parameterTypeCompositeLookup;
+    private ValuesLoaderStrategy queryValuesLoaderStrategy;
     @javax.annotation.Resource
-    protected InputControlPagination inputControlPagination;
+    private ValuesLoaderStrategy parametersValuesLoaderStrategy;
 
     @Override
     public List<ListOfValuesItem> loadValues(InputControl inputControl, ResourceReference dataSource, Map<String, Object> parameters, Map<String, Class<?>> parameterTypes, ReportInputControlInformation info, boolean isSingleSelect) throws CascadeResourceNotFoundException {
-        OrderedMap results = null;
-
         createInputControlsAuditEvent(inputControl.getURIString(), parameters);
 
         List<ListOfValuesItem> listOfValuesItems = null;
-        ResourceReference dataSourceForQuery = resolveDatasource(inputControl, dataSource);
-        final Query query = cachedRepositoryService.getResource(Query.class, inputControl.getQuery());
-
-        Map<String, Object> domainSchemaParameters = new HashMap<>();
-
-        //TODO Extract this parameter extension to separate interface
-        prepareDomainDataSource(dataSourceForQuery, domainSchemaParameters);
-
-        Map<String, Object> executionParameters = filterAndFillMissingQueryParameters(query, parameters, domainSchemaParameters);
-        Map<String, Class<?>> executionParameterTypes = filterParameterTypes(executionParameters.keySet(), parameterTypes);
-        Map<String, Class<?>> missingParameterTypes = findMissingParameterTypes(dataSource, executionParameters, executionParameterTypes);
-
-        executionParameterTypes.putAll(missingParameterTypes);
-
-        if (parameters != null && parameters.containsKey(EhcacheEngineService.IC_REFRESH_KEY)) {
-            executionParameters.put(EhcacheEngineService.IC_REFRESH_KEY, "true");
-        }
-        if (parameters != null && parameters.containsKey(EhcacheEngineService.DIAGNOSTIC_REPORT_URI)) {
-            executionParameters.put(EhcacheEngineService.DIAGNOSTIC_REPORT_URI, parameters.get(EhcacheEngineService.DIAGNOSTIC_REPORT_URI));
-        }
-        if (parameters != null && parameters.containsKey(EhcacheEngineService.DIAGNOSTIC_STATE)) {
-            executionParameters.put(EhcacheEngineService.DIAGNOSTIC_STATE, parameters.get(EhcacheEngineService.DIAGNOSTIC_STATE));
-        }
 
         /* Typed results are returned */
-        results = getResultsOrderedMap(inputControl, dataSourceForQuery, executionParameters, executionParameterTypes, results);
-        addNothingLabelToResults(results, isSingleSelect, inputControl);
+        String criteria = getCriteria(inputControl, parameters);
+        ResultsOrderedMap results = getLoaderStrategy(parameters).resultsOrderedMap(inputControl, dataSource, criteria, parameters, parameterTypes);
+        OrderedMap orderedMap = results.getOrderedMap();
+        addNothingLabelToResults(orderedMap, isSingleSelect, inputControl);
 
-        if (results != null) {
-            String criteria = getCriteria(inputControl, parameters);
-            listOfValuesItems = getListOfValuesItems(inputControl, info, criteria, results);
+        if (orderedMap != null) {
+            listOfValuesItems = getListOfValuesItems(inputControl, info,
+                    results.isSkipCriteriaSearch() ? null : criteria, orderedMap);
             addTotalCountToParameters(parameters, listOfValuesItems.size());
         }
 
@@ -133,25 +91,10 @@ public class QueryValuesLoader implements ValuesLoader {
         return listOfValuesItems;
     }
 
-    private OrderedMap getResultsOrderedMap(InputControl inputControl, ResourceReference dataSourceForQuery, Map<String, Object> executionParameters, Map<String, Class<?>> executionParameterTypes, OrderedMap results) throws CascadeResourceNotFoundException {
-        try {
-            results = cachedEngineService.executeQuery(
-                    ExecutionContextImpl.getRuntimeExecutionContext(), inputControl.getQuery(),
-                    inputControl.getQueryValueColumn(), inputControl.getQueryVisibleColumns(),
-                    dataSourceForQuery, executionParameters, executionParameterTypes, inputControl.getName());
-        } catch (JSMissingDataSourceFieldsException e) {
-            log.debug(e.getMessage(), e);
-            // This occurs when a field previously found in the domain is missing
-            // we ignore here as we do not need these values, and an error is rendered on the report canvas
-        } catch (IllegalArgumentException e) {
-            log.debug(e.getMessage(), e);
-            // This occurs when a field previously found in the domain is missing
-            // we ignore here as we do not need these values, and an error is rendered on the report canvas
-        }
-        return results;
-    }
-
-    protected List<ListOfValuesItem> getListOfValuesItems(InputControl inputControl, ReportInputControlInformation info, String criteria, OrderedMap results) throws CascadeResourceNotFoundException {
+    protected List<ListOfValuesItem> getListOfValuesItems(InputControl inputControl,
+                                                          ReportInputControlInformation info,
+                                                          String criteria,
+                                                          OrderedMap results) throws CascadeResourceNotFoundException {
         List<ListOfValuesItem> result = new ArrayList<>(results.size());
 
         if (results.containsKey(NOTHING_SUBSTITUTION_VALUE)) {
@@ -233,100 +176,13 @@ public class QueryValuesLoader implements ValuesLoader {
         }
     }
 
-    /**
-     * DomainFilterResolver needs access to the domain schema, which it can get from
-     * the param map. FilterCore doesn't need this, and it would allocate a connection
-     * that's not needed.
-     */
-    protected void prepareDomainDataSource(ResourceReference dataSourceRef, Map<String, Object> parameters) throws CascadeResourceNotFoundException {
-        ReportDataSource dataSource = (ReportDataSource) cachedRepositoryService.getResource(Resource.class, dataSourceRef);
-        if (filterResolver.paramTestNeedsDataSourceInit(dataSource)) {
-            parameters.putAll(cachedEngineService.getSLParameters(dataSource));
-        }
-    }
-
-    /**
-     * Create new Map with specified parameters, add only those which are used in query, find missing parameters and assign value Null to them.
-     * This is done because we indicate Nothing selection in single select control as absence of parameter in map,
-     * but QueryManipulator sets query to empty string and Executor throws exception if parameter is absent,
-     * so we set Null as most suitable value as yet.
-     *
-     * @param query      Query
-     * @param parameters Map&lt;String, Object&gt;
-     * @return Map&lt;String, Object&gt; copy of map, where missing parameters filled with Null values.
-     */
-    protected Map<String, Object> filterAndFillMissingQueryParameters(Query query, Map<String, Object> parameters, Map<String, Object> domainSchemaParameters) {
-        HashMap<String, Object> parametersWithSchema = new HashMap<String, Object>();
-        parametersWithSchema.putAll(parameters);
-        parametersWithSchema.putAll(domainSchemaParameters);
-        Set<String> queryParameterNames = filterResolver.getParameterNames(query.getSql(), parametersWithSchema);
-        HashMap<String, Object> resolvedParameters = new HashMap<String, Object>();
-        for (String queryParameterName : queryParameterNames) {
-            // If parameter is missing, set Null.
-            resolvedParameters.put(queryParameterName, parameters.get(queryParameterName));
-        }
-        resolvedParameters.putAll(domainSchemaParameters);
-        return resolvedParameters;
-    }
-
-    /**
-     * Filter only specified parameter types
-     *
-     * @param parameters     Parameter names
-     * @param parameterTypes Map of parameter types
-     * @return Filtered map of parameter types
-     */
-    protected Map<String, Class<?>> filterParameterTypes(Set<String> parameters, Map<String, Class<?>> parameterTypes) {
-        Map<String, Class<?>> filteredParameterTypes = new HashMap<String, Class<?>>(parameters.size());
-        for (String parameterName : parameters) {
-            if (parameterTypes.containsKey(parameterName)) {
-                filteredParameterTypes.put(parameterName, parameterTypes.get(parameterName));
-            }
-        }
-        return filteredParameterTypes;
-    }
-
-    /**
-     * Retrieves additional parameter types from dataSource (if it has any)
-     *
-     * @param dataSource     a resource that might have parameters
-     * @param parameters     a map of all parameters
-     * @param parameterTypes types that were find out earlier
-     * @return a map with parameter name and type
-     * @throws CascadeResourceNotFoundException
-     */
-    private Map<String, Class<?>> findMissingParameterTypes(ResourceReference dataSource,
-                                                            Map<String, Object> parameters,
-                                                            Map<String, Class<?>> parameterTypes) throws CascadeResourceNotFoundException {
-        Set<String> missingParameterTypes = new HashSet<>(parameters.keySet());
-        missingParameterTypes.removeAll(parameterTypes.keySet());
-        if (!missingParameterTypes.isEmpty()) {
-            return parameterTypeCompositeLookup.getParameterTypes(ExecutionContextImpl.getRuntimeExecutionContext(), dataSource, missingParameterTypes);
-        } else {
-            return Collections.emptyMap();
-        }
-    }
-
     @Override
     public Set<String> getMasterDependencies(InputControl inputControl, ResourceReference dataSource) throws CascadeResourceNotFoundException {
-        Map<String, Object> filterParameters = new HashMap<String, Object>();
-        ResourceReference dataSourceForQuery = resolveDatasource(inputControl, dataSource);
-        prepareDomainDataSource(dataSourceForQuery, filterParameters);
+        ResourceReference dataSourceForQuery = inputControlDataSourceResolver.resolveDatasource(inputControl, dataSource);
+        Map<String, Object> filterParameters = inputControlDataSourceResolver.prepareDomainDataSourceParameters(dataSourceForQuery);
         Query query = cachedRepositoryService.getResource(Query.class, inputControl.getQuery());
         String querySQL = query.getSql();
         return filterResolver.getParameterNames(querySQL, filterParameters);
-    }
-
-    protected ResourceReference resolveDatasource(InputControl inputControl, ResourceReference reportDatasource) throws CascadeResourceNotFoundException {
-        ResourceReference queryReference = inputControl.getQuery();
-        ResourceReference resolvedDatasource = reportDatasource;
-        if (queryReference != null) {
-            Resource queryResource = cachedRepositoryService.getResource(Resource.class, queryReference);
-            if (queryResource instanceof Query && ((Query) queryResource).getDataSource() != null) {
-                resolvedDatasource = ((Query) queryResource).getDataSource();
-            }
-        }
-        return resolvedDatasource;
     }
 
     protected void createInputControlsAuditEvent(final String resourceUri, final Map<String, Object> parameters) {
@@ -353,5 +209,18 @@ public class QueryValuesLoader implements ValuesLoader {
                 concreteAuditContext.closeAuditEvent(auditEvent);
             }
         });
+    }
+
+    /**
+     * This method determines whether we need to load values from a database, or from parameters (came from topic's XML)
+     *
+     * @param parameters parameters that contains selected Input Controls values
+     * @return a concrete strategy
+     */
+    ValuesLoaderStrategy getLoaderStrategy(Map<String, Object> parameters) {
+        // Fix for https://jira.tibco.com/browse/JS-62353
+        return parameters != null && Boolean.TRUE.toString().equals(parameters.get(SKIP_FETCHING_IC_VALUES_FROM_DB))
+                ? parametersValuesLoaderStrategy
+                : queryValuesLoaderStrategy;
     }
 }

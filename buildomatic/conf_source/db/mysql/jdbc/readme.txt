@@ -12,7 +12,7 @@ location:
 
 A downloaded MySQL driver typically has a name like the following: 
 
-  mysql-connector-java-5.1.30-bin.jar
+   mysql-connector-java-8.0.23.jar
 
 To set your buildomatic properties so that it uses the driver above instead
 of the JDBC driver maintained by the MariaDB project, you can do the following:
@@ -24,13 +24,10 @@ of the JDBC driver maintained by the MariaDB project, you can do the following:
   Next, edit your default_master.properties file. Comment out and edit to
   set the following: 
 
-    jdbcDriverClass=com.mysql.jdbc.Driver
+    jdbcDriverClass=com.mysql.cj.jdbc.Driver
     maven.jdbc.groupId=mysql
     maven.jdbc.artifactId=mysql-connector-java
-    maven.jdbc.version=5.1.30-bin
-
-(note the "-bin" on this end of the file/version name)
-
+    maven.jdbc.version=8.0.23
 
 2013-05-23
 ----------

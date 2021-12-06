@@ -72,7 +72,7 @@
     <t:putAttribute name="bodyClass" value="${pageClass}"/>
     <t:putAttribute name="moduleName" value="repository/repositoryMain"/>
     <t:putAttribute name="headerContent" >
-
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/<spring:theme code="importExport.css"/>" type="text/css" media="screen,print"/>
         <jsp:include page="resultsState.jsp"/>
 
         <%--get action model data for search menus--%>

@@ -54,6 +54,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.Serializable;
 import java.util.Map;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -63,7 +64,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * Created by stas on 4/8/15.
  */
 @XmlRootElement(name = "where")
-public class ClientWhere implements ClientQueryClause, DeepCloneable<ClientWhere> {
+public class ClientWhere implements ClientQueryClause, DeepCloneable<ClientWhere>, Serializable {
 
     @CheckExpressionType(
             value = {

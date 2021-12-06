@@ -46,7 +46,7 @@ public class PasswordCipherer extends BaseCipher implements PasswordEncoder {
 	
 	private static Log log = LogFactory.getLog(PasswordCipherer.class);
 	
-    public static String ID = "passwordEncoder";
+    public static final String ID = "passwordEncoder";
 
     private Cipherer cipherer;
     

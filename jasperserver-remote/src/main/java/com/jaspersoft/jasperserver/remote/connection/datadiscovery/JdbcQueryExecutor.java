@@ -84,16 +84,18 @@ public class JdbcQueryExecutor implements QueryExecutor<String, Connection, Flat
         final ArrayList<SchemaElement> columnElements = new ArrayList<SchemaElement>();
         final ResourceGroupElement metadata = new ResourceGroupElement().setKind("resultSet").setElements(columnElements);
         Statement stmt = null;
+        ResultSet resultSet = null;
         try {
             stmt = connection.createStatement();
             final Statement statementClosure = stmt;
+            log.debug("JDBC Query Executor SQL[" + query + "] skipData = " + skipData);
+            if (skipData) stmt.setMaxRows(1);
             final Future<ResultSet> future = executor.submit(new Callable<ResultSet>() {
                 @Override
                 public ResultSet call() throws Exception {
                     return statementClosure.executeQuery(query);
                 }
             });
-            ResultSet resultSet;
             try {
                 resultSet = future.get();
             } catch (CancellationException e){
@@ -143,6 +145,13 @@ public class JdbcQueryExecutor implements QueryExecutor<String, Connection, Flat
         } catch (ArrayIndexOutOfBoundsException ex) {
             throw new QueryExecutionException("Query parsing exception", query, null);
         } finally {
+           if (resultSet != null) {
+               try {
+                   resultSet.close();
+               } catch (SQLException e) {
+                   log.error(e);
+               }
+           }
             if(stmt != null){
                 try {
                     stmt.close();

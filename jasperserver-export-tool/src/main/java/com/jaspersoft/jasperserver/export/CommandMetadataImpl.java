@@ -43,6 +43,9 @@ public class CommandMetadataImpl implements CommandMetadata, InitializingBean {
 		argumentNameSet.add(BaseExportImportCommand.ARG_CONFIG_FILES);
 		argumentNameSet.add(BaseExportImportCommand.ARG_CONFIG_RESOURCES);
 		argumentNameSet.add(BaseExportImportCommand.ARG_COMMAND_BEAN);
+		argumentNameSet.add(BaseExportImportCommand.ARG_TRANSFER);
+		argumentNameSet.add(BaseExportImportCommand.ARG_PROFILE_ATTR_NAME);
+		argumentNameSet.add(BaseExportImportCommand.ARG_PROFILE_ATTR_VALUE);
 		if (argumentNames != null) {
 			argumentNameSet.addAll(argumentNames);
 		}

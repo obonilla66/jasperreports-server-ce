@@ -20,7 +20,6 @@
  */
 package com.jaspersoft.jasperserver.war.model.impl;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.azuresql.AzureManagementCredentials;
@@ -52,7 +50,6 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResourceData;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.AzureSqlReportDataSource;
-import com.jaspersoft.jasperserver.core.util.StringUtil;
 import com.jaspersoft.jasperserver.war.model.JSONObject;
 import com.jaspersoft.jasperserver.war.model.TreeDataProvider;
 import com.jaspersoft.jasperserver.war.model.TreeNode;

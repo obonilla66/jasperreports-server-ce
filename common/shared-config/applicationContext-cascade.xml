@@ -21,7 +21,7 @@
   -->
 
 <beans
-        xmlns="http://www.springframework.org/schema/beans"
+       xmlns="http://www.springframework.org/schema/beans"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:util="http://www.springframework.org/schema/util"
         xmlns:context="http://www.springframework.org/schema/context"
@@ -29,6 +29,7 @@
     http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
     http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+    <beans profile="engine">
     <alias name="${bean.repositoryService}" alias="concreteRepository"/>
     <alias name="${bean.controlLogicUriMapping}" alias="controlLogicUriMapping"/>
     <alias name="${bean.controlLogicRegestry}" alias="controlLogicRegestry"/>
@@ -103,7 +104,8 @@
         <!--<entry key="5" value="13:37:54"></entry>-->
         <entry key="5" value="~NULL~"></entry>
     </util:map>
-	
+    </beans>
+    <beans profile="jrs">
 	<!-- Cache Manager -->
 	<bean id="controlLogicCacheManager" class="com.jaspersoft.jasperserver.inputcontrols.cascade.cache.ControlLogicCacheManagerImpl">
 	    <!-- seconds before a user cache is invalid -->
@@ -111,7 +113,8 @@
 		<!-- seconds between server cleanup process checks for invalid user sessions -->
 		<property name="cacheCleanTriggerTime" value="60"/>
 	</bean>
-
+    </beans>
+    <beans profile="engine">
     <bean id="inputControlsCachingEnabled" class="java.lang.Boolean">
         <constructor-arg value="true"/>
     </bean>
@@ -250,6 +253,7 @@
         </entry>
     </util:map>
 	
+    </beans>
 </beans>
 
 

@@ -133,7 +133,16 @@ public interface ObjectPermissionService {
      */
     public boolean isObjectAdministrable(ExecutionContext context, Object targetObject);
 
-    /**
+	/**
+	 * Shows if the specified repository object has read-only access for current(authenticated/session) user.
+	 *
+	 * @param context the execution context.
+	 * @param targetObject the repository object.
+	 * @return <code>true</code> if the repository object has R/O access, <code>false</code> otherwise.
+	 */
+	public boolean isObjectReadOnlyAccessible(ExecutionContext context, Object targetObject);
+
+	/**
      * Saves the {@link com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission ObjectPermission} object.
      *
      * @param context the execution context.

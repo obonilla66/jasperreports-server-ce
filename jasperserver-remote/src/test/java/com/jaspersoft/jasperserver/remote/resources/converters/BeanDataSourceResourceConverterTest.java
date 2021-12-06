@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.BeanReportDataSourceImpl;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
@@ -54,7 +55,8 @@ public class BeanDataSourceResourceConverterTest {
         BeanReportDataSource serverObject = new BeanReportDataSourceImpl();
         clientObject.setBeanMethod(expectedBeanMethod);
         clientObject.setBeanName(expectedBeanName);
-        final BeanReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final BeanReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         assertEquals(result.getBeanMethod(), expectedBeanMethod);
         assertEquals(result.getBeanName(), expectedBeanName);

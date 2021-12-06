@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +37,7 @@ import java.util.Map;
 @Component("basicResourceValidator")
 public class BasicResourceValidator extends GenericResourceValidator<Resource> {
     @Override
-    protected void internalValidate(Resource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, Resource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         // no specific validation here
     }
 }

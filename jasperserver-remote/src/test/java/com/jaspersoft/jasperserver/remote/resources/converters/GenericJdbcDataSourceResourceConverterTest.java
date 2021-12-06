@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.JdbcReportDataSourceImpl;
 import com.jaspersoft.jasperserver.dto.resources.AbstractClientJdbcDataSource;
@@ -55,8 +56,9 @@ public class GenericJdbcDataSourceResourceConverterTest {
         clientObject.setTimezone(expectedTimezone);
         final JdbcReportDataSource serverObject = new JdbcReportDataSourceImpl();
 
-        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject,
-                new ArrayList<Exception>(), null);
+        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject,
+                serverObject, new ArrayList<Exception>(), null);
 
         assertSame(result, serverObject);
         assertEquals(result.getConnectionUrl(), expectedConnectionUrl);
@@ -76,7 +78,8 @@ public class GenericJdbcDataSourceResourceConverterTest {
         final JdbcReportDataSource serverObject = new JdbcReportDataSourceImpl();
         serverObject.setPassword(expectedPassword);
 
-        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final JdbcReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
 
         assertSame(result, serverObject);
         assertEquals(result.getConnectionUrl(), expectedConnectionUrl);

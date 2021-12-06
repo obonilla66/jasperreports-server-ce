@@ -23,15 +23,15 @@ package com.jaspersoft.jasperserver.remote.resources.converters;
 import com.jaspersoft.jasperserver.api.common.crypto.CipherFactory;
 import com.jaspersoft.jasperserver.api.common.crypto.KeystoreManagerFactory;
 import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.util.spring.StaticApplicationContext;
-import static com.jaspersoft.jasperserver.api.common.util.spring.StaticApplicationContext.getApplicationContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ContentResourceImpl;
 import com.jaspersoft.jasperserver.api.security.encryption.PlainCipher;
-import com.jaspersoft.jasperserver.crypto.KeystoreManager;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
 import com.jaspersoft.jasperserver.dto.resources.ClientFile;
-import java.io.File;
+
 import static java.lang.System.getenv;
 import javax.xml.bind.DatatypeConverter;
 
@@ -44,7 +44,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
+
 import static org.springframework.util.ResourceUtils.getFile;
 
 
@@ -65,7 +65,8 @@ public class ContentResourceConverterTest extends AbstractTestNGSpringContextTes
     
     final static String ksLocation = getenv("ks");
     final static String kspLocation = getenv("ksp");
-    
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
+
     @Configuration
     @ComponentScan("com.jaspersoft.jasperserver.api.common.crypto")
     static class ContextConfiguration {
@@ -129,7 +130,7 @@ public class ContentResourceConverterTest extends AbstractTestNGSpringContextTes
         final ContentResource serverObject = new ContentResourceImpl();
         clientObject.setType(ClientFile.FileType.ods);
         clientObject.setContent(encoded);
-        final ContentResource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final ContentResource result = converter.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNotNull(result);
         assertEquals(result.getFileType(), expectedFileType);
         assertEquals(result.getData(), data);
@@ -146,7 +147,7 @@ public class ContentResourceConverterTest extends AbstractTestNGSpringContextTes
         serverObject.setFileType(ClientFile.FileType.secureFile.name());
         clientObject.setType(ClientFile.FileType.secureFile);
         clientObject.setContent(encoded);
-        final ContentResource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final ContentResource result = converter.resourceSpecificFieldsToServer(ctx, clientObject, serverObject, new ArrayList<Exception>(), null);
         assertNotNull(result);
         assertEquals(result.getFileType(), expectedFileType);
         // We expect the data to be equal to the decripted result data

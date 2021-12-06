@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.dto.adhoc.component;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,7 +37,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Andriy Godovanets
  * @version $Id$
  */
-public class ClientGenericComponent implements ClientComponent {
+public class ClientGenericComponent implements ClientComponent, Serializable {
     private Map<String, Object> propertyMap;
     private String componentType;
     private List<? extends ClientComponent> components;

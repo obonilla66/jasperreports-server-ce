@@ -22,7 +22,6 @@ package com.jaspersoft.jasperserver.api.logging.access.domain;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
-import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 
 import java.util.Date;
 
@@ -31,17 +30,19 @@ import java.util.Date;
  * @version $Id$
  */
 public class AccessEventImpl implements AccessEvent, Cloneable {
-    private User user;
+    private String userId;
     private Date eventDate;
     private boolean updating;
-    private Resource resource;
+    private String resourceUri;
+    private String resourceType;
+    private boolean hidden;
 
-    public User getUser() {
-        return user;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(String user) {
+        this.userId = user;
     }
 
     public Date getEventDate() {
@@ -52,12 +53,12 @@ public class AccessEventImpl implements AccessEvent, Cloneable {
         this.eventDate = eventDate;
     }
 
-    public Resource getResource() {
-        return resource;
+    public String getResourceUri() {
+        return resourceUri;
     }
 
-    public void setResource(Resource resource) {
-        this.resource = resource;
+    public void setResourceUri(String resourceUri) {
+        this.resourceUri = resourceUri;
     }
 
     public boolean isUpdating() {
@@ -68,17 +69,51 @@ public class AccessEventImpl implements AccessEvent, Cloneable {
         this.updating = updating;
     }
 
+    @Override
+    public String extractUserName() {
+        if(userId==null||userId.indexOf(UID_DELIMITER)<0){
+            return userId;
+        } else {
+            return userId.substring(0,userId.indexOf(UID_DELIMITER));
+        }
+    }
+
+    @Override
+    public String extractTenantId() {
+        if(userId==null||userId.indexOf(UID_DELIMITER)<0){
+            return null;
+        } else {
+            return userId.substring(userId.indexOf(UID_DELIMITER)+1);
+        }
+    }
+
+    @Override
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    @Override
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
+    @Override
+    public boolean isHidden() {  return hidden;  }
+
+    @Override
+    public void setHidden(boolean hidden) { this.hidden = hidden; }
+
     public static class TranslateException extends IllegalArgumentException {
 
         private AccessEvent accessEvent;
-        private Resource resource;
+        private String resourceUri;
         private ResourceFactory resourceFactory;
         private Exception exception;
 
         public TranslateException(AccessEvent accessEvent, Resource resource, ResourceFactory resourceFactory, Exception exception) {
             super(exception);
             this.accessEvent = accessEvent;
-            this.resource = resource;
+            this.resourceUri = resource.getURIString();
             this.resourceFactory = resourceFactory;
             this.exception = exception;
         }
@@ -91,8 +126,8 @@ public class AccessEventImpl implements AccessEvent, Cloneable {
             return resourceFactory;
         }
 
-        public Resource getResource() {
-            return resource;
+        public String getResourceUri() {
+            return resourceUri;
         }
 
         public Exception getOriginalException() {
@@ -109,6 +144,6 @@ public class AccessEventImpl implements AccessEvent, Cloneable {
     }
     
     public String toString() {
-        return "AccessEventImpl["+user+","+eventDate+","+updating+","+resource+"]";
+        return "AccessEventImpl["+ userId +","+eventDate+","+updating+","+resourceUri+","+resourceType+","+hidden+"]";
     }
 }

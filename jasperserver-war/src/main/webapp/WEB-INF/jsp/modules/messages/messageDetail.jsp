@@ -42,12 +42,19 @@
     </t:putAttribute>
 
     <t:putAttribute name="bodyContent" >
-
+        <!-- NEW STYLE PAGE TITLE -->
+        <div class="pageHeader ">
+            <div class="pageHeader-title">
+                <div class="pageHeader-title-icon">
+                    <span class="icon messages"></span>
+                </div>
+                <div class="pageHeader-title-text"><spring:message code="messages.messageDetail.page.title"/></div>
+            </div>
+        </div>
         <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
-            <t:putAttribute name="containerTitle"><spring:message code="messages.messageDetail.header.title"/></t:putAttribute>
+            <t:putAttribute name="containerTitleEmpty" value="${true}"></t:putAttribute>
             <t:putAttribute name="containerClass" value="column decorated primary showingToolBar"/>
-            <t:putAttribute name="headerContent">
-
+            <t:putAttribute name="subHeaderContent">
                 <div id="toolbar" class="toolbar">
                     <ul class="list buttonSet">
                         <li class="leaf"><button id="back" class="button capsule text up"><span class="wrap"><spring:message code="messages.messageDetail.toolbar.button.back"/></span><span class="icon"></span></button></li>

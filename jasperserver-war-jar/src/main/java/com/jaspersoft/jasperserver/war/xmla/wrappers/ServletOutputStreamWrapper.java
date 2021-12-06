@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 
 public class ServletOutputStreamWrapper extends ServletOutputStream {
 
@@ -31,6 +32,14 @@ public class ServletOutputStreamWrapper extends ServletOutputStream {
 	
 	public ServletOutputStreamWrapper() {
 		
+	}
+
+	public boolean isReady() {
+		return true;
+	}
+
+	public void setWriteListener(WriteListener writeListener) {
+
 	}
 
 	@Override

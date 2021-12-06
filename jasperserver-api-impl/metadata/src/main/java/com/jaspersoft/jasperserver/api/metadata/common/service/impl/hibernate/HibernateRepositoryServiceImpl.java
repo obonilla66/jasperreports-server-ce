@@ -33,6 +33,8 @@ import com.jaspersoft.jasperserver.api.common.util.CollatorFactory;
 import com.jaspersoft.jasperserver.api.common.util.DefaultCollatorFactory;
 import com.jaspersoft.jasperserver.api.logging.access.context.AccessContext;
 import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEvent;
+import com.jaspersoft.jasperserver.api.logging.access.service.impl.AccessService;
+import com.jaspersoft.jasperserver.api.logging.access.service.impl.AccessEventListener;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventProperty;
@@ -68,20 +70,11 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.ut
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.UpdateDatesIndicator;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterElement;
-import com.jaspersoft.jasperserver.api.search.SearchCriteria;
-import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
-import com.jaspersoft.jasperserver.api.search.SortByAccessTimeTransformer;
-import com.jaspersoft.jasperserver.api.search.LastAccessTimeAttribute;
-import com.jaspersoft.jasperserver.api.search.TransformerFactory;
-import com.jaspersoft.jasperserver.api.search.SearchFilter;
-import com.jaspersoft.jasperserver.api.search.SearchSorter;
-import com.jaspersoft.jasperserver.api.search.IdAttribute;
-import com.jaspersoft.jasperserver.api.search.BasicTransformer;
-import com.jaspersoft.jasperserver.api.search.QueryModificationEvaluator;
+import com.jaspersoft.jasperserver.api.search.*;
 import com.jaspersoft.jasperserver.core.util.DBUtil;
-import com.jaspersoft.jasperserver.api.search.BasicTransformerFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -106,16 +99,6 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Conjunction;
-import org.hibernate.criterion.Order;
-import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -123,6 +106,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.orm.hibernate5.HibernateCallback;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,17 +116,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.Collator;
 import java.lang.InstantiationException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
@@ -190,6 +165,9 @@ public class HibernateRepositoryServiceImpl extends HibernateDaoImpl implements 
     private HibernateSaveUpdateDeleteListener hibernateSaveUpdateDeleteListener;
 
     private ApplicationContext applicationContext; //needed for validation settings
+
+    @javax.annotation.Resource(name = "accessService")
+    AccessService accessService;
 
 
     public HibernateRepositoryServiceImpl() {
@@ -429,8 +407,11 @@ public class HibernateRepositoryServiceImpl extends HibernateDaoImpl implements 
     private void logAccessResource(final RepoResource repoResource, final boolean updating) {
         accessContext.doInAccessContext(new AccessContext.AccessContextCallback() {
             public void fillAccessEvent(AccessEvent accessEvent) {
-                accessEvent.setResource((Resource)repoResource.toClient(resourceFactory));
+                accessEvent.setResourceUri(repoResource.getResourceURI());
+                accessEvent.setResourceType(repoResource.getResourceType());
                 accessEvent.setUpdating(updating);
+                accessEvent.setResourceType(repoResource.getResourceType());
+                accessEvent.setHidden(repoResource.getParent().isHidden());
             }
         });
     }
@@ -1669,6 +1650,13 @@ public class HibernateRepositoryServiceImpl extends HibernateDaoImpl implements 
             }
             HibernateTemplate template = getHibernateTemplate();
             template.delete(folder);
+            for (Iterator it = getRepositoryListeners().iterator(); it.hasNext();) {
+                RepositoryListener listener = (RepositoryListener) it.next();
+                //if (listener instanceof RepositoryEventListener) {
+                if (listener instanceof AccessEventListener) {
+                    ((RepositoryEventListener)listener).onFolderDelete(uri);
+                }
+            }
         } else {
         }
         closeAuditEvent("deleteFolder");
@@ -2595,25 +2583,81 @@ public class HibernateRepositoryServiceImpl extends HibernateDaoImpl implements 
             // we have to get ids only and make additional call, see:
             // https://community.jboss.org/wiki/HibernateFAQ-AdvancedProblems#Hibernate_does_not_return_distinct_results_for_a_query_with_outer_join_fetching_enabled_for_a_collection_even_if_I_use_the_distinct_keyword
             searchCriteriaFactory = searchCriteriaFactory.newFactory(Resource.class.getName());
-            criteria = searchCriteriaFactory.create(context, filters);
+            AbstractMap.SimpleEntry<String,String> accessType= new AbstractMap.SimpleEntry<>("accessType","");
+            criteria = searchCriteriaFactory.create(context, filters,accessType);
             criteria.addProjection(Projections.distinct(Projections.id()));
             searchCriteriaFactory.applySorter(context, criteria, sorter);
-
-            List list  = getHibernateTemplate().findByCriteria(criteria, current, max);
-
+            com.jaspersoft.jasperserver.api.search.ResultTransformer transformer = transformerFactory.createTransformer(filters, sorter);
+            List list;
+            if (transformer instanceof SortByAccessTimeTransformer || transformer instanceof SortByPopularityTransformer)
+                list = getHibernateTemplate().findByCriteria(criteria);
+            else
+                list = getHibernateTemplate().findByCriteria(criteria, current, max);
             List<Long> ids = new ArrayList<Long>();
             List<Timestamp> lastAccessTimeList = new ArrayList<Timestamp>();
-            com.jaspersoft.jasperserver.api.search.ResultTransformer transformer = transformerFactory.createTransformer(filters, sorter);
             if (transformer != null) {
                 ids.addAll(transformer.transformToIdList(list));
+                result = getResourcesByIdList(ids, searchCriteriaFactory);
                 if (transformer instanceof SortByAccessTimeTransformer) {
-                    lastAccessTimeList.addAll(((SortByAccessTimeTransformer) transformer).transformToLastAccessTimeList(list));
+                    if(ids != null && !ids.isEmpty()) {
+                        List<String> fullURIs = new ArrayList<>();
+                        for(ResourceLookup resourceLookup: result){
+                            fullURIs.add(resourceLookup.getURIString());
+                        }
+                        DetachedCriteria accessCriteria = DetachedCriteria.forClass(persistentClassMappings.getImplementationClass(AccessEvent.class));
+                        String accessTypeValue=accessType.getValue();
+                        if(accessTypeValue!=null &&!accessTypeValue.equals("ALL"))
+                            accessCriteria.add(Restrictions.eq("userId", getUserId()));
+                        accessCriteria.add(DBUtil.getBoundedInCriterion("resourceUri", fullURIs));
+                        accessCriteria.setProjection(Projections.projectionList().
+                                add(Projections.groupProperty("resourceUri")).
+                                add(Projections.max("eventDate"), "aed"));
+
+                        accessCriteria.addOrder(Order.desc("aed"));
+                        List eventsList = accessService.getResourceURIs(accessCriteria, max);
+
+                        List<String> uris = ((SortByAccessTimeTransformer) transformer).transformToURIList(eventsList);
+                        lastAccessTimeList.addAll(((SortByAccessTimeTransformer) transformer).transformToLastAccessTimeList(eventsList));
+                        List<ResourceLookup> reOrderedResult = new ArrayList<>();
+                        for(String uri: uris){
+                            int index = fullURIs.indexOf(uri);
+                            reOrderedResult.add(result.get(index));
+                        }
+                        result = reOrderedResult;
+                    }
+                } else if (transformer instanceof SortByPopularityTransformer) {
+                    if(ids != null && !ids.isEmpty()) {
+                        List<String> fullURIs = new ArrayList<>();
+                        for(ResourceLookup resourceLookup: result){
+                            fullURIs.add(resourceLookup.getURIString());
+                        }
+                        DetachedCriteria accessCriteria = DetachedCriteria.forClass(persistentClassMappings.getImplementationClass(AccessEvent.class));
+                        String accessTypeValue=accessType.getValue();
+                        if(accessTypeValue!=null && !accessTypeValue.equals("ALL"))
+                            accessCriteria.add(Restrictions.eq("userId", getUserId()));
+                        accessCriteria.add(DBUtil.getBoundedInCriterion("resourceUri", fullURIs));
+                        accessCriteria.setProjection(Projections.projectionList().
+                                add(Projections.groupProperty("resourceUri")).
+                                add(Projections.count("resourceUri"),"aep").
+                                add(Projections.rowCount()));
+
+                        accessCriteria.addOrder(Order.desc("aep"));
+                        List eventsList = accessService.getResourceURIs(accessCriteria, max);
+
+                        List<String> uris = ((SortByPopularityTransformer) transformer).transformToURIList(eventsList);
+                        List<ResourceLookup> reOrderedResult = new ArrayList<>();
+                        for(String uri: uris){
+                            int index = fullURIs.indexOf(uri);
+                            reOrderedResult.add(result.get(index));
+                        }
+                        result = reOrderedResult;
+                    }
                 }
             } else {
                 throw new IllegalArgumentException("Result transformer is null.");
             }
 
-            result = getResourcesByIdList(ids, searchCriteriaFactory);
+            //result = getResourcesByIdList(ids, searchCriteriaFactory);
             if (!lastAccessTimeList.isEmpty()) {
                 result = addLastAccessTimeAttributeToResources(result, lastAccessTimeList);
             }
@@ -2627,6 +2671,23 @@ public class HibernateRepositoryServiceImpl extends HibernateDaoImpl implements 
         }
 
         return result;
+    }
+
+    protected String getUserId() {
+        Authentication authenticationToken = SecurityContextHolder.getContext().getAuthentication();
+        if (authenticationToken == null) {
+            return null;
+        }
+
+        if (authenticationToken.getPrincipal() instanceof User) {
+            User user = (User)authenticationToken.getPrincipal();
+            String tenantId = user.getTenantId();
+            return user.getUsername() + (tenantId != null ? "|" + tenantId : "");
+        } else if (authenticationToken.getPrincipal() instanceof String){
+            return (String)authenticationToken.getPrincipal();
+        }else {
+            return null;
+        }
     }
 
     @Transactional(propagation = Propagation.REQUIRED)

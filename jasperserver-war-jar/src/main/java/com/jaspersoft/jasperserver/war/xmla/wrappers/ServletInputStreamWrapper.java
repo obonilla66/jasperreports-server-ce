@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.war.xmla.wrappers;
 
 import java.io.IOException;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 
 public class ServletInputStreamWrapper extends ServletInputStream {
@@ -42,4 +43,17 @@ public class ServletInputStreamWrapper extends ServletInputStream {
 		return data[idx++];
 	}
 
+	public boolean isFinished() {
+		if (idx == data.length)
+			return true;
+		return false;
+	}
+
+	public boolean isReady() {
+		return true;
+	}
+
+	public void setReadListener(ReadListener readListener) {
+
+	}
 }

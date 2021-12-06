@@ -23,9 +23,14 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd">
 
+<beans profile="engine">
     <alias name="${bean.loggingContextProvider}" alias="concreteLoggingContextProvider"/>
+</beans>
+<beans profile="jrs">
 
     <bean id="accessEventPurgerJob" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.JSMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="accessService"/>
@@ -54,10 +59,9 @@
         <property name="volatility" value="true"/>
     </bean>
     -->
-
     <bean id="accessService"
         class="com.jaspersoft.jasperserver.api.logging.access.service.impl.AccessServiceImpl">
-        <property name="sessionFactory" ref="sessionFactory"/>
+        <property name="sessionFactory" ref="auditSessionFactory"/>
         <property name="hibernateRepositoryService" ref="unsecureRepositoryService"/>
         <property name="persistentUserResolver" ref="${bean.internalUserAuthorityService}"/>
         <property name="persistentClassFactory" ref="persistentMappings"/>
@@ -66,8 +70,12 @@
     </bean>
 
     <bean id="hibernateAccessEventDeleteListener"
-          class="com.jaspersoft.jasperserver.api.logging.access.service.impl.HibernateAccessEventDeleteListener"/>
+          class="com.jaspersoft.jasperserver.api.logging.access.service.impl.HibernateAccessEventDeleteListener">
+        <property name="accessService" ref="accessService"/>
+    </bean>
 
+</beans>
+<beans profile="engine">
     <bean id="loggingFilter" class="com.jaspersoft.jasperserver.api.logging.filter.StandardLoggingFilter">
         <property name="loggingContextProvider" ref="concreteLoggingContextProvider"/>
     </bean>
@@ -93,9 +101,21 @@
         </constructor-arg>
     </bean>
 
-    <bean id="loggingEventsService"
-          class="com.jaspersoft.jasperserver.api.logging.service.impl.LoggingFacade">
+    <bean id="loggingEventsService" class="com.jaspersoft.jasperserver.api.logging.service.impl.LoggingFacade">
+        <property name="asyncExecutor" ref="asyncEventsExecutor"/>
     </bean>
+
+    <bean id="asyncEventsExecutor" class="java.util.concurrent.ThreadPoolExecutor">
+        <constructor-arg index="0" type="int" value="15"/>
+        <constructor-arg index="1" type="int" value="15"/>
+        <constructor-arg index="2" type="long" value="0"/>
+        <constructor-arg index="3" type="java.util.concurrent.TimeUnit">
+            <util:constant static-field="java.util.concurrent.TimeUnit.SECONDS"/>
+        </constructor-arg>
+        <constructor-arg index="4"  ref="eventsQueue"/>
+    </bean>
+
+    <bean id="eventsQueue" class="java.util.concurrent.LinkedBlockingQueue"/>
 
     <bean id="accessContext"
           class="com.jaspersoft.jasperserver.api.logging.access.context.impl.AccessContextImpl">
@@ -113,7 +133,8 @@
         <property name="loggingContextProvider" ref="${bean.loggingContextProvider}"/>
         <property name="requestTypeListener" ref="${bean.requestTypeListener}"/>
     </bean>
-
+</beans>
+<beans profile="jrs">
     <bean class="com.jaspersoft.jasperserver.api.logging.context.LoggingContextProviderStaticInjector">
         <property name="loggingContextProvider" ref="${bean.loggingContextProvider}"/>
         <property name="loggingContextProviderAwareClasses">
@@ -122,4 +143,5 @@
             </list>
         </property>
     </bean>
+</beans>
 </beans>

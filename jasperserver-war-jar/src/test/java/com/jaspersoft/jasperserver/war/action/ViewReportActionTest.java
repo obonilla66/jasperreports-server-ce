@@ -22,17 +22,18 @@
 package com.jaspersoft.jasperserver.war.action;
 
 import com.jaspersoft.jasperserver.api.JSShowOnlyErrorMessage;
-import com.jaspersoft.jasperserver.api.JSValidationException;
-import com.jaspersoft.jasperserver.api.common.domain.ValidationError;
 import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationErrorsImpl;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
+import com.jaspersoft.jasperserver.api.engine.common.service.SecurityContextProvider;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.domain.impl.ReportUnitResult;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportInputControlsInformationImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.ReportLoadingService;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.RepositoryConfiguration;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationError;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
@@ -49,7 +50,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.MessageSource;
 import org.springframework.webflow.context.ExternalContext;
 import org.springframework.webflow.context.servlet.ServletExternalContext;
-import org.springframework.webflow.core.collection.LocalAttributeMap;
 import org.springframework.webflow.core.collection.MutableAttributeMap;
 import org.springframework.webflow.core.collection.ParameterMap;
 import org.springframework.webflow.execution.Event;
@@ -59,25 +59,13 @@ import org.springframework.webflow.execution.RequestContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import static org.mockito.Mockito.*;
 
 /**
  * @author Vladimir Tsukur
@@ -110,6 +98,12 @@ public class ViewReportActionTest {
 
     @Mock
     private WebflowReportContextAccessor reportContextAccessor;
+
+    @Mock
+    private SecurityContextProvider securityContextProvider;
+
+    @Mock
+    private RepositoryConfiguration configuration;
 
     @Mock
     private UIExceptionRouter uiExceptionRouter;
@@ -289,6 +283,61 @@ public class ViewReportActionTest {
         mockRequestContext(map(), flowScopeParams, map());
         Event event = viewReportAction.chooseExportMode(requestContext);
         assertEquals("exportReport", event.getId());
+    }
+
+    @Test
+    public void ensureExportersListIsPresentOnFlowScopeParams() throws Exception {
+        final Map<String, Object> flowScopeParams = map();
+        mockRequestContextForPrepareReportView(map(), flowScopeParams, map());
+
+        Map<String, ExporterConfigurationBean> configuredExporters = new LinkedHashMap<>();
+
+        ExporterConfigurationBean pdfConfigurationBean = new ExporterConfigurationBean();
+        pdfConfigurationBean.setDescriptionKey("jasper.report.view.hint.export.pdf");
+        configuredExporters.put("pdf", pdfConfigurationBean);
+
+        ExporterConfigurationBean xlsConfigurationBean = new ExporterConfigurationBean();
+        xlsConfigurationBean.setDescriptionKey("jasper.report.view.hint.export.excel");
+        configuredExporters.put("xls", xlsConfigurationBean);
+
+        viewReportAction.setConfiguredExporters(configuredExporters);
+
+        User userMock = mock(User.class);
+        when(securityContextProvider.getContextUser()).thenReturn(userMock);
+        when(userMock.getTenantId()).thenReturn("tenantId");
+        when(configuration.getPublicFolderUri()).thenReturn("/public");
+        when(configuration.getTempFolderUri()).thenReturn("/temp");
+
+        viewReportAction.prepareReportView(requestContext);
+
+        String serializeExporters = (String) flowScopeParams.get("exportersList");
+        String expected = "[{\"type\": \"simpleAction\"," +
+                "\"text\": \"jasper.report.view.hint.export.pdf\"," +
+                "\"action\": \"Report.exportReport\"," +
+                "\"actionArgs\": [\"pdf\"]}," +
+                "{\"type\": \"simpleAction\"," +
+                "\"text\": \"jasper.report.view.hint.export.excel\"," +
+                "\"action\": \"Report.exportReport\"," +
+                "\"actionArgs\": [\"xls\"]}]";
+
+        assertEquals(expected, serializeExporters);
+    }
+
+    private void mockRequestContextForPrepareReportView(
+            Map<String, Object> requestParams, Map<String, Object> flowScopeParams, final Map<String, Object> sessionParams) {
+
+        ServletExternalContext externalContext = mock(ServletExternalContext.class);
+        HttpServletRequest httpServletRequestMock = mock(HttpServletRequest.class);
+        MutableAttributeMap mutableAttributeMap = mock(MutableAttributeMap.class);
+
+        doReturn(setupMutableAttributeMap(flowScopeParams)).when(requestContext).getFlowScope();
+        doReturn(setupMutableAttributeMap(requestParams)).when(requestContext).getRequestScope();
+        doReturn(externalContext).when(requestContext).getExternalContext();
+        doReturn(mutableAttributeMap).when(externalContext).getRequestMap();
+        doReturn(false).when(mutableAttributeMap).get(any());
+        doReturn(setupParameterMap(requestParams)).when(requestContext).getRequestParameters();
+
+        doReturn(httpServletRequestMock).when(externalContext).getNativeRequest();
     }
 
     private void mockRequestContext(

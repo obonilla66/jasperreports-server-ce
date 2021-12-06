@@ -21,8 +21,10 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
+import com.jaspersoft.jasperserver.dto.adhoc.query.el.adapters.DomELCommonSimpleDateFormats;
 import com.jaspersoft.jasperserver.dto.resources.ClientInputControl;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableDataType;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableListOfValues;
@@ -32,9 +34,8 @@ import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundEx
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * <p></p>
@@ -48,21 +49,26 @@ public class InputControlResourceConverter extends ResourceConverterImpl<InputCo
     private ResourceReferenceConverterProvider resourceConverterProvider;
 
     @Override
-    protected InputControl resourceSpecificFieldsToServer(ClientInputControl clientObject, InputControl resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected InputControl resourceSpecificFieldsToServer(ExecutionContext ctx, ClientInputControl clientObject, InputControl resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         ResourceReferenceConverter<ClientReferenceableDataType> dataTypeConverter = resourceConverterProvider.getConverterForType(ClientReferenceableDataType.class);
         ResourceReferenceConverter<ClientReferenceableListOfValues> lovConverter = resourceConverterProvider.getConverterForType(ClientReferenceableListOfValues.class);
         ResourceReferenceConverter<ClientReferenceableQuery> queryConverter = resourceConverterProvider.getConverterForType(ClientReferenceableQuery.class);
 
-        resultToUpdate.setDataType(dataTypeConverter.toServer(clientObject.getDataType(),resultToUpdate.getDataType(), options));
-        resultToUpdate.setListOfValues(lovConverter.toServer(clientObject.getListOfValues(), resultToUpdate.getListOfValues(), options));
-        resultToUpdate.setQuery(queryConverter.toServer(clientObject.getQuery(), resultToUpdate.getQuery(), options));
+        resultToUpdate.setDataType(dataTypeConverter.toServer(ctx, clientObject.getDataType(), resultToUpdate.getDataType(), options));
+        resultToUpdate.setListOfValues(lovConverter.toServer(ctx, clientObject.getListOfValues(), resultToUpdate.getListOfValues(), options));
+        resultToUpdate.setQuery(queryConverter.toServer(ctx, clientObject.getQuery(), resultToUpdate.getQuery(), options));
 
         resultToUpdate.setMandatory(clientObject.isMandatory());
         resultToUpdate.setReadOnly(clientObject.isReadOnly());
         resultToUpdate.setVisible(clientObject.isVisible());
         resultToUpdate.setInputControlType(clientObject.getType());
         resultToUpdate.setQueryValueColumn(clientObject.getValueColumn());
-
+        try {
+            resultToUpdate.setCreationDate(clientObject.getCreationDate()!=null ? DomELCommonSimpleDateFormats.isoTimestampFormatNoMilliSeconds().parse(clientObject.getCreationDate()) : null);
+            resultToUpdate.setUpdateDate(clientObject.getUpdateDate()!=null ? DomELCommonSimpleDateFormats.isoTimestampFormatNoMilliSeconds().parse(clientObject.getUpdateDate()) : null);
+        } catch (ParseException e) {
+           throw new IllegalParameterValueException("Exception occured while parsing date parameter", clientObject.getCreationDate(), clientObject.getUpdateDate());
+        }
         for( String column : resultToUpdate.getQueryVisibleColumns()){
             resultToUpdate.removeQueryVisibleColumn(column);
         }
@@ -85,7 +91,6 @@ public class InputControlResourceConverter extends ResourceConverterImpl<InputCo
         client.setDataType(dataTypeConverter.toClient(serverObject.getDataType(), options));
         client.setListOfValues(lovConverter.toClient(serverObject.getListOfValues(), options));
         client.setQuery(queryConverter.toClient(serverObject.getQuery(), options));
-
         client.setMandatory(serverObject.isMandatory());
         client.setReadOnly(serverObject.isReadOnly());
         client.setVisible(serverObject.isVisible());

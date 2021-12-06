@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
@@ -66,7 +67,7 @@ public class ContentResourceValidator extends GenericResourceValidator<ContentRe
     }
 
     @Override
-    protected void internalValidate(ContentResource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, ContentResource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         validateNaming(resource, errors);
         validateUpload(resource, errors);
     }

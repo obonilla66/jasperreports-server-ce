@@ -132,6 +132,7 @@ public class CoreDataCreateTestNG extends BaseServiceSetupTestNG {
         createDefaultTheme();
 
         addDefaultDomainWhitelist();
+        addAuditDBProfileAttribute();
 	}
     /*
      * create users and roles needed for the core ce data

@@ -21,6 +21,11 @@
 package com.jaspersoft.jasperserver.export.modules.logging.access.beans;
 
 import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEvent;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
+import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
+import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
 import com.jaspersoft.jasperserver.export.modules.ImporterModuleContext;
 import com.jaspersoft.jasperserver.export.modules.common.TenantQualifiedName;
 import com.jaspersoft.jasperserver.export.modules.common.TenantStrHolderPattern;
@@ -40,12 +45,14 @@ public class AccessEventBean {
     private String resourceUri;
 
     public void copyFrom(AccessEvent accessEvent) {
-        setUserName(accessEvent.getUser().getUsername());
-        String tenantId = accessEvent.getUser().getTenantId();
-        setTenantId(tenantId != null ? tenantId : "");
+        setUserName(accessEvent.extractUserName());
+        setTenantId(accessEvent.extractTenantId());
+        if(tenantId==null){
+            tenantId="";
+        }
         setEventDate(accessEvent.getEventDate());
         setUpdating(accessEvent.isUpdating());
-        setResourceUri(accessEvent.getResource().getURI());
+        setResourceUri(Resource.URI_PROTOCOL+":"+accessEvent.getResourceUri());
     }
 
     public void copyTo(AccessEvent accessEvent,
@@ -53,6 +60,10 @@ public class AccessEventBean {
                        ImporterModuleContext context) {
         String tenantId = getTenantId();
         String resourceUri = getResourceUri();
+        Resource resource = accessImportHandler.resolveResource(resourceUri);
+        if(resource==null)  {
+            return;
+        }
         if (!context.getNewGeneratedTenantIds().isEmpty()) {
             tenantId = TenantStrHolderPattern.TENANT_ID
                     .replaceWithNewTenantIds(context.getNewGeneratedTenantIds(), tenantId);
@@ -60,10 +71,22 @@ public class AccessEventBean {
                     .replaceWithNewTenantIds(context.getNewGeneratedTenantIds(), resourceUri);
         }
 
-        accessEvent.setUser(accessImportHandler.resolveUser(new TenantQualifiedName(tenantId, getUserName())));
+        User user = accessImportHandler.resolveUser(new TenantQualifiedName(tenantId, getUserName()));
+
+        String userId = user.getUsername();
+        if(tenantId!=null&&!tenantId.isEmpty()){
+            userId=userId+AccessEvent.UID_DELIMITER+tenantId;
+        }
+        accessEvent.setUserId(userId);
         accessEvent.setEventDate(getEventDate());
         accessEvent.setUpdating(isUpdating());
-        accessEvent.setResource(accessImportHandler.resolveResource(resourceUri));
+        accessEvent.setResourceType(resource.getType());
+        String resourceURI = resource.getURIString();
+        accessEvent.setResourceUri(resourceURI);
+        int index = resourceURI.lastIndexOf(Folder.SEPARATOR);
+        if (index > 0) {
+            accessEvent.setHidden(accessImportHandler.isLocalFolder(resourceURI.substring(0, index)));
+        }
     }
 
     public String getUserName() {
@@ -105,4 +128,5 @@ public class AccessEventBean {
     public void setResourceUri(String resourceUri) {
         this.resourceUri = resourceUri;
     }
+
 }

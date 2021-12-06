@@ -62,7 +62,7 @@ public abstract class RepoResourceBase implements IdedRepoObject, RepoReportData
 	protected String label = null;
 	protected String description = null;
 
-    protected Set<AccessEvent> accessEvents = null;
+   // protected Set<AccessEvent> accessEvents = null;
     protected Set<RepoReportThumbnail> thumbnails = null;
 
 	protected RepoFolder parent;
@@ -264,13 +264,13 @@ public abstract class RepoResourceBase implements IdedRepoObject, RepoReportData
         this.updateDate = updateDate;
     }
 
-    public Set<AccessEvent> getAccessEvents() {
+/*    public Set<AccessEvent> getAccessEvents() {
         return accessEvents;
     }
 
     public void setAccessEvents(Set<AccessEvent> accessEvents) {
         this.accessEvents = accessEvents;
-    }
+    }*/
 
     public Set<RepoReportThumbnail> getThumbnails() {
         return thumbnails;

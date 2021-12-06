@@ -21,7 +21,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:security="http://www.springframework.org/schema/security"
@@ -136,6 +137,7 @@
         <entry key="pptx" value="application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
         <entry key="json" value="application/json"/>
         <entry key="dashboardComponent" value="application/dashboardComponentsSchema+json"/>
+        <entry key="data_csv" value="text/csv"/>
     </util:map>
 
     <bean id="exposedMessageSource" parent="messageSource" class="com.jaspersoft.jasperserver.jaxrs.bundle.ExposedResourceBundleMessageSource"  >
@@ -225,7 +227,7 @@
         </constructor-arg>
         <!--Relations resolver-->
         <property name="visitor">
-            <bean id="workflowCollectionVisitor" scope="prototype" class="com.jaspersoft.jasperserver.jaxrs.poc.hypermedia.workflow.visitor.UserWorkflowRelationVisitor"/>
+            <bean id="workflowVisitor" scope="prototype" class="com.jaspersoft.jasperserver.jaxrs.poc.hypermedia.workflow.visitor.UserWorkflowRelationVisitor"/>
         </property>
     </bean>
 
@@ -569,6 +571,14 @@
 
     </util:map>
 
+    <bean id="resourceDetailsIncludesVoter" class="com.jaspersoft.jasperserver.jaxrs.resources.UnanimousResourceIncludesVoter">
+    	<property name="voters">
+    		<bean class="com.jaspersoft.jasperserver.jaxrs.resources.RequestAttributeResourceIncludesVoter">
+    			<property name="includeName" value="profileAttributesResolved"/>
+    			<property name="requestAttributeName" value="com.jaspersoft.jasperserver.security.web.token.authenticated"/>
+    		</bean>
+    	</property>
+    </bean>
 
 
 </beans>

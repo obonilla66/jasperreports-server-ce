@@ -157,6 +157,14 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
 		</bean>
 		<bean class="com.jaspersoft.jasperserver.war.dto.ByteEnum">
 			<property name="code">
+				<util:constant static-field="com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob.OUTPUT_FORMAT_DATA_CSV"/>
+			</property>
+			<property name="labelMessage">
+				<value>report.output.data.csv.label</value>
+			</property>
+		</bean>
+		<bean class="com.jaspersoft.jasperserver.war.dto.ByteEnum">
+			<property name="code">
 				<util:constant static-field="com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob.OUTPUT_FORMAT_DOCX"/>
 			</property>
 			<property name="labelMessage">

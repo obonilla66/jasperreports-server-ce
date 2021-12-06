@@ -48,6 +48,10 @@ public interface FileResourceBase
     String TYPE_MONGODB_JDBC_CONFIG = "config";
     String TYPE_AZURE_CERTIFICATE = "cer";
     String TYPE_SECURE_FILE = "secureFile";
+    String TYPE_MONGODB_SCHEMA = "mongoDbSchema";
+    String TYPE_KEY = "key";
+    String TYPE_PUB = "pub";
+    String TYPE_PPK = "ppk";
     String TYPE_DASHBOARD_COMPONENTS_SCHEMA = "dashboardComponent";
 
 }

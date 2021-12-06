@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection.jdbc;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.dto.resources.ClientResource;
 import com.jaspersoft.jasperserver.remote.connection.datadiscovery.Connector;
@@ -55,7 +56,7 @@ public class ClientJdbcConnector<ConnectionDescriptionType extends ClientResourc
     protected Resource convert(ConnectionDescriptionType connectionDescriptor){
         return resourceConverterProvider
                 .getToServerConverter(connectionDescriptor)
-                .toServer(connectionDescriptor, ToServerConversionOptions.getDefault().setSuppressValidation(true));
+                .toServer(ExecutionContextImpl.getRuntimeExecutionContext(), connectionDescriptor, ToServerConversionOptions.getDefault().setSuppressValidation(true));
     }
 
     @Override

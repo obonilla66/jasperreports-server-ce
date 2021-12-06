@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 
@@ -31,7 +32,7 @@ import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundEx
  * @version $Id$
  */
 public interface ToServerConverter<T, ResultType, OptionsType> {
-    ResultType toServer(T clientObject, OptionsType options) throws IllegalParameterValueException, MandatoryParameterNotFoundException;
-    ResultType toServer(T clientObject, ResultType resultToUpdate, OptionsType options) throws IllegalParameterValueException, MandatoryParameterNotFoundException, JSExceptionWrapper;
+    ResultType toServer(ExecutionContext ctx, T clientObject, OptionsType options) throws IllegalParameterValueException, MandatoryParameterNotFoundException;
+    ResultType toServer(ExecutionContext ctx, T clientObject, ResultType resultToUpdate, OptionsType options) throws IllegalParameterValueException, MandatoryParameterNotFoundException, JSExceptionWrapper;
     String getServerResourceType();
 }

@@ -65,7 +65,7 @@ public class CalendarInputTag extends BaseTagSupport {
 	
 	public int doEndTag() throws JspException {
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
-		WebApplicationContext applicationContext = RequestContextUtils.getWebApplicationContext(request);
+		WebApplicationContext applicationContext = RequestContextUtils.findWebApplicationContext(request);
 		Locale locale = RequestContextUtils.getLocale(request);
 
 		Map attributes = new HashMap();

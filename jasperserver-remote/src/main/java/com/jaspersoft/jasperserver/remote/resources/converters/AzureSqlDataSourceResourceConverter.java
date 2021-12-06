@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.remote.resources.converters;
 
 import javax.annotation.Resource;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import org.springframework.stereotype.Service;
 
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
@@ -40,10 +41,10 @@ public class AzureSqlDataSourceResourceConverter extends GenericJdbcDataSourceRe
     protected ResourceReferenceConverterProvider resourceReferenceConverterProvider;
 
     @Override
-    protected AzureSqlReportDataSource resourceSpecificFieldsToServer(ClientAzureSqlDataSource clientObject, AzureSqlReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
-        final AzureSqlReportDataSource azureSqlReportDataSource = super.resourceSpecificFieldsToServer(clientObject, resultToUpdate, exceptions, options);
+    protected AzureSqlReportDataSource resourceSpecificFieldsToServer(ExecutionContext ctx,ClientAzureSqlDataSource clientObject, AzureSqlReportDataSource resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+        final AzureSqlReportDataSource azureSqlReportDataSource = super.resourceSpecificFieldsToServer(ctx, clientObject, resultToUpdate, exceptions, options);
         azureSqlReportDataSource.setSubscriptionId(clientObject.getSubscriptionId());
-        azureSqlReportDataSource.setKeyStoreResource(convertResourceToServer(clientObject.getKeyStoreUri(), options));
+        azureSqlReportDataSource.setKeyStoreResource(convertResourceToServer(ctx, clientObject.getKeyStoreUri(), options));
         // modify password only if use explicitly modifies it (clientObject.getKeyStorePassword()!=null) or if subscription id is erased.
         if (clientObject.getKeyStorePassword() != null || clientObject.getSubscriptionId() == null) {
             azureSqlReportDataSource.setKeyStorePassword(clientObject.getKeyStorePassword());
@@ -70,10 +71,10 @@ public class AzureSqlDataSourceResourceConverter extends GenericJdbcDataSourceRe
         client.setKeyStorePassword(serverObject.getKeyStorePassword());
     }
 
-    private ResourceReference convertResourceToServer(String uri, ToServerConversionOptions options) {
+    private ResourceReference convertResourceToServer(ExecutionContext ctx, String uri, ToServerConversionOptions options) {
         ResourceReferenceConverter<ClientReferenceableFile> referenceConverter = resourceReferenceConverterProvider
                 .getConverterForType(ClientReferenceableFile.class);
-        return referenceConverter.toServer(new ClientReference(uri), options);
+        return referenceConverter.toServer(ctx, new ClientReference(uri), options);
     }
     
     private String convertResourceToClient(ResourceReference resource, ToClientConversionOptions options) {

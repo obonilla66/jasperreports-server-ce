@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.service.JdbcDriverService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.AwsReportDataSourceImpl;
@@ -55,6 +57,7 @@ public class JdbcDataSourceResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private JdbcReportDataSource dataSource;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -78,14 +81,14 @@ public class JdbcDataSourceResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
     public void testValidate_no_driverClass() throws Exception {
         dataSource.setDriverClass(null);
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -95,7 +98,7 @@ public class JdbcDataSourceResourceValidatorTest {
     public void testValidate_unknownDriver() throws Exception {
         reset(jdbcDriverService);
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -105,7 +108,7 @@ public class JdbcDataSourceResourceValidatorTest {
     public void testValidate_noConnection() throws Exception {
         dataSource.setConnectionUrl(null);
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -115,7 +118,7 @@ public class JdbcDataSourceResourceValidatorTest {
     public void testValidate_invalidTimezione() throws Exception {
         dataSource.setTimezone("#$%^&*(OL)");
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());
@@ -126,7 +129,7 @@ public class JdbcDataSourceResourceValidatorTest {
         reset(jdbcDriverService);
         when(profileAttributesResolver.containsAttribute(dataSource.getDriverClass())).thenReturn(true);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
@@ -134,6 +137,6 @@ public class JdbcDataSourceResourceValidatorTest {
         dataSource.setConnectionUrl("{attribute('name', 'category')}");
         when(profileAttributesResolver.containsAttribute(dataSource.getConnectionUrl())).thenReturn(true);
 
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 }

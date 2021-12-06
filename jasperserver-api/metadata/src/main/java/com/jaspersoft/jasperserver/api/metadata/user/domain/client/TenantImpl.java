@@ -22,8 +22,8 @@
 package com.jaspersoft.jasperserver.api.metadata.user.domain.client;
 
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;

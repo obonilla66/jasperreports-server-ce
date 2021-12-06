@@ -78,8 +78,8 @@ public class OdtReportOutput extends AbstractReportOutput
 				close = false;
 				odtDataOut.close();
 
-				String fileName = jobContext.getBaseFilename() + ".odt";
-				return new ReportOutput(odtData, ContentResource.TYPE_ODT, fileName);
+				String fileName = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(odtData, getFileType(), fileName);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -108,5 +108,15 @@ public class OdtReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "odt";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_ODT;
 	}
 }

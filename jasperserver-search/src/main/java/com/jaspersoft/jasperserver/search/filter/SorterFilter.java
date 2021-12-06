@@ -42,7 +42,7 @@ public class SorterFilter extends BaseSearchFilter implements Serializable {
         String searchBy = searchAttributes != null && searchAttributes.getState() != null ? searchAttributes.getState().getSortBy() :
                 repositorySearchCriteria != null ? repositorySearchCriteria.getSortBy() : null;
 
-        if ("popularity".equals(searchBy)) {
+        if ("popularity".equals(searchBy) && false) {
             criteria.getAlias("accessEvents", "ae");
         }
     }

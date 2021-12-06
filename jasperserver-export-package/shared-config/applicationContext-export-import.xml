@@ -370,7 +370,7 @@
         <property name="reportParametersTranslator"><ref bean="defaultReportParametersTranslator"/></property>
     </bean>
 
-    <bean id="importReportLoadingService" parent="${bean.reportLoadingService}">
+    <bean id="importReportLoadingService" class="com.jaspersoft.jasperserver.export.modules.common.ImportReportLoadingService" parent="${bean.reportLoadingService}">
         <property name="repositoryService" ref="${bean.unsecureRepositoryService}"/>
     </bean>
 

@@ -55,7 +55,7 @@ public class CacheableCompiledReports implements RepositoryCacheableItem {
 	}
 
 	public byte[] getData(ExecutionContext context, FileResource resource) {
-		return compiler.compileReport(context, resource);
+		return getCompiler().compileReport(context, resource);
 	}
 
 }

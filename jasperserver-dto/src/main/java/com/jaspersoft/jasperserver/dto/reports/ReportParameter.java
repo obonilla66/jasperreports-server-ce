@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +43,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id$
  */
 @XmlRootElement
-public class ReportParameter implements DeepCloneable<ReportParameter> {
+public class ReportParameter implements DeepCloneable<ReportParameter>, Serializable {
     private String name;
     private String limit;
     private String offset;

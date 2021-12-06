@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.jaxrs.report;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,6 +35,7 @@ public class ReportExecutionStatusEntity {
     public static final String VALUE_CANCELLED = "cancelled";
 
     private String value = VALUE_CANCELLED;
+    private boolean asyncCancel = false;
 
     @XmlValue
     @Schema(description = "The status of the report execution", example = "cancelled")
@@ -43,5 +45,13 @@ public class ReportExecutionStatusEntity {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public boolean getAsyncCancel() {
+        return asyncCancel;
+    }
+
+    public void setAsyncCancel(boolean asyncCancel) {
+        this.asyncCancel = asyncCancel;
     }
 }

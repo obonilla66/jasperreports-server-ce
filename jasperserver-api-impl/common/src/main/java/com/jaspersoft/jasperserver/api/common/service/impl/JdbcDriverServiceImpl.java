@@ -627,24 +627,27 @@ public class JdbcDriverServiceImpl implements JdbcDriverService, ApplicationCont
                 getPropertiesManagementService().reloadProperties();
             }
             String driverNameKey = String.format(SYSTEM_PROPERTIES_LIST_KEY_FORMAT, driverClassName);
-
-            if (!url.equals(oldUrl)) {
-                if (oldUrl != null && !oldUrl.equals(SYSTEM_CLASSLOADER_PATH)) {
-                    String preservedDriverNameKey =
-                            String.format("%s%s", driverNameKey, SYSTEM_PROPERTIES_PRESERVED_KEY_SUFFIX);
-                    logger.info(String.format("Existing mapping for [%s] will be saved as [%s]",
-                            driverClassName, preservedDriverNameKey));
-                    getPropertiesManagementService().setProperty(preservedDriverNameKey, oldUrl);
-                }
-
-                if (url.equals(SYSTEM_CLASSLOADER_PATH)) {
-                    if (getPropertiesManagementService().getProperty(driverNameKey) != null) {
-                        getPropertiesManagementService().remove(driverNameKey);
+            try {
+                if (!url.equals(oldUrl)) {
+                    if (oldUrl != null && !oldUrl.equals(SYSTEM_CLASSLOADER_PATH)) {
+                        String preservedDriverNameKey =
+                                String.format("%s%s", driverNameKey, SYSTEM_PROPERTIES_PRESERVED_KEY_SUFFIX);
+                        logger.info(String.format("Existing mapping for [%s] will be saved as [%s]",
+                                driverClassName, preservedDriverNameKey));
+                        getPropertiesManagementService().setProperty(preservedDriverNameKey, oldUrl);
                     }
-                } else {
-                    getPropertiesManagementService().setProperty(driverNameKey, url);
+                    if (url.equals(SYSTEM_CLASSLOADER_PATH)) {
+                        if (getPropertiesManagementService().getProperty(driverNameKey) != null) {
+                            getPropertiesManagementService().remove(driverNameKey);
+                        }
+                    } else {
+                        getPropertiesManagementService().setProperty(driverNameKey, url);
+                    }
                 }
+            } catch (Exception e) {
+                logger.error("Exception occured while setting/removing property in PropertyManagermentService :: "+e.getMessage(), e);
             }
+
         }
     }
 

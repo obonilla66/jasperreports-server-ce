@@ -204,12 +204,12 @@ public class HibernateReportJobsPersistenceService extends HibernateDaoImpl
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
 	public ReportJob updateJob(final ExecutionContext context, final ReportJob job) {
 		return (ReportJob) executeWriteCallback(new DaoCallback() {
-			public Object execute() {
+			public synchronized Object execute() {
 				HibernateTemplate hibernateTemplate = getHibernateTemplate();
 				PersistentReportJob persistentJob = findJob(job.getId(), true);
                 ArrayList unusedEntities = new ArrayList();
 				persistentJob.copyFrom(job, hibernateTemplate, unusedEntities, getProfileAttributeService(), getReferenceResolver(), context);
-				
+
 				persistentJob.cascadeSave(hibernateTemplate);
 				hibernateTemplate.update(persistentJob);
                 hibernateTemplate.deleteAll(unusedEntities);

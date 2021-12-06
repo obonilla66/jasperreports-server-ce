@@ -27,17 +27,19 @@
     <id name="id" type="long" unsaved-value="0">
       <generator class="native"/>
     </id>
-    <many-to-one name="user"
-                 column="user_id" class="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser"
-                 foreign-key="none"
+    <property name="userId"
+                 column="user_id"
+                 type="string"
                  not-null="true"
                  index="access_user_index"/>
     <property name="eventDate" column="event_date" type="timestamp" not-null="true" index="access_date_index"/>
-    <many-to-one name="resource"
-                 column="resource_id" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoResource"
-                 foreign-key="none"
+    <property name="resourceUri"
+                 column="resource_uri"
+                 type="string"
                  not-null="true"
-                 index="access_res_index"/>
+                 index="access_res_uri_index"/>
     <property name="updating" column="updating" type="boolean" index="access_upd_index" not-null="true"/>
+    <property name="resourceType" type="string" column="resource_type" index="access_res_type_index" not-null="true"/>
+    <property name="hidden" column="hidden" type="boolean" index="access_hid_index" not-null="true"/>
   </class>
 </hibernate-mapping>

@@ -30,6 +30,12 @@
         <res-type>javax.sql.DataSource</res-type>
         <jndi-name>java:/jdbc/jasperserver</jndi-name>
     </resource-ref>
+
+    <resource-ref>
+        <res-ref-name>jdbc/jasperserverAudit</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <jndi-name>java:/jdbc/jasperserverAudit</jndi-name>
+    </resource-ref>
     
     <resource-ref>
             <res-ref-name>jdbc/sugarcrm</res-ref-name>

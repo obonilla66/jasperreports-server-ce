@@ -47,6 +47,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorCode.Codes.QUERY_AGGREGATION_EXPRESSION_NOT_VALID;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
@@ -58,7 +60,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 @XmlRootElement
 @CheckAggregateDefinition
 public class ClientQueryAggregatedField implements ClientField, ClientAggregate, ClientFieldReference, ClientIdentifiable<String>,
-        ClientQueryExpression, IExpressionContainer, DeepCloneable<ClientQueryAggregatedField> {
+        ClientQueryExpression, IExpressionContainer, DeepCloneable<ClientQueryAggregatedField>, Serializable {
     private String id;
     private String aggregateFunction;
     private String fieldExpression;

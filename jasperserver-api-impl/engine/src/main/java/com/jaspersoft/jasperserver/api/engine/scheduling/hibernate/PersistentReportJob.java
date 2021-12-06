@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceVersionNotMatchException;
 import org.springframework.orm.hibernate5.HibernateTemplate;
 
 import com.jaspersoft.jasperserver.api.JSException;
@@ -136,7 +137,7 @@ public class PersistentReportJob {
 			HibernateRepositoryService referenceResolver, 
             ExecutionContext context) {
 		if ((job.getVersion() != ReportJob.VERSION_NEW) && (getVersion() != job.getVersion())) {
-			throw new JSException("jsexception.job.no.versions.match", new Object[] {new Integer(job.getVersion()), new Integer(getVersion())});
+			throw new JSResourceVersionNotMatchException("jsexception.job.no.versions.match", new Object[] {new Integer(job.getVersion()), new Integer(getVersion())});
 		}
 
 		// This method calls SELECT so we have to put it first, because

@@ -24,7 +24,6 @@ import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 import net.sf.jasperreports.engine.design.JRDesignField;
-import org.quartz.DateBuilder;
 
 import java.util.Date;
 import java.util.TimeZone;
@@ -92,7 +91,7 @@ public class JRTimezoneResultSetDataSource implements JRDataSource
             }
 			if (value instanceof Date && timezone != null) {
 				Date initialDate = (Date) value;
-                Date date = DateBuilder.translateTime(initialDate, TimeZone.getDefault(), timezone);
+                Date date = DateUtil.translateTime(initialDate, TimeZone.getDefault(), timezone);
 				initialDate.setTime(date.getTime());
 				return initialDate;
 			}

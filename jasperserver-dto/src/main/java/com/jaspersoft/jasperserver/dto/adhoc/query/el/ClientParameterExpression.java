@@ -25,6 +25,8 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -33,7 +35,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id$
  */
 @XmlType(propOrder = {"name", "expression"})
-public class ClientParameterExpression implements DeepCloneable<ClientParameterExpression> {
+public class ClientParameterExpression implements DeepCloneable<ClientParameterExpression>, Serializable {
     private String name;
     private ClientExpressionContainer expression;
 

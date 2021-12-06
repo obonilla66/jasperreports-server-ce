@@ -32,8 +32,10 @@ import com.jaspersoft.jasperserver.api.search.SearchCriteria;
 import com.jaspersoft.jasperserver.api.search.SearchCriteriaFactory;
 import com.jaspersoft.jasperserver.api.search.SearchFilter;
 import com.jaspersoft.jasperserver.api.search.SearchSorter;
+import com.jaspersoft.jasperserver.search.mode.AccessType;
 import com.jaspersoft.jasperserver.search.service.RepositorySearchCriteria;
 
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,6 +87,17 @@ public class ResourceTypeSearchCriteriaFactory implements SearchCriteriaFactory,
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("unexpected", e);
         }
+    }
+    @Override
+    public SearchCriteria create(ExecutionContext context, List<SearchFilter> filters, AbstractMap.SimpleEntry<String, String> pair){
+       List list= context.getAttributes();
+       for(Object obj: list){
+           if(obj instanceof RepositorySearchCriteria){
+               AccessType accessType=((RepositorySearchCriteria) obj).getAccessType();
+               pair.setValue(accessType.name());
+           }
+       }
+        return create(context,filters);
     }
 
     public SearchCriteria create(ExecutionContext context, List<SearchFilter> filters) {

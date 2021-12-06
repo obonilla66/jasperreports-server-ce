@@ -97,8 +97,8 @@ public class OdsReportOutput extends AbstractReportOutput
 				close = false;
 				odsDataOut.close();
 				
-				String filename = jobContext.getBaseFilename() + ".ods";
-				return new ReportOutput(odsData, ContentResource.TYPE_ODS, filename);
+				String filename = jobContext.getBaseFilename() + "." + getFileExtension();
+				return new ReportOutput(odsData, getFileType(), filename);
 			} catch (IOException e) {
 				throw new JSExceptionWrapper(e);
 			} finally {
@@ -140,5 +140,15 @@ public class OdsReportOutput extends AbstractReportOutput
 			}
 		}
 		return isPaginationPreferred;
+	}
+	
+	@Override
+	public String getFileExtension() {
+		return "ods";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_ODS;
 	}
 }

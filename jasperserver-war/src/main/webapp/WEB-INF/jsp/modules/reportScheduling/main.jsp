@@ -58,19 +58,19 @@
 			<div  class="content hasFooter " >
 				<div  class="header mover" >
 					<div class="title">
-						Save Values
+						<spring:message code='dialog.saveValues.title'/>
 					</div>
 				</div>
 				<div  class="body  " >
-					<label class="control input text" accesskey="o" for="savedValuesName" title="This is the displayed name of the resource. It can be changed at any time.">
-						<span class="wrap">The Name for the Saved Values (required):</span>
+					<label class="control input text" accesskey="o" for="savedValuesName" title="<spring:message code="dialog.saveValues.visibleResourceName" javaScriptEscape="true"/>">
+						<span class="wrap"><spring:message code='dialog.saveValues.nameForSavedValues'/> (<spring:message code='required.field' javaScriptEscape="true"/>): </span>
 						<input class="" id="savedValuesName" type="text" value=""/>
 						<span class="message warning">error message here</span>
 					</label>
 				</div>
 				<div  class="footer " >
-					<button id="saveAsBtnSave" class="button action primary up"><span class="wrap">Save<span class="icon"></span></button>
-					<button id="saveAsBtnCancel" class="button action up"><span class="wrap">Cancel<span class="icon"></span></button>
+					<button id="saveAsBtnSave" class="button action primary up"><span class="wrap"><spring:message code='dialog.saveValues.save'/><span class="icon"></span></button>
+					<button id="saveAsBtnCancel" class="button action up"><span class="wrap"><spring:message code='dialog.saveValues.cancel'/><span class="icon"></span></button>
 				</div>
 			</div>
 		</div>

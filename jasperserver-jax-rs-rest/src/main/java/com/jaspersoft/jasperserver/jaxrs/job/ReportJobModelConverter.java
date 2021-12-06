@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.jaxrs.job;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.reportjobmodel.ReportJobAlertModel;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.reportjobmodel.ReportJobMailNotificationModel;
@@ -44,12 +45,12 @@ import org.springframework.stereotype.Component;
 public class ReportJobModelConverter extends ReportJobConverter {
 
     @Override
-    public ReportJobModel toServer(ClientReportJob clientObject, Object options) {
-        return toServer(clientObject, new ReportJobModel(), null);
+    public ReportJobModel toServer(ExecutionContext ctx, ClientReportJob clientObject, Object options) {
+        return toServer(ctx, clientObject, new ReportJobModel(), null);
     }
 
     @Override
-    public ReportJobModel toServer(ClientReportJob clientObject, ReportJob serverObject, Object options) {
+    public ReportJobModel toServer(ExecutionContext ctx, ClientReportJob clientObject, ReportJob serverObject, Object options) {
         ClientReportJobModel clientJobModel = (ClientReportJobModel) clientObject;
         ReportJobModel resultToUpdate = (ReportJobModel) serverObject;
         if (clientJobModel.isSourceModified())
@@ -71,7 +72,7 @@ public class ReportJobModelConverter extends ReportJobConverter {
         if (clientJobModel.isBaseOutputFileNameModified())
             resultToUpdate.setBaseOutputFilename(clientObject.getBaseOutputFilename());
         if (clientJobModel.isOutputFormatsModified())
-            resultToUpdate.setOutputFormatsSet(toServerOutputFormats(clientObject.getOutputFormats()));
+            resultToUpdate.setOutputFormatsSet(toServerOutputFormats(clientObject.getOutputFormats(), clientObject.getExportType()));
         if (clientJobModel.isUsernameModified())
             resultToUpdate.setUsername(clientObject.getUsername());
         if (clientJobModel.isOutputLocaleModified())

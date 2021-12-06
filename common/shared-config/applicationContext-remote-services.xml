@@ -28,7 +28,11 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+<beans profile="jrs">
     <context:component-scan base-package="com.jaspersoft.jasperserver.remote"/>
+</beans>
+<beans profile="engine">
     <alias name="${bean.auditContext}" alias="concreteAuditContext"/>
     <alias name="${bean.repositoryService}" alias="concreteRepository"/>
     <alias name="${bean.userAuthorityService}" alias="concreteUserAuthorityService"/>
@@ -62,14 +66,16 @@
             <bean class="com.jaspersoft.jasperserver.remote.connection.ReportJobFtpConnectionDescriptionProviderImpl" />
         </entry>
     </util:map>
-
+</beans>
+<beans profile="jrs">
     <bean id="contextsCache" class="org.springframework.cache.ehcache.EhCacheFactoryBean">
         <property name="cacheManager" ref="cacheManager"/>
         <property name="cacheName">
             <value>connection.descriptions</value>
         </property>
     </bean>
-
+</beans>
+<beans profile="engine">
     <bean id="remoteResourceHandlerRegistryCE" class="com.jaspersoft.jasperserver.remote.MapResourceHandlerRegistry">
         <property name="handlers">
             <map>
@@ -196,7 +202,8 @@
     </util:set>
 
     <alias name="${bean.queryLanguages}" alias="queryLanguages"/>
-
+</beans>
+<beans profile="jrs">
     <util:map id="remoteExportersMap" key-type="java.lang.String" value-type="com.jaspersoft.jasperserver.remote.ReportExporter">
         <entry key="pdf" value-ref="remotePdfExporter"/>
         <entry key="html" value-ref="remoteHtmlExporter"/>
@@ -210,8 +217,10 @@
         <entry key="docx" value-ref="remoteDocxExporter"/>
         <entry key="pptx" value-ref="remotePptxExporter"/>
         <entry key="json" value-ref="remoteJsonMetadataExporter"/>
+        <entry key="data_csv" value-ref="remoteCsvMetadataExporter"/>
     </util:map>
-
+</beans>
+<beans profile="engine">
     <util:map id="htmlExportStrategies">
         <entry key="full" value-ref="fullHtmlExportStrategy"/>
         <entry key="embeddable" value-ref="embeddableHtmlExportStrategy"/>
@@ -232,6 +241,12 @@
         <value>olapMondrianSchema</value>
         <value>dashboardComponent</value>
         <value>img</value>
+        <value>secureFile</value>
+        <value>mongoDbSchema</value>
+        <value>key</value>
+        <value>ppk</value>
+        <value>pub</value>
+        <value>cer</value>
     </util:set>
 
     <util:set id="customDataSourcesToHide">
@@ -256,7 +271,8 @@
     <bean name="waitForFinalJasperPrintMs" class="java.lang.Integer">
         <constructor-arg type="java.lang.String" value="100"/>
     </bean>
-
+</beans>
+<beans profile="jrs">
     <bean id="importExportTaskRemoverJob" class="com.jaspersoft.jasperserver.api.engine.scheduling.quartz.JSMethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="importExportTaskRemover"/>
         <property name="targetMethod" value="call"/>
@@ -280,7 +296,8 @@
         <!-- once a second --><!--
         <property name="repeatInterval" value="1000"/> -->
     </bean>
-
+</beans>
+<beans profile="engine">
     <bean id="importExportTaskRemover" class="com.jaspersoft.jasperserver.remote.services.async.ImportExportTaskRemover">
         <property name="expirationInterval" value="86400000"/>
     </bean>
@@ -359,6 +376,8 @@
             </set>
         </constructor-arg>
     </bean>
+</beans>
+<beans profile="jrs">
     <!-- Repository search configurations. -->
     <bean id="defaultRestSearchConfiguration" class="com.jaspersoft.jasperserver.search.common.RepositorySearchConfiguration">
         <property name="customSorters" ref="customSorters"/>
@@ -398,7 +417,8 @@
             </map>
         </property>
     </bean>
-
+</beans>
+<beans profile="engine">
     <util:list id="disabledResourceTypes" value-type="java.lang.Class">
         <!-- add client DTO class names to disable -->
     </util:list>
@@ -423,5 +443,5 @@
     </bean>
 
     <alias name="${bean.exportPrivilegeOptions}" alias="exportPrivilegeOptions"/>
-
+</beans>
 </beans>

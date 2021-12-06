@@ -64,9 +64,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -84,7 +85,8 @@ import java.util.Map;
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
  * @version $Id$
  */
-public class ReportExecutionController extends MultiActionController {
+@Controller
+public class ReportExecutionController {
 
 	private static final Log log = LogFactory.getLog(ViewReportAction.class);
 
@@ -122,7 +124,7 @@ public class ReportExecutionController extends MultiActionController {
     private ReportContextFactory reportContextFactory;
     @Autowired
     private ApplicationContext applicationContext;
-
+    @RequestMapping("/viewReportCancel.html")
 	public ModelAndView viewReportCancel(HttpServletRequest req, HttpServletResponse res) {
 		String flowExecutionKey = req.getParameter("_flowExecutionKey");
 		String sessionName = REPORT_EXECUTION_PREFIX + flowExecutionKey;
@@ -146,7 +148,7 @@ public class ReportExecutionController extends MultiActionController {
         //leeds to parser error on client side
         return new ModelAndView("json:result", Collections.singletonMap("result", "ok"));
 	}
-
+    @RequestMapping("/viewReportAsyncCancel.html")
 	public ModelAndView viewReportAsyncCancel(HttpServletRequest req, HttpServletResponse res) throws Exception {
 		ReportUnitResult result = getReportResult(req);
 		String requestId = result == null ? null : result.getRequestId();
@@ -205,7 +207,7 @@ public class ReportExecutionController extends MultiActionController {
         return result;
 
      }
-
+    @RequestMapping("/viewReportPageUpdateCheck.html")
 	public ModelAndView viewReportPageUpdateCheck(HttpServletRequest req, HttpServletResponse res) throws Exception {
 		ReportUnitResult reportResult = getReportResult(req);
 		JasperPrintAccessor printAccessor = reportResult == null ? null : reportResult.getJasperPrintAccessor();
@@ -240,7 +242,7 @@ public class ReportExecutionController extends MultiActionController {
 
 		return new ModelAndView("json:result", Collections.singletonMap("result", result));
 	}
-
+    @RequestMapping("/runReportAction.html")
     public ModelAndView runReportAction(HttpServletRequest req, HttpServletResponse res) throws Exception {
         String reportContextId = req.getParameter("jr_ctxid"); // FIXME use constant
         Map<String, Object> result = new LinkedHashMap<String, Object>();
@@ -463,11 +465,11 @@ public class ReportExecutionController extends MultiActionController {
             request.setAttribute("flowExecutionKey", flowExecutionKey);
         }
     };
-
+    @RequestMapping("/getReportComponents.html")
     public ModelAndView getReportComponents(HttpServletRequest request, HttpServletResponse response) throws Exception {
         return new ModelAndView(REPORT_COMPONENTS_VIEW);
     }
-
+    @RequestMapping("/getRequirejsConfig.html")
     public ModelAndView getRequirejsConfig(HttpServletRequest request, HttpServletResponse response) throws Exception {
         WebUtil webUtil = WebUtil.getInstance(getJasperReportsContext());
 

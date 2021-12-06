@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.JasperServerAPI;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * ResourceReference is the class which references any JasperServer resource
@@ -41,6 +42,7 @@ public class ResourceReference implements Serializable {
 	private String referenceURI;
 	private ResourceLookup referenceLookup;
 	private Resource localResource;
+	int version;
 
     /**
      * Creates a new ResourceReference which references the specified URI
@@ -164,7 +166,18 @@ public class ResourceReference implements Serializable {
 		this.localResource = null;
 	}
 
-    /**
+	public int getVersion() {
+		return isLocal()
+				? Optional.ofNullable(localResource).map(Resource::getVersion).orElse(-1)
+				: this.version;
+	}
+
+	public ResourceReference setVersion(int version) {
+		this.version = version;
+		return this;
+	}
+
+	/**
      * Accepts <code>ResourceVisitor</code>.
      *
      * @param visitor resource visitor

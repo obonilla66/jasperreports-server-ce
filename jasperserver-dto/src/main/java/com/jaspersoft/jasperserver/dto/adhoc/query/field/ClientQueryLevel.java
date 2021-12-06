@@ -26,11 +26,12 @@ import com.jaspersoft.jasperserver.dto.adhoc.datasource.ClientDataSourceLevel;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
 
 /**
  * @author Andriy Godovanets
  */
-public class ClientQueryLevel extends ClientQueryGroup {
+public class ClientQueryLevel extends ClientQueryGroup implements Serializable {
     private String dimension;
     private String hierarchyName;
 

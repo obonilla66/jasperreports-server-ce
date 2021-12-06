@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
@@ -90,7 +91,7 @@ public class InputControlResourceValidator extends GenericResourceValidator<Inpu
     }
 
     @Override
-    protected void internalValidate(InputControl resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, InputControl resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         String type = Integer.toString(resource.getInputControlType());
         Map<String, Object> config = inputControlTypeConfiguration.get(type);
 

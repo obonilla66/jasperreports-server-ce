@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -96,7 +97,11 @@ class ConfigurationBeanTest {
     private final static String VALUE_RESOURCE_BUNDLE = "value12";
     private final static String VALUE_STYLE_TEMPLATE = "value13";
     private final static String VALUE_XML = "value14";
-    private final static String VALUE_UNSPECIFIED = "value15";
+    private final static String VALUE_PPK = "value15";
+    private final static String VALUE_PUB = "value16";
+    private final static String VALUE_KEY = "value17";
+    private final static String VALUE_MONGO_SCHEMA = "value18";
+    private final static String VALUE_UNSPECIFIED = "value19";
     private final static String RESOURCE_LABEL_CONST = "resource.com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource.label";
 
     private static final LinkedHashMap<String, String> ALL_FILE_RESOURCE_TYPES = new LinkedHashMap<String, String>() {{
@@ -112,6 +117,10 @@ class ConfigurationBeanTest {
         put(ResourceDescriptor.TYPE_MONDRIAN_SCHEMA, VALUE_MONDRIAN_SCHEMA);
         put(FileResource.TYPE_RESOURCE_BUNDLE, VALUE_RESOURCE_BUNDLE);
         put(FileResource.TYPE_STYLE_TEMPLATE, VALUE_STYLE_TEMPLATE);
+        put(FileResource.TYPE_PPK, VALUE_PPK);
+        put(FileResource.TYPE_PUB, VALUE_PUB);
+        put(FileResource.TYPE_KEY, VALUE_KEY);
+        put(FileResource.TYPE_MONGODB_SCHEMA, VALUE_MONGO_SCHEMA);
         put(FileResource.TYPE_XML, VALUE_XML);
         put(ContentResource.TYPE_UNSPECIFIED, VALUE_UNSPECIFIED);
     }};
@@ -136,6 +145,10 @@ class ConfigurationBeanTest {
         doReturn(VALUE_RESOURCE_BUNDLE).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_RESOURCE_BUNDLE), eq(((Object[]) null)), eq("Properties"), any(Locale.class));
         doReturn(VALUE_STYLE_TEMPLATE).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_STYLE_TEMPLATE), eq(((Object[]) null)), eq("Style Template"), any(Locale.class));
         doReturn(VALUE_XML).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_XML_FILE), eq(((Object[]) null)), eq("XML File"), any(Locale.class));
+        doReturn(VALUE_PPK).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_PPK), eq(((Object[]) null)), eq("Private Key File"), any(Locale.class));
+        doReturn(VALUE_PUB).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_PUB), eq(((Object[]) null)), eq("Public Key File"), any(Locale.class));
+        doReturn(VALUE_MONGO_SCHEMA).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_MONGODB_SCHEMA), eq(((Object[]) null)), eq("MongoDB Schema File"), any(Locale.class));
+        doReturn(VALUE_KEY).when(messages).getMessage(eq(JasperServerConst.TYPE_RSRC_KEY), eq(((Object[]) null)), eq("Secure Key File"), any(Locale.class));
         doReturn(VALUE_UNSPECIFIED).when(messages).getMessage(eq(RESOURCE_LABEL_CONST), eq(((Object[]) null)), eq("Content Resource"), any(Locale.class));
 
         doReturn(DATE).when(messages).getMessage(eq(DATE_FORMAT), eq(new Object[]{}), any(Locale.class));

@@ -26,13 +26,13 @@ import com.jaspersoft.jasperserver.api.common.domain.ValidationErrors;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationErrorImpl;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ValidationErrorsImpl;
 import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
+import com.jaspersoft.jasperserver.api.engine.jasperreports.util.DateUtil;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.*;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.core.util.validators.InputValidator;
 import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
-import org.quartz.DateBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -144,8 +144,7 @@ public class DefaultReportJobValidator implements ReportJobValidator, Applicatio
 		String tzId = trigger.getTimezone();
 		if (tzId != null && tzId.length() > 0) {
 			TimeZone tz = TimeZone.getTimeZone(tzId);
-			now = DateBuilder.translateTime(now, tz, TimeZone.getDefault());
-            //now = TriggerUtils.translateTime(now, tz, TimeZone.getDefault());
+			now = DateUtil.translateTime(now, tz, TimeZone.getDefault());
 		}
 
 		if (trigger.getStartType() != ReportJobTrigger.START_TYPE_NOW && trigger.getStartType() != ReportJobTrigger.START_TYPE_SCHEDULE) {

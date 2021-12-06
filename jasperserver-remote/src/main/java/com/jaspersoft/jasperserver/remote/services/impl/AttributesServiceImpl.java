@@ -21,6 +21,8 @@
 package com.jaspersoft.jasperserver.remote.services.impl;
 
 import com.jaspersoft.jasperserver.api.JSDuplicateResourceException;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ObjectPermission;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.service.AttributesSearchCriteria;
@@ -140,7 +142,7 @@ public class AttributesServiceImpl implements AttributesService {
                                                    List<? extends ClientAttribute> attributes,
                                                    Set<String> names, boolean includeEffectivePermissionsInResult) throws ErrorDescriptorException {
         Object attributeHolder = recipientIdentityResolver.resolveRecipientObject(holder);
-
+        final ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
         List<ProfileAttribute> attributesToDelete = new ArrayList<ProfileAttribute>();
         List<ClientAttribute> attributesToPut;
 
@@ -195,7 +197,7 @@ public class AttributesServiceImpl implements AttributesService {
             try {
                 client.setHolder(recipientIdentityResolver.toRecipientUri(holder));
 
-                ProfileAttribute serverAttr = attributesConverter.toServer(client, null);
+                ProfileAttribute serverAttr = attributesConverter.toServer(ctx, client, null);
                 profileAttributeService.putProfileAttribute(null, serverAttr);
 
                 if (client instanceof HypermediaAttribute) {
@@ -207,7 +209,7 @@ public class AttributesServiceImpl implements AttributesService {
                         for (RepositoryPermission repositoryPermission :
                                 ((HypermediaAttribute) client).getEmbedded().getRepositoryPermissions()) {
                             repositoryPermission.setUri(serverAttr.getURI());
-                            objectPermissions.add(permissionConverter.toServer(repositoryPermission, null));
+                            objectPermissions.add(permissionConverter.toServer(ctx, repositoryPermission, null));
                         }
                         attributesPermissionService.putPermissions(serverAttr, objectPermissions);
                     }

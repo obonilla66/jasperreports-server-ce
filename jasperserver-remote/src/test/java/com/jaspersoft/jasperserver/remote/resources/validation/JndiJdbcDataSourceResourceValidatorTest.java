@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.client.JndiJdbcReportDataSourceImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -49,6 +51,7 @@ public class JndiJdbcDataSourceResourceValidatorTest {
     private ProfileAttributesResolver profileAttributesResolver;
 
     private JndiJdbcReportDataSource dataSource;
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() {
@@ -65,14 +68,14 @@ public class JndiJdbcDataSourceResourceValidatorTest {
 
     @Test
     public void testValidate() throws Exception {
-        validator.validate(dataSource);
+        validator.validate(ctx, dataSource);
     }
 
     @Test
     public void testValidate_no_driverClass() throws Exception {
         dataSource.setJndiName(null);
 
-        final List<Exception> exceptions = validator.validate(dataSource);
+        final List<Exception> exceptions = validator.validate(ctx, dataSource);
 
         assertNotNull(exceptions);
         assertFalse(exceptions.isEmpty());

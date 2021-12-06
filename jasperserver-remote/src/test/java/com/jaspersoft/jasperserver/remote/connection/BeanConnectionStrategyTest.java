@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.BeanReportDataSourceServiceFactory;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.BeanReportDataSource;
@@ -69,6 +71,7 @@ public class BeanConnectionStrategyTest {
     private BeanReportDataSource serverBeanReportDataSource;
     private ClientBeanDataSource testConnectionDescription;
 
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
     @BeforeClass
     public void init(){
         MockitoAnnotations.initMocks(this);
@@ -80,8 +83,8 @@ public class BeanConnectionStrategyTest {
         testConnectionDescription = new ClientBeanDataSource(INITIAL_CONNECTION_DESCRIPTION);
         serverBeanReportDataSource = new BeanReportDataSourceImpl();
 
-        when(beanDataSourceResourceConverter.toServer(same(INITIAL_CONNECTION_DESCRIPTION),
-                any(ToServerConversionOptions.class))).thenReturn(serverBeanReportDataSource);
+        when(beanDataSourceResourceConverter.toServer(any(ExecutionContext.class),
+                same(INITIAL_CONNECTION_DESCRIPTION), any(ToServerConversionOptions.class))).thenReturn(serverBeanReportDataSource);
         when(beanDataSourceFactory.createService(serverBeanReportDataSource)).thenReturn(reportDataSourceService);
 
         when(secureExceptionHandlerMock.handleException(isA(Throwable.class), isA(ErrorDescriptor.class))).thenReturn(new ErrorDescriptor().setMessage("test"));
@@ -89,7 +92,7 @@ public class BeanConnectionStrategyTest {
 
     @Test
     public void createConnection_factoryCreatesReportDataSourceService_success(){
-        ClientBeanDataSource result = strategy.createContext(INITIAL_CONNECTION_DESCRIPTION, null);
+        ClientBeanDataSource result = strategy.createContext(ctx, INITIAL_CONNECTION_DESCRIPTION, null);
         assertEquals(result.getBeanName(), testConnectionDescription.getBeanName());
         assertEquals(result.getBeanMethod(), testConnectionDescription.getBeanMethod());
     }
@@ -98,6 +101,7 @@ public class BeanConnectionStrategyTest {
     @Test(expectedExceptions = ContextCreationFailedException.class)
     public void createConnection_factoryNotCreatesReportDataSourceService_null(){
         doThrow(new RuntimeException()).when(beanDataSourceFactory).createService(serverBeanReportDataSource);
-        strategy.createContext(INITIAL_CONNECTION_DESCRIPTION, null);
+        strategy.createContext( ctx
+                , INITIAL_CONNECTION_DESCRIPTION, null);
     }
 }

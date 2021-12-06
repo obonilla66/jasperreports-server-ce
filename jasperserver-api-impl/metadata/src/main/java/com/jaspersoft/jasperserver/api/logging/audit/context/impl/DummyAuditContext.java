@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.api.logging.audit.context.impl;
 import com.jaspersoft.jasperserver.api.logging.audit.context.AuditContext;
 import com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEvent;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,11 +33,11 @@ import java.util.List;
 public class DummyAuditContext implements AuditContext {
 
     public List<AuditEvent> getAllAuditEvents() {
-        return null;
+        return Collections.emptyList();
     }
 
     public List<AuditEvent> getAuditEvents(String auditEventTypeName) {
-        return null;
+        return Collections.emptyList();
     }
 
     public AuditEvent getOpenedAuditEvent(String auditEventTypeName) {
@@ -44,7 +45,7 @@ public class DummyAuditContext implements AuditContext {
     }
 
     public List<AuditEvent> getOpenedAuditEvents() {
-        return null;
+        return Collections.emptyList();
     }
 
     public void closeAuditEvent(AuditEvent auditEvent) {

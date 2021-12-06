@@ -35,6 +35,7 @@ import com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,7 +50,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Volodya Sabadosh
  * @version $Id: $
  */
-public class ClientAdhocDataViewSchema implements DeepCloneable<ClientAdhocDataViewSchema> {
+public class ClientAdhocDataViewSchema implements DeepCloneable<ClientAdhocDataViewSchema>, Serializable {
     private List<ResourceElement> resources;
     private List<PresentationElement> presentation;
 

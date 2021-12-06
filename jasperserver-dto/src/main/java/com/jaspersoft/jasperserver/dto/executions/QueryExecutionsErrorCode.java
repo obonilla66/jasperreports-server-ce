@@ -93,6 +93,8 @@ import static com.jaspersoft.jasperserver.dto.executions.QueryExecutionsErrorPar
 public enum QueryExecutionsErrorCode implements ErrorDescriptorTemplate {
     QUERY_EXECUTION_NOT_FOUND(Codes.QUERY_EXECUTION_NOT_FOUND,
             paramNames(EXECUTION_ID)),
+    QUERY_EXECUTION_REJECTED(Codes.QUERY_EXECUTION_REJECTED,
+            paramNames(EXECUTION_ID)),
     QUERY_DATASOURCE_NOT_FOUND(Codes.QUERY_DATASOURCE_NOT_FOUND,
             paramNames(DATASOURCE_URI)),
     QUERY_DATASOURCE_TYPE_NOT_SUPPORTED(Codes.QUERY_DATASOURCE_TYPE_NOT_SUPPORTED,
@@ -331,6 +333,7 @@ public enum QueryExecutionsErrorCode implements ErrorDescriptorTemplate {
 
     public interface Codes {
         String QUERY_EXECUTION_NOT_FOUND = "query.execution.not.found";
+        String QUERY_EXECUTION_REJECTED = "query.execution.rejected";
         String QUERY_DATASOURCE_NOT_FOUND = "query.datasource.not.found";
         String QUERY_DATASOURCE_TYPE_NOT_SUPPORTED = "query.datasource.type.not.supported";
         String QUERY_DATASOURCE_ACCESS_DENIED = "query.datasource.access.denied";

@@ -29,6 +29,7 @@ public class PooledObjectEntry {
     Object key;
     PooledObjectEntry next, prev;
     long lastAccess;
+    long created;
 
     public PooledObjectEntry(Object key) {
         this.key = key;
@@ -37,6 +38,11 @@ public class PooledObjectEntry {
     public void access(long now) {
         lastAccess = now;
     }
+
+    public void created(long now) {
+        created = now;
+    }
+
 
     public boolean isActive() {
         return false;

@@ -1,14 +1,5 @@
 create sequence hibernate_sequence start 1 increment 1;
 
-    create table JIAccessEvent (
-       id int8 not null,
-        user_id int8 not null,
-        event_date timestamp not null,
-        resource_id int8 not null,
-        updating boolean not null,
-        primary key (id)
-    );
-
     create table JIAdhocDataView (
        id int8 not null,
         adhocStateId int8,
@@ -61,48 +52,6 @@ create sequence hibernate_sequence start 1 increment 1;
         name varchar(100) not null,
         value varchar(1000),
         primary key (state_id, name)
-    );
-
-    create table JIAuditEvent (
-       id int8 not null,
-        username varchar(100),
-        tenant_id varchar(100),
-        event_date timestamp not null,
-        resource_uri varchar(250),
-        resource_type varchar(250),
-        event_type varchar(100) not null,
-        request_type varchar(100) not null,
-        primary key (id)
-    );
-
-    create table JIAuditEventArchive (
-       id int8 not null,
-        username varchar(100),
-        tenant_id varchar(100),
-        event_date timestamp not null,
-        resource_uri varchar(250),
-        resource_type varchar(250),
-        event_type varchar(100) not null,
-        request_type varchar(100) not null,
-        primary key (id)
-    );
-
-    create table JIAuditEventProperty (
-       id int8 not null,
-        property_type varchar(100) not null,
-        value varchar(250),
-        clob_value text,
-        audit_event_id int8 not null,
-        primary key (id)
-    );
-
-    create table JIAuditEventPropertyArchive (
-       id int8 not null,
-        property_type varchar(100) not null,
-        value varchar(250),
-        clob_value text,
-        audit_event_id int8 not null,
-        primary key (id)
     );
 
     create table JIAwsDatasource (
@@ -502,26 +451,6 @@ create sequence hibernate_sequence start 1 increment 1;
         primary key (id)
     );
 
-    create table JIReportMonitoringFact (
-       id int8 not null,
-        date_year int2 not null,
-        date_month int2 not null,
-        date_day int2 not null,
-        time_hour int2 not null,
-        time_minute int2 not null,
-        event_context varchar(255) not null,
-        user_organization varchar(255),
-        user_name varchar(255),
-        event_type varchar(255) not null,
-        report_uri varchar(255),
-        editing_action varchar(255),
-        query_execution_time int4 not null,
-        report_rendering_time int4 not null,
-        total_report_execution_time int4 not null,
-        time_stamp timestamp not null,
-        primary key (id)
-    );
-
     create table JIReportOptions (
        id int8 not null,
         options_name varchar(210) not null,
@@ -693,32 +622,11 @@ create sequence hibernate_sequence start 1 increment 1;
         begin_ms int4 not null,
         primary key (id)
     );
-create index access_user_index on JIAccessEvent (user_id);
-create index access_date_index on JIAccessEvent (event_date);
-create index access_res_index on JIAccessEvent (resource_id);
-create index access_upd_index on JIAccessEvent (updating);
-create index username_index on JIAuditEvent (username);
-create index tenant_id_index on JIAuditEvent (tenant_id);
-create index event_date_index on JIAuditEvent (event_date);
-create index resource_uri_index on JIAuditEvent (resource_uri);
-create index res_type_index on JIAuditEvent (resource_type);
-create index event_type_index on JIAuditEvent (event_type);
-create index request_type_index on JIAuditEvent (request_type);
-create index date_year_index on JIReportMonitoringFact (date_year);
-create index date_month_index on JIReportMonitoringFact (date_month);
-create index date_day_index on JIReportMonitoringFact (date_day);
-create index time_hour_index on JIReportMonitoringFact (time_hour);
-create index time_minute_index on JIReportMonitoringFact (time_minute);
-create index event_context_index on JIReportMonitoringFact (event_context);
-create index user_organization_index on JIReportMonitoringFact (user_organization);
-create index user_name_index on JIReportMonitoringFact (user_name);
-create index event_type_index_2 on JIReportMonitoringFact (event_type);
-create index report_uri_index on JIReportMonitoringFact (report_uri);
-create index editing_action_index on JIReportMonitoringFact (editing_action);
-create index query_execution_time_index on JIReportMonitoringFact (query_execution_time);
-create index report_rendering_time_index on JIReportMonitoringFact (report_rendering_time);
-create index total_report_exec_time_index on JIReportMonitoringFact (total_report_execution_time);
-create index time_stamp_index on JIReportMonitoringFact (time_stamp);
+create index idx_keyStore_id on JIAzureSqlDatasource (keyStore_id);
+create index idx_domain_schema_file on JIDomainDatasource (schema_id);
+create index idx_domain_security_file on JIDomainDatasource (security_id);
+create index idx_scheduled_res on JIReportJob (scheduledResource);
+create index idx_ssh_private_key on JIReportJobRepoDest (ssh_private_key);
 
     alter table JIReportThumbnail 
        add constraint UKby8mikd2bdxyvgguosocs0yn3 unique (user_id, resource_id);
@@ -801,16 +709,6 @@ create index resource_type_index on JIResource (resourceType);
        add constraint FKcc6y167w7n3u3ketxtmlwpsqr 
        foreign key (state_id) 
        references JIAdhocState;
-
-    alter table JIAuditEventProperty 
-       add constraint FK74sb8dic688mlyencffek40iw 
-       foreign key (audit_event_id) 
-       references JIAuditEvent;
-
-    alter table JIAuditEventPropertyArchive 
-       add constraint FK1lo2yra6fdwxqxo9769vyf4to 
-       foreign key (audit_event_id) 
-       references JIAuditEventArchive;
 
     alter table JIAwsDatasource 
        add constraint FKa2q6ho769d4h6k1inqfw0avbi 
@@ -1248,62 +1146,60 @@ create index resource_type_index on JIResource (resourceType);
        add constraint FKct2sphgl7gfep2dl9ub4npyge 
        foreign key (parent_id) 
        references ProfilingRecord;
-create index idx24_alert_id_idx on JIReportAlertToAddress (alert_id);
-create index idx27_destination_id_idx on JIReportJobMailRecipient (destination_id);
 create index idx14_repodest_id_idx on JIFTPInfoProperties (repodest_id);
-create index idx13_ref_id_idx on JIDomainDatasourceDSRef (ref_id);
-create index JILogEvent_userId_index on JILogEvent (userId);
+create index idx34_item_reference_idx on JIRepositoryCache (item_reference);
+create index idxA1_resource_id_idx on JICustomDatasourceResource (resource_id);
 create index JIReportJob_alert_index on JIReportJob (alert);
 create index idx25_content_destination_idx on JIReportJob (content_destination);
 create index JIReportJob_job_trigger_index on JIReportJob (job_trigger);
 create index idx26_mail_notification_idx on JIReportJob (mail_notification);
 create index JIReportJob_owner_index on JIReportJob (owner);
+create index idx24_alert_id_idx on JIReportAlertToAddress (alert_id);
+create index idx27_destination_id_idx on JIReportJobMailRecipient (destination_id);
+create index idx23_olapClientConnection_idx on JIOlapUnit (olapClientConnection);
 create index idx16_mondrianSchema_idx on JIMondrianConnection (mondrianSchema);
-create index JIInputControl_list_query_idx on JIInputControl (list_query);
-create index idx15_input_ctrl_id_idx on JIInputControlQueryColumn (input_control_id);
-create index idx34_item_reference_idx on JIRepositoryCache (item_reference);
-create index idxA1_resource_id_idx on JICustomDatasourceResource (resource_id);
+create index idx17_reportDataSource_idx on JIMondrianConnection (reportDataSource);
 create index JIFileResource_reference_index on JIFileResource (reference);
 create index idx35_parent_folder_idx on JIResourceFolder (parent_folder);
 create index JIResourceFolder_version_index on JIResourceFolder (version);
 create index JIResourceFolder_hidden_index on JIResourceFolder (hidden);
 create index JIInputControl_data_type_index on JIInputControl (data_type);
 create index JIInputCtrl_list_of_values_idx on JIInputControl (list_of_values);
-create index idx7_audit_event_id_idx on JIAuditEventProperty (audit_event_id);
-create index idx8_audit_event_id_idx on JIAuditEventPropertyArchive (audit_event_id);
-create index idxA2_resource_id_idx on JIDashboardModelResource (resource_id);
+create index JIInputControl_list_query_idx on JIInputControl (list_query);
+create index idx15_input_ctrl_id_idx on JIInputControlQueryColumn (input_control_id);
 create index idx20_mondrianConnection_idx on JIMondrianXMLADefinition (mondrianConnection);
 create index idx18_accessGrant_idx on JIMondrianConnectionGrant (accessGrant);
-create index idx32_report_unit_id_idx on JIReportUnitResource (report_unit_id);
-create index JIReportOptions_report_id_idx on JIReportOptions (report_id);
-create index idx33_resource_id_idx on JIReportUnitResource (resource_id);
 create index ProfilingRecord_parent_id_idx on ProfilingRecord (parent_id);
-create index idx31_report_unit_id_idx on JIReportUnitInputControl (report_unit_id);
-create index idx17_reportDataSource_idx on JIMondrianConnection (reportDataSource);
-create index idx23_olapClientConnection_idx on JIOlapUnit (olapClientConnection);
-create index JIQuery_dataSource_index on JIQuery (dataSource);
+create index JIResource_childrenFolder_idx on JIResource (childrenFolder);
 create index idx19_mondrianConnectionId_idx on JIMondrianConnectionGrant (mondrianConnectionId);
+create index JIResource_parent_folder_index on JIResource (parent_folder);
+create index idx33_resource_id_idx on JIReportUnitResource (resource_id);
+create index JIQuery_dataSource_index on JIQuery (dataSource);
 create index idx28_resource_id_idx on JIReportThumbnail (resource_id);
 create index JIReportUnit_mainReport_index on JIReportUnit (mainReport);
 create index JIReportUnit_query_index on JIReportUnit (query);
 create index idx29_reportDataSource_idx on JIReportUnit (reportDataSource);
 create index idx30_input_ctrl_id_idx on JIReportUnitInputControl (input_control_id);
-create index JIUserRole_userId_index on JIUserRole (userId);
-create index JITenant_parentId_index on JITenant (parentId);
-create index idx2_reportDataSource_idx on JIAdhocDataView (reportDataSource);
-create index idx3_input_ctrl_id_idx on JIAdhocDataViewInputControl (input_control_id);
+create index idx31_report_unit_id_idx on JIReportUnitInputControl (report_unit_id);
+create index idx32_report_unit_id_idx on JIReportUnitResource (report_unit_id);
 create index JIUser_tenantId_index on JIUser (tenantId);
 create index idx1_adhocStateId_idx on JIAdhocDataView (adhocStateId);
-create index idx12_bundle_id_idx on JIDomainDatasourceBundle (bundle_id);
-create index JIResource_childrenFolder_idx on JIResource (childrenFolder);
-create index idx5_adhocStateId_idx on JIAdhocReportUnit (adhocStateId);
-create index JIResource_parent_folder_index on JIResource (parent_folder);
-create index idx6_state_id_idx on JIAdhocStateProperty (state_id);
-create index idx36_resource_id_idx on JIVirtualDataSourceUriMap (resource_id);
 create index idx4_resource_id_idx on JIAdhocDataViewResource (resource_id);
-create index uri_index on JIObjectPermission (uri);
 create index idxA3_report_id_idx on JIAdhocDataViewBasedReports (report_id);
+create index idx2_reportDataSource_idx on JIAdhocDataView (reportDataSource);
+create index idx3_input_ctrl_id_idx on JIAdhocDataViewInputControl (input_control_id);
+create index idx12_bundle_id_idx on JIDomainDatasourceBundle (bundle_id);
+create index idx13_ref_id_idx on JIDomainDatasourceDSRef (ref_id);
+create index JILogEvent_userId_index on JILogEvent (userId);
+create index idx36_resource_id_idx on JIVirtualDataSourceUriMap (resource_id);
+create index idxA2_resource_id_idx on JIDashboardModelResource (resource_id);
+create index uri_index on JIObjectPermission (uri);
+create index JIReportOptions_report_id_idx on JIReportOptions (report_id);
 create index idx21_recipientobjclass_idx on JIObjectPermission (recipientobjectclass);
+create index idx5_adhocStateId_idx on JIAdhocReportUnit (adhocStateId);
 create index idx22_recipientobjid_idx on JIObjectPermission (recipientobjectid);
+create index idx6_state_id_idx on JIAdhocStateProperty (state_id);
 create index JIRole_tenantId_index on JIRole (tenantId);
 create index JIUserRole_roleId_index on JIUserRole (roleId);
+create index JIUserRole_userId_index on JIUserRole (userId);
+create index JITenant_parentId_index on JITenant (parentId);

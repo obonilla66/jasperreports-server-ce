@@ -68,6 +68,7 @@ import net.sf.jasperreports.web.servlets.ReportExecutionStatus;
 import net.sf.jasperreports.web.servlets.ReportPageStatus;
 import net.sf.jasperreports.web.util.JacksonUtil;
 import net.sf.jasperreports.web.util.WebUtil;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,6 +77,7 @@ import org.springframework.binding.convert.ConversionExecutionException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.validation.DataBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
+import org.springframework.web.util.JavaScriptUtils;
 import org.springframework.webflow.context.servlet.ServletExternalContext;
 import org.springframework.webflow.core.collection.MutableAttributeMap;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
@@ -110,6 +112,8 @@ public class ViewReportAction extends ReportParametersAction
     private static final String ATTRIBUTE_PUBLIC_FOLDER_URI = "publicFolderUri";
     private static final String ATTRIBUTE_TEMP_FOLDER_URI = "tempFolderUri";
     public static final String ATTRIBUTE_EMPTY_REPORT_MESSAGE = "emptyReportMessage";
+	public static final String ATTRIBUTE_HAS_INVISIBLE_IC_VALIDATION_ERRORS = "hasInvisibleICValidationErrors";
+	public static final String ATTRIBUTE_INVISIBLE_IC_VALIDATION_ERROR_MESSAGES = "invisibleICValidationErrorMessages";
     
     public static final String ATTRIBUTE_DIRECT_EXPORT = "directExport";
     public static final String ATTRIBUTE_INPUT_CONTROLS_EXPORT = "inputControlsExport";
@@ -165,6 +169,8 @@ public class ViewReportAction extends ReportParametersAction
      * Key is used for detecting parameters which don't have default values on UI.
      */
     public static final String PARAMETERS_WITHOUT_DEFAULT_VALUES = "parametersWithoutDefaultValues";
+
+	public static final String INPUT_CONTROL_VALUES_FROM_REQUEST = "inputControlValuesFromRequest";
 
     /**
      * Flag enables/disables showing dialog for mandatory input controls without default value.
@@ -274,6 +280,22 @@ public class ViewReportAction extends ReportParametersAction
 		flowScope.put(getFlowAttributeUseClientTimezone(), Boolean.valueOf(!parseRequest));
 
         flowScope.put(PARAMETERS_WITHOUT_DEFAULT_VALUES, getMandatoryParametersWithoutDefaultValuesAsJSON(context));
+
+		flowScope.put(ATTRIBUTE_HAS_INVISIBLE_IC_VALIDATION_ERRORS, false);
+		Map<String, String[]> inputControlValuesFromRequest = new HashMap<>();;
+		try {
+			// Use formatted IC values from request only when there are no visible ICs
+			if (!hasVisibleInputControls(context)) {
+				inputControlValuesFromRequest = getFormattedInputControlValuesFromRequest(context);
+			}
+		} catch (JSValidationException e) {
+			flowScope.put(ATTRIBUTE_HAS_INVISIBLE_IC_VALIDATION_ERRORS, true);
+			String validationMessage = formatInputControlsValidationErrorMessage(e.getErrors());
+			validationMessage = validationMessage.replaceAll("</?p>", "");
+			context.getFlashScope().put(ATTRIBUTE_INVISIBLE_IC_VALIDATION_ERROR_MESSAGES, validationMessage);
+		}
+
+		flowScope.put(INPUT_CONTROL_VALUES_FROM_REQUEST, convertObjectToJSONString(inputControlValuesFromRequest));
 
         try {
 			super.checkForParams(context);
@@ -839,7 +861,7 @@ public class ViewReportAction extends ReportParametersAction
 		return success();
 	}
 
-	public Event prepareReportView(RequestContext context) {
+	public Event prepareReportView(RequestContext context) throws Exception {
 		if (getHyperlinkProducerFactory() != null) {
 			context.getRequestScope().put(getRequestAttributeHtmlLinkHandlerFactory(), getHyperlinkProducerFactory());
 		}
@@ -870,6 +892,39 @@ public class ViewReportAction extends ReportParametersAction
         requestScope.put(REPORT_PARAMETER_VALUES, new JSONObject(getInputControlsState(context)).toString());
         // UI needs access to POST parameters.
         requestScope.put(ALL_REQUEST_PARAMETERS, getRequestParametersAsJSON(context));
+
+
+		StringBuilder exportersList = new StringBuilder("[");
+		boolean firstItem = true;
+		Map<String, ExporterConfigurationBean> configuredExporters = (Map<String, ExporterConfigurationBean>) exporters;
+		for (Map.Entry<String, ExporterConfigurationBean> configuredExporter : configuredExporters.entrySet()) {
+			if (!firstItem) {
+				exportersList.append(",");
+			} else {
+				firstItem = false;
+			}
+			ExporterConfigurationBean exporter = configuredExporter.getValue();
+			String exporterKey = configuredExporter.getKey();
+			ReportUnit reportUnit = getReportUnit(context);
+			String exportFilename = null;
+			if (exporter.getCurrentExporter() != null && reportUnit != null) {
+				exportFilename = exporter.getCurrentExporter().getDownloadFilename(null, reportUnit.getName());
+			}
+
+			String descriptionMessage = JavaScriptUtils.javaScriptEscape(
+					getMessages().getMessage(exporter.getDescriptionKey(), null, LocaleContextHolder.getLocale()));
+
+			exportersList.append("{\"type\": \"simpleAction\",");
+			exportersList.append("\"text\": \"" + descriptionMessage + "\",");
+			exportersList.append("\"action\": \"Report.exportReport\",");
+			exportersList.append("\"actionArgs\": [\"" + exporterKey + "\"");
+			if (StringUtils.isNotEmpty(exportFilename)) {
+				exportersList.append(", \"" + exportFilename + "\"");
+			}
+			exportersList.append("]}");
+		}
+		exportersList.append("]");
+		context.getFlowScope().put("exportersList", exportersList.toString());
 
 		return success();
 	}

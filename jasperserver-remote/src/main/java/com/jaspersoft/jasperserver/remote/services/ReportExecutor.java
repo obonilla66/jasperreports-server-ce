@@ -28,9 +28,11 @@ import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReportsContext;
+import net.sf.jasperreports.export.ExporterInputItem;
 
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,7 +46,7 @@ public interface ReportExecutor {
     boolean isRunnableResource(Resource resource);
     ReportUnitResult runReport(String reportUnitUri, Map<String, Object> parameters,
             ReportExecutionOptions reportExecutionOptions) throws ErrorDescriptorException;
-    Map<JRExporterParameter, Object> exportReport(String reportUnitURI, JasperPrint jasperPrint, String format, OutputStream output,
+    Map<JRExporterParameter, Object> exportReport(String reportUnitURI, List<ExporterInputItem> inputItems, String format, OutputStream output,
             HashMap exportParameters) throws ServiceException;
     JasperReportsContext getJasperReportsContext(Boolean interactive);
 	PaginationParameters getExportPaginationParameters(String reportUnitURI, JasperPrint jasperPrint, String outputFormat);

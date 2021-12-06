@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.api.engine.jasperreports.util.repo;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.RepositoryContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ContentResource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.FileResource;
@@ -119,13 +121,13 @@ public class RepositoryConnection extends URLConnection
 
                     if (fileResource.getFileType().equals(FileResource.TYPE_JRXML)) {
                         data = repositoryContext.getCompiledReportProvider().getCompiledReport(
-                                repositoryContext.getExecutionContext(),
+                                getRuntimeExecutionContext(),
                                 path);
                     } else {
-                        data = repository.getResourceData(repositoryContext.getExecutionContext(), path).getDataStream();
+                        data = repository.getResourceData(getRuntimeExecutionContext(), path).getDataStream();
                     }
                 } else if(resource instanceof ContentResource){
-                    data = repository.getContentResourceData(repositoryContext.getExecutionContext(), path).getDataStream();
+                    data = repository.getContentResourceData(getRuntimeExecutionContext(), path).getDataStream();
                 }
             }
 
@@ -134,4 +136,8 @@ public class RepositoryConnection extends URLConnection
 			throw new IOException(e.getMessage());
 		}
     }
+
+    private ExecutionContext getRuntimeExecutionContext() {
+                   return ExecutionContextImpl.getThreadLocalExecutionContext()!=null ? ExecutionContextImpl.getThreadLocalExecutionContext() : repositoryContext.getExecutionContext();
+            }
 }

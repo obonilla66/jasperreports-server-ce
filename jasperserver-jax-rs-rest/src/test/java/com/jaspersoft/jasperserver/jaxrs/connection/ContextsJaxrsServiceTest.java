@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.jaxrs.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.jaxrs.resources.ContentNegotiationHandler;
 import com.jaspersoft.jasperserver.remote.connection.ContextsManager;
 import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
@@ -86,6 +88,9 @@ public class ContextsJaxrsServiceTest {
     @Mock
     UriInfo uriInfo;
     private ContextsJaxrsService spyService;
+
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
+
     @BeforeClass
     public void init(){
         MockitoAnnotations.initMocks(this);
@@ -203,7 +208,7 @@ public class ContextsJaxrsServiceTest {
         final Object expectedConnectionObject = new Object();
         doReturn(expectedConnectionObject).when(spyService).parseEntity(connectionClass, streamMock, connectionType);
         final UUID expectedUuid = UUID.randomUUID();
-        when(contextsManager.isMetadataSupported(expectedConnectionObject, "connections.type.metadata")).thenReturn(true);
+        when(contextsManager.isMetadataSupported(ctx, expectedConnectionObject, "connections.type.metadata")).thenReturn(true);
         when(contextsManager.createContext(expectedConnectionObject)).thenReturn(expectedUuid);
         when(contextsManager.getContextMetadata(expectedUuid, new HashMap<String, String[]>())).thenReturn(expectedConnectionObject);
         final String someRequestUrl = "someRequestUrl";
@@ -224,7 +229,7 @@ public class ContextsJaxrsServiceTest {
         final InputStream streamMock = mock(InputStream.class);
         final Object expectedConnectionObject = new Object();
         doReturn(expectedConnectionObject).when(spyService).parseEntity(connectionClass, streamMock, connectionType);
-        when(contextsManager.isMetadataSupported(expectedConnectionObject, "connections.type.metadata")).thenReturn(false);
+        when(contextsManager.isMetadataSupported(ctx, expectedConnectionObject, "connections.type.metadata")).thenReturn(false);
         spyService.createContext(streamMock, connectionType, metadataType, request, uriInfo);
     }
 

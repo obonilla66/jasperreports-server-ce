@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.remote.exception.ReferencedResourceAccessDeniedException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceTypeNotSupportedException;
@@ -39,7 +40,6 @@ import com.jaspersoft.jasperserver.remote.resources.converters.ResourceConverter
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -118,9 +118,9 @@ public class ResourceLookupContextStrategy implements
     }
 
     @Override
-    public boolean isMetadataSupported(ClientResourceLookup resourceLookup, String metadataClientType){
+    public boolean isMetadataSupported(ExecutionContext ctx, ClientResourceLookup resourceLookup, String metadataClientType){
         return "repository.resourceLookup.metadata".equalsIgnoreCase(metadataClientType) ||
-                contextsManager.isMetadataSupported(getFullClientResource(resourceLookup), metadataClientType);
+                contextsManager.isMetadataSupported(ctx, getFullClientResource(resourceLookup), metadataClientType);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class ResourceLookupContextStrategy implements
     }
 
     @Override
-    public ClientResourceLookup createContext(ClientResourceLookup contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
+    public ClientResourceLookup createContext(ExecutionContext ctx, ClientResourceLookup contextDescription, Map<String, Object> data) throws IllegalParameterValueException {
         final UUID uuid = contextsManager.createContext(getFullClientResource(contextDescription));
         data.put(INNER_UUID, uuid);
         return contextDescription;

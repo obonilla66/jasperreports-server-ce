@@ -35,7 +35,7 @@
         resourceDataTypeLocate.messages = {};
     }
 
-    resourceDataTypeLocate.messages["resource.DataTypeLocate.Title"]  = '<spring:message code="resource.DataTypeLocate.Title" javaScriptEscape="true"/>';
+    resourceDataTypeLocate.messages["resource.DataTypeLocate.Title"]  = '<spring:message code="addResources.dataTypeLocate.selectDataType" javaScriptEscape="true"/>';
 
     __jrsConfigs__.resourceDataTypeLocate = resourceDataTypeLocate;
 

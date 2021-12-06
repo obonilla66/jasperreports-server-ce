@@ -21,6 +21,8 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.client.RoleImpl;
 import com.jaspersoft.jasperserver.dto.authority.ClientRole;
@@ -39,6 +41,7 @@ public class RoleConverterTest {
     private final Role server = new RoleImpl();
     private final ClientRole client = new ClientRole();
     private final RoleConverter converter  = new RoleConverter();
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -62,7 +65,7 @@ public class RoleConverterTest {
 
     @Test
     public void testToServer() throws Exception {
-        Role converted = converter.toServer(client, null);
+        Role converted = converter.toServer(ctx, client, null);
 
         assertEquals(converted.getRoleName(), client.getName());
         assertEquals(converted.getTenantId(), client.getTenantId());
@@ -71,7 +74,7 @@ public class RoleConverterTest {
 
     @Test
     public void testToServer_update() throws Exception {
-        Role converted = converter.toServer(client, server, null);
+        Role converted = converter.toServer(ctx, client, server, null);
 
         assertEquals(converted, server);
         assertEquals(converted.getRoleName(), client.getName());

@@ -21,7 +21,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
@@ -84,6 +85,21 @@
         <entry key="oAuthPvtKeyPath">
             <value><![CDATA[^(\/)([\p{L}\p{M}\p{N}_.:,/\-]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
+        <entry key="awsRegion">
+          <value><![CDATA[^([\p{L}\p{M}\p{N}\p{P}\p{S}]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="s3OutputLocation">
+          <value><![CDATA[^([^;]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="accessKey">
+            <value><![CDATA[^([\p{Lu}\p{M}\p{N}]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="secretKey">
+            <value><![CDATA[^([\p{L}\p{M}\p{N}/+=]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="arn">
+          <value><![CDATA[^(([\p{L}\p{M}\p{N}_.,+=/@:\-]*)|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
         <entry key="authMech">
             <value><![CDATA[^([0|1|2]{1}|#{ attributePlaceholderPatternUI })$]]></value>
         </entry>
@@ -105,12 +121,29 @@
         <entry key="informixServerName">
             <value><![CDATA[^([\p{L}\p{M}\p{N}\s_.,\-}{]|#{ attributePlaceholderPatternUI })+$]]></value>
         </entry>
+        <entry key="snowflakeDB">
+            <value><![CDATA[^([\p{L}\p{M}\p{N}_\$]|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="role">
+            <value><![CDATA[^([\p{L}\p{M}\p{N}_\$]*|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
+        <entry key="warehouse">
+            <value><![CDATA[^([\p{L}\p{M}\p{N}_\$]*|#{ attributePlaceholderPatternUI })+$]]></value>
+        </entry>
         <entry key="dynamicUrlPartPattern" value-ref="dynamicJdbcUrlPartPattern"/>
         <entry key="dynamicServerAddressPattern" value-ref="dynamicServerURLAddressPattern"/>
         <entry key="dynamicServiceAcctEmailPattern" value-ref="dynamicOAuthServiceAcctEmailPattern"/>
         <entry key="dynamicPvtKeyPathPattern" value-ref="dynamicOAuthPvtKeyPathPattern"/>
         <entry key="dynamicDatasetPattern" value-ref="dynamicOAuthDatasetPattern"/>
         <entry key="dynamicServerAddressPattern" value-ref="dynamicServerURLAddressPattern"/>
+        <entry key="dynamicS3OutputLocation" value-ref="dynamicS3OutputLocation"/>
+        <entry key="dynamicAwsRegion" value-ref="dynamicAwsRegion"/>
+        <entry key="dynamicARN" value-ref="dynamicARN"/>
+        <entry key="dynamicAccessKey" value-ref="dynamicAccessKey"/>
+        <entry key="dynamicSecretKey" value-ref="dynamicSecretKey"/>
+        <entry key="dynamicSnowflakeDB" value-ref="dynamicSnowflakeDB"/>
+        <entry key="dynamicRole" value-ref="dynamicRole"/>
+        <entry key="dynamicWarehouse" value-ref="dynamicWarehouse"/>
         <!-- Non-field helper patterns -->
         <entry key="forbidWhitespacesPattern">
             <value><![CDATA[^([^\s]|#{ attributePlaceholderPatternUI })*$]]></value>
@@ -150,7 +183,46 @@
             <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{N}]+[\p{L}\p{M}\p{N}_.:,/\-]+[\p{L}\p{N}])+)]]></value>
         </constructor-arg>
     </bean>
-
+    <bean id="dynamicAwsRegion" class="java.lang.String">
+      <constructor-arg type="java.lang.String">
+        <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}\p{P}\p{S}])+)]]></value>
+      </constructor-arg>
+    </bean>
+    <bean id="dynamicS3OutputLocation" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[^;])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicAccessKey" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{Lu}\p{M}\p{N}])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicSecretKey" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}/+=])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicARN" class="java.lang.String">
+      <constructor-arg type="java.lang.String">
+        <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|([\p{L}\p{M}\p{N}_.,+=/@:\-]*))+)]]></value>
+      </constructor-arg>
+    </bean>
+    <bean id="dynamicSnowflakeDB" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}_\$])+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicRole" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}_\$]*)+)]]></value>
+        </constructor-arg>
+    </bean>
+    <bean id="dynamicWarehouse" class="java.lang.String">
+        <constructor-arg type="java.lang.String">
+            <value><![CDATA[((?:#{ attributePlaceholderPatternUI }|[\p{L}\p{M}\p{N}_\$]*)+)]]></value>
+        </constructor-arg>
+    </bean>
     <util:map id="clientLogging">
         <entry key="enabled" value="true"/>
         <entry key="level" value="error"/>

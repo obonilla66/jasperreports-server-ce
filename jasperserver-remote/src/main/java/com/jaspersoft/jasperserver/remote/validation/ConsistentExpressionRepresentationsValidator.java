@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpression;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientExpressionContainer;
 import com.jaspersoft.jasperserver.dto.adhoc.query.el.ClientVariable;
@@ -46,7 +47,7 @@ import java.util.Set;
 public class ConsistentExpressionRepresentationsValidator implements ClientValidator<ClientExpressionContainer> {
 
     @Override
-    public List<Exception> validate(ClientExpressionContainer value) {
+    public List<Exception> validate(ExecutionContext ctx, ClientExpressionContainer value) {
         List<Exception> exceptions  = new ArrayList<Exception>();
         ClientExpression expressionObject = null;
         String expressionString = null;

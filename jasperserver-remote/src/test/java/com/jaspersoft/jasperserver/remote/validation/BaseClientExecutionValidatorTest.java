@@ -24,6 +24,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataSource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConverter;
@@ -85,6 +86,7 @@ public class BaseClientExecutionValidatorTest {
     private ClientReference dataSourceReference = mock(ClientReference.class);
 
     private ToClientConverter<?, ?, ?> toClientConverter = mock(ToClientConverter.class);
+    final ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @Before
     public void setUp() throws Exception {
@@ -100,7 +102,7 @@ public class BaseClientExecutionValidatorTest {
     public void validate_uriIsNull_notValid() {
         when(dataSourceReference.getUri()).thenReturn(null);
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertListContainsMandatoryParameterNotFoundException(exceptions);
     }
@@ -110,7 +112,7 @@ public class BaseClientExecutionValidatorTest {
         mockErrorDescriptorBuilder(QUERY_DATASOURCE_TYPE_NOT_SUPPORTED);
         when(repositoryService.folderExists(any(ExecutionContext.class), eq(DATA_SOURCE_URI))).thenReturn(true);
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertExceptionsContainErrorCode(exceptions, QUERY_DATASOURCE_TYPE_NOT_SUPPORTED.toString());
     }
@@ -120,7 +122,7 @@ public class BaseClientExecutionValidatorTest {
         mockErrorDescriptorBuilder(QUERY_DATASOURCE_NOT_FOUND);
         when(repositoryService.getResource(any(ExecutionContext.class), eq(DATA_SOURCE_URI))).thenReturn(null);
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertExceptionsContainErrorCode(exceptions, QUERY_DATASOURCE_NOT_FOUND.toString());
     }
@@ -131,7 +133,7 @@ public class BaseClientExecutionValidatorTest {
         when(repositoryService.getResource(any(ExecutionContext.class), eq(DATA_SOURCE_URI)))
                 .thenThrow(mock(AccessDeniedException.class));
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertExceptionsContainErrorCode(exceptions, QUERY_DATASOURCE_ACCESS_DENIED.toString());
     }
@@ -144,7 +146,7 @@ public class BaseClientExecutionValidatorTest {
                 .thenReturn(mock(DataSource.class));
         when(resourceConverterProvider.getToClientConverter(any(Resource.class))).thenReturn(null);
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertExceptionsContainErrorCode(exceptions, QUERY_DATASOURCE_TYPE_NOT_SUPPORTED.toString());
     }
@@ -157,7 +159,7 @@ public class BaseClientExecutionValidatorTest {
                 .thenReturn(mock(DataSource.class));
         doReturn(ClientDashboard.class).when(resourceConverterProvider).getClientTypeClass(CLIENT_RESOURCE_TYPE);
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertExceptionsContainErrorCode(exceptions, QUERY_DATASOURCE_TYPE_NOT_SUPPORTED.toString());
     }
@@ -169,7 +171,7 @@ public class BaseClientExecutionValidatorTest {
                 .thenReturn(mock(DataSource.class));
         doReturn(ClientDomain.class).when(resourceConverterProvider).getClientTypeClass(CLIENT_RESOURCE_TYPE);
 
-        List<Exception> exceptions = validator.validate(execution);
+        List<Exception> exceptions = validator.validate(ctx, execution);
 
         assertTrue(exceptions.isEmpty());
     }
@@ -180,7 +182,7 @@ public class BaseClientExecutionValidatorTest {
                 .getResource(any(ExecutionContext.class), eq(DATA_SOURCE_URI)))
                 .thenThrow(new Exception("Some Unexpected Exception"));
 
-        validator.validate(execution);
+        validator.validate(ctx, execution);
     }
 
     private void assertListContainsMandatoryParameterNotFoundException(List<Exception> exceptions) {

@@ -166,7 +166,7 @@ public class HtmlExporter extends AbstractExporter {
         if(interactive && allowInlineScripts){
             htmlExporter.getJasperReportsContext().setProperty("com.jaspersoft.jasperreports.highcharts.html.export.type", "standalone");
         }
-        htmlExporter.setFontHandler(new WebHtmlResourceHandler(contextPath + "/reportresource?&font={0}"));// html exporter font handler no longer used in JR; consider removing
+        htmlExporter.setFontHandler(new WebHtmlResourceHandler(contextPath + "/reportresource?&font={0}"));
     }
 
     @Override

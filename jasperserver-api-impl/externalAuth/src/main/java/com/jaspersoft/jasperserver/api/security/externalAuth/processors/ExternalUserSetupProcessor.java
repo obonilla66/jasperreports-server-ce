@@ -58,7 +58,7 @@ import static com.jaspersoft.jasperserver.api.security.externalAuth.processors.P
  * User: dlitvak
  * Date: 8/22/12
  */
-public class ExternalUserSetupProcessor extends AbstractExternalUserProcessor {
+public class ExternalUserSetupProcessor extends AbstractExternalUserProcessor implements InternalUserService {
     private static final Logger logger = LogManager.getLogger(ExternalUserSetupProcessor.class);
 	private static final String ROLE_SUFFIX = "|*";
 
@@ -117,7 +117,7 @@ public class ExternalUserSetupProcessor extends AbstractExternalUserProcessor {
 		}
     }
 
-    protected User getUser(){
+    public User getUser(){
         ProcessorData processorData = ProcessorData.getInstance();
         UserDetails userDetails = (UserDetails) processorData.getData(EXTERNAL_AUTH_DETAILS);
 

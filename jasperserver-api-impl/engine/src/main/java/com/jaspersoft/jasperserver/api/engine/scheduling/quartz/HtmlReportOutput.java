@@ -64,6 +64,7 @@ public class HtmlReportOutput extends AbstractReportOutput
 
 	private static final Log log = LogFactory.getLog(HtmlReportOutput.class);
 
+	//TODO no longer needed as there's a single HTML exporter now?
     private boolean forceToUseHTMLExporter = false;
 
 	private WebDeploymentInformation deploymentInformation;
@@ -95,12 +96,9 @@ public class HtmlReportOutput extends AbstractReportOutput
 			JasperPrint jasperPrint) throws JobExecutionException
 	{
 		try {
-			String filename = jobContext.getBaseFilename() + ".html";
-			String childrenFolderName = null;
+			String filename = jobContext.getBaseFilename() + "." + getFileExtension();
+			String childrenFolderName = jobContext.getChildrenFolderName(filename);
 
-			RepositoryService repositoryService = jobContext.getRepositoryService();
-            if (repositoryService != null) childrenFolderName = repositoryService.getChildrenFolderName(filename);
-			else childrenFolderName = "";
             AbstractHtmlExporter<HtmlReportConfiguration, HtmlExporterConfiguration> exporter = null;
 
             if (isForceToUseHTMLExporter()) {
@@ -132,16 +130,16 @@ public class HtmlReportOutput extends AbstractReportOutput
 				SimpleHtmlExporterOutput exporterOutput = new SimpleHtmlExporterOutput(htmlDataOut, jobContext.getCharacterEncoding());
 
 				ReportOutput htmlOutput = new ReportOutput(htmlData,
-						ContentResource.TYPE_HTML, filename);
+						getFileType(), filename);
 
 				if (!childrenFolderName.equals("")) {
                     exporterOutput.setImageHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "/{0}"));
                     exporterOutput.setResourceHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "/{0}"));
-                    exporterOutput.setFontHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "/{0}"));// html exporter font handler no longer used in JR; consider removing
+                    exporterOutput.setFontHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "/{0}"));
                 } else {
                 	exporterOutput.setImageHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "{0}"));
                 	exporterOutput.setResourceHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "{0}"));
-                	exporterOutput.setFontHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "{0}"));// html exporter font handler no longer used in JR; consider removing
+                	exporterOutput.setFontHandler(new RepoHtmlResourceHandler(htmlOutput, childrenFolderName + "{0}"));
                 }
 				
 				exporter.setExporterOutput(exporterOutput);
@@ -199,7 +197,16 @@ public class HtmlReportOutput extends AbstractReportOutput
 			WebDeploymentInformation deploymentInformation) {
 		this.deploymentInformation = deploymentInformation;
 	}
-
+	
+	@Override
+	public String getFileExtension() {
+		return "html";
+	}
+	
+	@Override
+	public String getFileType() {
+		return ContentResource.TYPE_HTML;
+	}
 }
 
 class RepoHtmlResourceHandler implements HtmlResourceHandler

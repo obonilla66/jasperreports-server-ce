@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.dto.adhoc.query;
 
+import java.io.Serializable;
+
 /**
  * @author Andriy Godovanets
  */

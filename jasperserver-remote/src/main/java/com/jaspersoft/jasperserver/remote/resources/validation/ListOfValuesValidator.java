@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValues;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ListOfValuesItem;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
@@ -46,7 +47,7 @@ public class ListOfValuesValidator extends GenericResourceValidator<ListOfValues
     private final Pattern forbiddenCharacters = Pattern.compile("[\"<>]+");
 
     @Override
-    protected void internalValidate(ListOfValues resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, ListOfValues resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         Set<String> names = new HashSet<String>();
         for (ListOfValuesItem item : resource.getValues()){
             if (empty(item.getLabel())) {

@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.OlapUnit;
@@ -37,6 +39,7 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -60,13 +63,14 @@ public class OlapUnitResourceConverterTest {
     @Mock
     private ToClientConversionOptions toClientConversionOptions;
     private final String EXPECTED_MDX_QUERY = "testMdxQuery";
+    ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeClass
     public void init() throws MandatoryParameterNotFoundException, IllegalParameterValueException {
         MockitoAnnotations.initMocks(this);
         final ResourceReferenceConverter<ClientReferenciableOlapConnection> olapConnectionReferencesConverter = (ResourceReferenceConverter<ClientReferenciableOlapConnection>) mock(ResourceReferenceConverter.class);
         when(resourceReferenceConverterProvider.getConverterForType(ClientReferenciableOlapConnection.class)).thenReturn(olapConnectionReferencesConverter);
-        when(olapConnectionReferencesConverter.toServer(clientConnection, null, toServerConversionOptions)).thenReturn(serverConnection);
+        when(olapConnectionReferencesConverter.toServer(ctx, clientConnection, null, toServerConversionOptions)).thenReturn(serverConnection);
         when(olapConnectionReferencesConverter.toClient(serverConnection, toClientConversionOptions)).thenReturn(clientConnection);
     }
 
@@ -82,7 +86,8 @@ public class OlapUnitResourceConverterTest {
         OlapUnit serverObject = new OlapUnitImpl();
         clientObject.setMdxQuery(EXPECTED_MDX_QUERY);
         clientObject.setOlapConnection(clientConnection);
-        final OlapUnit result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), toServerConversionOptions);
+        final OlapUnit result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), toServerConversionOptions);
         assertSame(result, serverObject);
         assertEquals(result.getMdxQuery(), EXPECTED_MDX_QUERY);
         assertSame(result.getOlapClientConnection(), serverConnection);

@@ -25,6 +25,7 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import java.io.Serializable;
 import java.util.List;
 
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
@@ -35,7 +36,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @version $Id$
  */
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class AbstractClientDatasetLevel implements DeepCloneable {
+public abstract class AbstractClientDatasetLevel implements DeepCloneable, Serializable {
     protected List<ClientDatasetFieldReference> fieldRefs;
 
     public AbstractClientDatasetLevel() {}

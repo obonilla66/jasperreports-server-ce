@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceLookup;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
@@ -51,9 +52,9 @@ public class MondrianXmlaDefinitionValidator extends GenericResourceValidator<Mo
     private TenantService tenantService;
 
     @Override
-    protected void internalValidate(MondrianXMLADefinition resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, MondrianXMLADefinition resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (!empty(resource.getCatalog())){
-            validateUniqueCatalog(resource.getCatalog(), resource.getURIString(), errors);
+            validateUniqueCatalog(ctx, resource.getCatalog(), resource.getURIString(), errors);
         } else {
             errors.add(new MandatoryParameterNotFoundException("catalog"));
         }
@@ -63,7 +64,7 @@ public class MondrianXmlaDefinitionValidator extends GenericResourceValidator<Mo
         }
     }
 
-    private void validateUniqueCatalog(String catalog, String uri, List<Exception> errors) {
+    private void validateUniqueCatalog(ExecutionContext ctx, String catalog, String uri, List<Exception> errors) {
         Tenant tenant = tenantService.getTenantBasedOnRepositoryUri(null, uri);
         String tenantFolder = null;
         FilterCriteria criteria = FilterCriteria.createFilter(MondrianXMLADefinition.class);
@@ -99,7 +100,7 @@ public class MondrianXmlaDefinitionValidator extends GenericResourceValidator<Mo
                     continue;
                 }
             }
-            Resource res = repositoryService.getResource(null, lookups[i].getURIString());
+            Resource res = repositoryService.getResource(ctx, lookups[i].getURIString());
             MondrianXMLADefinition def = (MondrianXMLADefinition) res;
             if (def.getCatalog().toLowerCase().equals(catalog)
                     && !def.getURIString().equals(uri)) {

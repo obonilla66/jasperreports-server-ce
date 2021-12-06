@@ -27,7 +27,10 @@ import com.jaspersoft.jasperserver.api.logging.access.domain.AccessEvent;
 import com.jaspersoft.jasperserver.api.logging.access.context.AccessContext;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.MetadataUserDetails;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
 import com.jaspersoft.jasperserver.api.metadata.user.service.UserAuthorityService;
+import com.lowagie.text.Meta;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -98,6 +101,12 @@ public class AccessContextImpl implements AccessContext {
         return user;
     }
 
+    private static String constructUserId_helper(final User user){
+        final String delimiter="|";
+        final String tenantId=user.getTenantId();
+        return user.getUsername()+((tenantId==null||tenantId.trim().isEmpty())?"":delimiter+tenantId);
+    }
+
     public void doInAccessContext(AccessContextCallback callback) {
         // Generating access events during export/import is pointless and should be disabled
         boolean noExportImport = !ExportRunMonitor.isExportRun() && !ImportRunMonitor.isImportRun();
@@ -107,7 +116,7 @@ public class AccessContextImpl implements AccessContext {
             if (user != null) {
                 AccessEvent accessEvent = (AccessEvent)clientClassFactory.newObject(AccessEvent.class);
                 accessEvent.setEventDate(new Date());
-                accessEvent.setUser(user);
+                accessEvent.setUserId(constructUserId_helper(user));
                 callback.fillAccessEvent(accessEvent);
                 loggingContextProvider.getContext().logEvent(accessEvent);
             }

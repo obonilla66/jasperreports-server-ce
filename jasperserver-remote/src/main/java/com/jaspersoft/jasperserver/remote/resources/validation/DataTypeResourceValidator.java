@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
@@ -41,7 +42,7 @@ import static com.jaspersoft.jasperserver.remote.resources.validation.Validation
 @Component
 public class DataTypeResourceValidator extends GenericResourceValidator<DataType> {
     @Override
-    protected void internalValidate(DataType resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, DataType resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (!empty(resource.getMaxValue()) && !empty(resource.getMinValue()) && resource.getMinValue().compareTo(resource.getMaxValue()) > 0){
             errors.add(new IllegalParameterValueException("The max value must be greater than min value", "maxValue", resource.getMaxValue().toString()));
         }

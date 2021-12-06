@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Folder;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InternalURI;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.PermissionUriProtocol;
@@ -69,11 +70,11 @@ public class PermissionConverter implements ToClientConverter<ObjectPermission, 
         return RepositoryPermission.class.getName();
     }
 
-    public ObjectPermission toServer(RepositoryPermission clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, new ObjectPermissionImpl(), null);
+    public ObjectPermission toServer(ExecutionContext ctx, RepositoryPermission clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, new ObjectPermissionImpl(), null);
     }
 
-    public ObjectPermission toServer(RepositoryPermission clientObject, ObjectPermission resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public ObjectPermission toServer(ExecutionContext ctx, RepositoryPermission clientObject, ObjectPermission resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         if (clientObject.getMask() == null) {
              throw new MandatoryParameterNotFoundException("mask");
         }

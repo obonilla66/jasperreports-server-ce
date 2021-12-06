@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.war.validation;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
+import com.jaspersoft.jasperserver.war.common.JasperServerConst;
 import com.jaspersoft.jasperserver.war.dto.QueryWrapper;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -66,8 +67,9 @@ public class QueryValidator implements Validator
 			if(!ValidationUtil.regExValidateName(query.getName())) {
 				errors.rejectValue("query.name", "QueryValidator.error.invalid.chars");
 			}
-			if (query.getName().length() > 100) {
-				errors.rejectValue("query.name", "QueryValidator.error.too.long");
+			if (query.getName().length() > JasperServerConst.MAX_LENGTH_NAME) {
+				errors.rejectValue("query.name", "QueryValidator.error.too.long",
+						new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 			}
 
 			if (wrapper.isAloneNewMode()) {
@@ -83,8 +85,9 @@ public class QueryValidator implements Validator
 			if(!ValidationUtil.regExValidateLabel(query.getLabel())) {
 				errors.rejectValue("query.label", "QueryValidator.error.invalid.chars");
 			}
-			if (query.getLabel().length() > 100) {
-				errors.rejectValue("query.label", "QueryValidator.error.too.long");
+			if (query.getLabel().length() > JasperServerConst.MAX_LENGTH_LABEL) {
+				errors.rejectValue("query.label", "QueryValidator.error.too.long",
+						new Object[]{JasperServerConst.MAX_LENGTH_LABEL_W}, null);
 			}
 		}
 

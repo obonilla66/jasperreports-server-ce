@@ -104,6 +104,7 @@ class AbstractClientDataSourceHolderTest {
     // because the class isn't in annotation of dataSource method
     private class AnotherDataSource implements ClientReferenceableDataSource {
         private String uri;
+        private Integer version;
 
         @Override
         public DeepCloneable deepClone() {
@@ -118,6 +119,16 @@ class AbstractClientDataSourceHolderTest {
         @Override
         public String getUri() {
             return uri;
+        }
+
+        @Override
+        public Integer getVersion() {
+            return version;
+        }
+
+        public AnotherDataSource setVersion(Integer version) {
+            this.version = version;
+            return this;
         }
     }
 

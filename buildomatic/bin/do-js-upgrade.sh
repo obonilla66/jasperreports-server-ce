@@ -100,7 +100,7 @@ else
   if [[ "$JS_UPGRADE_STRATEGY" == "standard" && "$JS_OPTION" != "regen-config" && "$JS_OPTION" != "test" && "$JS_OPTION" != "help" && "$IMPORT_FILE" == "" ]]; then
     fail "JasperReports Server import file(<path-to-file-and-filename>) expected as input"
   fi
-  
+
   if [ "$JS_OPTION" == "" ]; then
     JS_ANT_TARGET=upgrade-minimal-$JS_EDITION
     JS_OPTION=default

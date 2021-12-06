@@ -21,7 +21,8 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans profile="jrs"
+       xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:util="http://www.springframework.org/schema/util"
        xmlns:context="http://www.springframework.org/schema/context"
@@ -67,6 +68,10 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
   <!-- define datasource for repository -->
   <bean id="dataSource" class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.JndiObjectFactoryBeanWrapper">
     <property name="jndiName" value="java:comp/env/${metadata.hibernate.dataSource.jndiName}"/>
+  </bean>
+
+  <bean id="auditDataSource" class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.JndiObjectFactoryBeanWrapper">
+    <property name="jndiName" value="java:comp/env/${metadata.hibernate.auditDataSource.jndiName}"/>
   </bean>
 
 
@@ -415,7 +420,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
           <util:map>
             <entry key="label" value="Neo4j"/>
             <entry key="jdbcUrl" value="jdbc:neo4j://$[dbHost]:$[dbPort]"/>
-            <entry key="jdbcDriverClass" value="com.simba.neo4j.jdbc42.Driver"/>
+            <entry key="jdbcDriverClass" value="com.simba.neo4j.neo4j.jdbc42.Driver"/>
             <entry key="defaultValues">
               <util:map>
                 <entry key="dbHost" value="localhost"/>
@@ -465,22 +470,6 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
                 </entry>
             </util:map>
         </entry>
-        <!--<entry key="googlebigquery_simba">
-            <util:map>
-                <entry key="label" value="Google BigQuery"/>
-                <entry key="jdbcUrl" value="jdbc:bigquery://$[serverAddress]:$[dbPort];OAuthType=0;QueryDialect=SQL;Timeout=60;ProjectId=$[projectId];OAuthServiceAcctEmail=$[oAuthServiceAcctEmail];OAuthPvtKeyPath=$[oAuthPvtKeyPath]"/>
-                <entry key="jdbcDriverClass" value="com.simba.googlebigquery.jdbc41.Driver"/>
-                <entry key="defaultValues">
-                    <util:map>
-                        <entry key="serverAddress" value="https://www.googleapis.com/oauth2/v2"/>
-                        <entry key="dbPort" value="443"/>
-                        <entry key="projectId" value=""/>
-                        <entry key="oAuthServiceAcctEmail" value=""/>
-                        <entry key="oAuthPvtKeyPath" value=""/>
-                    </util:map>
-                </entry>
-            </util:map>
-        </entry>-->
         <entry key="googlebigquery_progress">
           <util:map>
             <entry key="label" value="Google BigQuery"/>
@@ -670,6 +659,37 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
           </entry>
         </util:map>
       </entry>-->
+      <entry key="aws_athena">
+        <util:map>
+          <entry key="label" value="AWS Athena"/>
+          <entry key="jdbcUrl" value="jdbc:awsathena://athena.$[awsRegion]:443;S3OutputLocation=s3://$[s3OutputLocation];AccessKey=$[accessKey];SecretKey=$[secretKey];arn=$[arn];"/>
+          <entry key="jdbcDriverClass" value="com.simba.athena.jdbc42.Driver"/>
+          <entry key="defaultValues">
+            <util:map>
+              <entry key="accessKey" value=""/>
+              <entry key="secretKey" value=""/>
+              <entry key="arn" value=""/>
+              <entry key="awsRegion" value="us-east-2.amazonaws.com"/>
+              <entry key="s3OutputLocation" value=""/>
+            </util:map>
+          </entry>
+        </util:map>
+      </entry>
+      <entry key="snowflake">
+        <util:map>
+          <entry key="label" value="Snowflake"/>
+          <entry key="jdbcUrl" value="jdbc:snowflake://$[dbHost]?role=$[role]&amp;warehouse=$[warehouse]&amp;db=$[snowflakeDB]&amp;CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX=true"/>
+          <entry key="jdbcDriverClass" value="net.snowflake.client.jdbc.SnowflakeDriver"/>
+          <entry key="defaultValues">
+            <util:map>
+                <entry key="dbHost" value=""/>
+                <entry key="role" value="PUBLIC"/>
+                <entry key="warehouse" value=""/>
+                <entry key="snowflakeDB" value=""/>
+            </util:map>
+          </entry>
+        </util:map>
+      </entry>
    </util:map>
 
   <bean id="jdbcConnectionMap" parent="${bean.jdbcConnectionMap}"></bean>
@@ -679,6 +699,7 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
         <list>
             <ref bean="hibernateReportJobsUserDeleteListener"/>
             <ref bean="hibernateLoggingServiceUserDeleteListener"/>
+            <ref bean="hibernateAccessEventDeleteListener"/>
             <ref bean="hibernateRoleDeleteListener"/>
         </list>
      </constructor-arg>
@@ -894,5 +915,9 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
         <property name="optimizedJavascriptPath" value="optimized-scripts"/>
     </bean>
 
+    <!--<util:list id="allowSecretDataForProducts" value-type="java.lang.String">
+        <value>scalable-query-engine</value>
+    </util:list>
+-->
 
 </beans>

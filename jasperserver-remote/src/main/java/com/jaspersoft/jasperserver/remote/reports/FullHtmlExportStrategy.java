@@ -31,6 +31,8 @@ import net.sf.jasperreports.engine.ReportContext;
 import net.sf.jasperreports.engine.export.AbstractHtmlExporter;
 import net.sf.jasperreports.engine.export.HtmlResourceHandler;
 import net.sf.jasperreports.engine.export.JRHtmlExporterParameter;
+import net.sf.jasperreports.web.util.WebHtmlResourceHandler;
+
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -101,6 +103,7 @@ public class FullHtmlExportStrategy extends AbstractHtmlExportStrategy {
                 //NOOP
             }
         });
+        exporter.setFontHandler(new WebHtmlResourceHandler(contextPath + "/reportresource?&font={0}"));
 
         return exporter;
     }

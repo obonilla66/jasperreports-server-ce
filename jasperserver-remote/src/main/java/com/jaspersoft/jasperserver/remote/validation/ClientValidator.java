@@ -21,6 +21,9 @@
 
 package com.jaspersoft.jasperserver.remote.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+
 import java.util.List;
 
 /**
@@ -33,6 +36,9 @@ import java.util.List;
  */
 public interface ClientValidator<T> {
 
-    List<Exception> validate(T value);
+    List<Exception> validate(ExecutionContext ctx, T value);
+    default List<Exception> validate(T value) {
+        return this.validate(ExecutionContextImpl.getRuntimeExecutionContext(), value);
+    }
 
 }

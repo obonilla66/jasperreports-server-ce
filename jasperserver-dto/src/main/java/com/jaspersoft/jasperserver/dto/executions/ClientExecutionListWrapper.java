@@ -53,7 +53,9 @@ public class ClientExecutionListWrapper implements DeepCloneable {
     @XmlElements({
             @XmlElement(name = "providedQueryExecution", type = ClientProvidedQueryExecution.class),
             @XmlElement(name = "multiLevelQueryExecution", type = ClientMultiLevelQueryExecution.class),
-            @XmlElement(name = "multiAxisQueryExecution", type = ClientMultiAxisQueryExecution.class)})
+            @XmlElement(name = "multiAxisQueryExecution", type = ClientMultiAxisQueryExecution.class),
+            @XmlElement(name = "icQueryExecution", type = ClientICQueryExecution.class),
+            @XmlElement(name = "domainQueryExecution", type = ClientDomainQueryExecution.class)})
     public List<AbstractClientExecution> getExecutions() {
         return executions;
     }

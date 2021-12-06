@@ -21,6 +21,7 @@
 
 package com.jaspersoft.jasperserver.remote.resources.validation;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.service.JdbcDriverService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JdbcReportDataSource;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributesResolver;
@@ -49,7 +50,7 @@ public class JdbcDataSourceResourceValidator extends GenericResourceValidator<Jd
     private ProfileAttributesResolver profileAttributesResolver;
 
     @Override
-    protected void internalValidate(JdbcReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
+    protected void internalValidate(ExecutionContext ctx, JdbcReportDataSource resource, List<Exception> errors, Map<String, String[]> additionalParameters) {
         if (empty(resource.getDriverClass())) {
             errors.add(new MandatoryParameterNotFoundException("DriverClass"));
         } else {

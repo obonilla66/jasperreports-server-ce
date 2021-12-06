@@ -34,6 +34,8 @@ import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 
@@ -41,7 +43,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
  * @author Andriy Godovanets
  */
 public class ClientQueryField implements ClientField, ClientIdentifiable<String>, ClientQueryExpression,
-        IExpressionContainer,  DeepCloneable<ClientQueryField> {
+        IExpressionContainer,  DeepCloneable<ClientQueryField>, Serializable {
     private String id;
     private String type;
     private boolean measure;

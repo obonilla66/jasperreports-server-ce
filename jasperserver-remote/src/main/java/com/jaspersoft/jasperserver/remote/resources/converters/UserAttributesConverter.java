@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.InternalURI;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.PermissionUriProtocol;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
@@ -99,12 +100,12 @@ public class UserAttributesConverter implements ToServerConverter<ClientAttribut
     }
 
     @Override
-    public ProfileAttribute toServer(ClientAttribute clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        return toServer(clientObject, new ProfileAttributeImpl(), null);
+    public ProfileAttribute toServer(ExecutionContext ctx, ClientAttribute clientObject, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+        return toServer(ctx, clientObject, new ProfileAttributeImpl(), null);
     }
 
     @Override
-    public ProfileAttribute toServer(ClientAttribute clientObject, ProfileAttribute resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    public ProfileAttribute toServer(ExecutionContext ctx, ClientAttribute clientObject, ProfileAttribute resultToUpdate, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         if (isEmpty(clientObject.getName()) || clientObject.getName().length() > attributesConfig.getMaxLengthAttrName()) {
             throw new IllegalParameterValueException("name", clientObject.getName());
         }

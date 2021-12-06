@@ -28,6 +28,7 @@ import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
 import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
+import com.jaspersoft.jasperserver.war.common.JasperServerConst;
 import com.jaspersoft.jasperserver.war.dto.MondrianXmlaSourceWrapper;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -75,9 +76,10 @@ public class MondrianXmlaSourceValidator implements Validator
 				errors.rejectValue(
 						"mondrianXmlaDefinition.name", "MondrianXmlaSourceValidator.error.invalid.chars");
 			}
-			if (mondrianXmlaDefinition.getName().length() > 100) {
+			if (mondrianXmlaDefinition.getName().length() > JasperServerConst.MAX_LENGTH_NAME) {
 				errors.rejectValue(
-						"mondrianXmlaDefinition.name", "MondrianXmlaSourceValidator.error.too.long");
+						"mondrianXmlaDefinition.name", "MondrianXmlaSourceValidator.error.too.long"
+						, new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 			}
 
 			if (wrapper.isAloneNewMode()) {
@@ -95,14 +97,15 @@ public class MondrianXmlaSourceValidator implements Validator
 				errors.rejectValue(
 						"mondrianXmlaDefinition.label", "MondrianXmlaSourceValidator.error.invalid.chars");
 			}
-			if (mondrianXmlaDefinition.getLabel().length() > 100) {
+			if (mondrianXmlaDefinition.getLabel().length() > JasperServerConst.MAX_LENGTH_LABEL) {
 				errors.rejectValue(
-						"mondrianXmlaDefinition.label", "MondrianXmlaSourceValidator.error.too.long");
+						"mondrianXmlaDefinition.label", "MondrianXmlaSourceValidator.error.too.long"
+						, new Object[]{JasperServerConst.MAX_LENGTH_NAME_W}, null);
 			}
 		}
 
 		if (mondrianXmlaDefinition.getDescription() != null &&
-			mondrianXmlaDefinition.getDescription().length() > 100) {
+			mondrianXmlaDefinition.getDescription().length() > JasperServerConst.MAX_LENGTH_DESC) {
 			errors.rejectValue(
 					"mondrianXmlaDefinition.description", "MondrianXmlaSourceValidator.error.too.long");
 		}

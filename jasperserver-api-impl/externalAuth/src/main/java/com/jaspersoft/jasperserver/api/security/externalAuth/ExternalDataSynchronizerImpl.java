@@ -21,8 +21,10 @@
 package com.jaspersoft.jasperserver.api.security.externalAuth;
 
 import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.MetadataUserDetails;
 import com.jaspersoft.jasperserver.api.security.externalAuth.processors.ExternalUserProcessor;
+import com.jaspersoft.jasperserver.api.security.externalAuth.processors.InternalUserService;
 import com.jaspersoft.jasperserver.api.security.externalAuth.processors.ProcessorData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,12 +35,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
@@ -61,13 +69,18 @@ public class ExternalDataSynchronizerImpl implements ExternalDataSynchronizer, I
 	private ExternalUserDetailsService externalUserDetailsService = new EmptyExternalUserDetailsService();
     private List<ExternalUserProcessor> externalUserProcessors;
 
+	@Inject
+	private PlatformTransactionManager transactionManager;
+
+	@Inject
+	private InternalUserService internalUserService;
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(externalUserProcessors, "externalUserProcessors must not be null");
         Assert.notEmpty(externalUserProcessors, "externalUserProcessors must not be empty: at least external user setup processor must be present to enter th user into JRS DB.");
     }
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
+	@Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
     public void synchronize() {
 		try {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -82,9 +95,38 @@ public class ExternalDataSynchronizerImpl implements ExternalDataSynchronizer, I
 				ProcessorData.getInstance().clearData();
 
 				loadExternalUserDetailsToProcessorData(auth);
-				for  (ExternalUserProcessor processor : externalUserProcessors)
-					processor.process();
-
+				boolean continueExecution = true;
+				if (internalUserService !=null) {
+					User user = internalUserService.getUser();
+					if (user == null) {
+						synchronized (this) {
+							user = internalUserService.getUser();
+							if (user == null) {
+								TransactionStatus transaction = null;
+								try {
+									transaction = transactionManager.getTransaction(new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRES_NEW));
+									for (ExternalUserProcessor processor : externalUserProcessors)
+										processor.process();
+									transaction.flush();
+									transactionManager.commit(transaction);
+									continueExecution = false;
+								} catch (Exception e) {
+									logger.error("Exception occurred during synchronization in synchronized mode", e.getMessage());
+									continueExecution = true;
+								} finally {
+									if (transaction != null && !transaction.isCompleted()) {
+										transactionManager.rollback(transaction);
+										logger.error("New transaction got rollback in synchronized mode. Will try again and proceed in non-synchronized mode");
+									}
+								}
+							}
+						}
+					}
+				}
+				if (continueExecution) {
+					for  (ExternalUserProcessor processor : externalUserProcessors)
+						processor.process();
+				}
 				Authentication newAuth = SecurityContextHolder.getContext().getAuthentication();
 				// The authentication can be null if there are no roles. This sets the anonymous user as the
 				// logged-in user, if the anonymousUserFilter is in the chain

@@ -37,6 +37,8 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl.getRuntimeExecutionContext;
+
 /**
  * @author: Zakhar.Tomchenco
  */
@@ -132,7 +134,7 @@ public class RolesJaxrsService {
     }
 
     public Response createRole(ClientRole clientRole) throws ErrorDescriptorException {
-        Role role = converter.toServer(clientRole, null);
+        Role role = converter.toServer(getRuntimeExecutionContext(), clientRole, null);
 
         if (findRole(role.getRoleName(), role.getTenantId()) != null){
             throw new ResourceAlreadyExistsException(role.getRoleName());

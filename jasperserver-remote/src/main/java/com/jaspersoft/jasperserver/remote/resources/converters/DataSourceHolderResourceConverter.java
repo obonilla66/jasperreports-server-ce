@@ -20,9 +20,12 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
+import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.dto.resources.AbstractClientDataSourceHolder;
 import com.jaspersoft.jasperserver.dto.resources.ClientReferenceableDataSource;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
@@ -43,13 +46,16 @@ public abstract class DataSourceHolderResourceConverter<ResourceType extends Res
 
     protected abstract ResourceReference getDataSourceFromResource(ResourceType resource);
 
+    @javax.annotation.Resource(name = "${bean.repositoryService}")
+    protected RepositoryService repositoryService;
+
     @Override
-    protected ResourceType genericFieldsToServer(ClientType clientObject, ResourceType resultToUpdate, ToServerConversionOptions options)
+    protected ResourceType genericFieldsToServer(ExecutionContext ctx, ClientType clientObject, ResourceType resultToUpdate, ToServerConversionOptions options)
             throws IllegalParameterValueException, MandatoryParameterNotFoundException {
-        resultToUpdate = super.genericFieldsToServer(clientObject, resultToUpdate, options);
+        resultToUpdate = super.genericFieldsToServer(ctx, clientObject, resultToUpdate, options);
         ResourceReference dataSourceReference = resourceReferenceConverterProvider
                 .getConverterForType(ClientReferenceableDataSource.class)
-                .toServer(clientObject.getDataSource(), getDataSourceFromResource(resultToUpdate), options);
+                .toServer(ctx, clientObject.getDataSource(), getDataSourceFromResource(resultToUpdate), options);
         setDataSourceToResource(dataSourceReference, resultToUpdate);
         return resultToUpdate;
     }

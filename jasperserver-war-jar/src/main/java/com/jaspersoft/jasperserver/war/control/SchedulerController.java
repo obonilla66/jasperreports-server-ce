@@ -31,13 +31,17 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportUnit;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeCategory;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
+import com.jaspersoft.jasperserver.dto.common.ExportType;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -49,7 +53,8 @@ import java.util.*;
  * Controller to handle all the scheduling interaction.
  * It should not depend to Web-Flow and use only the REST v2 end points.
  */
-public class SchedulerController extends MultiActionController {
+@Controller
+public class SchedulerController {
 
     private static final Log log = LogFactory.getLog(SchedulerController.class);
 
@@ -69,11 +74,12 @@ public class SchedulerController extends MultiActionController {
     private boolean enableDataSnapshot;
     private Map reportJobDefaults = new HashMap();
     private List<String> availableReportJobOutputFormats;
-    private List<String> availableDashboardJobOutputFormats;
+    private List<String> availableDashboardJobScreenshotOutputFormats;
+    private List<String> availableDashboardJobDetailedOutputFormats;
 
     private static final String LICENSE_MANAGER = "com.jaspersoft.ji.license.LicenseManager";
 
-
+    @RequestMapping("/scheduler/main.html")
     public ModelAndView main(HttpServletRequest request, HttpServletResponse response) throws Exception {
         ModelAndView mav = new ModelAndView();
         mav.setViewName("modules/reportScheduling/main");
@@ -84,12 +90,32 @@ public class SchedulerController extends MultiActionController {
         mav.addObject("enableSaveToHostFS", getEnableSaveToHostFS());
         mav.addObject("enableDataSnapshot", getEnableDataSnapshot());
         mav.addObject("reportJobDefaults", new JSONObject(getResolvedReportJobDefaults()));
-        mav.addObject("availableReportJobOutputFormats", new JSONArray(getAvailableReportJobOutputFormats()));
-        mav.addObject("availableDashboardJobOutputFormats", new JSONArray(getAvailableDashboardJobOutputFormats()));
+        mav.addObject("availableReportJobOutputFormats", availableReportJobOutputFormatsJSON());
+        mav.addObject("availableDashboardJobOutputFormats", availableDashboardJobOutputFormatsJSON());
         mav.addObject("controlsDisplayForm", getParametersForm(getReportUri(request)));
 
         return mav;
     }
+
+    private JSONArray availableReportJobOutputFormatsJSON() throws JSONException {
+        JSONArray categories = new JSONArray();
+        categories.put(jobOutputFormatsCategoryJSON(ExportType.DEFAULT.name(), getAvailableReportJobOutputFormats()));
+        return categories;
+    }
+
+    private JSONArray availableDashboardJobOutputFormatsJSON() throws JSONException {
+        JSONArray categories = new JSONArray();
+        categories.put(jobOutputFormatsCategoryJSON(ExportType.DEFAULT.name(), getAvailableDashboardJobScreenshotOutputFormats()));
+        categories.put(jobOutputFormatsCategoryJSON(ExportType.DASHBOARD_DETAILED.name(), getAvailableDashboardJobDetailedOutputFormats()));
+        return categories;
+    }
+
+	public JSONObject jobOutputFormatsCategoryJSON(String exportType, List<String> formats) throws JSONException {
+		JSONObject categoryObject = new JSONObject();
+		categoryObject.put("exportType", exportType);
+		categoryObject.put("formats", new JSONArray(formats));
+		return categoryObject;
+	}
 
     private String getReportUri(HttpServletRequest request){
         String reportURI = request.getParameter(PARENT_REPORT_PARAMETER_NAME);
@@ -225,13 +251,21 @@ public class SchedulerController extends MultiActionController {
         this.availableReportJobOutputFormats = availableReportJobOutputFormats;
     }
 
-    public List<String> getAvailableDashboardJobOutputFormats() {
-        return availableDashboardJobOutputFormats;
+    public List<String> getAvailableDashboardJobScreenshotOutputFormats() {
+        return availableDashboardJobScreenshotOutputFormats;
     }
 
-    public void setAvailableDashboardJobOutputFormats(List<String> availableDashboardJobOutputFormats) {
-        this.availableDashboardJobOutputFormats = availableDashboardJobOutputFormats;
+    public void setAvailableDashboardJobScreenshotOutputFormats(List<String> availableDashboardJobScreenshotOutputFormats) {
+        this.availableDashboardJobScreenshotOutputFormats = availableDashboardJobScreenshotOutputFormats;
     }
+
+	public List<String> getAvailableDashboardJobDetailedOutputFormats() {
+		return availableDashboardJobDetailedOutputFormats;
+	}
+
+	public void setAvailableDashboardJobDetailedOutputFormats(List<String> availableDashboardJobDetailedOutputFormats) {
+		this.availableDashboardJobDetailedOutputFormats = availableDashboardJobDetailedOutputFormats;
+	}
 
     public void setRepository(RepositoryService repository) {
         this.repository = repository;

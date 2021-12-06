@@ -22,6 +22,8 @@ package com.jaspersoft.jasperserver.dto.adhoc.dataset;
 
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
+
 import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNull;
 
 /**
@@ -29,7 +31,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.checkNotNul
  * @version $Id: Id $
  * @since 08.07.2016
  */
-public class ClientDatasetFieldReference implements DeepCloneable<ClientDatasetFieldReference> {
+public class ClientDatasetFieldReference implements DeepCloneable<ClientDatasetFieldReference>, Serializable {
     String reference;
     String type;
 

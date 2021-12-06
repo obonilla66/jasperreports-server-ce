@@ -26,9 +26,13 @@ import org.testng.annotations.Test;
 import org.testng.Assert;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TeiidVirtualDataSourceQueryServiceImplTest {
@@ -91,6 +95,35 @@ public class TeiidVirtualDataSourceQueryServiceImplTest {
         assertEquals(importProperties.getProperty("importer.importKeys"), "true");
     }
 
+    @Test
+    public void releaseExpiredPools_teiidExpiredPool_release() throws Exception {
+        final String key = "key";
+        final int poolTimeout = 10;
+        final long now = System.currentTimeMillis();
+
+        teiidVirtualDataSourceQueryServiceImpl.setPoolTimeoutInMinute(poolTimeout);
+        TeiidVirtualDataSourceQueryServiceImpl.PooledVirtualSchemaEntry entry =
+                spy(teiidVirtualDataSourceQueryServiceImpl.new PooledVirtualSchemaEntry(key, Collections.emptySet()));
+        teiidVirtualDataSourceQueryServiceImpl.getDataSourceCache().put("key", entry, now);
+        teiidVirtualDataSourceQueryServiceImpl.releaseExpiredPools(now + TimeUnit.MINUTES.toMillis(poolTimeout + 1));
+
+        verify(entry).release();
+    }
+
+    @Test
+    public void releaseExpiredPools_teiidActivePool_nothing() throws Exception {
+        final String key = "key";
+        final int poolTimeout = 10;
+        final long now = System.currentTimeMillis();
+
+        teiidVirtualDataSourceQueryServiceImpl.setPoolTimeoutInMinute(poolTimeout);
+        TeiidVirtualDataSourceQueryServiceImpl.PooledVirtualSchemaEntry entry =
+                spy(teiidVirtualDataSourceQueryServiceImpl.new PooledVirtualSchemaEntry(key, Collections.emptySet()));
+        teiidVirtualDataSourceQueryServiceImpl.getDataSourceCache().put("key", entry, now);
+        teiidVirtualDataSourceQueryServiceImpl.releaseExpiredPools(now);
+
+        verify(entry, times(0)).release();
+    }
 
     public Map<String, Map<String, String>> getImportPropertyMap() {
         Map<String, Map<String, String>> importPropertyMap = new HashMap<>();

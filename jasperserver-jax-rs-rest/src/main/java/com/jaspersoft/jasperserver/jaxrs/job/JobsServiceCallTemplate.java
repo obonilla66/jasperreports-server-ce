@@ -25,11 +25,13 @@ import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.api.JSValidationException;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.ReportJobNotFoundException;
 import com.jaspersoft.jasperserver.api.engine.scheduling.service.TriggerTypeMismatchException;
+import com.jaspersoft.jasperserver.api.metadata.common.service.JSResourceVersionNotMatchException;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceCallTemplate;
 import com.jaspersoft.jasperserver.remote.common.RemoteServiceInTemplateCaller;
 import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.remote.exception.ResourceNotFoundException;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
+import com.jaspersoft.jasperserver.remote.exception.VersionNotMatchException;
 import com.jaspersoft.jasperserver.remote.services.JobsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,6 +68,8 @@ public class JobsServiceCallTemplate implements RemoteServiceCallTemplate<JobsSe
             entity = new ErrorDescriptor().setErrorCode("access.denied").setMessage(e.getMessage());
         } catch (JSValidationException e) {
             entity = e.getErrors();
+        } catch (JSResourceVersionNotMatchException e) {
+            throw new VersionNotMatchException();
         } catch (JSExceptionWrapper e) {
             throw e;
         } catch (JSException e) {

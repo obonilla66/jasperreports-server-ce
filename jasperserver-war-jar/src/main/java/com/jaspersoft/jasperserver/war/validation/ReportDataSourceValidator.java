@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.CustomR
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceDefinition;
 import com.jaspersoft.jasperserver.api.engine.jasperreports.util.CustomDataSourceValidator;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
+import com.jaspersoft.jasperserver.api.metadata.common.service.impl.RepositorySecurityChecker;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.*;
 import com.jaspersoft.jasperserver.core.util.validators.ValidationUtil;
 import com.jaspersoft.jasperserver.war.common.JasperServerConstImpl;
@@ -44,7 +45,11 @@ public class ReportDataSourceValidator implements Validator {
     public static final String DATASOURCE_AWS = "aws";
     public static final String DATASOURCE_MONGO = "MongoDbDataSource";
     public static final String DATASOURCE_CUSTOM = "Custom Data Source";
+		private RepositorySecurityChecker securityChecker;
 
+		public void setSecurityChecker(RepositorySecurityChecker securityChecker) {
+			this.securityChecker = securityChecker;
+		}
     public CustomReportDataSourceServiceFactory getCustomDataSourceFactory() {
 		return customDataSourceFactory;
 	}
@@ -233,7 +238,8 @@ public class ReportDataSourceValidator implements Validator {
     public void validateDataSourceExists(ReportDataSourceWrapper wrapper, Errors errors) {
         if (wrapper.getSource() != null && wrapper.getSource().equals(JasperServerConstImpl.getFieldChoiceRepo())
                 && (wrapper.getSelectedUri() == null || wrapper.getSelectedUri().trim().length() == 0 ||
-                    !repository.resourceExists(null, wrapper.getSelectedUri()))) {
+                    !repository.resourceExists(null, wrapper.getSelectedUri()) ||
+									!this.securityChecker.isResourceReadable(wrapper.getSelectedUri()))) {
             errors.rejectValue("selectedUri", "ReportDataSourceValidator.error.no");
         } else if (wrapper.getSource() != null && wrapper.getSource().equals(JasperServerConstImpl.getFieldChoiceLocal())) {
             if (wrapper.getReportDataSource() == null || wrapper.getType() == null

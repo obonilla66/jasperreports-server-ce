@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Resource;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.ResourceLookupImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
@@ -75,14 +76,16 @@ public class LookupResourceConverterTest {
     public void toServer_notSupported() {
         IllegalStateException exception = null;
         try {
-            converter.toServer(new ClientResourceLookup(), null);
+            converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                    , new ClientResourceLookup(), null);
         } catch (IllegalStateException ex) {
             exception = ex;
         }
         assertNotNull(exception);
         exception = null;
         try {
-            converter.toServer(new ClientResourceLookup(), new ResourceLookupImpl(), null);
+            converter.toServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                    , new ClientResourceLookup(), new ResourceLookupImpl(), null);
         } catch (IllegalStateException ex) {
             exception = ex;
         }

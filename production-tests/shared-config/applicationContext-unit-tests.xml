@@ -101,6 +101,12 @@ http://www.springframework.org/schema/context http://www.springframework.org/sch
     <property name="password" value="${metadata.jdbc.password}"/>
   </bean>
 
+    <bean id="auditDataSource" class="com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl.BasicDataSourceWrapper"  destroy-method="close">
+        <property name="driverClassName" value="${audit.jdbc.driverClassName}"/>
+        <property name="url" value="${audit.jdbc.url}"/>
+        <property name="username" value="${audit.jdbc.username}"/>
+        <property name="password" value="${audit.jdbc.password}"/>
+    </bean>
 
   <!-- non-standard access to Hibernate (we usually go to the repo manager) -->
   <bean id="jasperServerDao" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateDaoImpl">

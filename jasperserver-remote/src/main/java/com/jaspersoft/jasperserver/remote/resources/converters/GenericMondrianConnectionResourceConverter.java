@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
 import com.jaspersoft.jasperserver.api.metadata.olap.domain.MondrianConnection;
@@ -51,10 +52,10 @@ public class GenericMondrianConnectionResourceConverter
     }
 
     @Override
-    protected MondrianConnectionServerSubType resourceSpecificFieldsToServer(MondrianConnectionClientSubType clientObject, MondrianConnectionServerSubType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
+    protected MondrianConnectionServerSubType resourceSpecificFieldsToServer(ExecutionContext ctx, MondrianConnectionClientSubType clientObject, MondrianConnectionServerSubType resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException, MandatoryParameterNotFoundException {
         resultToUpdate.setSchema(resourceReferenceConverterProvider.getConverterForType(ClientReferenceableFile.class)
                 .addReferenceRestriction(new ResourceReferenceConverter.FileTypeRestriction(ClientFile.FileType.olapMondrianSchema))
-                .toServer(clientObject.getSchema(), resultToUpdate.getSchema(), options));
+                .toServer(ctx, clientObject.getSchema(), resultToUpdate.getSchema(), options));
         return resultToUpdate;
     }
 

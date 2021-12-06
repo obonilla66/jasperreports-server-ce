@@ -93,8 +93,9 @@ public class FullDataCreateTestNG extends BaseServiceSetupTestNG {
         addUserAuthorityServiceTestResources();
         addOlapConnectionResources();
         addInteractiveReportResources();
-
+        
         addDefaultDomainWhitelist();
+        addAuditDBProfileAttribute();
     }
 
 

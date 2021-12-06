@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.Query;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.util.ToClientConversionOptions;
@@ -39,7 +40,7 @@ import java.util.List;
 public class QueryResourceConverter extends DataSourceHolderResourceConverter<Query, ClientQuery> {
 
     @Override
-    protected Query resourceSpecificFieldsToServer(ClientQuery clientObject, Query resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
+    protected Query resourceSpecificFieldsToServer(ExecutionContext ctx, ClientQuery clientObject, Query resultToUpdate, List<Exception> exceptions, ToServerConversionOptions options) throws IllegalParameterValueException {
         resultToUpdate.setSql(clientObject.getValue());
         resultToUpdate.setLanguage(clientObject.getLanguage());
         return resultToUpdate;

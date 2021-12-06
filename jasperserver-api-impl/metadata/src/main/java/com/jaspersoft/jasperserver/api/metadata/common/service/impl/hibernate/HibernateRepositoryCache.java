@@ -295,18 +295,18 @@ public class HibernateRepositoryCache extends HibernateDaoImpl implements Reposi
 	}
 
 	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
-	public void clearCache(final String uri, final RepositoryCacheableItem cacheableItem) {
+	public void clearCache(ExecutionContext ctx, final String uri, final RepositoryCacheableItem cacheableItem) {
 		if (isCachingOn()) {
 			executeWriteCallback(new DaoCallback() {
 				public Object execute() {
-					removeCached(uri, cacheableItem);
+					removeCached(ctx, uri, cacheableItem);
 					return null;
 				}
 			}, false);
 		}
 	}
 
-	protected void removeCached(String uri, RepositoryCacheableItem cacheableItem) {
+	protected void removeCached(ExecutionContext ctx, String uri, RepositoryCacheableItem cacheableItem) {
 		if (log.isDebugEnabled()) {
 			log.debug("Clearing cache " + cacheableItem.getCacheName() + " for resource " + uri);
 		}

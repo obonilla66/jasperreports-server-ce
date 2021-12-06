@@ -23,6 +23,7 @@ package com.jaspersoft.jasperserver.dto.adhoc.query.group.axis;
 import com.jaspersoft.jasperserver.dto.adhoc.query.field.ClientQueryGroup;
 import com.jaspersoft.jasperserver.dto.common.DeepCloneable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +34,7 @@ import static com.jaspersoft.jasperserver.dto.utils.ValueObjectUtils.copyOf;
 /**
  * @author Andriy Godovanets
  */
-public class ClientBaseAxis<T extends ClientQueryGroup> implements ClientAxis<T>, DeepCloneable<ClientBaseAxis<T>> {
+public class ClientBaseAxis<T extends ClientQueryGroup> implements ClientAxis<T>, DeepCloneable<ClientBaseAxis<T>>, Serializable {
     private List<T> items;
 
     protected ClientBaseAxis() {

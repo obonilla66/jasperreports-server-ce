@@ -20,6 +20,7 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.VirtualReportDataSource;
@@ -85,7 +86,8 @@ public class VirtualDataSourceResourceConverterTest {
         reference.setUri(expectedUri2);
         subDataSourceReferences.add(reference);
         clientObject.setSubDataSources(subDataSourceReferences);
-        final VirtualReportDataSource result = converter.resourceSpecificFieldsToServer(clientObject, serverObject, new ArrayList<Exception>(), null);
+        final VirtualReportDataSource result = converter.resourceSpecificFieldsToServer(    ExecutionContextImpl.getRuntimeExecutionContext()
+                , clientObject, serverObject, new ArrayList<Exception>(), null);
         assertSame(result, serverObject);
         final Map<String,ResourceReference> dataSourceUriMap = result.getDataSourceUriMap();
         assertNotNull(dataSourceUriMap);

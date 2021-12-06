@@ -93,6 +93,8 @@ public class JdbcQueryExecutorTest {
                         new ResourceSingleElement().setName("column2Name").setType("integer")
                 ))));
         verify(sqlQueryValidator).validate(query, connection);
+        // verify set max row is used
+        verify(statement).setMaxRows(1);
         verify(statement).close();
         verify(statement, never()).executeQuery(query);
 

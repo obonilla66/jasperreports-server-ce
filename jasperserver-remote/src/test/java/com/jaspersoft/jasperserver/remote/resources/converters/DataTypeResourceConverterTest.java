@@ -20,6 +20,8 @@
  */
 package com.jaspersoft.jasperserver.remote.resources.converters;
 
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.DataType;
 import com.jaspersoft.jasperserver.api.metadata.common.domain.client.DataTypeImpl;
 import com.jaspersoft.jasperserver.dto.common.ClientTypeUtility;
@@ -55,6 +57,7 @@ public class DataTypeResourceConverterTest {
     private DataConverterService dataConverterService;
 
     private List<Exception> exceptions = new ArrayList<Exception>();
+    private ExecutionContext ctx  = ExecutionContextImpl.getRuntimeExecutionContext();
 
     @BeforeMethod
     public void initMocks(){
@@ -81,7 +84,7 @@ public class DataTypeResourceConverterTest {
         clientObject.setStrictMax(expectedStrictMax);
         clientObject.setStrictMin(expectedStrictMin);
         clientObject.setMaxLength(expectedMaxLength);
-        final DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        final DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getRegularExpr(), expectedPattern);
         assertEquals(result.isStrictMax(), false);
@@ -104,7 +107,7 @@ public class DataTypeResourceConverterTest {
         clientObject.setStrictMax(expectedStrictMax);
         clientObject.setStrictMin(expectedStrictMin);
         clientObject.setMaxLength(expectedMaxLength);
-        final DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        final DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getRegularExpr(), null);
         assertEquals(result.isStrictMax(), expectedStrictMax.booleanValue());
@@ -126,7 +129,7 @@ public class DataTypeResourceConverterTest {
         clientObject.setStrictMax(expectedStrictMax);
         clientObject.setStrictMin(expectedStrictMin);
         clientObject.setMaxLength(expectedMaxLength);
-        final DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        final DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getRegularExpr(), null);
         assertEquals(result.isStrictMax(), expectedStrictMax.booleanValue());
@@ -149,7 +152,7 @@ public class DataTypeResourceConverterTest {
         clientObject.setStrictMax(expectedStrictMax);
         clientObject.setStrictMin(expectedStrictMin);
         clientObject.setMaxLength(expectedMaxLength);
-        final DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        final DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getRegularExpr(), null);
         assertEquals(result.isStrictMax(), expectedStrictMax.booleanValue());
@@ -172,7 +175,7 @@ public class DataTypeResourceConverterTest {
         clientObject.setStrictMax(expectedStrictMax);
         clientObject.setStrictMin(expectedStrictMin);
         clientObject.setMaxLength(expectedMaxLength);
-        final DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        final DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getRegularExpr(), null);
         assertEquals(result.isStrictMax(), expectedStrictMax.booleanValue());
@@ -187,27 +190,27 @@ public class DataTypeResourceConverterTest {
         DataType expectedServerObject = new DataTypeImpl();
         // ignore by default
         clientObject.setType(null);
-        DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertEquals(result.getDataTypeType(), 0);
         // number
         clientObject.setType(ClientDataType.TypeOfDataType.number);
-        result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertEquals(result.getDataTypeType(), DataType.TYPE_NUMBER);
         // text
         clientObject.setType(ClientDataType.TypeOfDataType.text);
-        result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertEquals(result.getDataTypeType(), DataType.TYPE_TEXT);
         // date
         clientObject.setType(ClientDataType.TypeOfDataType.date);
-        result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertEquals(result.getDataTypeType(), DataType.TYPE_DATE);
         // datetime
         clientObject.setType(ClientDataType.TypeOfDataType.datetime);
-        result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertEquals(result.getDataTypeType(), DataType.TYPE_DATE_TIME);
         // time
         clientObject.setType(ClientDataType.TypeOfDataType.time);
-        result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertEquals(result.getDataTypeType(), DataType.TYPE_TIME);
     }
 
@@ -228,14 +231,14 @@ public class DataTypeResourceConverterTest {
         when(dataConverterService.convertSingleValue(minValueToConvert, expectedServerObject)).thenReturn(expectedMinValue);
         when(dataConverterService.convertSingleValue(invalidMaxValue,expectedServerObject)).thenThrow(new InputControlValidationException(null, null, null, null));
         when(dataConverterService.convertSingleValue(invalidMinValue,expectedServerObject)).thenThrow(new InputControlValidationException(null, null, null, null));
-        final DataType result = converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+        final DataType result = converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         assertSame(result, expectedServerObject);
         assertEquals(result.getMaxValue(), expectedMaxValue);
         assertEquals(result.getMinValue(), expectedMinValue);
         IllegalParameterValueException exception = null;
         clientObject.setMaxValue(invalidMaxValue);
         try{
-            converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+            converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         } catch (IllegalParameterValueException ex){
             exception = ex;
         }
@@ -244,7 +247,7 @@ public class DataTypeResourceConverterTest {
         clientObject.setMaxValue(null);
         clientObject.setMaxValue(invalidMinValue);
         try{
-            converter.resourceSpecificFieldsToServer(clientObject, expectedServerObject, exceptions, null);
+            converter.resourceSpecificFieldsToServer(ctx, clientObject, expectedServerObject, exceptions, null);
         } catch (IllegalParameterValueException ex){
             exception = ex;
         }

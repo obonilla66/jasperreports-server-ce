@@ -28,7 +28,7 @@ Usage:
 
     <t:insertTemplate template="/WEB-INF/jsp/templates/saveValues.jsp">
     </t:insertTemplate>
-    
+
 --%>
 
 <%@ page import="com.jaspersoft.jasperserver.api.JSException" %>
@@ -44,14 +44,14 @@ Usage:
 
 <t:insertTemplate template="/WEB-INF/jsp/templates/container.jsp">
     <t:putAttribute name="containerClass">panel dialog saveValues overlay moveable centered_horz centered_vert ${containerClass}</t:putAttribute>
-    <t:putAttribute name="headerClass" value="mover"/>    
+    <t:putAttribute name="headerClass" value="mover"/>
     <t:putAttribute name="containerID" value="saveValues" />
     <t:putAttribute name="containerTitle"><spring:message code="dialog.saveValues.title"/></t:putAttribute>
     <t:putAttribute name="bodyContent">
 
             <label class="control input text" accesskey="o" for="savedValuesName" title="<spring:message code="dialog.file.name.title" javaScriptEscape="true"/>">
                 <span class="wrap">
-                    <spring:message code='dialog.saveValues.nameForSavedValues' javaScriptEscape="true"/> (<spring:message code='required.field' javaScriptEscape="true"/>):
+                    <spring:message code='dialog.saveValues.nameForSavedValues' javaScriptEscape="true"/>
                 </span>
                 <input class="" id="savedValuesName" type="text" value=""/>
                 <span class="message warning"></span>

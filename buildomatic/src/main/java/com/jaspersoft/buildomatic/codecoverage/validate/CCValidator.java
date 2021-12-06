@@ -50,7 +50,7 @@ public class CCValidator {
 		newInstRatio =	newInstRatio > 0 ? new BigDecimal(newInstRatio, new MathContext(2, RoundingMode.DOWN)).doubleValue() : 0.0;
 		newBranchRatio = newBranchRatio > 0 ? new BigDecimal(newBranchRatio, new MathContext(2, RoundingMode.DOWN)).doubleValue() : 0.0;
 		
-		if (bean.getInstructionCoveredRatio() > newInstRatio || bean.getBranchCoveredRatio() > newBranchRatio) {
+		if ((newInstRatio < 0.8 && bean.getInstructionCoveredRatio() > newInstRatio) || (newInstRatio < 0.8 && bean.getBranchCoveredRatio() > newBranchRatio)) {
 			
 			if (bean.getInstructionCoveredRatio() > newInstRatio) {
 				errorList.append("Rule violated for bundle "

@@ -1,5 +1,6 @@
 package com.jaspersoft.jasperserver.remote.connection;
 
+import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.ExceptionOutputManagerImpl;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandlerImpl;
@@ -66,7 +67,7 @@ public class FtpContextStrategyTest {
         connectionDescriptionProviders.put("ABC", provider);
         ftpContextStrategy.setConnectionDescriptionProviders(connectionDescriptionProviders);
         try {
-            ftpContextStrategy.createContext(ftpConnection, data);
+            ftpContextStrategy.createContext(ExecutionContextImpl.getRuntimeExecutionContext(), ftpConnection, data);
         } catch (ContextCreationFailedException ex) {
             String[] parameters = ex.getErrorDescriptor().getParameters();
             boolean isPasswordNull = false;
@@ -89,5 +90,4 @@ public class FtpContextStrategyTest {
         Assert.assertNull(ftpConnection.getPassword());
         Assert.assertNull(ftpConnection.getSshPassphrase());
     }
-
 }

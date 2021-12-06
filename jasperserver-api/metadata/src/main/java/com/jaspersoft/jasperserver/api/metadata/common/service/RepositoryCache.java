@@ -65,12 +65,13 @@ public interface RepositoryCache {
 	
 	/**
 	 * Deletes the cached items for a repository resource.
-	 * 
-	 * @param uri the repository path of the resource for which the cached item 
+	 *
+	 * @param ctx
+	 * @param uri the repository path of the resource for which the cached item
 	 * should be deleted
 	 * @param cacheableItem the cache instance
 	 */
-	void clearCache(String uri, RepositoryCacheableItem cacheableItem);
+	void clearCache(ExecutionContext ctx, String uri, RepositoryCacheableItem cacheableItem);
 	
 	/**
 	 * Deletes cached items for all resources and a specified cache.
