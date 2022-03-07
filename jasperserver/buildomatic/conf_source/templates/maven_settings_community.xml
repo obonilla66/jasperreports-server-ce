@@ -42,13 +42,23 @@
         <test.hibernate.jdbc.properties>${currentConf}/js.jdbc.properties</test.hibernate.jdbc.properties>
         <master.properties>${masterPropsSource}</master.properties>
         <!-- workaround src w/o tibco drivers -->
-        <tibco.driver.available>false</tibco.driver.available>
-        <SKIP_TEST_ARG>skipTests</SKIP_TEST_ARG>
-        <disable.fafj>false</disable.fafj>
+        <tibco.driver.available>${tibco.driver.available}</tibco.driver.available>
+        <SKIP_TEST_ARG>${SKIP_TEST_ARG}</SKIP_TEST_ARG>
+        <disable.fafj>${disable.fafj}</disable.fafj>
         <buildArtifactVersionName>${buildArtifactVersionName}</buildArtifactVersionName>
         <fafBuildArtifactVersionName>${fafBuildArtifactVersionName}</fafBuildArtifactVersionName>
       </properties>
       <repositories>
+        <repository>
+          <id>Central Repository</id>
+          <url>https://repo1.maven.org/maven2/</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+        </repository>
         <repository>
           <id>JBoss</id>
           <url>https://repository.jboss.org/nexus/content/groups/public</url>
@@ -61,7 +71,7 @@
         </repository>
         <repository>
           <id>jaspersoft-external-addons</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/jrs-ce-addons-releases</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/jrs-ce-addons-releases</url>
           <snapshots>
             <enabled>false</enabled>
           </snapshots>
@@ -71,7 +81,7 @@
         </repository>
         <repository>
           <id>jaspersoft-external-addons-snapshots</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/jrs-ce-addons-snapshots</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/jrs-ce-addons-snapshots</url>
           <snapshots>
             <enabled>true</enabled>
             <updatePolicy>always</updatePolicy>
@@ -82,7 +92,7 @@
         </repository>
         <repository>
           <id>jaspersoft-js-modules</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/jrs-ce-js-modules</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/jrs-ce-js-modules</url>
           <snapshots>
             <enabled>true</enabled>
             <updatePolicy>always</updatePolicy>
@@ -93,7 +103,7 @@
         </repository>
         <repository>
           <id>jaspersoft-external-third-party</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
@@ -103,7 +113,7 @@
         </repository>
         <repository>
           <id>jasperreports-snapshots</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/jr-ce-snapshots/</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/jr-ce-snapshots/</url>
           <snapshots>
             <enabled>true</enabled>
             <updatePolicy>always</updatePolicy>
@@ -114,7 +124,7 @@
         </repository>
         <repository>
           <id>jasperreports-releases</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/jr-ce-releases</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/jr-ce-releases</url>
           <snapshots>
             <enabled>false</enabled>
           </snapshots>
@@ -136,30 +146,10 @@
           </snapshots>
         </repository>
         <repository>
-          <id>Repo1 Maven</id>
-          <url>http://repo1.maven.org/maven2/</url>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-        </repository>
-        <repository>
           <id>SpringSource</id>
-          <url>http://repo.springsource.org/release</url>
+          <url>https://repo.springsource.org/release</url>
           <snapshots>
             <enabled>true</enabled>
-          </snapshots>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-        </repository>
-        <repository>
-          <id>Google</id>
-          <url>http://z-os.googlecode.com/svn/release-repository/</url>
-          <snapshots>
-            <enabled>false</enabled>
           </snapshots>
           <releases>
             <enabled>true</enabled>
@@ -167,7 +157,7 @@
         </repository>
         <repository>
           <id>jaspersoft-3rd-party</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/jaspersoft-3rd-party</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/jaspersoft-3rd-party</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
@@ -183,7 +173,7 @@
       <pluginRepositories>
         <pluginRepository>
           <id>jaspersoft-external-third-party</id>
-          <url>http://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts</url>
+          <url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts</url>
           <snapshots>
             <enabled>false</enabled>
           </snapshots>
