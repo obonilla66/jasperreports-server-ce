@@ -34,7 +34,7 @@ So before starting backend build we can publish our frontend distribution to the
 so backend build will pick it up.
 
 In order to do this 
-- set `BUILD_ARTIFACT_VERSION_NAME=master` env variable (see [Parametrization](../jasperserver-ui/ce/jrs-ui/README.md#parametrization)). 
+- set `BUILD_ARTIFACT_VERSION_NAME=master` env variable. It should be configured in [../jasperserver-ui/ce/jrs-ui/.env.local](../jasperserver-ui/ce/jrs-ui/.env.local) file (you need to create this file) to override default parameters defined in [../jasperserver-ui/ce/jrs-ui/.env](../jasperserver-ui/ce/jrs-ui/.env) file. For more information see [Parametrization](../jasperserver-ui/ce/jrs-ui/README.md#parametrization). 
 > You can set this variable to any other value, but you will need additionally to configure the server to use it instead.
 > Otherwise it will not be able to find UI artifacts   
 - navigate to your jrs-ui folder [../jasperserver-ui/ce/jrs-ui](../jasperserver-ui/ce/jrs-ui)
