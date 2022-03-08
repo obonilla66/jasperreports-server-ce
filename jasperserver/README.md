@@ -9,15 +9,25 @@
 
 ## Set up
 ### Build UI artifacts
-First you need to build UI and Deploy (described in the section below) it to the local maven repository. To build UI please follow this guide [../jasperserver-ui/ce/README.md](../jasperserver-ui/ce/README.md). 
+First you need to build UI and Deploy (described in the section below) it to the local maven repository. 
 
-It is important to prepare the following artifacts during the UI build process: 
-- JavaScript (`yarn run build` in **ce** folder)
-- themes and bundles (`yarn run overlay` in **jrs-ui** folder)
+#### Set up UI build environment
+To start you should set up UI build environment as described in [../jasperserver-ui/ce/README.md#set-up](../jasperserver-ui/ce/README.md#set-up) including `yarn install` command.
 
-If themes artifacts are not prepared the UI layout could be broken.
+#### Build UI artifacts
+To build UI artifacts run the following commands:
 
-### Deploy UI artifacts to the local maven repository 
+in [../jasperserver-ui/ce](../jasperserver-ui/ce) folder:
+```shell script
+yarn run clean
+yarn run build
+```
+in [../jasperserver-ui/ce/jrs-ui](../jasperserver-ui/ce/jrs-ui) folder:
+```shell script
+yarn run overlay
+```
+
+#### Deploy UI artifacts to the local maven repository 
 Backend build process expects frontend distribution to be deployed to the maven repository.
 
 So before starting backend build we can publish our frontend distribution to the local maven repository,
