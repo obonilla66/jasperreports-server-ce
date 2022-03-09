@@ -58,7 +58,7 @@ rename a file to `default_master.propeties`.
   - `dbType`, `dbHost`, `dbUsername`, `dbPassword` - database type, host, username and password related properties; 
   - `maven.build.type` - set it to `community` value. Build uses this property to check what maven settings should be used.
   - `fafBuildArtifactVersionName` - set it to `master`. This property checks what UI artifact to use. If you have specified a different value for the `BUILD_ARTIFACT_VERSION_NAME` env variable - you should use it.
-  - `buildArtifactVersionName=master` - set it to `master`. The value of this property should be the same as the value for `fafBuildArtifactVersionName`.
+  - `buildArtifactVersionName` - set it to `master`. The value of this property should be the same as the value for `fafBuildArtifactVersionName`.
   
 Configuration example:
 ```properties
