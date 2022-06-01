@@ -1309,6 +1309,7 @@
         <if>
             <available classname="org.codehaus.groovy.ant.Groovy"/>
             <then>
+                <echo>Found Groovy in classpath</echo>
                 <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy"/>
             </then>
             <elseif>
@@ -1324,15 +1325,36 @@
                 </then>
             </elseif>
             <else>
-                <echo>Didn't find groovy JAR, downloading it</echo>
+                <var name="groovy.version" value="3.0.7"/>
+                <echo>Didn't find groovy JAR, downloading groovy ${groovy.version}</echo>
                 <runmaven dir="${basedir}">
                     <arg value="dependency:copy"/>
-                    <arg value="-Dartifact=org.codehaus.groovy:groovy-all:3.0.7:jar"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy:${groovy.version}:jar"/>
+                    <arg value="-DoutputDirectory=${ant.home}/lib"/>
+                </runmaven>
+                <runmaven dir="${basedir}">
+                    <arg value="dependency:copy"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy-ant:${groovy.version}:jar"/>
+                    <arg value="-DoutputDirectory=${ant.home}/lib"/>
+                </runmaven>
+                <runmaven dir="${basedir}">
+                    <arg value="dependency:copy"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy-console:${groovy.version}:jar"/>
+                    <arg value="-DoutputDirectory=${ant.home}/lib"/>
+                </runmaven>
+                <runmaven dir="${basedir}">
+                    <arg value="dependency:copy"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy-nio:${groovy.version}:jar"/>
+                    <arg value="-DoutputDirectory=${ant.home}/lib"/>
+                </runmaven>
+                <runmaven dir="${basedir}">
+                    <arg value="dependency:copy"/>
+                    <arg value="-Dartifact=org.codehaus.groovy:groovy-astbuilder:${groovy.version}:jar"/>
                     <arg value="-DoutputDirectory=${ant.home}/lib"/>
                 </runmaven>
                 <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy">
                     <classpath>
-                        <fileset dir="${ant.home}/lib" includes="groovy-*.jar" />
+                        <fileset dir="${ant.home}/lib" includes="groovy-*.jar"/>
                     </classpath>
                 </taskdef>
             </else>

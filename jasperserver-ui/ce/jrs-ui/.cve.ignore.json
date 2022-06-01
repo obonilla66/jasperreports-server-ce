@@ -1,7 +1,8 @@
 {
   "ignoreList": [
     "lodash",
-    "jquery-ui"
+    "jquery-ui",
+    "moment"
   ],
   "ignoreDevList": [
     "lodash",

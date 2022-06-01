@@ -48,7 +48,16 @@ public class UserAuthorityServiceMock implements UserAuthorityService {
         return users.get(s);
     }
 
-    
+    @Override
+    public List<User> getUsersWithProfileAttributes(ExecutionContext context, FilterCriteria filterCriteria) {
+        return null;
+    }
+
+    @Override
+    public List<User> getTenantUsersWithProfileAttributes(ExecutionContext context, Set<?> tenantIds, String name) {
+        return null;
+    }
+
     public void putUser(ExecutionContext executionContext, User user) {
         users.put(user.getUsername(), user);
     }

@@ -34,13 +34,16 @@ import com.jaspersoft.jasperserver.api.metadata.common.service.impl.HibernateDao
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.util.IlikeEscapeAwareExpression;
 import com.jaspersoft.jasperserver.api.metadata.common.util.DatabaseCharactersEscapeResolver;
 import com.jaspersoft.jasperserver.api.metadata.tenant.service.TenantPersistenceResolver;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.ProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.client.MetadataUserDetails;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoProfileAttribute;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoRole;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoTenant;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser;
+import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeLevel;
 import com.jaspersoft.jasperserver.api.metadata.user.service.ProfileAttributeService;
 import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.api.metadata.view.domain.FilterCriteria;
@@ -51,15 +54,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Order;
 import org.springframework.context.MessageSource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.orm.hibernate5.HibernateCallback;
@@ -75,17 +79,23 @@ import org.springframework.security.web.authentication.switchuser.SwitchUserGran
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Date;
 import java.util.Map;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.*;
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.CREATE_ROLE;
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.CREATE_USER;
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.DELETE_ROLE;
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.DELETE_USER;
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.UPDATE_ROLE;
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.UPDATE_USER;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
 
 /**
@@ -360,18 +370,17 @@ public class UserAuthorityServiceImpl extends HibernateDaoImpl implements UserDe
     public List<User> getUsers(ExecutionContext context, FilterCriteria filterCriteria) {
         // make User DTOs
         List results = getHibernateTemplate().loadAll(getPersistentUserClass());
-        List userDTOs = null;
+        return convertUserListToDtoList(results);
+    }
 
-        if (results != null) {
-            userDTOs = new ArrayList(results.size());
-            Iterator it = results.iterator();
-            while (it.hasNext()) {
-                RepoUser u = (RepoUser) it.next();
-                User newUser = (User) u.toClient(getObjectMappingFactory());
-                userDTOs.add(newUser);
-            }
-        }
-        return userDTOs;
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<User> getUsersWithProfileAttributes(ExecutionContext context, FilterCriteria filterCriteria) {
+        // make User DTOs
+        List<RepoUser> results = getHibernateTemplate().execute(session -> {
+            Criteria criteria = includeProfileAttributes(session.createCriteria(RepoUser.class));
+            return criteria.list();
+        });
+        return convertUserListToDtoListWithAttributes(results);
     }
 
     /**
@@ -1288,6 +1297,17 @@ public class UserAuthorityServiceImpl extends HibernateDaoImpl implements UserDe
         return userDTOs;
     }
 
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<User> getTenantUsersWithProfileAttributes(ExecutionContext context, Set<?> tenantIds, String name) {
+        List<RepoUser> userList = getHibernateTemplate().execute(session -> {
+            Criteria criteria = createTenantUsersCriteria(session, tenantIds, name);
+            criteria = includeProfileAttributes(criteria);
+            return criteria.list();
+        });
+        return convertUserListToDtoListWithAttributes(userList);
+    }
+
     @Transactional(propagation = Propagation.REQUIRED)
     public List getTenantUsers(ExecutionContext context,
                                final Set tenantIds, final String name,
@@ -1410,6 +1430,10 @@ public class UserAuthorityServiceImpl extends HibernateDaoImpl implements UserDe
         return  createTenantUsersCriteria(session, tenantIds, name, true);
     }
 
+    private Criteria includeProfileAttributes(Criteria criteria) {
+        return criteria.setFetchMode("principalobjectclass", FetchMode.EAGER);
+    }
+
     private Criteria createTenantUsersCriteria(Session session, Set tenantIds, String name, boolean order) {
         Set internalTenantIds = null;
         if (tenantIds != null) {
@@ -1503,24 +1527,25 @@ public class UserAuthorityServiceImpl extends HibernateDaoImpl implements UserDe
         return criteria;
     }
 
-    private List convertUserListToDtoList(List userList) {
+    private List<User> convertUserListToDtoList(List<RepoUser> userList) {
+        if (userList == null) return null;
+        return userList.stream()
+                .map(repoUser -> (User) repoUser.toClient(getObjectMappingFactory()))
+                .collect(Collectors.toList());
+    }
 
-        List userDTOs = null;
-        if (userList != null) {
-
-            userDTOs = new ArrayList(userList.size());
-
-            Iterator it = userList.iterator();
-            while(it.hasNext()) {
-
-                RepoUser u = (RepoUser) it.next();
-
-                User newUser = (User) u.toClient(getObjectMappingFactory());
-                userDTOs.add(newUser);
+    private List<User> convertUserListToDtoListWithAttributes(List<RepoUser> userList) {
+        if (userList == null) return null;
+        return userList.stream().map(repoUser -> {
+            User user = (User) repoUser.toClient(getObjectMappingFactory());
+            if (repoUser.getProfileAttributes() != null) {
+                List<?> attributes = repoUser.getProfileAttributes().stream()
+                        .map(this::convertRepoProfileAttribute)
+                        .collect(Collectors.toList());
+                user.setAttributes(attributes);
             }
-        }
-
-        return userDTOs;
+            return user;
+        }).collect(Collectors.toList());
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -2034,5 +2059,12 @@ public class UserAuthorityServiceImpl extends HibernateDaoImpl implements UserDe
 
     public void setMessageSource(MessageSource messageSource) {
         this.messageSource = messageSource;
+    }
+
+    private ProfileAttribute convertRepoProfileAttribute(RepoProfileAttribute repoProfileAttribute) {
+        ProfileAttribute profileAttribute = (ProfileAttribute) repoProfileAttribute.toClient(getObjectMappingFactory());
+        profileAttribute.setGroup(profileAttributeService.getChangerName(profileAttribute.getAttrName()));
+        profileAttribute.setLevel(ProfileAttributeLevel.TARGET_ASSIGNED);
+        return profileAttribute;
     }
 }

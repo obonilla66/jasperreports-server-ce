@@ -54,10 +54,11 @@ import java.util.*;
  * @version $Id$
  */
 public class ResourceExporter extends BaseExporterModule implements ResourceExportHandler {
+	private static final Log log = LogFactory.getLog(ResourceExporter.class);
+
 	public static final String DIAGNOSTIC = "diagnostic";
 
 	private static final String FOLDER_RESOURCE_TYPES = "folder";
-	private static final Log log = LogFactory.getLog(ResourceExporter.class);
 
 	protected Set<String> uris = new HashSet<String>();
 	protected ResourceModuleConfiguration configuration;
@@ -124,6 +125,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	public void init(ExporterModuleContext moduleContext) {
 		super.init(moduleContext);
 		initProcess();
+		log.debug("Init resource exporter module");
 
 		String[] resourceTypes = getParameterValues(ImportExportServiceImpl.RESOURCE_TYPES);
 		if (resourceTypes != null) {
@@ -145,6 +147,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	public void process() {
+		log.debug("Export resources");
         mkdir(configuration.getResourcesDirName());
 
         for (String uri : uris) {
@@ -157,6 +160,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	private void exportDependencies() {
+		log.debug("Export dependencies");
 		while (!urisQueue.isEmpty()) {
 			QueuedUri queuedUri = urisQueue.pop();
 			try {
@@ -174,6 +178,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	private void handleResourceWithBrokenDependencies() {
+		log.debug("Handle resources with broken dependencies");
 		Set<String> brokenDependencies = new TreeSet<String>();
 		for (String uri : notAccessibleResources) {
 			checkBrokenResource(brokenDependencies, uri);
@@ -187,6 +192,9 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	private void checkBrokenResource(Set<String> brokenDependencies, String uri) {
+		if (log.isDebugEnabled()) {
+			log.debug("Check broken resource: " + uri);
+		}
 		Set<String> result = dependencies.get(uri);
 		if (result != null) {
 			for (String resourceUri : result) {
@@ -208,6 +216,10 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 		if (alreadyExported(uri) || exportFilter.excludeFolder(uri, exportParams)) {
 			return;
 		}
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("Process resource, uri: %s, entry: %s, ignore missing: %s",
+					uri, entry, ignoreMissing));
+		}
 
 		ResourceLookup resource = getResourceFromRepository(uri);
 		if (resource == null) {
@@ -223,6 +235,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 
                 message.append(", skipping from export");
 				commandOut.info(message.toString());
+				if (log.isDebugEnabled()) log.debug(message.toString());
 			} else {
 				if (exportFolder(folder)) {
 					if (entry) {
@@ -245,6 +258,9 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 
 	private ResourceLookup getResourceFromRepository(String uri) {
 		if (uri.equals(Folder.SEPARATOR)) return null;
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("get resource %s from the repository", uri));
+		}
 
 		PathUtils.SplittedPath splittedPath = PathUtils.splitPathToFolderAndName(uri);
 
@@ -271,7 +287,9 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 			return false;
 		}
 
-		commandOut.info("Exporting repository folder " + uri);
+		final String msg = "Exporting repository folder " + uri;
+		commandOut.info(msg);
+		log.debug(msg);
 
 		List<Folder> subFolders = null;
 		ResourceLookup[] resources = null;
@@ -340,16 +358,19 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	protected List getSubfolders(String uri) {
+		if (log.isDebugEnabled()) log.debug("Get sub folder for the uri: " + uri);
 		return configuration.getRepository().getSubFolders(executionContext, uri);
 	}
 
 	protected ResourceLookup[] getFolderResources(String uri) {
+		if (log.isDebugEnabled()) log.debug("Get folder resources for the uri: " + uri);
 		FilterCriteria filter = FilterCriteria.createFilter();
 		filter.addFilterElement(FilterCriteria.createParentFolderFilter(uri));
 		return configuration.getRepository().findResource(executionContext, filter);
 	}
 
 	protected void writeFolder(Folder folder, List subFolders, ResourceLookup[] resources) {
+		if (log.isDebugEnabled()) log.debug("Write folder: " + folder.getURIString());
 		FolderBean bean = createFolderBean(folder, subFolders, resources);
 
 		String outputFolder = mkdir(configuration.getResourcesDirName(), folder.getURIString());
@@ -395,6 +416,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 
 	protected void exportFolders(List subFolders) {
 		if (subFolders != null && !subFolders.isEmpty()) {
+			log.debug("Export folders");
 			for (Iterator it = subFolders.iterator(); it.hasNext();) {
 				Folder subFolder = (Folder) it.next();
 				exportFolder(subFolder);
@@ -404,6 +426,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 
 	protected ResourceLookup[] exportResources(ResourceLookup[] resources) {
 		if (resources == null || resources.length == 0) return resources;
+		log.debug("Starting to export resources");
 
 		List<ResourceLookup> result = new ArrayList<ResourceLookup>();
 		for (ResourceLookup resLookup : resources) {
@@ -434,7 +457,9 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 		if (alreadyExported(uri)) {
 			return;
 		}
-		commandOut.info("Exporting repository resource " + uri);
+		final String msg = "Exporting repository resource " + uri;
+		commandOut.info(msg);
+		log.debug(msg);
 
 		writeResource(resource);
 
@@ -452,6 +477,9 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	protected ResourceBean createResourceBean(Resource resource){
+		if (log.isDebugEnabled()) {
+			log.debug("Create resource bean: " + resource.getURIString());
+		}
 		ResourceBean bean = handleResource(resource);
 		if (exportPermissions) {
 			RepositoryObjectPermissionBean[] permissions = handlePermissions(resource);
@@ -463,6 +491,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 
 	// writing indexes for all parent folders to save labels and descriptions
 	protected void writeIndexesForAllParentFolders(String parentFolder) {
+		if (log.isDebugEnabled()) log.debug(String.format("Write indexes for all parent folders: %s", parentFolder));
 		while (parentFolder != null && !parentFolder.equals("") && !parentFolder.equals("/")) {
 			Folder fld = configuration.getRepository().getFolder(executionContext, parentFolder);
 
@@ -477,6 +506,9 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	public ResourceBean handleResource(Resource resource) {
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("Handle resource: %s", resource != null ? resource.getURIString() : null));
+		}
 		ResourceBean bean = (ResourceBean) configuration.getCastorBeanMappings().newObject(resource.getClass());
 
 		bean.setDiagnostic(hasParameter(DIAGNOSTIC));
@@ -523,6 +555,7 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	protected void handleExternalReferenceUri(String uri) {
+		if (log.isDebugEnabled()) log.debug("Handle external reference uri: " + uri);
 		addResourceToDependenciesMap(uri);
 		if (exportParams.hasParameter(skipDependentResource)) {
 			notAccessibleResources.add(uri);
@@ -552,6 +585,10 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	public String handleData(Resource resource, String dataProviderId) {
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("Get data for the resource: %s, data provider id: %s",
+					resource != null ? resource.getURIString() : null, dataProviderId));
+		}
 		ResourceDataProvider dataProvider = configuration.getResourceDataProvider(dataProviderId);
 
 		InputStream dataIn = dataProvider.getData(exportContext, resource);
@@ -565,6 +602,10 @@ public class ResourceExporter extends BaseExporterModule implements ResourceExpo
 	}
 
 	public void handleData(Resource resource, String fileName, InputStream dataIn) {
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("Handle data for the resource: %s, file name: %s",
+					resource != null ? resource.getURIString() : null, fileName));
+		}
 		if (dataIn != null) {
 			boolean closeInput = true;
 			try {

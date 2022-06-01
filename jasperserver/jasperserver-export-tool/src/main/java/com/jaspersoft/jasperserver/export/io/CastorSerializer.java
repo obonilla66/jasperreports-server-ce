@@ -76,15 +76,17 @@ public class CastorSerializer implements ObjectSerializer, InitializingBean {
 
 		if (castorMappings != null) {
 			try {
+				log.debug("Create castor mappings");
+
 				for (int i = 0; i < castorMappings.length; i++) {
 					Resource mappingRes = castorMappings[i];
+					if (log.isDebugEnabled()) {
+						log.debug(String.format("Load mapping: %s", mappingRes.getURL()));
+					}
 					castorMapping.loadMapping(mappingRes.getURL());
 				}
 				context.addMapping(castorMapping);
-			} catch (IOException e) {
-				log.error(e);
-				throw new JSExceptionWrapper(e);
-			} catch (MappingException e) {
+			} catch (IOException | MappingException e) {
 				log.error(e);
 				throw new JSExceptionWrapper(e);
 			}
@@ -106,10 +108,7 @@ public class CastorSerializer implements ObjectSerializer, InitializingBean {
             Marshaller marshaller = context.createMarshaller();
             marshaller.setWriter(writer);
             marshaller.marshal(object);
-		} catch (UnsupportedEncodingException e) {
-			log.error(e);
-			throw new JSExceptionWrapper(e);
-		} catch (XMLException e) {
+		} catch (UnsupportedEncodingException | XMLException e) {
 			log.error(e);
 			throw new JSExceptionWrapper(e);
 		}

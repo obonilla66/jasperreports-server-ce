@@ -151,12 +151,12 @@ const validatePaginatedValuesResponse = (response, controls) => {
                 document.dispatchEvent(event);
             },
 
-            _onViewModelSelectionChange: function(event, controlId, value, inCascade) {
+            _onViewModelSelectionChange: function(event, selectionChangedControlId, value, inCascade) {
                 const viewModel = this.getViewModel();
                 const controls = viewModel.getControls();
                 if (value && inCascade) {
                     const dfd = this.inputControlsReportViewerService.fetchInputControlsValuesOnControlSelectionChange({
-                        controlId,
+                        controlId: selectionChangedControlId,
                         value,
                         uri: this.dataUri,
                         structure: viewModel.structure,
@@ -165,8 +165,9 @@ const validatePaginatedValuesResponse = (response, controls) => {
                     }).then((response, selectionPerControl, paginationOptions) => {
                         const promises = paginationOptions.map((controlPaginationOptions) => {
                             const controlId = controlPaginationOptions.name;
+                            controls[controlId].paginatedValuesOptions = paginationOptions;
 
-                            return controls[controlId].fetch(this.dataUri, paginationOptions);
+                            return selectionChangedControlId !== controlId && controls[controlId].fetch(this.dataUri, paginationOptions);
                         });
 
                         return jQuery.when(...promises).then(() => {
@@ -174,7 +175,7 @@ const validatePaginatedValuesResponse = (response, controls) => {
                         });
                     }).then((selectionPerControl, response) => {
                         selectionPerControl = Object.assign({}, selectionPerControl, {
-                            [controlId]: value
+                            [selectionChangedControlId]: value
                         });
 
                         _.each(selectionPerControl, (values, id) => {
@@ -183,7 +184,7 @@ const validatePaginatedValuesResponse = (response, controls) => {
 
                         validatePaginatedValuesResponse(response, controls);
                     }).catch((xhr) => {
-                        const control = controls[controlId];
+                        const control = controls[selectionChangedControlId];
 
                         control.set({
                             values: control.selection
@@ -196,7 +197,7 @@ const validatePaginatedValuesResponse = (response, controls) => {
 
                     Controls.Utils.showLoadingDialogOn(dfd, null, true);
                 }else{
-                    controlId && this.viewModel.controls[controlId].set({'selection':value},true);
+                    selectionChangedControlId && this.viewModel.controls[selectionChangedControlId].set({'selection':value},true);
                 }
             },
 

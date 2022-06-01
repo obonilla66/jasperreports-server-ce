@@ -56,11 +56,12 @@ public class RepoUser implements User, IdedObject {
 	private Date previousPasswordChangeTime = null;
     private List attributes = null;
     private RepoTenant tenant = null;
-    protected Set<RepoReportThumbnail> thumbnails = null;
+	protected Set<RepoReportThumbnail> thumbnails = null;
+	private Set<RepoProfileAttribute> profileAttributes = null;
 
 	/**
 	 * @return
-	 * @hibernate.id type="long" column="id" generator-class="identity"
+	 * @hibernate.id type="long" column="id" generator-class="id entity"
 	 */
 	public long getId() {
 		return id;
@@ -407,4 +408,25 @@ public class RepoUser implements User, IdedObject {
     public void setThumbnails(Set<RepoReportThumbnail> thumbnails) {
         this.thumbnails = thumbnails;
     }
+
+	/**
+	 * @hibernate.set
+	 * 		name="profileAttributes" lazy="true" cascade="none"
+	 * 		where="principalobjectclass = 'com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoUser'
+	 *
+	 * @hibernate.key
+	 * 		column="principalobjectid"
+	 *
+	 * @hibernate.one-to-manu
+	 * 		class="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoProfileAttribute"
+	 *
+	 * @return Set
+	 */
+	public Set<RepoProfileAttribute> getProfileAttributes() {
+		return profileAttributes;
+	}
+
+	public void setProfileAttributes(Set<RepoProfileAttribute> profileAttributes) {
+		this.profileAttributes = profileAttributes;
+	}
 }

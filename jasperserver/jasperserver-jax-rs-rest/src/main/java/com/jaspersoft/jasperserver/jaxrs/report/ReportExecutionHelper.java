@@ -20,8 +20,13 @@
  */
 package com.jaspersoft.jasperserver.jaxrs.report;
 
+import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.remote.services.ReportOutputResource;
 import com.jaspersoft.jasperserver.remote.services.RunReportService;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.core.Response;
 
@@ -86,7 +91,18 @@ public class ReportExecutionHelper {
             responseBuilder = Response.ok(outputResource.getData(), contentType);
 
             if (!suppressContentDisposition && outputResource.getFileName() != null) {
-                responseBuilder.header("Content-Disposition", "attachment; filename=\"" + outputResource.getFileName() + "\"");
+            	try
+            	{
+                    responseBuilder.header(
+                    	"Content-Disposition", "attachment; filename=\"" 
+                    	+ URLEncoder.encode(outputResource.getFileName(), StandardCharsets.UTF_8.toString())
+                    	+ "\""
+                    	);
+            	}
+            	catch (UnsupportedEncodingException e)
+            	{
+            		throw new JSExceptionWrapper(e);
+            	}
             }
         }
 

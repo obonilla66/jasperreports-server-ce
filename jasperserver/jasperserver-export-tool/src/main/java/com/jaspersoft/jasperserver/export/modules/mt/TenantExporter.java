@@ -58,7 +58,7 @@ public class TenantExporter extends BaseExporterModule {
 			log.debug("Exporting tenants: " + exportTenants);
 		}
 		
-		tenantIdQueue = new LinkedList<String>();
+		tenantIdQueue = new LinkedList<>();
 	}
 
 	@Override
@@ -74,15 +74,18 @@ public class TenantExporter extends BaseExporterModule {
 		String rootTenantId = moduleConfiguration.getTenantExportConfiguration().getRootTenantId();
 		Tenant rootTenant = getTenantService().getTenant(executionContext, rootTenantId);
 		if (rootTenant == null) {
-			commandOut.info("Root tenant \"" + rootTenantId + "\" not found, skipping tenants");
+			final String msg = "Root tenant \"" + rootTenantId + "\" not found, skipping tenants";
+			commandOut.info(msg);
+			log.debug(msg);
 		} else {
 			processTenant(rootTenant);
 		}
 	}
 
 	protected void processTenant(Tenant tenant) {
-		commandOut.info("Exporting tenant " + tenant.getId()
-				+ " (" + tenant.getTenantUri() + ")");
+		final String msg = "Exporting tenant " + tenant.getId() + " (" + tenant.getTenantUri() + ")";
+		commandOut.info(msg);
+		log.debug(msg);
 
 		TenantBean tenantBean = new TenantBean();
 		tenantBean.copyFrom(tenant);
@@ -106,6 +109,9 @@ public class TenantExporter extends BaseExporterModule {
 	}
 
 	protected void addTenantIndexEntry(Tenant tenant) {
+		if (log.isDebugEnabled()) {
+			log.debug("Add index to the tenant: " + tenant.getId());
+		}
 		Element indexElement = getIndexElement();
 		Element tenantElement = indexElement.addElement(
 				moduleConfiguration.getTenantIndexElement());
@@ -121,6 +127,9 @@ public class TenantExporter extends BaseExporterModule {
 	}
 
 	private List<ProfileAttribute> getProfileAttributes(Tenant tenant) {
+		if (log.isDebugEnabled()) {
+			log.debug("Get profile attributes for the tenant: " + tenant.getId());
+		}
 		AttributesSearchCriteria searchCriteria = new AttributesSearchCriteria.Builder()
 				.build();
 		Set<String> groups = new HashSet<String>();

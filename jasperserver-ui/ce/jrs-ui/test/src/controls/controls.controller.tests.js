@@ -260,7 +260,7 @@ describe('Controller', function () {
                     error: 'Error'
                 });
 
-                expect(controller.viewModel.controls.test1.fetch).toHaveBeenCalledWith('testUri', paginationOptions);
+                expect(controller.viewModel.controls.test1.fetch).not.toHaveBeenCalled();
                 expect(controller.viewModel.controls.test2.fetch).toHaveBeenCalledWith('testUri', paginationOptions);
                 expect(controller.viewModel.controls.test3.fetch).toHaveBeenCalledWith('testUri', paginationOptions);
 

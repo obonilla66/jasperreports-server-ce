@@ -115,7 +115,7 @@
 
     <util:map id="contentTypeMapping">
         <entry key="pdf" value="application/pdf"/>
-        <entry key="html" value="text/html"/>
+        <entry key="html" value="application/html"/>
         <entry key="xls" value="application/xls"/>
         <entry key="rtf" value="application/rtf"/>
         <entry key="csv" value="text/csv"/>
@@ -125,15 +125,15 @@
         <entry key="ods" value="application/vnd.oasis.opendocument.spreadsheet"/>
         <entry key="xlsx" value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
         <entry key="font" value="font/*"/>
-        <entry key="jrxml" value="application/xml"/>
+        <entry key="jrxml" value="application/repository.file+jrxml"/>
         <entry key="jar" value="application/zip"/>
         <entry key="prop" value="text/plain"/>
-        <entry key="jrtx" value="application/xml"/>
-        <entry key="xml" value="application/xml"/>
+        <entry key="jrtx" value="application/repository.file+jrtx"/>
+        <entry key="xml" value="application/repository.file+xml"/>
         <entry key="json" value="application/json"/>
         <entry key="css" value="text/css"/>
-        <entry key="accessGrantSchema" value="application/xml"/>
-        <entry key="olapMondrianSchema" value="application/xml"/>
+        <entry key="accessGrantSchema" value="application/repository.file+accessGrantSchema"/>
+        <entry key="olapMondrianSchema" value="application/repository.file+olapMondrianSchema"/>
         <entry key="pptx" value="application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
         <entry key="json" value="application/json"/>
         <entry key="dashboardComponent" value="application/dashboardComponentsSchema+json"/>

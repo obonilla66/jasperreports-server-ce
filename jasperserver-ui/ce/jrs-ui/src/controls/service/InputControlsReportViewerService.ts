@@ -344,7 +344,7 @@ export default class InputControlsReportViewerService {
                             return {
                                 ...stateMemo,
                                 [controlSelection.id]: controlSelection.options ? controlSelection.options.map((ip) => _.omit(ip, 'selected')) || []
-                                    : controlSelection.value
+                                    : [{ value: controlSelection.value, label: controlSelection.value }]
                             };
                         }, {});
 

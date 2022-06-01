@@ -82,14 +82,13 @@ jQuery.extend(Report, {
                     const freshData = true;
                     if (typeof Controls !== 'undefined') {
                         var selectedData = Controls.viewModel.get('selection');
-                        var controlsUri = ControlsBase.buildSelectedDataUri(selectedData);
                         if (Report.hasInputControls && Controls.selectionChanged){
                             Controls.applyInputValues(null, freshData);
                         } else {
-                            this.refreshReport({freshData: freshData}, null, controlsUri ? '&' + controlsUri : '', selectedData);
+                            this.refreshReport({freshData: freshData}, null, selectedData);
                         }
                     } else {
-                        this.refreshReport({ freshData: freshData }, null, '', null);
+                        this.refreshReport({ freshData: freshData }, null, null);
                     }
                 }
             }.bindAsEventListener(this));
