@@ -719,6 +719,13 @@
         </sequential>
     </macrodef>
 
+    <macrodef name="initRequiredPropertiesToDefaultValues">
+        <sequential>
+            <property name="js-pro-path" value=""/>
+            <property name="mvn-mirror" value="https://repo1.maven.org/maven2"/>
+        </sequential>
+    </macrodef>
+
     <macrodef name="gen-config-if-required">
         <sequential>
             <if>
@@ -751,7 +758,7 @@
                 </else>
             </if>
 
-            <echo level="info"> Back-End version: ${buildArtifactVersionName}</echo>
+            <echo level="info">Back-End version: ${buildArtifactVersionName}</echo>
             <echo level="info">Front-End version: ${fafBuildArtifactVersionName}</echo>
 
             <if>
@@ -800,6 +807,8 @@
                     <!-- recreate build conf -->
                     <delete dir="${currentConf}"/>
                     <mkdir dir="${currentConf}"/>
+
+                    <initRequiredPropertiesToDefaultValues/>
 
                     <!-- copy and load base props -->
                     <filterCopyLoad file="${masterPropsSource}" toFile="${masterProps}"/>
