@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -140,10 +140,7 @@ actionModel.showDynamicMenu = function (menuContext, event, className, coordinat
 };
 actionModel.closeHandler = function (event) {
     var target = jQuery(event.relatedTarget);
-    if ((jQuery(target).hasClass('mutton') || target.parents('.mutton').length) && event.relatedTarget || (target.attr('id') === 'menu' || target.parents('#menu').length)) {
-    }    //|| actionModel.lastInput=="key"
-    //event.stopPropagation();
-    else {
+    if (!((jQuery(target).hasClass('mutton') || target.parents('.mutton').length) && event.relatedTarget || (target.attr('id') === 'menu' || target.parents('#menu').length))) {
         jQuery('body').trigger('actionmodel-mouseout');
         actionModel.hideMenu();
     }

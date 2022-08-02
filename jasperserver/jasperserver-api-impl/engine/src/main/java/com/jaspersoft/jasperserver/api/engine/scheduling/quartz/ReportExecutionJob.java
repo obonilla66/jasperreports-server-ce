@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -23,17 +23,14 @@ package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.WeakHashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.jaspersoft.jasperserver.api.metadata.user.domain.Tenant;
+import com.jaspersoft.jasperserver.api.metadata.user.domain.TenantQualified;
+import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
+import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.quartz.Job;
@@ -81,6 +78,10 @@ import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.export.JRHyperlinkProducerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.*;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
@@ -103,6 +104,7 @@ public class ReportExecutionJob implements Job {
     public static final String SCHEDULER_CONTEXT_KEY_JOB_REPORT_SCHEDULING_SERVICE = "reportSchedulingService";
     public static final String SCHEDULER_CONTEXT_KEY_ENGINE_SERVICE = "engineService";
     public static final String SCHEDULER_CONTEXT_KEY_REPOSITORY = "repositoryService";
+    public static final String SCHEDULER_CONTEXT_KEY_TENANT_SERVICE = "tenantService";
     public static final String SCHEDULER_CONTEXT_KEY_MAIL_SENDER = "mailSender";
     public static final String SCHEDULER_CONTEXT_KEY_MAIL_FROM_ADDRESS = "mailFromAddress";
     public static final String SCHEDULER_CONTEXT_KEY_LOGGING_SERVICE = "loggingService";
@@ -123,11 +125,41 @@ public class ReportExecutionJob implements Job {
     public static final String SCHEDULER_CONTEXT_KEY_DISABLE_SENDING_ALERT_TO_ADMIN = "disableSendingAlertToAdmin";
     public static final String SCHEDULER_CONTEXT_KEY_DISABLE_SENDING_ALERT_TO_OWNER = "disableSendingAlertToOwner";
     public static final String SCHEDULER_CONTEXT_KEY_REPORT_EXECUTOR_PRODUCER = "reportExecutorProducer";
+    public static final String DASHBOARD_EXECUTION_ID = "dashboardExecutionID";
+
+    private TenantService tenantService;
 
     public static final String JOB_DATA_KEY_DETAILS_ID = "jobDetailsID";
     public static final String JOB_DATA_KEY_USERNAME = "jobUser";
 
     public static final String LOGGING_COMPONENT = "reportScheduler";
+
+    //Audit Properties
+    public static final String JOB_ID = "jobID";
+    public static final String JOB_LABEL = "jobLabel";
+    public static final String JOB_DESCRIPTION = "jobDescription";
+    public static final String SCHEDULE_START_TIME = "scheduleStartTime";
+    public static final String SCHEDULE_END_TIME = "scheduleEndTime";
+    public static final String EXECUTION_TIME = "executionTime";
+    public static final String RESOURCE_NAME = "resourceName";
+    public static final String TENANT_NAME = "organization";
+    public static final String TENANT_ID = "organizationID";
+    public static final String TENANT_URI = "organizationURI";
+    public static final String REPORT_SCHEDULE_EXECUTION_ID = "reportScheduleExecutionID";
+    public static final String DASHBOARD_SCHEDULE_EXECUTION_ID = "dashboardScheduleExecutionID";
+    public static final String SCHEDULE_RESOURCE_TYPE = "scheduleResourceType";
+    public static final String EXECUTION_IDS = "executionIDS";
+    public static final String RESOURCE_TYPE_DASHBOARD = "DASHBOARD";
+    public static final String RESOURCE_TYPE_REPORT = "REPORT";
+
+    public static final String OUTPUT_FORMAT = "format";
+    public static final String OUTPUT_START_TIME = "startTime";
+    public static final String OUTPUT_END_TIME = "endTime";
+    public static final String OUTPUT_TIME = "outputTime";
+    public static final String EXECUTION_ID = "executionID";
+    public static final String SAVE_TO_REPOSITORY = "saveToRepository";
+    public static final String SAVE_TO_DISK = "saveToDisk";
+    public static final String SAVE_TO_FTP_SERVER = "saveToFTPServer";
 
     protected List<ErrorDescriptor> exceptions = new ArrayList<ErrorDescriptor>();
     protected ApplicationContext applicationContext;
@@ -143,6 +175,24 @@ public class ReportExecutionJob implements Job {
     protected boolean cancelRequested = false;
 
     private String logId = null;
+
+    private String tenantURI;
+    private String tenantName;
+    private String tenantID;
+
+    protected boolean isDashboardExecution = false;
+
+    public ReportExecutor getReportExecutor() {
+        return reportExecutor;
+    }
+
+    protected ReportExecutor reportExecutor;
+
+    public String getScheduleExecutionID() {
+        return scheduleExecutionID;
+    }
+
+    protected String scheduleExecutionID = null;
 
     private final WeakHashMap<DataContainer, Boolean> dataContainers = new WeakHashMap<DataContainer, Boolean>();
     private SecureExceptionHandler secureExceptionHandler;
@@ -163,19 +213,18 @@ public class ReportExecutionJob implements Job {
         });
     }
 
-    protected void addReportJobLabelToAuditEvent(final long jobID, final String jobLabel) {
-        auditContext.doInAuditContext(AuditEventType.RUN_REPORT.toString(), new AuditContext.AuditContextCallbackWithEvent() {
-            public void execute(AuditEvent auditEvent) {
-                auditContext.addPropertyToAuditEvent("jobID", jobID, auditEvent);
-                auditContext.addPropertyToAuditEvent("jobLabel", jobLabel, auditEvent);
-            }
-        });
-    }
-
     protected void addExceptionToAuditEvent(final Throwable ex) {
         auditContext.doInAuditContext(AuditEventType.RUN_REPORT.toString(), new AuditContext.AuditContextCallbackWithEvent() {
             public void execute(AuditEvent auditEvent) {
                 auditContext.addPropertyToAuditEvent("exception", ex, auditEvent);
+            }
+        });
+    }
+
+    protected void addNotificationExceptionToAuditEvent(final Throwable ex) {
+        auditContext.doInAuditContext(AuditEventType.RUN_REPORT.toString(), new AuditContext.AuditContextCallbackWithEvent() {
+            public void execute(AuditEvent auditEvent) {
+                auditContext.addPropertyToAuditEvent("notificationException", ex, auditEvent);
             }
         });
     }
@@ -195,7 +244,44 @@ public class ReportExecutionJob implements Job {
         }
     }
 
+    public void createOutputFormatAuditEvent() {
+        if (!isDashboardExecution) {
+            auditContext.doInAuditContext(new AuditContext.AuditContextCallback() {
+                public void execute() {
+                    auditContext.createAuditEvent(SCHEDULE_OUTPUT_DETAILS.toString());
+                }
+            });
+        }
+    }
+
+    private void addOutputDetailsToAuditEvent(long startTime, ReportOutput reportOutput) {
+        if (!isDashboardExecution) {
+            auditContext.doInAuditContext(SCHEDULE_OUTPUT_DETAILS.toString(),
+                    new AuditContext.AuditContextCallbackWithEvent() {
+                        public void execute(AuditEvent auditEvent) {
+                            long endTime = System.currentTimeMillis();
+                            auditContext.addPropertyToAuditEvent(OUTPUT_FORMAT, reportOutput.getFileType(), auditEvent);
+                            auditContext.addPropertyToAuditEvent(OUTPUT_START_TIME, startTime, auditEvent);
+                            auditContext.addPropertyToAuditEvent(OUTPUT_END_TIME, endTime, auditEvent);
+                            auditContext.addPropertyToAuditEvent(OUTPUT_TIME, endTime - startTime, auditEvent);
+                            //Need to handle for Dashboard in future
+                            auditContext.addPropertyToAuditEvent(REPORT_SCHEDULE_EXECUTION_ID, scheduleExecutionID,auditEvent);
+                            auditContext.addPropertyToAuditEvent(EXECUTION_ID, reportOutput.getExecutionID(), auditEvent);
+                            auditContext.addPropertyToAuditEvent(TENANT_URI,tenantURI ,auditEvent );
+                        }
+                    });
+
+            auditContext.doInAuditContext(SCHEDULE_OUTPUT_DETAILS.toString(), new AuditContext.AuditContextCallbackWithEvent() {
+                public void execute(AuditEvent auditEvent) {
+                    auditContext.closeAuditEvent(auditEvent);
+                }
+            });
+        }
+    }
+
+    @WithSpan
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        long startTime = System.currentTimeMillis();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         SecurityContextProvider securityContextProvider = null;
         try {
@@ -209,24 +295,27 @@ public class ReportExecutionJob implements Job {
             this.applicationContext = (ApplicationContext) schedulerContext.get(SCHEDULER_CONTEXT_KEY_APPLICATION_CONTEXT);
             this.username = getUsername();
             this.secureExceptionHandler = this.applicationContext.getBean(SecureExceptionHandlerImpl.class);
-
             securityContextProvider = getSecurityContextProvider();
             securityContextProvider.setAuthenticatedUser(this.username);
+            this.tenantID = Optional.ofNullable(getContextTenantId()).orElse("organizations");
+            Tenant tenant = getTenantService().getTenant(null,tenantID);
+            this.tenantName = tenant.getTenantName();
+            this.tenantURI = tenant.getTenantUri();
+
             createAuditEvent();
             if (log.isDebugEnabled()) {
                 log.debug("*** about to execute job ***\n" + logId);
             }
             executeAndSendReport();
         } catch (JobExecutionException e) {
-            addExceptionToAuditEvent(e);
             throw e;
         } catch (SchedulerException e) {
-            addExceptionToAuditEvent(e);
             throw new JobExecutionException(e);
         } catch (RuntimeException e) {
             log.error("*** ReportExecutionJob.execute EXCEPTION *** for \n" + logId, e);
         } finally {
             try {
+                addExecutionDetailsToAudit(startTime);
                 closeAuditEvent();
                 clear();
             } finally {
@@ -237,7 +326,48 @@ public class ReportExecutionJob implements Job {
         }
     }
 
+    protected void addExecutionDetailsToAudit(long startTime) {
+        long endTime = System.currentTimeMillis();
+        auditContext.doInAuditContext(AuditEventType.RUN_REPORT.toString(), new AuditContext.AuditContextCallbackWithEvent() {
+            public void execute(AuditEvent auditEvent) {
+                auditContext.addPropertyToAuditEvent(JOB_ID, jobDetails.getId(), auditEvent);
+                auditContext.addPropertyToAuditEvent(JOB_LABEL, jobDetails.getLabel(), auditEvent);
+                auditContext.addPropertyToAuditEvent(JOB_DESCRIPTION, jobDetails.getDescription(), auditEvent);
+                auditContext.addPropertyToAuditEvent(SCHEDULE_START_TIME, startTime, auditEvent);
+                auditContext.addPropertyToAuditEvent(SCHEDULE_END_TIME, endTime, auditEvent);
+                auditContext.addPropertyToAuditEvent(EXECUTION_TIME, endTime-startTime, auditEvent);
+                auditContext.addPropertyToAuditEvent(TENANT_NAME,tenantName ,auditEvent );
+                auditContext.addPropertyToAuditEvent(TENANT_URI,tenantURI ,auditEvent );
+                auditContext.addPropertyToAuditEvent(TENANT_ID,tenantID ,auditEvent );
+                if (isDashboardExecution)
+                    auditContext.addPropertyToAuditEvent(DASHBOARD_SCHEDULE_EXECUTION_ID,scheduleExecutionID,auditEvent);
+                else {
+                    auditContext.addPropertyToAuditEvent(REPORT_SCHEDULE_EXECUTION_ID,scheduleExecutionID,auditEvent);
+                }
+                addAdditionalAuditEvents(auditContext, auditEvent);
+            }
+        });
+    }
+
+    private String getContextTenantId() {
+        Authentication authenticationToken = SecurityContextHolder.getContext().getAuthentication();
+        if (authenticationToken == null) {
+            return null;
+        }
+
+        if (authenticationToken.getPrincipal() instanceof TenantQualified) {
+            TenantQualified tenantQualified = (TenantQualified) authenticationToken.getPrincipal();
+            return tenantQualified.getTenantId();
+        } else {
+            return null;
+        }
+    }
+
+    protected void addAdditionalAuditEvents(AuditContext auditContext, AuditEvent auditEvent) {
+    }
+
     protected void initJobExecution() {
+        this.scheduleExecutionID =  UUID.randomUUID().toString();
         updateExecutionContextDetails();
     }
 
@@ -428,6 +558,11 @@ public class ReportExecutionJob implements Job {
         return engineService;
     }
 
+    protected TenantService getTenantService() {
+        TenantService tenantService = (TenantService) schedulerContext.get(SCHEDULER_CONTEXT_KEY_TENANT_SERVICE);
+        return tenantService;
+    }
+
     protected ReportExecutorProducer getReportExecutorProducer() {
     	ReportExecutorProducer producer = (ReportExecutorProducer) schedulerContext.get(SCHEDULER_CONTEXT_KEY_REPORT_EXECUTOR_PRODUCER);
         return producer;
@@ -438,10 +573,9 @@ public class ReportExecutionJob implements Job {
             executionContext = getExecutionContext();
             jobDetails = getJobDetails();
             initJobExecution();
-            addReportJobLabelToAuditEvent(jobDetails.getId(), jobDetails.getLabel());
             boolean isMailNotificationSent = false;
-            
-            ReportExecutor reportExecutor = null;
+            boolean notificationException = false;
+
             try {
                 reportUnit = (ReportUnit) getRepository().getResource(executionContext,
                         getReportUnitURI(), ReportUnit.class);
@@ -486,8 +620,8 @@ public class ReportExecutionJob implements Job {
 
                     if (!skipEmpty) {
                         for (ReportExecutionOutput output : outputs) {
+                            long outputStartTime = System.currentTimeMillis();
                             ReportOutput reportOutput = null;
-
 							isCancelRequested();
 							try {
 							    reportOutput = output.getReportOutput(reportJobContext);
@@ -499,10 +633,7 @@ public class ReportExecutionJob implements Job {
 							}
 							isCancelRequested();
 							if (reportOutput != null) reportOutputs.add(reportOutput);
-
                             isCancelRequested();
-
-
                             if ((!useFolderHierarchy) && (jobDetails.getContentRepositoryDestination() != null) &&
                                     (jobDetails.getContentRepositoryDestination().isSaveToRepository()) && (!reportOutput.getChildren().isEmpty())) {
                                 // if not using hierarchy, but contains children and requires to save to repository.  regenerate the output with folder hierarchy
@@ -511,9 +642,10 @@ public class ReportExecutionJob implements Job {
                                 		reportRepositoryJobContext);
                                 isCancelRequested();
                                 if (reportOutputForRepository != null)
-                                    getReportExecutionJobFileSaving().save(this, reportOutputForRepository, true, jobDetails);
+                                    getReportExecutionJobFileSaving().save(this, reportOutputForRepository, true, jobDetails, isDashboardExecution);
                             } else
-                                getReportExecutionJobFileSaving().save(this, reportOutput, useFolderHierarchy, jobDetails);
+                                    getReportExecutionJobFileSaving().save(this, reportOutput, useFolderHierarchy, jobDetails, isDashboardExecution);
+                            addOutputDetailsToAuditEvent(outputStartTime, reportOutput);
                         }
                     }
 
@@ -526,6 +658,8 @@ public class ReportExecutionJob implements Job {
                                 sendMailNotification(attachments);
                             } catch (Exception e) {
                                 handleException(getMessage("report.scheduling.error.sending.email.notification", null), e);
+                                addNotificationExceptionToAuditEvent(e);
+                                notificationException = true;
                             }
                         }
                     }
@@ -533,7 +667,7 @@ public class ReportExecutionJob implements Job {
             } catch (CancelRequestException cancelRequestException) {
                 handleException(getMessage("report.scheduling.cancelling.by.request", null), cancelRequestException);
             } catch (Exception otherException) {
-                handleException(getMessage("error.generating.report", null), otherException);
+                handleException(otherException.getMessage(), otherException);
             } finally {
             	if (reportExecutor != null) {
                     reportExecutor.dispose();
@@ -547,12 +681,16 @@ public class ReportExecutionJob implements Job {
                         }
                     } catch (Exception e) {
                         handleException(getMessage("report.scheduling.error.sending.email.notification", null), e);
+                        addNotificationExceptionToAuditEvent(e);
+                        notificationException = true;
                     }
                 }
                 try {
-                    sendAlertMail();
+                    if (!notificationException)
+                        sendAlertMail();
                 } catch (Exception e) {
                     handleException(getMessage("fail to send out alert mail notification", null), e);
+                    addNotificationExceptionToAuditEvent(e);
                 }
             }
         } catch (Throwable e) {

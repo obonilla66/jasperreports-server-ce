@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -951,18 +951,14 @@ tomcat copies to this location from the jasperserver war file META-INF/context.x
                         import groovy.xml.DOMBuilder
 
                         def document = DOMBuilder.parse(new FileReader(args[0]))
-                        def context = document.documentElement
-
-                        def jsDbResourceFound = false
+                        def context = document.documentElement                
 
                         context.childNodes.each { node ->
                         if (node.nodeType == org.w3c.dom.Node.ELEMENT_NODE &amp;&amp; node.nodeName == "Resource") {
-                        if (jsDbResourceFound) {
-                        context.removeChild(node)
-                        }
-                        else {
-                        jsDbResourceFound = true
-                        }
+                            def jndiName =  node.getAttributes().getNamedItem("name").getNodeValue()
+                            if (!( jndiName.equals("jdbc/jasperserver") || jndiName.equals("jdbc/jasperserverAudit") )) {
+                                context.removeChild(node)
+                            }
                         }
                         }
 

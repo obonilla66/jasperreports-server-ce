@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -206,7 +206,12 @@ $.extend(stdnav.prototype, stdnavEventHandlers, stdnavFocusing, stdnavModalFocus
         var depth = 0,
             items_at_current_depth = 1,
             items_at_next_depth = 0,
-            iterator = start;
+            iterator = start,
+            enqueueFn = function (index, child) {
+                // Enqueue children for search after this level is completed.
+                search_queue.unshift(child);
+                items_at_next_depth++;
+            };
         while (iterator !== undefined) {
             // See if the iterator is the element we're looking for.
             if ($(iterator).is(target) && (depth > 0)) {
@@ -217,11 +222,7 @@ $.extend(stdnav.prototype, stdnavEventHandlers, stdnavFocusing, stdnavModalFocus
             // See if its children should be enqueued for search.
             if (!($(iterator).is(barrier))) {
                 var children = $(iterator).children();
-                children.each(function (index, child) {
-                    // Enqueue children for search after this level is completed.
-                    search_queue.unshift(child);
-                    items_at_next_depth++;
-                });
+                children.each(enqueueFn);
             }
 
             // See if this was our last element at this depth (our next dequeue
@@ -794,10 +795,10 @@ $.extend(stdnav.prototype, stdnavEventHandlers, stdnavFocusing, stdnavModalFocus
         // Figure out the default navtype for the node/element type.
         var defaultNavtype;
         var nodeName = el.prop('nodeName');
-        $.each(this.navtype_nodeNames, function (navtype, supportedNodeNames) {
+        $.each(this.navtype_nodeNames, function (navigationType, supportedNodeNames) {
             if ($.inArray(nodeName, supportedNodeNames) > -1) {
                 if (self.isNavigable(element)) {
-                    defaultNavtype = navtype;
+                    defaultNavtype = navigationType;
                 }
             }
         });
@@ -919,7 +920,7 @@ $.extend(stdnav.prototype, stdnavEventHandlers, stdnavFocusing, stdnavModalFocus
     //    the system that something other than StdNav is going to handle the
     //    event.
     _runActionDesc: function (actionDesc, element) {
-        var retval = true;
+        var retval = true, context;
         if ((typeof actionDesc === "string") || (actionDesc instanceof String)) {
             // A string can be used to indicate a simple subfocus change to a new
             // element, for example, "#someOtherDiv".
@@ -950,7 +951,7 @@ $.extend(stdnav.prototype, stdnavEventHandlers, stdnavFocusing, stdnavModalFocus
             } else if (actionDesc.substr(0, 1) == '@') {
                 var funcName, func, paramstr, colon, lparen, rparen;
                 // If no context is specified, use the stdnav instance.
-                var context = this;
+                context = this;
                 if (actionDesc.substr(1, 1) == '@') {
                     context = $(element).data('stdnav-context');
                 } else {
@@ -980,7 +981,7 @@ $.extend(stdnav.prototype, stdnavEventHandlers, stdnavFocusing, stdnavModalFocus
             if (actionDesc[1] === undefined) {
                 logger.debug("undefined actionDesc[1]");
             }
-            var context = actionDesc[0];
+            context = actionDesc[0];
             if ((context === null) || typeof (context) === 'undefined') {
                 context = this;
             }

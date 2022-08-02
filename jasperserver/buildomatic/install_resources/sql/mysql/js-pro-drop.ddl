@@ -135,6 +135,14 @@
        drop 
        foreign key FKt7lysq7v9t62tpu4vdirp50pl;
 
+    alter table JIFavoriteResource 
+       drop 
+       foreign key FKe3ak4arnheeorbrsc4u8m8pi0;
+
+    alter table JIFavoriteResource 
+       drop 
+       foreign key FK63man3dkmekfr2hgfifi3ne8c;
+
     alter table JIFileResource 
        drop 
        foreign key FK9cks6rnum2e1nwpltygmric0a;
@@ -443,6 +451,8 @@
 
     drop table if exists JIDomainDatasourceDSRef;
 
+    drop table if exists JIFavoriteResource;
+
     drop table if exists JIFileResource;
 
     drop table if exists JIFTPInfoProperties;
@@ -600,6 +610,8 @@
     DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
 
     DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
+
+    DROP INDEX JIFavoriteResource_resource_id_idx ON JIFavoriteResource;
 
     DROP INDEX idx19_mondrianConnectionId_idx ON JIMondrianConnectionGrant;
 

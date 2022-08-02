@@ -57,7 +57,7 @@ IF "%JS_SETUP_MODE%"=="upgrade" (
     )
   )
 )
-ENDLOCAL & SET JS_ANT_OPTIONS=%_JS_ANT_OPTIONS% -Djs.setup.mode=%JS_SETUP_MODE%
+ENDLOCAL & SET JS_ANT_OPTIONS=%_JS_ANT_OPTIONS% -Djs.setup.mode=%JS_SETUP_MODE% -Djs.option=%JS_OPTION%
 
 rem
 rem Initializing time variable.

@@ -316,6 +316,11 @@
     margin-right: 8px;
 }
 
+.adhocDesigner .pageHeader-title-controlsRight {
+    margin-top: 5px;
+    margin-right: 2px;
+}
+
 .pageHeader-title,
 .pageHeader-subtitle {
     /* flex: 0 1 auto; delete if there are no issues */

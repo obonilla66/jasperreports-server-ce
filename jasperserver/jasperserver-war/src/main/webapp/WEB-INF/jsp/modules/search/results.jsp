@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -126,6 +126,15 @@
                     </t:putAttribute>
                     <t:putAttribute name="inputID" value="secondarySearchInput"/>
                 </t:insertTemplate>
+                <c:if test="${mode == 'library'}">
+                    <div class="control switch" data-name="showFavoritesOnlySwitch">
+                    <input id="favorites-only" type="checkbox">
+                    <label class="wrap" for="favorites-only">
+                    <div class="label"><spring:message code="SEARCH_SORT_BY_FAVORITES" javaScriptEscape="true"/></div>
+                    <div class="track"></div>
+                    </label>
+                    </div>
+                </c:if>
                 <ul id="sortMode" class=""></ul>
                     <ul class="list buttonSet">
                     	<li class="node open">
@@ -160,7 +169,9 @@
                     <li class="resources first leaf scheduled" id="resultsListHeader_item1">
                         <div class="wrap draggable">
                             <div class="column one">
-                                <div class="scheduled icon button"></div>
+                            <div class="favorite icon button"></div>
+                            <div class="separator"></div>
+                            <div class="scheduled icon button"></div>
                                 <div class="separator"></div>
                                 <div class="disclosure icon button"></div>
                             </div>
@@ -211,6 +222,13 @@
             <t:putAttribute name="bodyID" value="filtersPanelContent"/>
             <t:putAttribute name="bodyContent">
            		<div id="filtersPanel">
+                    <div class="panel open"> <!-- new element -->
+                        <div class="header">
+                            <button class="buttonIconToggle"></button>
+                            <div class="title"><spring:message code="SEARCH_FAVORITE_HEADING" javaScriptEscape="true"/></div>
+                        </div>
+                        <div class="subcontainer ui-resizable"></div>
+                    </div>
                     <div class="panel open"> <!-- new element -->
                         <div class="header">
                             <button class="buttonIconToggle"></button>

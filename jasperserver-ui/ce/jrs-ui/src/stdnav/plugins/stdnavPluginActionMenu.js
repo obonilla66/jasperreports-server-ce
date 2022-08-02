@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -156,7 +156,6 @@ _.extend(stdnavPluginActionMenu.prototype, {
                 // Clicked on non-list-item content inside the list.
                 // This COULD happen, but probably indicates a bad template.
                 // Either way, don't crash.
-                newFocus = $el.closest('ul,ol');
                 newFocus = $el.find('li');
                 if (newFocus.length > 0) {
                     newFocus = newFocus[0];
@@ -209,8 +208,7 @@ _.extend(stdnavPluginActionMenu.prototype, {
     _onFocusIn: function (element) {
         var
             $thisItem,
-            $matched,
-            $next = $(element);
+            $matched;
         var $selected = $(element);
         if ($selected.length>0) {
             $thisItem = $selected.closest(layoutModule.NAVIGATION_PATTERN);
@@ -233,7 +231,6 @@ _.extend(stdnavPluginActionMenu.prototype, {
                 if ($thisItem.length>0) {
                     // An item in a drop-down or context menu has been focused.
                     buttonManager.over($thisItem.find(layoutModule.BUTTON_PATTERN)[0]);
-                    $matched = $thisItem.closest(layoutModule.NAVIGATION_MUTTON_PATTERN);
                     /* FIXME: flyouts (none exist in main menu right now)
                     if ($matched.length>0) {
                         // NOTE: This function expects an event object that will

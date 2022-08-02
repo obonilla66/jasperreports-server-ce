@@ -54,7 +54,7 @@
 
      9. MISC/UNKNOWN
    -----------------------------------
-    File last modified Feb 8, 2021
+    File last modified Nov 2, 2021
    -----------------------------------  */
 
 
@@ -269,10 +269,10 @@
 
 .header > .button.mutton,
 .subheader > .button.mutton {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
     background-position: 5px 8px;
-    background-size: 80px;
+    background-size: 170px;
     display: inline-block;
     height: 32px;
     margin: 0;
@@ -280,14 +280,6 @@
     right: 0;
     top: 0;
     width: 22px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .header > .button.mutton,
-    .subheader > .button.mutton {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .sub.header {

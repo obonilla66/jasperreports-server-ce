@@ -101,6 +101,12 @@
     alter table JIDomainDatasourceDSRef 
        drop constraint FKt7lysq7v9t62tpu4vdirp50pl;
 
+    alter table JIFavoriteResource 
+       drop constraint FKe3ak4arnheeorbrsc4u8m8pi0;
+
+    alter table JIFavoriteResource 
+       drop constraint FK63man3dkmekfr2hgfifi3ne8c;
+
     alter table JIFileResource 
        drop constraint FK9cks6rnum2e1nwpltygmric0a;
 
@@ -344,6 +350,8 @@
 
     drop table if exists JIDomainDatasourceDSRef cascade;
 
+    drop table if exists JIFavoriteResource cascade;
+
     drop table if exists JIFileResource cascade;
 
     drop table if exists JIFTPInfoProperties cascade;
@@ -503,6 +511,8 @@
     DROP INDEX idx27_destination_id_idx ON JIReportJobMailRecipient;
 
     DROP INDEX idxA1_resource_id_idx on JICustomDatasourceResource;
+
+    DROP INDEX JIFavoriteResource_resource_id_idx ON JIFavoriteResource;
 
     DROP INDEX idx19_mondrianConnectionId_idx ON JIMondrianConnectionGrant;
 

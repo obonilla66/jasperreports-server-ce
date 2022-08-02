@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -39,6 +39,7 @@ public class ReportOutput {
 	private final String filename;
 	private final List children;
 	private String repositoryPath;
+	private String executionID;
 	
 	public ReportOutput(DataContainer data, String fileType, String filename) {
 		this.data = data;
@@ -78,5 +79,12 @@ public class ReportOutput {
 	public DataContainer getPersistenceData() {
 		return DataContainerStreamUtil.getRawDataContainer(data);
 	}
-	
+
+	public String getExecutionID() {
+		return executionID;
+	}
+
+	public void setExecutionID(String executionID) {
+		this.executionID = executionID;
+	}
 }

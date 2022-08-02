@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -249,7 +249,7 @@
             <!-- Add JDBC jars for installation and/or for the DataSource drop list in the UI    --> 
             <!-- =============================================================================== --> 
 
-            <resource-root path="WEB-INF/lib/postgresql-42.2.5.jar" use-physical-code-source="true"/>
+            <resource-root path="WEB-INF/lib/postgresql-42.3.5.jar" use-physical-code-source="true"/>
             <resource-root path="WEB-INF/lib/mariadb-java-client-2.5.3.jar" use-physical-code-source="true"/>
 
             <!-- Uncomment out JDBC driver line below to add to the JDBC driver dropdown list in the UI.      --> 

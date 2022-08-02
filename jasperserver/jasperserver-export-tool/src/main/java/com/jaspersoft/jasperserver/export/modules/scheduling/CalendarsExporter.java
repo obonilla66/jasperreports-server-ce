@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -26,8 +26,8 @@ import com.jaspersoft.jasperserver.export.modules.scheduling.beans.HolidayCalend
 import com.jaspersoft.jasperserver.core.util.PathUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Element;
 
 import org.quartz.Calendar;
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * @version $Id: ReportJobsExporter.java 37706 2013-09-18 15:28:43Z ztomchenco $
  */
 public class CalendarsExporter extends BaseExporterModule {
-    private static final Log log = LogFactory.getLog(CalendarsExporter.class);
+    private static final Logger log = LogManager.getLogger(CalendarsExporter.class);
 
     protected static final Pattern RESOURCE_ID_INVALID_CHAR =
             Pattern.compile("[^\\p{L}\\p{N}]");
@@ -91,9 +91,7 @@ public class CalendarsExporter extends BaseExporterModule {
 	}
 
     protected void exportCalendar(String folderPath, String name, HolidayCalendar calendar) {
-	    if (log.isDebugEnabled()) {
-	        log.debug("Export calendar: " + name);
-        }
+        log.debug("Export calendar: {}", name);
         HolidayCalendarBean calendarBean = new HolidayCalendarBean();
         calendarBean.setName(name);
         calendarBean.copyFrom(calendar);
@@ -102,9 +100,7 @@ public class CalendarsExporter extends BaseExporterModule {
     }
 
     protected Element addIndexElement(String calendarName) {
-        if (log.isDebugEnabled()) {
-            log.debug("Add index element to the calendar: " + calendarName);
-        }
+        log.debug("Add index element to the calendar: {}", calendarName);
         Element roleElement = getIndexElement().addElement(configuration.getIndexCalendarElement());
         roleElement.setText(calendarName);
         return roleElement;

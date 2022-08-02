@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -30,7 +30,7 @@ import picker from '../components/components.pickers';
 var resourceReportResourceNaming = {
     LABEL_ID: 'label',
     RESOURCE_ID_ID: 'resourceID',
-    DESCRIPTION_ID: 'fileResource.description',
+    DESCRIPTION_ID: 'fileResource\\.description',
     FOLDER_TREE_DATA_PROVIDER: 'repositoryExplorerTreeFoldersProvider',
     FOLDER_TREE_ID: 'addFileTreeRepoLocation',
     FOLDER_RESOURCE_INPUT: 'folderUri',

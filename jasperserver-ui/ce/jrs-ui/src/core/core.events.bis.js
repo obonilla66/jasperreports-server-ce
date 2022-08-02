@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -43,8 +43,8 @@ document.observe(isSupportsTouch() ? 'drag:touchstart' : 'drag:mousedown', funct
     if (!isSupportsTouch() || !(event.treeEvent || event.listEvent)) {
         var li = matchMeOrUp(element, layoutModule.LIST_ITEM_PATTERN);
         if (li && !element.match(layoutModule.DISCLOSURE_BUTTON_PATTERN)) {
-            buttonManager.down(li, function (element) {
-                return jQuery(element).children(layoutModule.LIST_ITEM_WRAP_PATTERN)[0];
+            buttonManager.down(li, function (listItemElement) {
+                return jQuery(listItemElement).children(layoutModule.LIST_ITEM_WRAP_PATTERN)[0];
             });
         }
         if (element.match(layoutModule.DISCLOSURE_BUTTON_PATTERN)) {

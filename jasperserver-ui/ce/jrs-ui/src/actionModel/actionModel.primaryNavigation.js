@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -54,6 +54,10 @@ var primaryNavModule = {
         search: {
             url: 'flow.html',
             params: '_flowId=searchFlow&mode=search'
+        },
+        favorites: {
+            url: 'flow.html',
+            params: '_flowId=searchFlow&mode=search&filterId=favoriteFilter&filterOption=favoriteFilter-favorites'
         },
         report: {
             url: 'flow.html',
@@ -118,6 +122,7 @@ var primaryNavModule = {
             params: '_flowId=addDataSourceFlow&ParentFolderUri=' + encodeURIComponent('/datasources')
         },
         logSettings: { url: 'log_settings.html' },
+        adminConsole: { url: 'adminConsole.html' },
         createReport: { url: 'view/view/modules/adhoc/createReport' }
     },
     /**

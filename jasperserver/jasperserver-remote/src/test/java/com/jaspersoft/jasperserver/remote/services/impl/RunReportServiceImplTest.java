@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -26,6 +26,7 @@ import com.jaspersoft.jasperserver.api.engine.common.service.EngineService;
 import com.jaspersoft.jasperserver.api.engine.common.service.VirtualizerFactory;
 import com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlUITypeMapper;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
 import com.jaspersoft.jasperserver.remote.exception.ErrorDescriptorBuildingService;
@@ -53,11 +54,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import static com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl.TYPE_MULTI_SELECT_LIST_OF_VALUES;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_VALUE;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NULL_SUBSTITUTION_VALUE;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 
 @ContextConfiguration(locations = {
@@ -333,6 +334,20 @@ public class RunReportServiceImplTest extends AbstractTestNGSpringContextTests {
         // Assert
         // Ensure that runnable is using 1-st version of attributes
         assertEquals(attributes1, RequestContextHolder.getRequestAttributes());
+    }
+
+    @Test
+    public void verifyCorrectParameterValuesForNonCascadingControls() throws InputControlsValidationException {
+        ReportInputControl reportInputControl = mock(ReportInputControl.class);
+        when(reportInputControl.getId()).thenReturn("city");
+        when(reportInputControl.getType()).thenReturn(InputControlUITypeMapper.getUiType(TYPE_MULTI_SELECT_LIST_OF_VALUES));
+        List<ReportInputControl> inputControlList = Arrays.asList(reportInputControl);
+        Map<String, String[]> rawInputParameters = new HashMap<>();
+        rawInputParameters.put("city", new String[]{NOTHING_SUBSTITUTION_VALUE});
+
+        Map<String, String[]> inputControlFormattedValues = new HashMap<>();
+        inputControlFormattedValues.put("city", new String[]{"ABC", "EFG"});
+        service.verifyCorrectParameterValuesForNonCascadingControls(inputControlList, rawInputParameters, inputControlFormattedValues);
     }
 
 }

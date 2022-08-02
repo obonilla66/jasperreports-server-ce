@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,7 +25,7 @@ import items from 'src/data/list.data';
 import {dynamicList, baseList} from 'src/components/list.base';
 import listText from './test/templates/list.htm';
 import setTemplates from 'js-sdk/test/tools/setTemplates';
-import {rewire$matchAny, restore as restoreUtilsCommon} from 'src/util/utils.common';
+import {rewire$matchAny,rewire$matchMeOrUp, restore as restoreUtilsCommon} from 'src/util/utils.common';
 import layoutModule from 'src/core/core.layout';
 import buttonManager from 'src/core/core.events.bis';
 import * as dragndrop from 'dragdropextra';
@@ -926,9 +926,41 @@ describe('lists', function () {
         for (var i = 0; i < 3; i++) {
             items.push(new dynamicList.ListItem({
                 label: 'item' + i,
-                templateDomId: dynamicList.ListItem.prototype.DEFAULT_TEMPLATE_DOM_ID
+                templateDomId: dynamicList.ListItem.prototype.DEFAULT_TEMPLATE_DOM_ID,
+                scheduleIconPattern: ".scheduled.icon",
+                favoriteIconPattern: ".favorite.icon"
             }));
         }
+        it('should prevent select event on mouse down handler of favorite icon',function(){
+            var list = new dynamicList.List('list_control_path', { listTemplateDomId: 'list_control_path' });
+            const div = jQuery('<div class="favorite icon"></div>');
+            list.addItems(items);
+            let event = list.fire(list.Event.ITEM_SELECTED,items[0]);
+            event.memo.targetEvent = {
+                target:div[0],
+                shiftKey: true,
+                preventDefault: function () {
+                },
+                stopPropagation: function () {
+                }
+            };
+
+            rewire$matchMeOrUp(function() {
+                return {
+                    identify: function () {
+                        return 0;
+                    }
+                }
+            });
+            let getEventStub = sinon.stub(list, 'getItemByEvent').returns(items[0]);
+            let isElementIncludedStub = sinon.stub(items[0],'_isElementInExcluded').returns(false);
+            list._mousedownHandler(event);
+            expect(getEventStub).toHaveBeenCalled();
+            expect(isElementIncludedStub).toHaveBeenCalled();
+            restoreUtilsCommon();
+            getEventStub.restore();
+            isElementIncludedStub.restore();
+        });
         it('should not show if container not specified', function () {
             var item = new dynamicList.ListItem();
             spyOn(item, 'processTemplate');
@@ -1039,6 +1071,24 @@ describe('lists', function () {
             elToProcess = item.processTemplate(elToProcess);
             expect(jQuery(elToProcess).text()).toEqual(textToProcess);
         });
+        it('should check whether list item element is scheduled ',function(){
+            let list = new dynamicList.List('list_control_path', { listTemplateDomId: 'list_control_path' });
+            list.addItems(items);
+            let item = items[1];
+            let elem = item._getElement();
+            elem.classList = 'scheduled icon';
+            let isListItemScheduleHandler = item._isScheduleHandler(elem);
+            expect(isListItemScheduleHandler).toBeTruthy();
+        });
+        it('should check whether list item element is added as favorite ',function(){
+            let list = new dynamicList.List('list_control_path', { listTemplateDomId: 'list_control_path' });
+            list.addItems(items);
+            let item = items[1];
+            let elem = item._getElement();
+            elem.classList = 'favorite icon';
+            let isListItemFavoriteHandler = item._isFavoriteHandler(elem);
+            expect(isListItemFavoriteHandler).toBeTruthy();
+        });
     });
     describe('composite list item', function () {
         var items = [];
@@ -1053,7 +1103,9 @@ describe('lists', function () {
             composite = new dynamicList.CompositeItem({
                 items: items,
                 openUp: false,
-                templateDomId: dynamicList.ListItem.prototype.DEFAULT_TEMPLATE_DOM_ID
+                templateDomId: dynamicList.ListItem.prototype.DEFAULT_TEMPLATE_DOM_ID,
+                favoriteIconPattern: '.favorite.icon',
+                scheduleIconPattern: '.scheduled.icon'
             });
             list = new dynamicList.List('list_control_path', { listTemplateDomId: 'list_control_path' });
         });
@@ -1161,6 +1213,20 @@ describe('lists', function () {
             composite.refreshStyle();
             expect(baseList.openItem).not.toHaveBeenCalled();
             expect(baseList.closeItem).toHaveBeenCalled();
+        });
+        it('should check whether composite item element is added as favorite ',function(){
+            list.addItems([composite]);
+            list.show();
+            composite._element.classList = 'favorite icon';
+            let checkFavoriteHandler = composite._isFavoriteHandler(composite._element);
+            expect(checkFavoriteHandler).toBeTruthy();
+        });
+        it('should check whether composite item element is scheduled ',function(){
+            list.addItems([composite]);
+            list.show();
+            composite._element.classList = 'scheduled icon';
+            let checkSchedulerHandler = composite._isScheduleHandler(composite._element);
+            expect(checkSchedulerHandler).toBeTruthy();
         });
     });
 });

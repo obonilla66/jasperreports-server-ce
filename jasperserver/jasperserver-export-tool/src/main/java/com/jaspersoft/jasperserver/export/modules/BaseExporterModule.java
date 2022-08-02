@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,8 +35,8 @@ import com.jaspersoft.jasperserver.api.metadata.user.service.TenantService;
 import com.jaspersoft.jasperserver.export.modules.common.ProfileAttributeBean;
 import com.jaspersoft.jasperserver.export.modules.repository.RepositoryExportFilter;
 import com.jaspersoft.jasperserver.export.modules.repository.beans.RepositoryObjectPermissionBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Element;
 
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
@@ -54,7 +54,7 @@ import static java.lang.String.format;
  * @version $Id$
  */
 public abstract class BaseExporterModule extends BasicExporterImporterModule implements ExporterModule {
-	private static final Log log = LogFactory.getLog(BaseExporterModule.class);
+	private static final Logger log = LogManager.getLogger(BaseExporterModule.class);
 	
 	protected static final CommandOut commandOut = CommandOut.getInstance();
 	
@@ -132,10 +132,8 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 		OutputStream out = getFileOutput(parentPath, fileName);
 		BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(out, 16384);
 
-		if (log.isDebugEnabled()) {
-			log.debug(format("Serialize object %s, class: %s, parent path: %s, file name: %s",
-					object.toString(), object.getClass(), parentPath, fileName));
-		}
+		log.debug(() -> format("Serialize object %s, class: %s, parent path: %s, file name: %s",
+				object.toString(), object.getClass(), parentPath, fileName));
 
 		boolean closeOut = true;
 		try {
@@ -147,9 +145,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 			log.error(e);
 			throw new JSExceptionWrapper(e);
 		} finally {
-			if (log.isDebugEnabled()) {
-				log.debug(format("End of serialization for the file: %s", fileName));
-			}
+			log.debug("End of serialization for the file: {}", fileName);
 			if (closeOut) {
 				try {
 					bufferedOutputStream.close();
@@ -161,9 +157,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	}
 
 	protected final OutputStream getFileOutput(String parentPath, String fileName) {
-		if (log.isDebugEnabled()) {
-			log.debug(format("Get file output stream. Parent path: %s, file name: %s", parentPath, fileName));
-		}
+		log.debug("Get file output stream. Parent path: {}, file name: {}", parentPath, fileName);
 		try {
 			return output.getFileOutputStream(parentPath, fileName);
 		} catch (IOException e) {
@@ -173,9 +167,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	}
 	
 	protected final void writeData(InputStream input, String parentPath, String fileName) {
-		if (log.isDebugEnabled()) {
-			log.debug(format("Write data for the parent path: %s, file name: %s", parentPath, fileName));
-		}
+		log.debug("Write data for the parent path: {}, file name: {}", parentPath, fileName);
 
 		OutputStream out = getFileOutput(parentPath, fileName);
 		boolean closeOut = true;
@@ -188,9 +180,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 			log.error(e);
 			throw new JSExceptionWrapper(e);
 		} finally {
-			if (log.isDebugEnabled()) {
-				log.debug(format("Ending of writing data for the parent path: %s, file name: %s", parentPath, fileName));
-			}
+			log.debug("Ending of writing data for the parent path: {}, file name: {}", parentPath, fileName);
 
 			if (closeOut) {
 				try {
@@ -203,9 +193,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	}
 	
 	protected final void mkdir(String path) {
-		if (log.isDebugEnabled()) {
-			log.debug(format("Make directory for the path: %s", path));
-		}
+		log.debug("Make directory for the path: {}", path);
 		try {
 			output.mkdir(path);
 		} catch (IOException e) {
@@ -215,9 +203,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	}
 	
 	protected final String mkdir(String parentPath, String path) {
-		if (log.isDebugEnabled()) {
-			log.debug(format("Make directory for parent path: %s, path: %s", parentPath, path));
-		}
+		log.debug("Make directory for parent path: {}, path: {}", parentPath, path);
 		try {
 			return output.mkdir(parentPath, path);
 		} catch (IOException e) {
@@ -239,18 +225,14 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	}
 
 	public RepositoryObjectPermissionBean[] handlePermissions(InternalURI object) {
-		if (log.isDebugEnabled()) {
-			log.debug(format("Get object permissions for the object: %s", getObjectURI(object)));
-		}
+		log.debug("Get object permissions for the object: {}", () -> getObjectURI(object));
 
 		List permissions = permissionService.getObjectPermissionsForObject(executionContext, object);
 		RepositoryObjectPermissionBean[] permissionBeans;
 		if (permissions == null || permissions.isEmpty()) {
 			permissionBeans = null;
 		} else {
-			if (log.isDebugEnabled()) {
-				log.debug(format("Found %s permissions for %s", permissions.size(), getObjectURI(object)));
-			}
+			log.debug("Found {} permissions for {}", permissions::size, () -> getObjectURI(object));
 			commandOut.debug("Found " + permissions.size() + " permissions for " + object.getURI());
 			log.debug("Creating permissions beans");
 
@@ -266,9 +248,7 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 	}
 
 	protected RepositoryObjectPermissionBean toPermissionBean(ObjectPermission permission) {
-		if (log.isDebugEnabled()) {
-			log.debug("Creating repository object permission bean: " + permission.toString());
-		}
+		log.debug("Creating repository object permission bean: {}", permission::toString);
 
 		RepositoryObjectPermissionBean permissionBean = new RepositoryObjectPermissionBean();
 
@@ -282,12 +262,9 @@ public abstract class BaseExporterModule extends BasicExporterImporterModule imp
 		if (userAttributes == null || userAttributes.isEmpty()) {
 			return null;
 		}
-		if (log.isDebugEnabled()) {
-			final String userAttributesString = userAttributes.stream()
-					.map(Object::toString)
-					.collect(Collectors.joining(", "));
-			log.debug(format("Prepare attributes beans: %s", userAttributesString));
-		}
+		log.debug("Prepare attributes beans: {}", () ->
+				userAttributes.stream().map(Object::toString).collect(Collectors.joining(", "))
+		);
 
 		ArrayList<ProfileAttributeBean> beans = new ArrayList<ProfileAttributeBean>();
 		Iterator it = userAttributes.iterator();

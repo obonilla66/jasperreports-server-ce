@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -33,8 +33,7 @@ import {
     isIPad,
     doNothing,
     isSupportsTouch,
-    centerElement,
-    addDataToForm
+    centerElement
 } from "../util/utils.common";
 import {JRS} from "../namespace/namespace";
 import TouchController from '../util/touch.controller';
@@ -132,6 +131,13 @@ jQuery.extend(Report, {
         } else {
             Report.refreshReport();
         }
+
+        jQuery('.list.buttonSet.j-toolbar , .control.toolsRight.j-toolbar').on('mousedown',function(e){
+            let isBtnDisabled = jQuery(e.target).parent().parent().is(":disabled");
+            if(isBtnDisabled){
+                e.preventDefault();
+            }
+        });
     },
     reportRefreshed: function (silentUpdate) {
         //        Report.snapshotSaveStatus = null;
@@ -150,8 +156,6 @@ jQuery.extend(Report, {
 
             if (!isIPad())
                 fr.parent().parent().css('background-image', 'none');
-            var h = r.height();
-            var w = r.width();
             if (isSupportsTouch()) {
                 new TouchController(r.get(0), fr.get(0).parentNode.parentNode, {
                     use2Fingers: true,

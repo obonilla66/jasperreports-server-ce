@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -26,6 +26,8 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.ResourceReference;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlOption;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.InputControlState;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DataConverterService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -53,8 +55,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Yaroslav.Kovalchyk
@@ -230,6 +232,18 @@ public class MultiSelectListInputControlHandlerTest extends BaseInputControlHand
         handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
 
         assertEquals(3, state.getOptions().size());
+    }
+
+    @Test
+    public void fillStateValue_withNoParameterValue() throws CascadeResourceNotFoundException {
+        Map<String, Object> parameters = new HashMap<>();
+        setIncomingValue(parameters, Arrays.asList(), inputControl);
+        setSelectedOnly(parameters, true);
+        setLimit(parameters, 1);
+        setOffset(parameters, 1);
+        mockLoadValues(values);
+        handler.fillStateValue(state, inputControl, dataSource, parameters, reportInputControlInformation, Collections.emptyMap());
+        assertEquals(0, state.getOptions().size());
     }
 
 }

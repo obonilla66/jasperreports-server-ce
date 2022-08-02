@@ -1,5 +1,5 @@
 # JasperReports Server Community Edition Build Guide
-## Build pre-prerequisites
+## Build prerequisites
 - Install [Java 1.8](https://www.oracle.com/java/technologies/downloads) or higher. Open JDK 1.8 or higher is supported too.
 - Install [Apache Ant](https://ant.apache.org). Recommended version 1.10.2 or later.
 - Install [Ant Contrib](http://ant-contrib.sourceforge.net/#install) library (version 1.0b3).

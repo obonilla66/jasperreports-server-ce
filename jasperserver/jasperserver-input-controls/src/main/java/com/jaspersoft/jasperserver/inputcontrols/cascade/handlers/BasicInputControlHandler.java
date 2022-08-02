@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -74,7 +74,7 @@ public class BasicInputControlHandler implements InputControlHandler {
     protected DataConverterService dataConverterService;
     @Resource
     protected MessageSource messageSource;
-    @Resource(name = "isoCalendarFormatProvider")
+    @Resource(name = "${bean.calendarFormatProvider}")
     protected CalendarFormatProvider calendarFormatProvider;
     @Resource
     protected InputControlPagination inputControlPagination;
@@ -267,7 +267,7 @@ public class BasicInputControlHandler implements InputControlHandler {
             parameters.put(inputControl.getName(), dataConverterService.convertSingleValue(formattedValue, inputControl, info));
 
             inputControlOption.setSelected(null);
-            selectedValues = Arrays.asList(new InputControlOption[]{inputControlOption});
+            selectedValues = Arrays.asList(inputControlOption);
             selectedValueMap.put(inputControl.getName(), selectedValues);
             return selectedValueMap;
         } else {
@@ -282,7 +282,11 @@ public class BasicInputControlHandler implements InputControlHandler {
      * @deprecated this method need to be removed if real nothing substitution is implemented for single value and single select controls.
      */
     protected void internalApplyNothingSubstitution(String controlName, Map<String, Object> parameters) {
-        parameters.put(controlName, null);
+        // JS-65535 and JS 65427
+        // sync behavior of using internalApplyNothingSubstitution() and applyNothingSelected()
+        // if nothing is selected, IC will be removed from IC list instead of setting it to NULL
+        applyNothingSelected(controlName, parameters);
+
     }
 
     protected void doMandatoryValidation(Object typedValue, InputControlState state) {

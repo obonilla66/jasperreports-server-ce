@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -556,6 +556,12 @@
             <groupId>jaxen</groupId>
             <artifactId>jaxen</artifactId>
             <version>1.1-beta-8-JS-1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>jdom</groupId>
+                    <artifactId>jdom</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
@@ -756,12 +762,7 @@
             <version>2.0.1</version>
         </dependency>
 	    <!-- support jrxml with javascript -->
-        <dependency>
-            <groupId>org.mozilla</groupId>
-            <artifactId>rhino</artifactId>
-            <version>1.7.6</version>
-            <scope>runtime</scope>
-        </dependency>
+
         <!-- xbean dependency added in order to make jersey REST work for WAS 7. see bug #28550 -->
         <!-- 3.1.0 matches apache's poi-ooxml 4.1.0 -->
         <dependency>
@@ -869,7 +870,7 @@
         <dependency>
             <groupId>com.github.kklisura.cdt</groupId>
             <artifactId>cdt-java-client</artifactId>
-            <version>2.0.0</version>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.kohsuke</groupId>

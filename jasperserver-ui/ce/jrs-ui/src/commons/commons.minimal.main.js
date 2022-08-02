@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -60,7 +60,7 @@ if (jrsConfigs.enableAccessibility === 'true') {
     stdnavPluginForms.activate(stdnav);
     stdnavPluginGrid.activate(stdnav);
     stdnavPluginList.activate(stdnav);
-    stdnavPluginTable.activate(stdnav);    // JasperServer-specific stdnav plugins from jrs-ui
+    //stdnavPluginTable.activate(stdnav);    // JasperServer-specific stdnav plugins from jrs-ui
     // JasperServer-specific stdnav plugins from jrs-ui
     stdnavPluginActionMenu.activate(stdnav);
     stdnavPluginDynamicList.activate(stdnav);

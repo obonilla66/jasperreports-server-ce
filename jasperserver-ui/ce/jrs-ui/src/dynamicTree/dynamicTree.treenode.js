@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -634,7 +634,6 @@ dynamicTree.TreeNode.addMethod('edit', function (evt) {
             return;
         }
         dynamicTree.treeNodeEdited = this;
-        var obj = this;
         var oldName = this.name;
         var titleHolder = jQuery(this._getTitle().parentNode)[0];
         var input = this._getInputTemplateElement();
@@ -656,8 +655,8 @@ dynamicTree.TreeNode.addMethod('edit', function (evt) {
         input.onmouseup = function (e) {
             cancelEventBubbling(e);
         };
-        input.onkeydown = function (evt) {
-            var e = window.event ? window.event : evt;
+        input.onkeydown = function (keyEvt) {
+            var e = window.event ? window.event : keyEvt;
             if (e.keyCode == 13) {
                 input.onblur = null;
                 this.doEndEdit(e);
@@ -691,7 +690,6 @@ dynamicTree.TreeNode.addMethod('editEnded', function () {
     var tree = dynamicTree.trees[this.getTreeId()];
     if (dynamicTree.treeNodeEdited != null) {
         var input = this._getTitleInputElement();
-        var titleHolder = jQuery(input.parentNode)[0];
         var newValue = input.value;
         if (newValue == dynamicTree.treeNodeEdited.name) {
             input.remove();

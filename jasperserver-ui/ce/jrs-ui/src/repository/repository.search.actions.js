@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -36,6 +36,7 @@ import {baseErrorHandler} from "../core/core.ajax.utils";
 import {ajaxIframeDownload, doNothing, redirectToUrl, downloadFileByUrl} from "../util/utils.common";
 import jQuery from 'jquery';
 import layoutModule from '../core/core.layout';
+import request from 'js-sdk/src/common/transport/request';
 
 repositorySearch.Action = function (invokeFn) {
     if (Object.isFunction(invokeFn)) {
@@ -64,7 +65,6 @@ repositorySearch.folderActionFactory = {
         return new repositorySearch.Action(function () {
             var actionName;
             var toFolder = folder ? folder : repositorySearch.model.getContextFolder();
-            var object = repositorySearch.CopyMoveController.object;
             if (repositorySearch.CopyMoveController.isCopyFolder()) {
                 actionName = repositorySearch.FolderAction.COPY;
             } else if (repositorySearch.CopyMoveController.isMoveFolder()) {
@@ -168,6 +168,13 @@ function parseRepoData(data) {
     }
 }
 repositorySearch.resourceActionFactory = {
+    'ResourceFavoriteAction': function () {
+        return new repositorySearch.Action((function () {
+            const resources = repositorySearch.model._uiState.selectedResources;
+            repositorySearch.addToFavorite(resources);
+        }));
+    },
+
     'Copy': function (resource) {
         return new repositorySearch.Action(function () {
             repositorySearch.CopyMoveController.copy(resource);
@@ -313,6 +320,17 @@ repositorySearch.ServerAction.addMethod('invokeAction', function () {
         mode: AjaxRequester.prototype.EVAL_JSON
     });
 });
+repositorySearch.onFavoriteItem = function(url, favoriteList){
+    return request({
+        url: url,
+        type: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'content-type': 'application/json',
+        },
+        data: Object.toJSON({ favorites: favoriteList})
+    });
+};
 repositorySearch.ServerAction.addMethod('initDownload', function () {
     var url = this.actionURL + '&' + this.data;
     ajaxIframeDownload(url, {
@@ -559,11 +577,11 @@ repositorySearch.ServerAction.createResourceAction = function (actionName, optio
     function promptFilteredRetry(existingLabels, filteredResources) {
         dialogs.dependentResources.show(existingLabels, {
             dependenciesBtnOk: function () {
-                var action = new repositorySearch.ServerAction.createResourceAction(actionName, {
+                var resourceAction = new repositorySearch.ServerAction.createResourceAction(actionName, {
                     resources: filteredResources,
                     folder: options.folder
                 });
-                action.invokeAction();
+                resourceAction.invokeAction();
             }
         }, {
             buttons: [
@@ -1132,6 +1150,7 @@ repositorySearch.RedirectAction.createEditResourceAction = function (resource, i
         return repositorySearch.editActionFactory[repositorySearch.Action.DEFAULT](resource, type);
     }
 };
+
 repositorySearch.openActionFactory = {
     'ContentResource': function (resource, actionType) {
         if (actionType === repositorySearch.RedirectType.FLOW_REDIRECT) {

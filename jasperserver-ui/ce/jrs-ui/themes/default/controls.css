@@ -29,7 +29,8 @@
        1d. textarea
        1e. text input
        1f. select
-       1g. launcher
+       1g. switch
+       1h. launcher
 
     2. COMPLEX CONTROLS
        2a. date picker
@@ -75,7 +76,7 @@
 
    11. MISCELLANEOUS
    -----------------------------------
-    File last modified Feb 17, 2021
+    File last modified Nov 15, 2021
    -----------------------------------  */
 
 
@@ -326,8 +327,89 @@ input[type="text"].date {
 } /* I could only find this in data source template
      files, but I can't find it used in the UI */
 
+/* ------------- */
+/*  1g. switch   */
+/* ------------- */
+.control.switch {
+    display: inline-flex;
+    margin-bottom: 0;
+    min-height: 16px;
+    position: relative;
+}
+
+.control.switch input[type=checkbox] {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.control.switch .wrap {
+    align-items: center;
+    display: flex;
+    position: relative;
+}
+
+.control.switch .wrap .label {
+    flex: 1 0 auto;
+    margin: 0;
+    padding-right: 8px;
+}
+
+.control.switch .wrap .track {
+    background: #8a8a8a;
+    border-radius: 8px;
+    flex: 1 0 28px;
+    height: 16px;
+    position: relative;
+}
+
+.control.switch .wrap .track:before {
+    content: "";
+    height: 14px;
+    left: 14px;
+    position: absolute;
+    top: 0;
+    width: 14px;
+}
+
+.control.switch .wrap .track:after {
+    background: white;
+    border-radius: 6px;
+    content: "";
+    height: 12px;
+    left: 2px;
+    position: absolute;
+    top: 2px;
+    transition: transform 0.3s cubic-bezier(0, 1, 0.5, 1);
+    width: 12px;
+}
+
+/* on */
+.control.switch input[type=checkbox]:checked ~ .wrap .track:before {
+    left: 0;
+}
+
+.control.switch input[type=checkbox]:checked ~ .wrap .track:after {
+    transform: translate3d(12px, 0, 0);
+}
+
+.control.switch input[type=checkbox]:checked ~ .wrap .track,
+.control.switch input[type=checkbox]:checked:focus ~ .wrap .track {
+    background-color: #01529a;
+}
+
+/* disabled */
+.control.switch input[type=checkbox][disabled] ~ .wrap .track {
+    opacity: 0.6;
+}
+
+.control.switch input[type=checkbox][disabled] ~ .wrap {
+    opacity: 0.5;
+}
+
 /* --------------- */
-/*  1g. launcher   */
+/*  1h. launcher   */
 /* --------------- */
 /* launcher is clickable text that performs an action on
    click. Found in manage properties, Permissions dialog. */
@@ -1665,19 +1747,12 @@ legend a {
 }
 
 .textPlus .button.disclosure > .icon {
-	background-image: url("images/disclosure_indicators_icons_sprite@1x.png");
+	background-image: url("images/disclosure_indicators_icons_sprite.svg");
     background-repeat: no-repeat;
-    background-size: 80px;
+    background-size: 170px;
 	background-position: 3px -84px;
 	height: 20px;
 	width: 18px;
-}
-
-/* 2x icons*/
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .textPlus .button.disclosure > .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 /* ------------ */
@@ -1864,7 +1939,7 @@ div.olap_level_label {
     height: 28px;
     left: 10px;
     position: absolute;
-    top: 6px !important;
+    top: 6px;
     width: 45px;
     z-index: 3;
 }
@@ -1878,7 +1953,6 @@ div.olap_level_label {
 
 #tableOptions {
     display: block;
-    left: 0;
 }
 
 #tableOptions.over,

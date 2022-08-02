@@ -80,7 +80,7 @@
 
     24. NO RESULTS MESSAGE
   -----------------------------------
-    File last modified Jan 21, 2021
+    File last modified May 26, 2022
   -----------------------------------  */
 
 
@@ -121,19 +121,22 @@
 }
 
 ul.decorated li {
-    background-image: url("images/disclosure_indicators_icons_sprite@1x.png");
-    background-position: -32px -120px;
-    background-repeat: no-repeat;
-    background-size: 80px;
     margin: 1em;
     padding-left: 15px;
+    position: relative;
 }
 
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    ul.decorated li {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
+ul.decorated li:before {
+    background-image: url("images/disclosure_indicators_icons_sprite.svg");
+    background-position: -32px -120px;
+    background-repeat: no-repeat;
+    background-size: 170px;
+    content: "";
+    height: 15px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 12px;
 }
 
 .hideRoot > .node > .collapsible {
@@ -457,23 +460,16 @@ and (max-device-width : 1024px) {
 }
 
 .filters > li > .wrap > .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-position: -26px -119px;
     background-repeat: no-repeat;
-    background-size: 80px;
+    background-size: 170px;
     float: left;
     height: 20px;
     margin: 5px 3px 0 0;
     position: relative;
     visibility: hidden;
     width: 20px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .filters > li > .wrap > .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .list.filters .selected .icon {
@@ -504,8 +500,8 @@ and (max-device-width : 1024px) {
 
 #filtersPanel > .panel > .header > .buttonIconToggle {
     background-color: transparent;
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
-    background-size: 80px;
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
+    background-size: 170px;
     border: none;
     float: left;
     height: 32px;
@@ -513,13 +509,6 @@ and (max-device-width : 1024px) {
     padding: 0;
     transform: none;
     width: 22px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    #filtersPanel > .panel > .header > .buttonIconToggle {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 #filtersPanel > .panel.open > .header > .buttonIconToggle {
@@ -589,22 +578,13 @@ and (max-device-width : 1024px) {
 .fields > .node > .wrap > .icon,
 .fields .node > .wrap > .icon,
 .fields.node > .wrap > .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
-    background-size: 80px;
+    background-size: 170px;
     height: 26px;
     margin-right: 5px;
     top: 0;
     width: 15px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .fields > .node > .wrap > .icon,
-    .fields .node > .wrap > .icon,
-    .fields.node > .wrap > .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .fields.tabular > .node > .wrap > .icon,
@@ -914,23 +894,16 @@ and (max-device-width : 1024px) {
 }
 
 .stepIndicator .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-position: -26px -119px;
     background-repeat: no-repeat;
-    background-size: 80px;
+    background-size: 170px;
     float: left;
     height: 20px;
     margin: 5px 3px 0 0;
     position: relative;
     visibility: hidden;
     width: 20px;
-} /* ??? */
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .stepIndicator .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .list.stepIndicator .selected .icon {
@@ -1782,7 +1755,7 @@ and (max-device-width : 1024px) {
 .list.resources .column.one {
     border: none;
     margin: 0 !important;
-    width: 44px;
+    width: 66px;
 }
 
 .list.resources .separator,
@@ -1830,7 +1803,7 @@ and (max-device-width : 1024px) {
 }
 
 .list.resources .icon.disclosure {
-    left: 26px;
+    left: 48px;
 }
 
 .resourceName {
@@ -1954,16 +1927,9 @@ and (max-device-width : 1024px) {
 
 /* disclosure arrow */
 .list.resources .disclosure.icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
-    background-size: 80px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .list.resources .disclosure.icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
+    background-size: 170px;
 }
 
 .list.resources .node.closed > .wrap .disclosure.icon {
@@ -1983,24 +1949,58 @@ and (max-device-width : 1024px) {
 }
 
 /* scheduled button */
+/* background image is set in buttons.css */
 .list.resources .wrap .scheduled.icon {
-    left: 4px;
+    left: 26px;
     visibility: hidden;
 }
 
 .list.resources > .scheduled > .wrap .scheduled.icon {
-    background-position: -30px -415px;
+    background-position: -28px -415px;
     visibility: visible;
 }
 
 .list.resources .scheduled.selected > .wrap .scheduled.icon {
-    background-position: -60px -415px;
+    background-position: -58px -415px;
 }
 
 #resultsListHeader.list.resources .scheduled > .wrap .scheduled.icon {
     background-position: 0 -416px;
     cursor: auto;
     top: 6px;
+}
+
+/* favorite button */
+.list.resources .wrap .favorite.icon {
+    background-position: -27px -473px;
+    background-size: 170px;
+    height: 22px;
+    left: 2px;
+    visibility: hidden;
+    width: 20px;
+}
+
+.list.resources > .favorite > .wrap .favorite.icon {
+    visibility: visible;
+}
+
+.list.resources .wrap.over .favorite.icon {
+    background-position: 3px -502px;
+    visibility: visible;
+}
+
+.list.resources > .selected > .wrap:hover .favorite.icon {
+    background-position: -57px -502px;
+    visibility: visible;
+}
+
+.list.resources > .favorite > .wrap:hover .favorite.icon {
+    background-position: -27px -473px;
+}
+
+.list.resources > .favorite.selected > .wrap .favorite.icon,
+.list.resources > .favorite.selected > .wrap:hover .favorite.icon {
+    background-position: -57px -473px;
 }
 
 /* ---------------- */

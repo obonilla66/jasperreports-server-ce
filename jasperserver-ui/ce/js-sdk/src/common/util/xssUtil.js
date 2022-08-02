@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -389,7 +389,7 @@ var _xssSoftHtmlEscape = function(string, options) {
 
     // If the string contains nonce (not noncePrefix in the 1st pos-n), it comes from JRS; it's safe to exec javascript.
     var xssNonce = _getXssNonce();
-    if (xssNonce && string.indexOf(xssNonce) > 0)
+    if (xssNonce && string.indexOf(xssNonce) >= 0)
         return string;
 
     string = _canonicalize(string);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -247,9 +247,6 @@ function canAllBeCopiedOrMovedToFolder(folder) {
         return false;
     }
     var resources = repositorySearch.CopyMoveController.isBulkAction() ? repositorySearch.CopyMoveController.object : [repositorySearch.CopyMoveController.object];
-    var folderUris = resources.collect(function (resource) {
-        return resource.parentFolder;
-    });
     var allow = true;
     if (folder.isThemeRootFolder() || folder.isThemeFolder()) {
         var allFiles = resources.detect(function (resource) {
@@ -264,8 +261,8 @@ function canAllBePasted() {
 }
 function canAllPropertiesBeShowed() {
     var resources = repositorySearch.model.getSelectedResources();
-    var detected = resources.detect(function (resource) {
-        return !canResourcePropertiesBeShowed(resource);
+    var detected = resources.detect(function () {
+        return !canResourcePropertiesBeShowed();
     });
     return resources.length > 0 && detected === undefined;
 }
@@ -276,6 +273,19 @@ function canAllPropertiesBeEdited() {
     });
     return resources.length > 0 && detected === undefined;
 }
+function canBeAddedToFavorites() {
+    let resources = repositorySearch.model.getSelectedResources();
+    return resources.every((resource)=>{
+        return !resource.isFavorite;
+    });
+}
+function canBeRemovedFromFavorites() {
+    let resources = repositorySearch.model.getSelectedResources();
+    return resources.every((resource)=>{
+        return resource.isFavorite;
+    });
+}
+
 function canAllBeDeleted() {
     var resources = repositorySearch.model.getSelectedResources();
     var detected = resources.detect(function (resource) {
@@ -300,14 +310,14 @@ function canThemeBeReuploaded() {
     return folder && folder.isThemeFolder() && canFolderBeEdited(folder);
 }
 function isPermissionsChanged() {
-    var dialogs = repositorySearch.dialogsPool.getAllPermissionsDialogs();
-    return dialogs.detect(function (dialog) {
+    var permissionDialogs = repositorySearch.dialogsPool.getAllPermissionsDialogs();
+    return permissionDialogs.detect(function (dialog) {
         return dialog.isChanged();
     });
 }
 function isPropertiesChanged() {
-    var dialogs = repositorySearch.dialogsPool.getAllPropertiesDialogs();
-    return dialogs.detect(function (dialog) {
+    var propertyDialogs = repositorySearch.dialogsPool.getAllPropertiesDialogs();
+    return propertyDialogs.detect(function (dialog) {
         return dialog.isChanged();
     });
 }    ////////////////////////////
@@ -450,6 +460,11 @@ var repositorySearch = {
         REUPLOADED: 'theme:reuploaded',
         THEME_ERROR: 'theme:error'
     },
+    ResourcesFavoriteAction: {
+        FILTER_ID: 'favoriteFilter',
+        ALL_RESOURCES: 'favoriteFilter-all',
+        FAVORITE_RESOURCES: 'favoriteFilter-favorites'
+    },
     initialize: function (localContext) {
         var options = localContext.rsInitOptions;
         repositorySearch.mode = options.mode;
@@ -476,6 +491,9 @@ var repositorySearch = {
             repositorySearch.filterPath.initialize();
         }
         repositorySearch.resultsPanel.initialize(options);
+        if(repositorySearch.mode === repositorySearch.Mode.LIBRARY){
+            repositorySearch.favoriteSwitchControl.initialize(options);
+        }
         repositorySearch.sortersPanel.initialize(repositorySearch.model.getSortersConfiguration(), repositorySearch.model.getSortState());
         repositorySearch.initFolderEvents();
         repositorySearch.initResourceEvents();
@@ -693,8 +711,7 @@ var repositorySearch = {
                 jQuery(repositorySearch.filtersPanel).find(filterId, state.customFilters[filterId], true)[0];
             }
         }
-        if (state.folderUri != repositorySearch.model.getFolderUriState()) {
-        }    // TODO: select folder
+        // TODO: select folder
         repositorySearch.model.setServerState(state);
     },
     initFolderEvents: function () {
@@ -748,7 +765,6 @@ var repositorySearch = {
                     bottomMessage: repositorySearch.messages['dialog.dependencies.resources.deleteMessage']
                 });
             } else {
-                var folder = repositorySearch.model.getSelectedFolder();
                 repositorySearch.resultsPanel.removeResources(resources);
             }
         });
@@ -788,7 +804,6 @@ var repositorySearch = {
             dialogs.systemConfirm.show(repositorySearch.messages['RM_REPORT_CREATED'], 5000);
         });
         this.observe('resource:generateError', function (event) {
-            var inputData = event.memo.inputData;
             var error = event.memo.responseData;
             var msg = error.msg;
             var data = error.data;
@@ -1240,7 +1255,11 @@ var Resource = function (json) {
     this.parentFolder = json.parentFolder;
     this.resourceType = json.resourceType;
     this.type = json.type;
+    if (json.fileType) {
+        this.fileType = json.fileType;
+    }
     this.isScheduled = json.scheduled;
+    this.isFavorite = json.favorite;
     this._permissions = json.permissions;
     this.hasChildren = json.hasChildren;
     this.isChild = false;
@@ -1405,6 +1424,13 @@ var ResourcesUtils = {
         });
         return list;
     },
+    getSelectedResourceUris: function (resources) {
+        return resources.map((resource)=>{
+            return {
+                uri: resource.URIString ? resource.URIString : resource.URI
+            };
+        });
+    },
     checkNameLength: function (value) {
         return !value.blank() && value.length <= repositorySearch.model.getConfiguration().resourceNameMaxLength;
     },
@@ -1414,10 +1440,7 @@ var ResourcesUtils = {
     labelValidator: function (value) {
         var isValid = true;
         var errorMessage = '';
-        if (value.blank()) {
-            errorMessage = repositorySearch.messages['RE_INVALID_NAME_SIZE'].replace('{0}', repositorySearch.model.getConfiguration().resourceLabelMaxLength);
-            isValid = false;
-        } else if (value.length > repositorySearch.model.getConfiguration().resourceLabelMaxLength) {
+        if (value.blank() || (value.length > repositorySearch.model.getConfiguration().resourceLabelMaxLength)) {
             errorMessage = repositorySearch.messages['RE_INVALID_NAME_SIZE'].replace('{0}', repositorySearch.model.getConfiguration().resourceLabelMaxLength);
             isValid = false;
         }
@@ -1542,6 +1565,9 @@ window.canAllBePasted = canAllBePasted;
 window.canAllPropertiesBeShowed = canAllPropertiesBeShowed;
 window.canAllPropertiesBeEdited = canAllPropertiesBeEdited;
 window.canAllBeDeleted = canAllBeDeleted;
+window.canBeAddedToFavorites = canBeAddedToFavorites;
+window.canBeRemovedFromFavorites = canBeRemovedFromFavorites;
+
 
 export {
     repositorySearch,
@@ -1559,5 +1585,7 @@ export {
     canBeOpened,
     invokeBulkAction,
     invokeRedirectAction,
-    canBeScheduled
+    canBeScheduled,
+    canBeAddedToFavorites,
+    canBeRemovedFromFavorites
 };

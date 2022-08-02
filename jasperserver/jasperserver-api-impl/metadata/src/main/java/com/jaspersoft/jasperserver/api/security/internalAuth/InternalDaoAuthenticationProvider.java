@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -47,14 +47,24 @@ public class InternalDaoAuthenticationProvider extends DaoAuthenticationProvider
 		if (!(userDetails instanceof MetadataUserDetails))
 			throw new UserIsNotInternalException("User needs to be internal to be authenticated by " + this.getClass());
 		if (((MetadataUserDetails)userDetails).isExternallyDefined()) {
-			User sysUser = loadUserFromSystemStorageByAuth(authentication);
-			if (sysUser == null) {
-				throw new UserIsNotInternalException("User needs to be internal to be authenticated by " + this.getClass());
-			} else {
-				((MetadataUserDetails) userDetails).setPassword(sysUser.getPassword());
-			}
+			externalUserCheck(userDetails, authentication);
 		}
 		super.additionalAuthenticationChecks(userDetails, authentication);
+	}
+
+	protected void externalUserCheck(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) {
+		if (authentication instanceof InternalizableAuthentication 
+				&& ((InternalizableAuthentication) authentication).canInternalize()) {
+			//authentication object indicates that it can be internalized, no further checks needed
+			return;
+		}
+		
+		User sysUser = loadUserFromSystemStorageByAuth(authentication);
+		if (sysUser == null) {
+			throw new UserIsNotInternalException("User needs to be internal to be authenticated by " + this.getClass());
+		} else {
+			((MetadataUserDetails) userDetails).setPassword(sysUser.getPassword());
+		}
 	}
 
 	/**

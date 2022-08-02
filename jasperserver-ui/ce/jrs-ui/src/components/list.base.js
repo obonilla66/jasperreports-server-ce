@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -145,6 +145,7 @@ dynamicList.ListItem = function (options) {
     this.first = false;
     this.last = false;
     if (options) {
+        this.isIconClicked = true;
         this._value = options.value ? options.value : {};
         this._label = options.label ? options.label : '';
         this._subList = options.subList;
@@ -153,6 +154,9 @@ dynamicList.ListItem = function (options) {
         this._respondOnItemEvents = !Object.isUndefined(options.respondOnItemEvents) ? options.respondOnItemEvents : true;
         this._excludeFromEventHandling = 'excludeFromEventHandling' in options ? options.excludeFromEventHandling : undefined;
         this._excludeFromSelectionTriggers = 'excludeFromSelectionTriggers' in options ? options.excludeFromSelectionTriggers : undefined;
+        this.FAVORITE_ICON_PATTERN= options.favoriteIconPattern ;
+        this.SCHEDULE_ICON_PATTERN= options.scheduleIconPattern ;
+
     }
 };    /**
  *
@@ -192,8 +196,7 @@ dynamicList.ListItem.addMethod('getId', function () {
  */
 dynamicList.ListItem.addMethod('setList', function (list) {
     this._list = list;
-    if (!list) {
-    }    // This function should no longer be used for this purpose.
+    // This function should no longer be used for this purpose.
     // Use "unsetList" instead.
     // FIXME: Turn this on when logging is added to this module!
     // this.logger.warn("deprecated use case");
@@ -543,7 +546,13 @@ dynamicList.ListItem.addMethod('_isElementInExcluded', function (event, item) {
 dynamicList.ListItem.addMethod('_isExcludedFromSelectionTriggers', function (event) {
     var element = event.target;
     return this._excludeFromSelectionTriggers && matchAny(element, this._excludeFromSelectionTriggers) != null;
-});    ///////////////////////////////////////////////////////
+});
+dynamicList.ListItem.addMethod('_isFavoriteHandler', function (element) {
+    return jQuery(element).is(this.FAVORITE_ICON_PATTERN);
+});
+dynamicList.ListItem.addMethod('_isScheduleHandler', function (element) {
+    return jQuery(element).is(this.SCHEDULE_ICON_PATTERN);
+})///////////////////////////////////////////////////////
 // Composite List Item
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
@@ -557,6 +566,8 @@ dynamicList.CompositeItem = function (options) {
     this._subList = null;
     this._subListOptions = options.listOptions ? options.listOptions : {};
     this._listTagName = 'ul';
+    this.FAVORITE_ICON_PATTERN = options.favoriteIconPattern ;
+    this.SCHEDULE_ICON_PATTERN = options.scheduleIconPattern;
     this.OPEN_HANDLER_PATTERN = options.openHandlerPattern ? options.openHandlerPattern : this.OPEN_HANDLER_PATTERN;
     this.CLOSE_HANDLER_PATTERN = options.closeHandlerPattern ? options.closeHandlerPattern : this.CLOSE_HANDLER_PATTERN;
 };
@@ -696,6 +707,10 @@ dynamicList.CompositeItem.addMethod('_isOpenHandler', function (element) {
     return jQuery(element).is(this.OPEN_HANDLER_PATTERN);
 }).addMethod('_isCloseHandler', function (element) {
     return jQuery(element).is(this.CLOSE_HANDLER_PATTERN);
+}).addMethod('_isFavoriteHandler', function (element) {
+    return jQuery(element).is(this.FAVORITE_ICON_PATTERN);
+}).addMethod('_isScheduleHandler', function (element) {
+    return jQuery(element).is(this.SCHEDULE_ICON_PATTERN);
 });
 dynamicList.CompositeItem.addMethod('_getSubListId', function () {
     return this._generateId() + '_' + this.DEFAULT_SUB_LIST_ID_SUFFIX;
@@ -724,10 +739,10 @@ dynamicList.UnderscoreTemplatedListItem = function (options) {
         this._template = 'template' in options ? options.template : '';
     }
 };
-var tempFunc = function () {
+var tempFunction = function () {
 };
-tempFunc.prototype = dynamicList.TemplatedListItem.prototype;
-dynamicList.UnderscoreTemplatedListItem.prototype = new tempFunc();
+tempFunction.prototype = dynamicList.TemplatedListItem.prototype;
+dynamicList.UnderscoreTemplatedListItem.prototype = new tempFunction();
 dynamicList.UnderscoreTemplatedListItem.prototype.constructor = dynamicList.UnderscoreTemplatedListItem;
 dynamicList.UnderscoreTemplatedListItem.prototype._getTemplate = function () {
     return this._template;
@@ -891,8 +906,7 @@ dynamicList.List.addMethod('setItems', function (items) {
             // No items, no suitable cursor, or cursor has not been rendered
             // yet-- focus the list itself.
             jQuery(listEl).focus();
-        } else {
-        }    // FIXME: Enable when logger is added
+        }  // FIXME: Enable when logger is added
         // this.logger.error("Focus has been abandoned; region tabindex may be lost");
         //console.error("Focus has been abandoned; region tabindex may be lost");
     }
@@ -1173,7 +1187,7 @@ dynamicList.List.addMethod('isItemSelected', function (item) {
 /**
  * @param item {dynamicList.ListItem} -
  */
-dynamicList.List.addMethod('selectItem', function (item, isCtrlHeld, isShiftHeld, isContextMenu) {
+dynamicList.List.addMethod('selectItem', function (item, isCtrlHeld, isShiftKeyHeld, isContextMenu) {
     var event = this.fire(this.Event.ITEM_BEFORE_SELECT_OR_UNSELECT, { item: item });
     if (event.stopSelectOrUnselect) {
         return;
@@ -1183,13 +1197,13 @@ dynamicList.List.addMethod('selectItem', function (item, isCtrlHeld, isShiftHeld
     // Fix for multiple DnD.
     // If couple items selected and _selectOnMousedown enabled
     // we need deselect items on mouse up to be able Drag them.
-    if (this._multiSelect && this._selectedItems.length > 1 && this.isItemSelected(item) && !(isCtrlHeld || isShiftHeld || isContextMenu)) {
+    if (this._multiSelect && this._selectedItems.length > 1 && this.isItemSelected(item) && !(isCtrlHeld || isShiftKeyHeld || isContextMenu)) {
         return;
     }
     var isContextMenuOnSelected = this.isItemSelected(item) && isContextMenu;
     var reset = !(this._multiSelect && isCtrlHeld) && !isContextMenuOnSelected;
     var deselect = this.isItemSelected(item) && isCtrlHeld && !isContextMenuOnSelected;
-    var selectRange = this._multiSelect && !deselect && isNotNullORUndefined(this._lastSelectedItem) && isShiftHeld;
+    var selectRange = this._multiSelect && !deselect && isNotNullORUndefined(this._lastSelectedItem) && isShiftKeyHeld;
     var select = !deselect && !selectRange;
     if (reset) {
         this.resetSelected();
@@ -1210,7 +1224,7 @@ dynamicList.List.addMethod('selectItem', function (item, isCtrlHeld, isShiftHeld
         }
     }
     if (select) {
-        this._addItemToSelected(item, !(isShiftHeld && this._multiSelect));
+        this._addItemToSelected(item, !(isShiftKeyHeld && this._multiSelect));
     }    // Move the cursor to the most recently selected or deselected item.
     // Move the cursor to the most recently selected or deselected item.
     this.setCursor(item);
@@ -1225,7 +1239,7 @@ dynamicList.List.addMethod('deselectItem', function (item) {
     // Move the cursor to the most recently selected or deselected item.
     this.setCursor(item);
 });
-dynamicList.List.addMethod('deselectOthers', function (item, isCtrlHeld, isShiftHeld, isContextMenu) {
+dynamicList.List.addMethod('deselectOthers', function (item, isCtrlHeld, isShiftKey, isContextMenu) {
     var event = this.fire(this.Event.ITEM_BEFORE_SELECT_OR_UNSELECT, { item: item });
     if (event.stopSelectOrUnselect) {
         return;
@@ -1235,7 +1249,7 @@ dynamicList.List.addMethod('deselectOthers', function (item, isCtrlHeld, isShift
     // Fix for multiple DnD.
     // If couple items selected and _selectOnMousedown enabled
     // we need deselect items on mouse up to be able Drag them.
-    if (this._multiSelect && this._selectedItems.length > 1 && this.isItemSelected(item) && !(isCtrlHeld || isShiftHeld || isContextMenu)) {
+    if (this._multiSelect && this._selectedItems.length > 1 && this.isItemSelected(item) && !(isCtrlHeld || isShiftKey || isContextMenu)) {
         var items = this._selectedItems.findAll(function (i) {
             return i != item;
         });
@@ -1325,9 +1339,7 @@ dynamicList.List.addMethod('scrollUpTo', function (item) {
         return;
     }
     var scrollTop = scrollEl.scrollTop;
-    var scrollPortHeight = scrollEl.offsetHeight;
-    var itemYPos = item._getElement().offsetTop;
-    var itemHeight = item._getElement().offsetHeight;    // Hack to try and deal with column headers.  The header should NOT have
+    var itemYPos = item._getElement().offsetTop;  // Hack to try and deal with column headers.  The header should NOT have
     // been included in the scrollable region.
     // FIXME-- remove the header from the scrollable region, then remove this
     // hack.  Note the potentially invalid assumption that the header has the
@@ -1877,7 +1889,6 @@ dynamicList.List.addMethod('_removeItemFromSelected', function (item) {
 });
 dynamicList.List.addMethod('_buildDnDOverlay', function (element) {
     //    var wrapper = $(this.DND_WRAPPER_TEMPLATE).cloneNode(true), template = $(this.DND_ITEM_TEMPLATE).cloneNode(true);
-    var items = [];
     element.setStyle({
         width: null,
         height: null
@@ -1996,6 +2007,7 @@ dynamicList.List.addMethod('_mousedownHandler', function (event) {
         return;
     }
     event.listEvent = true;
+    let iconEvent = this._itemPreventEvent(item,event);
     if (event.touches && event.touches.length == 2) {
         this.twofingers = true;    //var li = jQuery(element).parents('li:first');
         //li.hasClass('selected') && document.fire(layoutModule.ELEMENT_CONTEXTMENU, {targetEvent: event, node: element});
@@ -2003,7 +2015,7 @@ dynamicList.List.addMethod('_mousedownHandler', function (event) {
     } else {
         this.twofingers = false;
     }
-    if (item.isComposite && (item._isOpenHandler(event.target) || item._isCloseHandler(event.target))) {
+    if (iconEvent){
         // Do not focus items that have only had their expanders clicked--
         // this will result in a fixFocus call to the current selection
         // (clicking on the expander will not change the selection), which
@@ -2012,7 +2024,8 @@ dynamicList.List.addMethod('_mousedownHandler', function (event) {
         // item selects it prior to focusing, which avoids the problem.)
         event.stopPropagation();
         event.preventDefault();
-    } else {
+    }
+    else {
         if (item._respondOnItemEvents && !event.isInvoked) {
             this.fire(this.Event.ITEM_MOUSEDOWN, {
                 targetEvent: event,
@@ -2107,7 +2120,22 @@ dynamicList.List.addMethod('_initEvents', function () {
     container.stopObserving('key:home').observe('key:home', this.selectFirst.bindAsEventListener(this));
     container.stopObserving('key:end').observe('key:end', this.selectLast.bindAsEventListener(this));
     */
-});    // List element that is rendered from Underscore template string passed as an option
+});
+dynamicList.List.addMethod('_itemPreventEvent',function(item , event){
+    let isComposite = item.isComposite,
+        isFavIcon = item.isIconClicked,
+        isOpenOrCloseHandler = isComposite && (item._isOpenHandler(event.target) || item._isCloseHandler(event.target)),
+        isFavHandler;
+    if ( event.which !== 3 ) {
+        isFavHandler = item._isFavoriteHandler(event.target);
+    }
+
+    const compositeItemSelectable = isComposite && ( isOpenOrCloseHandler||isFavHandler);
+    const listItemSelectable = isFavIcon && isFavHandler;
+
+    return compositeItemSelectable || listItemSelectable ;
+});
+// List element that is rendered from Underscore template string passed as an option
 // List element that is rendered from Underscore template string passed as an option
 dynamicList.UnderscoreTemplatedList = function (id, options) {
     if (options) {
@@ -2115,10 +2143,10 @@ dynamicList.UnderscoreTemplatedList = function (id, options) {
     }
     dynamicList.List.apply(this, arguments);
 };
-var tempFunc = function () {
+var temporaryFunc = function () {
 };
-tempFunc.prototype = dynamicList.List.prototype;
-dynamicList.UnderscoreTemplatedList.prototype = new tempFunc();
+temporaryFunc.prototype = dynamicList.List.prototype;
+dynamicList.UnderscoreTemplatedList.prototype = new temporaryFunc();
 dynamicList.UnderscoreTemplatedList.prototype.constructor = dynamicList.UnderscoreTemplatedList;
 dynamicList.UnderscoreTemplatedList.prototype._getTemplateElement = function (currentElement) {
     var element = jQuery(_.template(this._template, {}))[0];

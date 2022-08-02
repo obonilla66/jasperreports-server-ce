@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -288,9 +288,9 @@ var Viewer = function(options) {
                     it.disableSearchButtons();
                     it.goToPage(nextPage).then(function() {
                         it.enableSearchButtons();
-                        var elem = $('.jr_search_result:first');
-                        elem.addClass('highlight');
-                        it.scrollElementIntoView(elem[0]);
+                        var searchElem = $('.jr_search_result:first');
+                        searchElem.addClass('highlight');
+                        it.scrollElementIntoView(searchElem[0]);
                         it.search.currentIndex = 0;
                         it.search.currentPage = nextPage;
                     });
@@ -342,9 +342,9 @@ var Viewer = function(options) {
                     it.disableSearchButtons();
                     it.goToPage(prevPage).then(function() {
                         it.enableSearchButtons();
-                        var elem = $('.jr_search_result:last');
-                        elem.addClass('highlight');
-                        it.scrollElementIntoView(elem[0]);
+                        var searchElem = $('.jr_search_result:last');
+                        searchElem.addClass('highlight');
+                        it.scrollElementIntoView(searchElem[0]);
                         it.search.currentIndex = prevPageResults - 1;
                         it.search.currentPage = prevPage;
                     });
@@ -408,10 +408,10 @@ Viewer.privateMethods = {
                 container.hide();
             });
             container.on('click', 'b.icon', function() {
-                var it = $(this),
+                var listElem = $(this),
                     parentLi;
-                if (!it.is('.noninteractive')) {
-                    parentLi = it.closest('li.subtree');
+                if (!listElem.is('.noninteractive')) {
+                    parentLi = listElem.closest('li.subtree');
                     if (parentLi.is('.open')) {
                         parentLi.removeClass('open').addClass('closed');
                     } else {
@@ -573,9 +573,9 @@ Viewer.privateMethods = {
             return;
         }
 
-        $.each(it.partsStartIndex, function (i, sIndex) {
+        $.each(it.partsStartIndex, function (partIndex, sIndex) {
             if (it.reportStatus.pages.current >= sIndex) {
-                activePartIndex = i;
+                activePartIndex = partIndex;
                 activePartStartIndex = sIndex;
             }
         });
@@ -1066,14 +1066,14 @@ Viewer.publicMethods = {
                         switch(link.type) {
                         case hyperlinkTypes.LOCAL_ANCHOR:
                         case hyperlinkTypes.LOCAL_PAGE:
-                            var pagesOption = {};
+                            var pagesOpt = {};
                             if (link.anchor) {
-                                pagesOption.anchor = link.anchor;
+                                pagesOpt.anchor = link.anchor;
                             }
                             if (link.pages) {
-                                pagesOption.pages = link.pages;
+                                pagesOpt.pages = link.pages;
                             }
-                            self._reportInstance.pages(pagesOption).run().fail(self.errorHandler.bind(self));
+                            self._reportInstance.pages(pagesOpt).run().fail(self.errorHandler.bind(self));
                             break;
 
                         case hyperlinkTypes.REMOTE_ANCHOR:
@@ -1142,18 +1142,6 @@ Viewer.publicMethods = {
         if(window.Report.hasError) {
             window.Report.hasError = false;
         }
-
-        // Give the table a tabindex so that Standard Navigation can work with it.
-        $(el).find('table.jrPage').prop('tabindex', '8');
-        // Prevent screen-readers from guessing that our table is used only for layout purposes,
-        // because of all the blank cells at the edges
-        $(el).find('table.jrPage').attr('role', 'grid');
-        $(el).find('table.jrPage tr').attr('role', 'row');
-        $(el).find('table.jrPage tbody tr').attr('role', 'row');
-        $(el).find('table.jrPage tr th').attr('role', 'columnheader');
-        $(el).find('table.jrPage tbody tr th').attr('role', 'columnheader');
-        $(el).find('table.jrPage tr td').attr('role', 'gridcell');
-        $(el).find('table.jrPage tbody tr td').attr('role', 'gridcell');
     },
     goToPage: function(page) {
         this.reportStatus.pages.current = page;
@@ -1175,7 +1163,7 @@ Viewer.publicMethods = {
         if (!currentStatus) {
             return true;
         } else {
-            isQueuedOrInExecution = _.contains([reportStatuses.QUEUED, reportStatuses.EXECUTION], currentStatus),
+            isQueuedOrInExecution = _.contains([reportStatuses.QUEUED, reportStatuses.EXECUTION], currentStatus);
             isFailedOrEmpty = _.contains([reportStatuses.FAILED, reportStatuses.EMPTY], currentStatus);
 
             return isQueuedOrInExecution || (!isFailedOrEmpty && outputFinal === false);

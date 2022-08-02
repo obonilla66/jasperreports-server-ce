@@ -553,13 +553,18 @@
 }
 
 
-.jr-mIcon.jr-slideIn:before {
+.jr-mIcon.jr-searchClear:before {
 	content:"\f17e";
 }
 
 
-.jr-mIcon.jr-slideOut:before {
+.jr-mIcon.jr-slideIn:before {
 	content:"\f17f";
+}
+
+
+.jr-mIcon.jr-slideOut:before {
+	content:"\f180";
 }
 
 
@@ -568,8 +573,28 @@
 }
 
 
+.jr-mIcon.jr-sortAscending:before {
+	content:"\f181";
+}
+
+
+.jr-mIcon.jr-sortDescending:before {
+	content:"\f182";
+}
+
+
 .jr-mIcon.jr-squareBackground:before {
 	content:"\f151";
+}
+
+
+.jr-mIcon.jr-star:before {
+	content:"\f183";
+}
+
+
+.jr-mIcon.jr-starOutline:before {
+	content:"\f184";
 }
 
 
@@ -579,7 +604,7 @@
 
 
 .jr-mIcon.jr-swap:before {
-	content:"\f180";
+	content:"\f185";
 }
 
 
@@ -589,7 +614,7 @@
 
 
 .jr-mIcon.jr-table:before {
-	content:"\f181";
+	content:"\f186";
 }
 
 
@@ -604,7 +629,7 @@
 
 
 .jr-mIcon.jr-textAJustify:before {
-	content:"\f182";
+	content:"\f187";
 }
 
 
@@ -624,7 +649,7 @@
 
 
 .jr-mIcon.jr-textAStretch:before {
-	content:"\f183";
+	content:"\f188";
 }
 
 
@@ -644,27 +669,27 @@
 
 
 .jr-mIcon.jr-textRotate0:before {
-	content:"\f184";
+	content:"\f189";
 }
 
 
 .jr-mIcon.jr-textRotate180:before {
-	content:"\f185";
+	content:"\f18a";
 }
 
 
 .jr-mIcon.jr-textRotate270:before {
-	content:"\f186";
+	content:"\f18b";
 }
 
 
 .jr-mIcon.jr-textRotate90:before {
-	content:"\f187";
+	content:"\f18c";
 }
 
 
 .jr-mIcon.jr-textStrikethrough:before {
-	content:"\f188";
+	content:"\f18d";
 }
 
 
@@ -699,7 +724,7 @@
 
 
 .jr-mIcon.jr-upload:before {
-	content:"\f189";
+	content:"\f18e";
 }
 
 
@@ -719,5 +744,15 @@
 
 
 .jr-mIcon.jr-wrench:before {
-	content:"\f18a";
+	content:"\f18f";
+}
+
+
+.jr-mIcon.jr-zoomIn:before {
+	content:"\f190";
+}
+
+
+.jr-mIcon.jr-zoomOut:before {
+	content:"\f191";
 }

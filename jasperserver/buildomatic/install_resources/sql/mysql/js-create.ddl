@@ -101,6 +101,14 @@
         primary key (id)
     ) engine=InnoDB;
 
+    create table JIFavoriteResource (
+       id bigint not null auto_increment,
+        user_id bigint not null,
+        resource_id bigint not null,
+        creation_date datetime not null,
+        primary key (id)
+    ) engine=InnoDB;
+
     create table JIFileResource (
        id bigint not null,
         data longblob,
@@ -502,6 +510,9 @@ create index access_upd_index on JIAccessEvent (updating);
 create index access_res_type_index on JIAccessEvent (resource_type);
 create index access_hid_index on JIAccessEvent (hidden);
 create index idx_keyStore_id on JIAzureSqlDatasource (keyStore_id);
+
+    alter table JIFavoriteResource 
+       add constraint UKrj25jnmtcmddlfp23n7duhpv unique (user_id, resource_id);
 create index idx_scheduled_res on JIReportJob (scheduledResource);
 create index idx_ssh_private_key on JIReportJobRepoDest (ssh_private_key);
 
@@ -581,6 +592,18 @@ create index resource_type_index on JIResource (resourceType);
        add constraint FKfowvvrdpyr4fsfdt0qekb6b31 
        foreign key (id) 
        references JIResource (id);
+
+    alter table JIFavoriteResource 
+       add constraint FKe3ak4arnheeorbrsc4u8m8pi0 
+       foreign key (user_id) 
+       references JIUser (id) 
+       on delete cascade;
+
+    alter table JIFavoriteResource 
+       add constraint FK63man3dkmekfr2hgfifi3ne8c 
+       foreign key (resource_id) 
+       references JIResource (id) 
+       on delete cascade;
 
     alter table JIFileResource 
        add constraint FK9cks6rnum2e1nwpltygmric0a 
@@ -921,3 +944,4 @@ create index JIFileResource_reference_index on JIFileResource (reference);
 create index JIResource_parent_folder_index on JIResource (parent_folder);
 create index idx35_parent_folder_idx on JIResourceFolder (parent_folder);
 create index idx36_resource_id_idx on JIVirtualDataSourceUriMap (resource_id);
+create index JIFavoriteResource_resource_id_idx on JIFavoriteResource (resource_id);

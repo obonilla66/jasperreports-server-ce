@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -573,11 +573,11 @@ dynamicTree.Tree.addMethod('_selectOrEditNode', function (evt, node, ctrlHeld, s
         return;
     }
     if (isRangeReduce) {
-        for (var i = 0; i < min; i++) {
-            parent.childs[i].deselect(evt);
+        for (var j = 0; j < min; j++) {
+            parent.childs[j].deselect(evt);
         }
-        for (var i = max + 1; i < parent.childs.length; i++) {
-            parent.childs[i].deselect(evt);
+        for (var k = max + 1; k < parent.childs.length; k++) {
+            parent.childs[k].deselect(evt);
         }
         return;
     }
@@ -600,14 +600,14 @@ dynamicTree.Tree.addMethod('_deselectOthers', function (evt, node, ctrlHeld, shi
  */
 dynamicTree.Tree.addMethod('_selectNextNode', function (node, event) {
     //recurse up the parent chain until we get a parent with a next sibling
-    function getNextUncle(node) {
-        node = node.parent;
-        if (!node) {
+    function getNextUncle(currentNode) {
+        currentNode = currentNode.parent;
+        if (!currentNode) {
             return null;
-        } else if (node.nextSibling) {
-            return node.nextSibling;
+        } else if (currentNode.nextSibling) {
+            return currentNode.nextSibling;
         }
-        return getNextUncle(node);
+        return getNextUncle(currentNode);
     }
     var nextNode = node.isOpen() && node.getFirstChild() || node.nextSibling || getNextUncle(node);
     nextNode && (node.deselect() && nextNode.select(event));
@@ -620,8 +620,8 @@ dynamicTree.Tree.addMethod('_selectNextNode', function (node, event) {
  * @param {Object} node - current node
  */
 dynamicTree.Tree.addMethod('_selectPreviousNode', function (node, event) {
-    function getLastVisibleDescendant(node) {
-        return !(node.isOpen() && node.hasChilds()) && node || getLastVisibleDescendant(node.getLastChild());
+    function getLastVisibleDescendant(currentNode) {
+        return !(currentNode.isOpen() && currentNode.hasChilds()) && currentNode || getLastVisibleDescendant(currentNode.getLastChild());
     }
     var prevNode = node.prevSibling && getLastVisibleDescendant(node.prevSibling) || node.parent;
     prevNode && (node.deselect() && prevNode.select(event));

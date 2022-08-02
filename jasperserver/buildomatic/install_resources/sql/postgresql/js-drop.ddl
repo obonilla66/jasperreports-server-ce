@@ -32,6 +32,12 @@
     alter table JIDataType 
        drop constraint FKfowvvrdpyr4fsfdt0qekb6b31;
 
+    alter table JIFavoriteResource 
+       drop constraint FKe3ak4arnheeorbrsc4u8m8pi0;
+
+    alter table JIFavoriteResource 
+       drop constraint FK63man3dkmekfr2hgfifi3ne8c;
+
     alter table JIFileResource 
        drop constraint FK9cks6rnum2e1nwpltygmric0a;
 
@@ -233,6 +239,8 @@
 
     drop table if exists JIDataType cascade;
 
+    drop table if exists JIFavoriteResource cascade;
+
     drop table if exists JIFileResource cascade;
 
     drop table if exists JIFTPInfoProperties cascade;
@@ -402,3 +410,5 @@
     DROP INDEX JIFileResource_reference_index ON JIFileResource;
 
     DROP INDEX JIResource_parent_folder_index ON JIResource;
+
+    DROP INDEX JIFavoriteResource_resource_id_idx ON JIFavoriteResource;

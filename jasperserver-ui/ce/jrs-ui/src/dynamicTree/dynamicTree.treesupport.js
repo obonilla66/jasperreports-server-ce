@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -773,16 +773,16 @@ dynamicTree.TreeSupport.addMethod('findNodeFirstNodeChildByAlphabeticalOrder', f
  * @param nodeId Node identifier.
  */
 dynamicTree.TreeSupport.addMethod('findNodeById', function (nodeId, startNode) {
-    return function _findNodeById(nodeId, node) {
-        if (!node || !nodeId) {
+    return function _findNodeById(keyNode, node) {
+        if (!node || !keyNode) {
             return null;
         }
-        if (node.param.id === nodeId) {
+        if (node.param.id === keyNode) {
             return node;
         }
         if (node.hasChilds()) {
             for (var i = 0; i < node.childs.length; ++i) {
-                var found = _findNodeById(nodeId, node.childs[i]);
+                var found = _findNodeById(keyNode, node.childs[i]);
                 if (found) {
                     return found;
                 }

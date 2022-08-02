@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -150,8 +150,8 @@ JSTooltip.addMethod("_setValues", function(elements, values) {
 });
 
 JSTooltip.addMethod("_calculateZIndex", function(element) {
-    function getElementZIndex(element) {
-        return parseInt(jQuery(element).css("z-index"));
+    function getElementZIndex(elem) {
+        return parseInt(jQuery(elem).css("z-index"));
     }
 
     // Get tooltip element zIndex.
@@ -182,9 +182,9 @@ JSTooltip.addMethod("_escapeText", function(text) {
         : xssUtil.hardEscape(text);
 });
 
-JSTooltip.addMethod("show", function(offsets) {
-    if(offsets) {
-        this.offsets = offsets;
+JSTooltip.addMethod("show", function(tooltipOffsets) {
+    if(tooltipOffsets) {
+        this.offsets = tooltipOffsets;
     }
 
     this._element = jQuery('#' + this.templateId)[0];

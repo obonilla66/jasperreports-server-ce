@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -49,7 +49,7 @@ Usage:
         <div class="pageHeader-title-text">${pageHeaderText}</div>
         <c:if test="${isEmbeddedDesigner}">
             <div class="pageHeader-title-controls pageHeader-controls-right">
-                <div id="closeDesigenr" class="closeIcon" js-nonmodal-tabindex="undefined" tabindex="-1"></div>
+                <div id="closeDesigner" class="closeIcon" js-nonmodal-tabindex="undefined" tabindex="-1"></div>
             </div>
         </c:if>
     </div>

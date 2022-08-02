@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -58,8 +58,7 @@ export default {
 
         var $el = $(element),
             canFocus = false,
-            nodeName = $el.prop('nodeName'),
-            tabindex = $el.attr('tabindex');
+            nodeName = $el.prop('nodeName');
 
         // These elements are always focusable (...unless you're in Safari
         // and haven't turned on keyboard accessibility!)

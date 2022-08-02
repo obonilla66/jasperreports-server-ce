@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -86,6 +86,8 @@ using only the mouse, but happens really easily using the keyboard. -->
     <li js-navtype="dynamiclist" id="tabular_fourColumn_resources:leaf" class="resources">
         <div class="wrap button draggable">
             <div class="column one">
+                <div class="favorite icon button"></div>
+                <div class="separator"></div>
                 <div class="scheduled icon button"></div>
                 <div class="separator"></div>
                 <div class="disclosure icon button"></div>
@@ -120,6 +122,8 @@ using only the mouse, but happens really easily using the keyboard. -->
     <li js-navtype="dynamiclist" id="tabular_fourColumn_resources_sublist:leaf" class="resources">
         <div class="wrap button draggable">
             <div class="column one">
+                <div class="favorite icon button"></div>
+                <div class="separator"></div>
                 <div class="scheduled icon button">&nbsp;</div>
                 <div class="separator"></div>
                 <div class="disclosure icon button">&nbsp;</div>

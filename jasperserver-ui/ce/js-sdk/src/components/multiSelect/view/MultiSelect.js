@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,7 +22,6 @@
 import $ from 'jquery';
 import Backbone from 'backbone';
 import _ from 'underscore';
-import SearcheableDataProvider from '../../singleSelect/dataprovider/SearcheableDataProvider';
 import NumberUtils from '../../../common/util/parse/NumberUtils';
 import doCalcOnVisibleNodeClone from '../../scalableList/util/domAndCssUtil';
 import browserDetection from '../../../common/util/browserDetection';
@@ -37,7 +36,7 @@ import Sizer from '../../sizer/Sizer';
 let doCalcOnVisibleNodeCloneObj = doCalcOnVisibleNodeClone.doCalcOnVisibleNodeClone;
 
 var numberUtils = new NumberUtils();
-var SELECTION_CHANGE_TIMEOUT = 100;
+var SELECTION_CHANGE_TIMEOUT = 300;
 var DEFAULT_VISIBLE_ITEMS_COUNT = 10;
 var DEFAULT_MIN_ITEMS_COUNT = 3;
 export default Backbone.View.extend({

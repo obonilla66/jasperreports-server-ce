@@ -20,8 +20,7 @@
  */
 package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)

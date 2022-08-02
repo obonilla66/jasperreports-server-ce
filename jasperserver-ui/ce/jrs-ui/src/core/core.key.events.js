@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -114,12 +114,12 @@ document.observe('keydown', function(event){
         return;
     }
     //ctrl + y
-    if(isMetaHeld(event) && ((event.keyCode == 89))) {
+    if(isMetaHeld(event) && (event.keyCode == 89)) {
         focused.fire('key:redo', {targetEvent: event, node: focused});
         return;
     }
     //ctrl + z
-    if(isMetaHeld(event) && ((event.keyCode == 90))) {
+    if(isMetaHeld(event) && (event.keyCode == 90)) {
         focused.fire('key:undo', {targetEvent: event, node: focused});
         return;
     }

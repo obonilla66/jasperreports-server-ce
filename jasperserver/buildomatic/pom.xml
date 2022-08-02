@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -35,14 +35,13 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
         <jaxb-api.version>2.3.2</jaxb-api.version>
         <jaxb-runtime.version>2.3.2</jaxb-runtime.version>
         <istack-commons-runtime.version>3.0.8</istack-commons-runtime.version>
         <xerces.version>2.12.1-sp1</xerces.version>
         <semver4j.version>3.1.0</semver4j.version>
-        <jackson.version>2.11.4</jackson.version>
-        <log4j.version>2.17.1</log4j.version>
+        <jackson.version>2.13.2</jackson.version>        <log4j.version>2.17.1</log4j.version>
+        <js-crypto.version>3.1.1</js-crypto.version>
     </properties>
 
     <dependencies>
@@ -55,7 +54,7 @@
         <dependency>
             <groupId>com.jaspersoft.jasperserver.crypto</groupId>
             <artifactId>js-crypto</artifactId>
-            <version>3.1.1</version>
+            <version>${js-crypto.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.checkerframework</groupId>
@@ -202,6 +201,12 @@
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
             <version>${jaxb-runtime.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>jakarta.xml.bind</groupId>
+                    <artifactId>jakarta.xml.bind-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.sun.istack</groupId>

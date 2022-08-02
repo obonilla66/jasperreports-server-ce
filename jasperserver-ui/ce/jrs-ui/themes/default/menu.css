@@ -34,7 +34,7 @@
     5. CHART MENU, AD HOC DESIGNER
 
    -----------------------------------
-    File last modified Jan 12, 2021
+    File last modified Nov 2, 2021
    -----------------------------------  */
 
 
@@ -124,18 +124,10 @@
 
 .menu.vertical .leaf > .wrap.toggle.down .icon,
 .menu.vertical .leaf.active .wrap.button .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-position: -20px -115px;
-    background-size: 80px;
+    background-size: 170px;
     top: 3px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .menu.vertical .leaf > .wrap.toggle.down .icon,
-    .menu.vertical .leaf.active .wrap.button .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .menu.vertical li > .wrap.over,
@@ -151,20 +143,13 @@
 }
 
 .menu.vertical .node > .wrap > .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-position: -28px -297px;
-    background-size: 80px;
+    background-size: 170px;
     height: 18px;
     right: 5px;
     top: 6px;
     width: 18px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .menu.vertical .node > .wrap > .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .menu.vertical .node > .wrap.over > .icon,

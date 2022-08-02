@@ -47,12 +47,14 @@
 
     10. SCHEDULED BUTTON
 
-    11. SEARCH BUTTON
+    11. FAVORITES BUTTON
 
-    12. MOVE BUTTON
+    12. SEARCH BUTTON
+
+    13. MOVE BUTTON
 
   -----------------------------------
-    File last modified Jan 19, 2021
+    File last modified May 31, 2022
   ----------------------------------- */
 
 
@@ -537,17 +539,10 @@ button.capsule {
 
 /* disclosure indicator icon positions for capsule buttons */
 .button.capsule .indicator {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
-    background-size: 80px;
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
+    background-size: 170px;
     background-position: -1px -80px;
     right: 2px;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    .button.capsule .indicator {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .button.capsule.over .indicator,
@@ -629,7 +624,7 @@ button.capsule.mini .wrap {
 .button.capsule.up {}
 
 .button.capsule.up.over,
-.button.capsule.superfocus.subfocus:hover,
+.button.capsule.superfocus.subfocus:not([disabled]):hover,
 .button.capsule.down,
 .button.capsule.down.over,
 .button.capsule.down.pressed {
@@ -782,22 +777,15 @@ button.capsule.mini .wrap {
 /*  10. SCHEDULED BUTTON   */
 /* ----------------------- */
 .button.scheduled {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-position: -30px -415px;
     background-repeat: no-repeat;
-    background-size: 80px;
+    background-size: 170px;
     display: inline-block;
     height: 22px;
     position: relative;
-    width: 16px;
+    width: 20px;
     z-index: 10;
-}
-
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    .button.scheduled {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .button.scheduled.over {}
@@ -806,7 +794,23 @@ button.capsule.mini .wrap {
 
 
 /* ----------------------- */
-/*  11. SEARCH BUTTON   */
+/*  11. FAVORITES BUTTON   */
+/* ----------------------- */
+.button.favorite {
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
+    background-repeat: no-repeat;
+    display: inline-block;
+    position: relative;
+    z-index: 10;
+}
+
+.button.favorite.over {}
+
+.button.favorite.pressed {}
+
+
+/* ----------------------- */
+/*  12. SEARCH BUTTON   */
 /* ----------------------- */
 .button.search {
     background-image: url(images/search_icons_sprite@1x.png);
@@ -854,7 +858,7 @@ button.capsule.mini .wrap {
 
 
 /* ------------------- */
-/*  12. MOVE BUTTON    */
+/*  13. MOVE BUTTON    */
 /* ------------------- */
 .move.right .icon,
 .move.right.over.pressed .icon {

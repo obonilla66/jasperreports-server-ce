@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -536,6 +536,7 @@
                 <security:intercept-url pattern="/rest_v2/settings/**" access="ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/customDataSources" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/rest_v2/jdbcDrivers" method="GET" access="ROLE_USER,ROLE_ADMINISTRATOR" />
+                <security:intercept-url pattern="/rest_v2/favorites/**" access="ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/404.html" access="ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/500.html" access="ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR" />
                 <security:intercept-url pattern="/reportGenerator.html" access="ROLE_USER,ROLE_ADMINISTRATOR" />

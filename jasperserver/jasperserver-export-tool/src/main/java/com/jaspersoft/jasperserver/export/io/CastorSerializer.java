@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,8 +24,8 @@ package com.jaspersoft.jasperserver.export.io;
 import com.jaspersoft.jasperserver.api.JSExceptionWrapper;
 import com.jaspersoft.jasperserver.export.modules.ExporterModuleContext;
 import com.jaspersoft.jasperserver.export.modules.ImporterModuleContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.exolab.castor.mapping.Mapping;
 import org.exolab.castor.mapping.MappingException;
 import org.exolab.castor.xml.Marshaller;
@@ -44,14 +44,14 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.URL;
 
 /**
  * @author Lucian Chirita (lucianc@users.sourceforge.net)
  * @version $Id$
  */
 public class CastorSerializer implements ObjectSerializer, InitializingBean {
-
-	private static final Log log = LogFactory.getLog(CastorSerializer.class);
+	private static final Logger log = LogManager.getLogger(CastorSerializer.class);
 
 	private XMLContext context = new XMLContext();
 
@@ -80,10 +80,9 @@ public class CastorSerializer implements ObjectSerializer, InitializingBean {
 
 				for (int i = 0; i < castorMappings.length; i++) {
 					Resource mappingRes = castorMappings[i];
-					if (log.isDebugEnabled()) {
-						log.debug(String.format("Load mapping: %s", mappingRes.getURL()));
-					}
-					castorMapping.loadMapping(mappingRes.getURL());
+					final URL url = mappingRes.getURL();
+					log.debug("Load mapping: {}", url);
+					castorMapping.loadMapping(url);
 				}
 				context.addMapping(castorMapping);
 			} catch (IOException | MappingException e) {

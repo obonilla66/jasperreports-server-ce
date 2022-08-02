@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -28,8 +28,8 @@ import com.jaspersoft.jasperserver.export.modules.BaseExporterModule;
 import com.jaspersoft.jasperserver.export.modules.ExporterModuleContext;
 import com.jaspersoft.jasperserver.export.modules.mt.beans.TenantBean;
 import com.jaspersoft.jasperserver.export.service.impl.ImportExportServiceImpl;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Element;
 
 import java.util.*;
@@ -39,7 +39,7 @@ import java.util.*;
  * @version $Id: TenantExporter.java 15533 2009-01-14 18:34:04Z lucian $
  */
 public class TenantExporter extends BaseExporterModule {
-	private static final Log log = LogFactory.getLog(TenantExporter.class);
+	private static final Logger log = LogManager.getLogger(TenantExporter.class);
 
 	protected boolean exportTenants;
 
@@ -53,11 +53,8 @@ public class TenantExporter extends BaseExporterModule {
 				hasParameter(moduleConfiguration.getTenantsArgument()) ||
 				hasParameter(ImportExportServiceImpl.ORGANIZATION);
 
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Exporting tenants: " + exportTenants);
-		}
-		
+		log.debug("Exporting tenants: {}", exportTenants);
+
 		tenantIdQueue = new LinkedList<>();
 	}
 
@@ -109,13 +106,12 @@ public class TenantExporter extends BaseExporterModule {
 	}
 
 	protected void addTenantIndexEntry(Tenant tenant) {
-		if (log.isDebugEnabled()) {
-			log.debug("Add index to the tenant: " + tenant.getId());
-		}
+		final String tenantId = tenant.getId();
+		log.debug("Add index to the tenant: {}", tenantId);
 		Element indexElement = getIndexElement();
 		Element tenantElement = indexElement.addElement(
 				moduleConfiguration.getTenantIndexElement());
-		tenantElement.addText(tenant.getId());
+		tenantElement.addText(tenantId);
 	}
 
 	public TenantModuleConfiguration getModuleConfiguration() {
@@ -127,9 +123,7 @@ public class TenantExporter extends BaseExporterModule {
 	}
 
 	private List<ProfileAttribute> getProfileAttributes(Tenant tenant) {
-		if (log.isDebugEnabled()) {
-			log.debug("Get profile attributes for the tenant: " + tenant.getId());
-		}
+		log.debug("Get profile attributes for the tenant: {}", tenant::getId);
 		AttributesSearchCriteria searchCriteria = new AttributesSearchCriteria.Builder()
 				.build();
 		Set<String> groups = new HashSet<String>();

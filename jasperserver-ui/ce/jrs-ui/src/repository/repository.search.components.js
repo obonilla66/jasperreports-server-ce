@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -71,6 +71,7 @@ import _ from 'underscore';
 import jQuery from 'jquery';
 import 'js-sdk/src/common/extension/customEventExtension';
 import __jrsConfigs__ from 'js-sdk/src/jrs.configs';
+import i18n from '../i18n/jasperserver_messages.properties';
 
 // Get functions from the global scope in order to fix JRS-20092
 // in fact they are declared in repository.search.main for CE or in
@@ -114,6 +115,21 @@ repositorySearch.secondarySearchBox = {
 ///////////////////////////////
 // Toolbar object
 ///////////////////////////////
+repositorySearch.favoriteSwitchControl = {
+    _containerId: 'favorites-only',
+    initialize: function (options) {
+        this._container = jQuery('#' + this._containerId)[0];
+        if ( options.state?.customFilters?.favoriteFilter === repositorySearch.ResourcesFavoriteAction.FAVORITE_RESOURCES ) {
+            this._container.checked = true
+        }
+        this._container.onclick= function(){
+            repositorySearch.fire(repositorySearch.Event.SEARCH_FILTER, {
+                filterId: repositorySearch.ResourcesFavoriteAction.FILTER_ID,
+                optionId: this.checked ? repositorySearch.ResourcesFavoriteAction.FAVORITE_RESOURCES : repositorySearch.ResourcesFavoriteAction.ALL_RESOURCES
+            });
+        };
+    }
+};
 repositorySearch.toolbar = {
     _bulkActions: {},
     initialize: function (bulkActions) {
@@ -365,6 +381,7 @@ repositorySearch.resultsPanel = {
     LINK_NAME_PATTERN: '.resourceName > a',
     DISCLOSURE_PATTERN: '.disclosure',
     SCHEDULED_PATTERN: '.scheduled',
+    FAVORITE_PATTERN: '.favorite',
     LOADING_CLASS_NAME: 'loading',
     initialize: function (options) {
         var it = this;
@@ -426,8 +443,10 @@ repositorySearch.resultsPanel = {
                 value: value,
                 openHandlerPattern: '.disclosure.icon',
                 closeHandlerPattern: '.disclosure.icon',
+                favoriteIconPattern: '.favorite.icon',
+                scheduleIconPattern: '.scheduled.icon',
                 //respondOnItemEvents: false,
-                excludeFromSelectionTriggers: ['.disclosure.icon'],
+                excludeFromSelectionTriggers: ['.disclosure.icon','.favorite.icon'],
                 listOptions: {
                     listTemplateDomId: 'tabular_fourColumn_resources_sublist',
                     itemTemplateDomId: 'tabular_fourColumn_resources_sublist:leaf',
@@ -443,7 +462,10 @@ repositorySearch.resultsPanel = {
             resourceItem = new dynamicList.ListItem({
                 cssClassName: layoutModule.LEAF_CLASS,
                 label: value.label,
-                value: value
+                value: value,
+                favoriteIconPattern: '.favorite.icon',
+                scheduleIconPattern: '.scheduled.icon',
+                excludeFromSelectionTriggers: ['.favorite.icon'],
             });
         }
         resourceItem.processTemplate = function (element) {
@@ -499,21 +521,25 @@ repositorySearch.resultsPanel = {
                     }
                 }
             });
-            var descriptionValue = this.getValue().description;
+            let descriptionValue = this.getValue().description;
             desc.update(xssUtil.hardEscape(descriptionValue));
             if (!descriptionValue) {
                 desc.jsTooltip && desc.jsTooltip.disable();
             } else {
                 new JSTooltip(desc, { text: descriptionValue });
             }
-            var type = element.select('.resourceType')[0];
-            var modifiedDate = jQuery(element).find('.modifiedDate')[0];
-            var createdDate = jQuery(element).find('.createdDate')[0];
+            let type = element.select('.resourceType')[0];
+            let modifiedDate = jQuery(element).find('.modifiedDate')[0];
+            let createdDate = jQuery(element).find('.createdDate')[0];
+            let scheduleIcon = jQuery(element).find('.scheduled')[0];
+            let favoriteIcon = jQuery(element).find('.favorite')[0];
             type.update(this.getValue().type);
             modifiedDate.update(this.getValue().updateDate);
             new JSTooltip(modifiedDate, { text: this.getValue().updateDateTime });
             createdDate.update(this.getValue().date);
             new JSTooltip(createdDate, { text: this.getValue().dateTime });
+            new JSTooltip(scheduleIcon, { text: i18n['schedule.tooltip'] });
+            new JSTooltip(favoriteIcon, { text: i18n['favorite.tooltip'] });
             return element;
         };
         var baseRefreshStyle = resourceItem.refreshStyle;
@@ -522,6 +548,9 @@ repositorySearch.resultsPanel = {
             var element = this._getElement();
             if (this.getValue().isScheduled) {
                 jQuery(element).addClass(layoutModule.SCHEDULED_CLASS);
+            }
+            if (this.getValue().isFavorite) {
+                jQuery(element).addClass(layoutModule.FAVORITE_CLASS);
             }
             if (this.isLoading) {
                 jQuery(element).addClass(layoutModule.LOADING_CLASS);
@@ -564,22 +593,17 @@ repositorySearch.resultsPanel = {
             if (this._isScheduleIconEvent(e) && canBeScheduled(resource)) {
                 invokeRedirectAction('ScheduleAction');
             }
+
+            if (this._isFavoriteIconClicked(e) ) {
+                const selectedItem = jQuery(item._element);
+                repositorySearch.addToFavorite([resource], selectedItem);
+            }
         }.bindAsEventListener(this));
         this.getList().observe('item:selected', function (event) {
-            var item = event.memo.item;
-            var resources = this.getList().getSelectedItems().collect(function (lItem) {
-                return lItem.getValue();
-            });
-            repositorySearch.model.setSelectedResources(resources);
-            repositorySearch.actionModel.refreshToolbar();
+            this._selectOrUnselectResources(event);
         }.bindAsEventListener(this));
         this.getList().observe('item:unselected', function (event) {
-            var item = event.memo.item;
-            var resources = this.getList().getSelectedItems().collect(function (lItem) {
-                return lItem.getValue();
-            });
-            repositorySearch.model.setSelectedResources(resources);
-            repositorySearch.actionModel.refreshToolbar();
+            this._selectOrUnselectResources(event);
         }.bindAsEventListener(this));
         this.getList().observe('item:mouseup', function (event) {
         }    //            var item = event.memo.item;
@@ -588,7 +612,7 @@ repositorySearch.resultsPanel = {
         );
         this.getList().observe('item:open', function (event) {
             var item = event.memo.item;
-            var resource = item.getValue();
+            let resource = item.getValue();
             if (!resource.isLoaded()) {
                 item.setLoading(true);
                 repositorySearch.fire(repositorySearch.Event.SEARCH_CHILDREN, {
@@ -621,6 +645,17 @@ repositorySearch.resultsPanel = {
             Event.stop(event);
         });
     },
+    _selectOrUnselectResources:function(event){
+        const item = event.memo.item;
+        const resourceVal = item.getValue();
+        const selectedElement = jQuery(item._element);
+        const resources = this.getList().getSelectedItems().collect(function (lItem) {
+            return lItem.getValue();
+        });
+        resourceVal.isFavorite && selectedElement.addClass(layoutModule.FAVORITE_CLASS)
+        repositorySearch.model.setSelectedResources(resources);
+        repositorySearch.actionModel.refreshToolbar();
+    },
     _isLinkEvent: function (event) {
         var element = Event.element(event);
         return matchAny(element, [this.LINK_NAME_PATTERN]) != null;
@@ -628,6 +663,10 @@ repositorySearch.resultsPanel = {
     _isScheduleIconEvent: function (event) {
         var element = Event.element(event);
         return jQuery(element).is(this.SCHEDULED_PATTERN);
+    },
+    _isFavoriteIconClicked: function (event) {
+        let element = Event.element(event);
+        return jQuery(element).is(this.FAVORITE_PATTERN);
     },
     _isDisclosureEvent: function (event) {
         var element = Event.element(event);
@@ -1714,6 +1753,33 @@ repositorySearch.editFolderProperties = function (folder) {
         }
     });
     folderProperties.show();
+};
+repositorySearch.addToFavorite = function (resources, itemHovered) {
+    const resourceSelectedElement = jQuery(this._container).find('.resources.selected'),
+        selectedElem = itemHovered? itemHovered : resourceSelectedElement;
+    let url = __jrsConfigs__.contextPath + '/rest_v2/favorites';
+    const selectedResourceList = ResourcesUtils.getSelectedResourceUris(resources);
+    const isItemMarkedAsFav = resources.every((resource)=>{
+        return resource.isFavorite;
+    });
+    if ( !isItemMarkedAsFav ) {
+        repositorySearch.onFavoriteItem(url, selectedResourceList).then(()=>{
+            selectedElem.addClass(layoutModule.FAVORITE_CLASS);
+            repositorySearch.setFavorite(resources);
+        });
+    } else {
+        url = url+ '/delete';
+        repositorySearch.onFavoriteItem(url, selectedResourceList).then(()=>{
+            selectedElem.removeClass(layoutModule.FAVORITE_CLASS);
+            repositorySearch.setFavorite(resources);
+        });
+    }
+};
+
+repositorySearch.setFavorite = function(resources){
+    resources.forEach((resource)=>{
+        resource.isFavorite = ! resource.isFavorite
+    });
 };
 repositorySearch.editResourcePermissions = function (resource) {
     var dialog = repositorySearch.dialogsPool.createOrGetPermissionsDialog(resource);

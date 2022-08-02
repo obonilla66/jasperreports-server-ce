@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -103,6 +103,7 @@
         <property name="dataSource" ref="dataSource"/>
         <property name="mappingResources">
             <list>
+                <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoFavoriteResource.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/RepoResourceItemBase.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/CachedItem.hbm.xml</value>
                 <value>/com/jaspersoft/jasperserver/api/metadata/common/service/impl/hibernate/persistent/ContentRepoFileResource.hbm.xml</value>
@@ -830,7 +831,20 @@
         </list>
       </property>
     </bean>
-
+    <bean id="favoriteResourceProxyService" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="interceptorNames">
+            <list>
+                <idref bean="hibernateRepoServiceSecurity"/>
+                <idref bean="permissionsPrefetcher"/>
+                <idref bean="favoriteResourceService"/>
+            </list>
+        </property>
+    </bean>
+    <bean id="favoriteResourceService" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.FavoriteResourceServiceImpl">
+      <property name="userAuthorityService" ref="${bean.userAuthorityService}"/>
+      <property name="favoriteResourceProxyService" ref="favoriteResourceProxyService"/>
+      <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
     <bean id="thumbnailGenerationService" class="com.jaspersoft.jasperserver.api.metadata.common.service.impl.ThumbnailGenerationServiceImpl">
         <property name="longestEdge" value="300"/>
         <property name="jpgQuality" value="0.8"/> <!-- a value between 0 and 1 -->
@@ -883,6 +897,9 @@
         </property>
         <property name="queryManipulator">
             <ref bean="CascadeQueryManipulator"/>
+        </property>
+        <property name="tenantService">
+            <ref bean="${bean.hibernateTenantService}"/>
         </property>
         <property name="securityContextProvider" ref="${bean.securityContextProvider}"/>
         <property name="builtInParameterProviders" ref="builtInParameterProviders"/>
@@ -1454,7 +1471,7 @@
     				<bean class="net.sf.jasperreports.repo.SerializedReportPersistenceService"/>
     			</entry>
     			<entry key="net.sf.jasperreports.repo.DataAdapterResource">
-    				<bean class="net.sf.jasperreports.repo.CastorDataAdapterPersistenceService">
+    				<bean class="net.sf.jasperreports.repo.JacksonDataAdapterPersistenceService">
     					<constructor-arg ref="${bean.jasperReportsContext}"/>
     				</bean>
     			</entry>
@@ -1599,6 +1616,8 @@
         <property name="lenientFormats" value="false"/>
     </bean>
 
+    <alias name="${bean.calendarFormatProvider}" alias="configurableCalendarFormatProvider"/>
+
     <!-- handle file uploads using commons-fileupload
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
      -->
@@ -1630,9 +1649,21 @@
     </bean>
 
     <bean id="hyperlinkDateParameterFormatter" class="com.jaspersoft.jasperserver.war.util.HyperlinkDateParameterFormatter">
-        <property name="dateConverter" ref="dateDataConverter"/>
-        <property name="timestampConverter" ref="timestampDataConverter"/>
-        <property name="timeConverter" ref="timeDataConverter"/>
+        <property name="dateConverter">
+            <bean class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.DateDataConverter">
+                <property name="onlyUseISOFormat" value="true"/>
+            </bean>
+        </property>
+        <property name="timestampConverter">
+            <bean class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.TimestampDataConverter">
+                <property name="onlyUseISOFormat" value="true"/>
+            </bean>
+        </property>
+        <property name="timeConverter">
+            <bean class="com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.converters.TimeDataConverter">
+                <property name="onlyUseISOFormat" value="true"/>
+            </bean>
+        </property>
     </bean>
 
     <bean id="encodingProvider" class="com.jaspersoft.jasperserver.api.common.util.StaticCharacterEncodingProvider">
@@ -1906,6 +1937,7 @@
                 <value>navigation</value>
                 <value>search</value>
                 <value>viewReport</value>
+                <value>serverMonitoringTabs</value>
             </list>
         </property>
     </bean>
@@ -1913,6 +1945,7 @@
     <!--bean definition for primary navigation-->
     <bean id="navigationActionModelSupport" class="com.jaspersoft.jasperserver.api.engine.common.service.impl.NavigationActionModelSupport" lazy-init="false" scope="singleton">
         <property name="proVersion" value="${isProVersion}"/>
+        <property name="availableAdminConsole" value="true"/>
     </bean>
 
     <bean id="genericActionModelBuilder" class="com.jaspersoft.jasperserver.war.action.GenericActionModelBuilder" lazy-init="false" scope="singleton">
@@ -2194,6 +2227,23 @@
         <property name="resourceFactory" ref="mappingResourceFactory"/>
     </bean>
      -->
+
+    <util:map id="monitoringExceptionMapping" key-type="java.lang.String" value-type="java.util.List">
+        <entry key="Report DataSource">
+            <list>
+                <value>com.jaspersoft.jasperserver.api.metadata.common.service.JSDataSourceConnectionFailedException</value>
+                <value>java.sql.SQLException</value>
+                <value>javax.naming.NameNotFoundException</value>
+                <value>net.sf.jasperreports.data.cache.DataSnapshotException</value>
+                <value>net.sf.jasperreports.engine.data.NoRecordAtIndexException</value>
+            </list>
+        </entry>
+        <entry key="Invalid Report">
+            <list>
+                <value>net.sf.jasperreports.engine.design.JRValidationException</value>
+            </list>
+        </entry>
+    </util:map>
 
 </beans>
 </beans>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -96,8 +96,8 @@ export default Panel.extend({
         return this;
     },
     _getDataProvider: function (cache) {
-        var self = this, getData = _.bind(function (options) {
-                return this.obtainData(options, self);
+        var self = this, getData = _.bind(function (obtainDataOptions) {
+                return this.obtainData(obtainDataOptions, self);
             }, this.dataLayer), options = {};
         if (cache) {
             if (typeof cache === 'object') {
@@ -107,13 +107,13 @@ export default Panel.extend({
             this.dataProvider = new DataProviderWithSearchCache(options);
             getData = this.dataProvider.getData;
         }
-        return function (options) {
-            options || (options = {
+        return function (getDataOptions) {
+            getDataOptions || (getDataOptions = {
                 offset: 0,
                 limit: 100
             });
-            options.id = self.id;
-            return getData(_.extend({}, self.owner.context, options), self);
+            getDataOptions.id = self.id;
+            return getData(_.extend({}, self.owner.context, getDataOptions), self);
         };
     },
     _onOpen: function () {
@@ -190,7 +190,6 @@ export default Panel.extend({
         return !!this.$('> .subcontainer > .j-view-port-chunk > ul > li').length;
     },
     clearCache: function () {
-        var self = this;
         _.each(this.items, function (value) {
             value.clearCache();
         });

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -48,6 +48,7 @@ import com.jaspersoft.jasperserver.dto.executions.ExecutionStatus;
 import com.jaspersoft.jasperserver.dto.reports.inputcontrols.ReportInputControl;
 import com.jaspersoft.jasperserver.dto.resources.ClientDataType;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.CascadeResourceNotFoundException;
+import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlUITypeMapper;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsLogicService;
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlsValidationException;
 import com.jaspersoft.jasperserver.inputcontrols.util.ReportParametersUtils;
@@ -109,6 +110,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.jaspersoft.jasperserver.api.logging.audit.domain.AuditEventType.EXPORT;
+import static com.jaspersoft.jasperserver.api.metadata.common.domain.InputControl.TYPE_MULTI_SELECT_LIST_OF_VALUES;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NOTHING_SUBSTITUTION_VALUE;
 import static com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.InputControlHandler.NULL_SUBSTITUTION_VALUE;
 import static net.sf.jasperreports.web.servlets.ReportExecutionStatus.Status.CANCELED;
@@ -1042,19 +1044,25 @@ public class RunReportServiceImpl implements RunReportService, Serializable, Dis
                 Arrays.sort(oldValues);
 
                 ClientDataType type = null;
+                String selectionType = null;
                 for (ReportInputControl it : inputControlsForReport){
-                    if (it.getId().equals(key)){
-                        type = it.getDataType() ;
+                    if (it.getId().equals(key)) {
+                        type = it.getDataType();
+                        selectionType = it.getType();
                     }
                 }
 
                 if (newValues.length == 0 && oldValues.length == 1 && NOTHING_SUBSTITUTION_VALUE.equals(oldValues[0])) {
                     // correct case, do nothing
-                } else if (newValues.length == 1 && oldValues.length == 1 && NOTHING_SUBSTITUTION_VALUE.equals(newValues[0]) && NULL_SUBSTITUTION_VALUE.equals(oldValues[0])) {
+                } else if (newValues.length == 1 && oldValues.length == 1 && (NOTHING_SUBSTITUTION_VALUE.equals(newValues[0]) && NULL_SUBSTITUTION_VALUE.equals(oldValues[0]))) {
                     // correct case, do nothing
-                } else if (newValues.length == oldValues.length){
-                    for (int i = 0; i<oldValues.length; i++){
-                        if (!isSameValue(newValues[i], oldValues[i], type)){
+                } else if (newValues.length > 0 && InputControlUITypeMapper.getUiType(TYPE_MULTI_SELECT_LIST_OF_VALUES).equals(selectionType) && oldValues.length == 1 && (NOTHING_SUBSTITUTION_VALUE.equals(oldValues[0]))) {
+                    // correct case, do nothing
+                    // see bug 64856.  Importing adhoc report from 7.5.1
+                    // and in this case oldValues is ~NOTHING~, and new value is ALL (everything)
+                } else if (newValues.length == oldValues.length) {
+                    for (int i = 0; i < oldValues.length; i++) {
+                        if (!isSameValue(newValues[i], oldValues[i], type)) {
                             verifyCascade(inputControlsForReport, rawInputParameters.keySet(), key, oldValues[i]);
                         }
                     }

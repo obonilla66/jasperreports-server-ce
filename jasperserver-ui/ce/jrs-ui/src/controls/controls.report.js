@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,7 +22,6 @@
  * @version: $Id$
  */
 /* global viewer, confirm, alert, Report */
-import {$, $$} from 'prototype';
 import {JRS} from "../namespace/namespace";
 import layoutModule from '../core/core.layout';
 import Controls from './controls.core';
@@ -40,7 +39,6 @@ import '../reportViewer/report.view.base';
 import {isProVersion} from "../namespace/namespace";
 import Report from '../reportViewer/report.view.base';
 import './controls.controller';
-import inputControlsSettings from '../settings/inputControls.settings';
 import jQuery from 'jquery';
 import _ from 'underscore';
 import ConfirmationDialog from 'js-sdk/src/common/component/dialog/ConfirmationDialog';
@@ -151,7 +149,6 @@ var ControlsReport = function (jQuery, _, Controls, Report) {
             });
 
             const mandatoryInputControls = isMandatoryInputControls();
-            const shouldFetchInputControlsOnInitialize = mandatoryInputControls || (Report.hasInputControls &&  Controls.layouts.LAYOUT_IN_PAGE === Report.reportControlsLayout );
 
             if (Report.hasInputControls) {
                 const dfd = this._fetchAndSetInputControlsStateOnce().then(() => {

@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -218,13 +218,15 @@
                                     </span>
                                 </button>
                             </li>
-                            <li class="leaf">
-                                <button id="embed" data-title="true" class="button capsule up middle" disabled="disabled" aria-label="<spring:message code="button.embed"/>" tabindex="-1">
-                                    <span class="wrap">
-                                        <span class="icon"></span>
-                                    </span>
-                                </button>
-                            </li>
+                            <c:if test="${isPro}">
+                                <li class="leaf">
+                                    <button id="embed" data-title="true" class="button capsule up middle" disabled="disabled" aria-label="<spring:message code="button.embed"/>" tabindex="-1">
+                                        <span class="wrap">
+                                            <span class="icon"></span>
+                                        </span>
+                                    </button>
+                                </li>
+                            </c:if>
                             <li class="leaf">
                                 <button id="schedule" data-title="true" class="button capsule up  middle" disabled="disabled" aria-label="<spring:message code="button.schedule"/>" tabindex="-1">
                                     <span class="wrap">
@@ -459,7 +461,7 @@
                 <%--c:if test="${empty param.frame}">
                     <center>
                 </c:if--%>
-                <div id="reportContainer" class="" style="position:relative;height:100%;overflow:auto"></div>
+                <div id="reportContainer" class="" style="position:relative;height:100%;overflow:auto" tabindex="8"></div>
                 <%--c:if test="${empty param.frame}">
                     </center>
                 </c:if--%>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -50,10 +50,6 @@
             <groupId>com.jaspersoft.jasperserver.core.util</groupId>
             <artifactId>jasperserver-core-util</artifactId>
         </dependency>
-        <!--dependency>
-            <groupId>com.jaspersoft.jasperserver.crypto</groupId>
-            <artifactId>js-crypto</artifactId>
-        </dependency -->
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -453,6 +453,8 @@
         <security:protect method="com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService.copyResources" access="ACL_USER_MULTI_COPY"/>
         <security:protect method="com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService.copyFolder" access="ACL_USER_COPY"/>
         <security:protect method="com.jaspersoft.jasperserver.api.metadata.common.service.RepositoryService.copyRenameFolder" access="ACL_USER_COPY"/>
+
+        <security:protect method="com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.FavoriteResourceService.toLookups" access="AFTER_ACL_COLLECTION_READ"/>
         <!--
                    For comparison, this is the analogous configuration defined inline under aclUpdateMethodSecurityInterceptor
 

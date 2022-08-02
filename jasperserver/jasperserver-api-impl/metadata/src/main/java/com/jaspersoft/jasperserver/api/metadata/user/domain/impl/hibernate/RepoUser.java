@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.metadata.common.domain.impl.IdedObject;
 import com.jaspersoft.jasperserver.api.metadata.common.service.ResourceFactory;
 import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.PersistentObjectResolver;
+import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoFavoriteResource;
 import com.jaspersoft.jasperserver.api.metadata.common.service.impl.hibernate.persistent.RepoReportThumbnail;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.Role;
 import com.jaspersoft.jasperserver.api.metadata.user.domain.User;
@@ -56,12 +57,21 @@ public class RepoUser implements User, IdedObject {
 	private Date previousPasswordChangeTime = null;
     private List attributes = null;
     private RepoTenant tenant = null;
-	protected Set<RepoReportThumbnail> thumbnails = null;
+    protected Set<RepoReportThumbnail> thumbnails = null;
+	protected Set<RepoFavoriteResource> favorites = null;
+
+	public Set<RepoFavoriteResource> getFavorites() {
+		return favorites;
+	}
+
+	public void setFavorites(Set<RepoFavoriteResource> favorites) {
+		this.favorites = favorites;
+	}
 	private Set<RepoProfileAttribute> profileAttributes = null;
 
 	/**
 	 * @return
-	 * @hibernate.id type="long" column="id" generator-class="id entity"
+	 * @hibernate.id type="long" column="id" generator-class="identity"
 	 */
 	public long getId() {
 		return id;
@@ -417,7 +427,7 @@ public class RepoUser implements User, IdedObject {
 	 * @hibernate.key
 	 * 		column="principalobjectid"
 	 *
-	 * @hibernate.one-to-manu
+	 * @hibernate.one-to-many
 	 * 		class="com.jaspersoft.jasperserver.api.metadata.user.domain.impl.hibernate.RepoProfileAttribute"
 	 *
 	 * @return Set

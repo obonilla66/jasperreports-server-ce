@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -568,7 +568,7 @@ public class HibernateRepositoryServiceImpl extends HibernateDaoImpl implements 
         if (foldersList.isEmpty()) {
             if (required) {
                 String quotedURI = "\"" + uri + "\"";
-                throw new JSResourceNotFoundException("jsexception.folder.not.found.at", new Object[] {quotedURI});
+                throw new JSResourceNotFoundException("Folder not found at "+quotedURI);
             }
             if(log.isDebugEnabled()){
                 log.debug("Folder not found at \"" + uri + "\"");

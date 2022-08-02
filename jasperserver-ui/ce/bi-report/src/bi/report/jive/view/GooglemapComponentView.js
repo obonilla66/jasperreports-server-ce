@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved. Confidentiality & Proprietary.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved. Confidentiality & Proprietary.
  * Licensed pursuant to commercial TIBCO End User License Agreement.
  */
 
@@ -122,8 +122,8 @@ export default BaseJiveComponentView.extend({
                 for (var prop in props) {
                     if (prop === 'locations' && props[prop]) {
                         var loc = props[prop];
-                        for (var j = 0; j < loc.length; j++) {
-                            var latln = loc[j];
+                        for (let m = 0; m < loc.length; m++) {
+                            var latln = loc[m];
                             l.push(new google.maps.LatLng(latln['latitude'], latln['longitude']));
                         }
                     } else if (prop === 'isPolygon') {

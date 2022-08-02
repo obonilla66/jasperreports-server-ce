@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -354,6 +354,7 @@ Make sure you have compiled the jasperserver source code.
             <arg value="--keypass=${deprecatedImportExportEncSecret.keypass}" />
         </run-import-export>
         <import-profile-attribute key="auditDB" attrValue="${audit.dbName}"/>
+        <import-profile-attribute key="repositoryDB" attrValue="${js.dbName}"/>
     </target>
 
     <target name="import-sample-data-ce" depends="keystore-properties"
@@ -658,6 +659,7 @@ Linux Example:
                     <var name="importExportConfig" value="${importExportConfigPro}"/>
                     <local name="iecpjar"/>
                     <property name="iecpjar" value="${importExportConfig}/lib/iecp.jar"/>
+                    <make-ie-classpath-jar ieLibDir="${importExportConfig}/lib" classpathjar="${iecpjar}"/>
                     <java classname="com.jaspersoft.jasperserver.export.ProfileAttributeImportCommand" fork="true" failonerror="true">
                         <arg value="--import"/>
                         <arg value="--profile-attr-name=@{key}"/>

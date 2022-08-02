@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -328,15 +328,15 @@ dialogs.popup = {
             return;
         }
 
-        var $elem = jQuery(elem)[0];
+        var $element = jQuery(elem)[0];
         //hide dialog and dimmer
-        if (jQuery($elem).hasClass(layoutModule.CANCELLABLE_CLASS)) {
-            jQuery($elem).removeClass(layoutModule.CANCELLABLE_CLASS);
+        if (jQuery($element).hasClass(layoutModule.CANCELLABLE_CLASS)) {
+            jQuery($element).removeClass(layoutModule.CANCELLABLE_CLASS);
         }
-        if (!jQuery($elem).hasClass(layoutModule.HIDDEN_CLASS)) {
-            jQuery($elem).addClass(layoutModule.HIDDEN_CLASS);
+        if (!jQuery($element).hasClass(layoutModule.HIDDEN_CLASS)) {
+            jQuery($element).addClass(layoutModule.HIDDEN_CLASS);
             pageDimmer.hide();
-            jQuery($elem).is(layoutModule.DIALOG_LOADING_PATTERN) && pageDimmer.setZindex(layoutModule.DIMMER_Z_INDEX);
+            jQuery($element).is(layoutModule.DIALOG_LOADING_PATTERN) && pageDimmer.setZindex(layoutModule.DIMMER_Z_INDEX);
         }
 
         _.defer(()=>{
@@ -349,7 +349,7 @@ dialogs.popup = {
             // 3. unexpected click event handler executed second time and it fails since there is no even in the registry
             //
             // wrapping in _.defer changes this to click->click->stopObserving
-            $elem.stopObserving('click', dialogs.popup.zIndexHandler)
+            $element.stopObserving('click', dialogs.popup.zIndexHandler)
         });
     },
     showShared: function (elem, showDimmer, options) {
@@ -439,7 +439,7 @@ dialogs.popupConfirm = _.extend({}, dialogs.popup, {
             okButtonSelector: 'button.ok',
             cancelButtonSelector: 'button.cancel'
         }, options);
-        var $elem = jQuery(elem), $ok = jQuery($elem).find(options.okButtonSelector), $cancel = jQuery($elem).find(options.cancelButtonSelector), deferred = jQuery.Deferred();
+        var $element = jQuery(elem), $ok = jQuery($element).find(options.okButtonSelector), $cancel = jQuery($element).find(options.cancelButtonSelector), deferred = jQuery.Deferred();
         jQuery($ok).on('click', function () {
             if (options.validateFunc) {
                 if (options.validateFunc() === false) {

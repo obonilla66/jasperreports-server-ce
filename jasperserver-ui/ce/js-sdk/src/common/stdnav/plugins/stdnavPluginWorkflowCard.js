@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -71,14 +71,11 @@ $.extend(StdnavPluginWorkflowCard.prototype, {
             itemPlural = 'items';
         }
 
-        let allItemsAreLinks = false;
-
         if (stdnav.nullOrUndefined(label) && stdnav.nullOrUndefined(labelledBy)) {
             let allLinks = $items.find('a');
 
             if (allLinks.length === $items.length) {
                 $list.attr('aria-label', 'List of ' + $items.length + ' links.');
-                allItemsAreLinks = true;
             } else {
                 $list.attr('aria-label', 'List of ' + $items.length + itemPlural);
             }
@@ -95,7 +92,6 @@ $.extend(StdnavPluginWorkflowCard.prototype, {
 
                 if (stdnav.nullOrUndefined(itemLabel) && stdnav.nullOrUndefined(itemLabelledBy)) {
                     let itemText = $item.text();
-                    let itemLinkText = $($itemLinks[0]).text();
                     itemLabel = itemText + '. ' + (index + 1) + ' of ' + $items.length + ' ' + itemPlural + '.';
                     $item.attr('aria-label', itemLabel);
                 }

@@ -63,52 +63,34 @@ if (jrsConfigs.isProVersion) {
 loginBox.initialize(jrsConfigs.loginState);
 if (isIPad()) {
     var orientation = window.orientation;
-    switch (orientation) {
-    case 0:
+    if ( orientation === 0 ) {
         jQuery('h2.textAccent').css('font-size', '14px').parent().css('width', '39%');
         jQuery('#copy').css('width', '600px');
         jQuery('#loginForm').css({
             left: '524px',
             right: ''
         });
-        break;
-    case 90:
+    } else if ( orientation === 90 || orientation === -90 ) {
         jQuery('h2.textAccent').css('font-size', '16px').parent().css('width', '46%');
         jQuery('#copy').css('width', '766px');
-        break;
-    case -90:
-        jQuery('h2.textAccent').css('font-size', '16px').parent().css('width', '46%');
-        jQuery('#copy').css('width', '766px');
-        break;
     }
     jQuery('#frame').show();
     window.addEventListener('orientationchange', function (e) {
-        var orientation = window.orientation;
-        switch (orientation) {
-        case 0:
+        var newOrientation = window.orientation;
+        if ( newOrientation === 0 ) {
             jQuery('h2.textAccent').css('font-size', '14px').parent().css('width', '39%');
             jQuery('#copy').css('width', '600px');
             jQuery('#loginForm').css({
                 left: '524px',
                 right: ''
             });
-            break;
-        case 90:
+        } else if ( newOrientation === 90 || newOrientation === -90 ) {
             jQuery('h2.textAccent').css('font-size', '16px').parent().css('width', '46%');
             jQuery('#copy').css('width', '766px');
             jQuery('#loginForm').css({
                 left: '',
                 right: '-10px'
             });
-            break;
-        case -90:
-            jQuery('h2.textAccent').css('font-size', '16px').parent().css('width', '46%');
-            jQuery('#copy').css('width', '766px');
-            jQuery('#loginForm').css({
-                left: '',
-                right: '-10px'
-            });
-            break;
         }
     });
 }

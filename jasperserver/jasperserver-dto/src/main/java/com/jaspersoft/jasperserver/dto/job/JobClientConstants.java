@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -28,4 +28,5 @@ package com.jaspersoft.jasperserver.dto.job;
  */
 public interface JobClientConstants {
     public static final String JOB_V_1_1_JSON_MEDIA_TYPE = "application/job+json";
+    public static final String JOB_V_1_XML_MEDIA_TYPE = "application/job.v1+xml";
 }

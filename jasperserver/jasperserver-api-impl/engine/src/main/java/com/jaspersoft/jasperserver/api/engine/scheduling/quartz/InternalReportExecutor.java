@@ -20,17 +20,10 @@
  */
 package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
+import io.opentelemetry.extension.annotations.WithSpan;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.quartz.JobExecutionException;
@@ -99,7 +92,8 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
 		this.executionContext = jobContext.getExecutionContext();
 	}
 
-	@Override
+    @WithSpan
+    @Override
 	public List<? extends ReportExecutionOutput> createOutputs(Map<String, Object> reportParameters) {
         Set<Byte> outputFormats = jobDetails.getOutputFormatsSet();
         List<ReportExecutionOutput> outputs = new ArrayList<ReportExecutionOutput>(outputFormats.size());
@@ -161,13 +155,17 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
     		return output;
     	}
 
-    	@Override
+        @WithSpan
+        @Override
     	public ReportOutput getReportOutput(ReportJobContext reportJobContext) throws JobExecutionException {
     		ReportUnitResult result = getReportResultForOutput(output, jasperReport);
-    		return getOutput().getOutput(reportJobContext, result.getJasperPrint());
+            ReportOutput reportOutput = getOutput().getOutput(reportJobContext, result.getJasperPrint());
+            reportOutput.setExecutionID(result.getRequestId());
+    		return reportOutput;
     	}
     }
 
+    @WithSpan
     protected void executeReport(Map<String, Object> reportParameters, List<ReportExecutionOutput> outputs) {
         jasperReport = jobContext.getEngineService().getMainJasperReport(executionContext, 
         		jobContext.getReportUnitURI());
@@ -195,7 +193,8 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
         runReport(paginations, reportParameters);
     }
 
-	protected void runReport(List<PaginationParameters> paginations, Map<String, Object> reportParameters) {
+    @WithSpan
+    protected void runReport(List<PaginationParameters> paginations, Map<String, Object> reportParameters) {
 		// recording a data snapshot if saving is enabled or if we need to fill the report multiple times
         recordDataSnapshot = getDataSnapshotService().isSnapshotPersistenceEnabled() 
                 //FIXME detect common cases when multiple pagination params can use a single execution
@@ -226,7 +225,8 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
 		return result;
 	}
 
-	protected ReportUnitResult runReport(PaginationParameters paginationParams, 
+    @WithSpan
+    protected ReportUnitResult runReport(PaginationParameters paginationParams,
 			Map<String, Object> reportParameters) {
         jobContext.checkCancelRequested();
         if (log.isDebugEnabled()) {
@@ -234,20 +234,18 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
         }
         
 		ReportUnitResult result = null;
-        try {
-        	Map<String, Object> parametersMap = new HashMap<>(reportParameters);
-        	putAdditionalParameters(parametersMap);
-            Map<String, Object> reportJobProperties = collectReportJobProperties();
+        Map<String, Object> parametersMap = new HashMap<>(reportParameters);
+        putAdditionalParameters(parametersMap);
+        Map<String, Object> reportJobProperties = collectReportJobProperties();
 
-            paginationParams.setReportParameters(parametersMap);
-            ReportUnitRequest request = new ReportUnitRequest(jobContext.getReportUnitURI(), 
-            		parametersMap, reportJobProperties);
-            request.setJasperReportsContext(jobContext.getJasperReportsContext());
+        paginationParams.setReportParameters(parametersMap);
+        ReportUnitRequest request = new ReportUnitRequest(jobContext.getReportUnitURI(),
+        parametersMap, reportJobProperties);
+        request.setScheduleResourceType(ReportExecutionJob.RESOURCE_TYPE_REPORT);
+        request.setScheduleExecutionID(jobContext.getReportExecutionJob().getScheduleExecutionID());
+        request.setJasperReportsContext(jobContext.getJasperReportsContext());
+        result = runReport(request);
 
-            result = runReport(request);
-        } catch (Exception e) {
-        	jobContext.handleException(getMessage("report.scheduling.error.filling.report", null), e);
-        }
         return result;
 	}
 

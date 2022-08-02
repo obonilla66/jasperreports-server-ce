@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -198,17 +198,17 @@ public class ContextsJaxrsService {
     @GET
     @Path("/{uuid}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getContextDetails(@PathParam("uuid") UUID uuid,
+    public Response getContextDetails(@PathParam("uuid") String uuid,
             @Context HttpServletRequest request) throws ResourceNotFoundException {
-        final Object context = contextsManager.getContext(uuid, request.getParameterMap());
+        final Object context = contextsManager.getContext(getUUID(uuid), request.getParameterMap());
         return context != null ? Response.ok(context).build() : Response.status(Response.Status.NOT_FOUND).build();
     }
 
     @DELETE
     @Path("/{uuid}")
-    public Response removeContextDetails(@PathParam("uuid") UUID uuid) throws ResourceNotFoundException {
+    public Response removeContextDetails(@PathParam("uuid") String uuid) throws ResourceNotFoundException {
         try {
-            contextsManager.removeContext(uuid);
+            contextsManager.removeContext(getUUID(uuid));
         } catch (ResourceNotFoundException e){
             // no such context. Do nothing. It's expected state after this operation completion.
         }
@@ -217,19 +217,19 @@ public class ContextsJaxrsService {
 
     @GET
     @Path("/{uuid}/metadata")
-    public Response getContextMetadata(@PathParam("uuid") UUID uuid, @Context HttpServletRequest request) {
-        final Object contextMetadata = contextsManager.getContextMetadata(uuid, request.getParameterMap());
+    public Response getContextMetadata(@PathParam("uuid") String uuid, @Context HttpServletRequest request) {
+        final Object contextMetadata = contextsManager.getContextMetadata(getUUID(uuid), request.getParameterMap());
         if (contextMetadata == null) {
             return Response.status(Response.Status.NO_CONTENT).build();
         }
         final String metadataClientResourceType = contextsManager
-                .getMetadataClientResourceType(contextsManager.getContext(uuid, request.getParameterMap()));
+                .getMetadataClientResourceType(contextsManager.getContext(getUUID(uuid), request.getParameterMap()));
         return Response.ok(contextMetadata, clientTypeToMimeType(metadataClientResourceType)).build();
     }
 
     @POST
     @Path("/{uuid}/metadata")
-    public Response getContextMetadata(@PathParam("uuid") UUID uuid, InputStream stream,
+    public Response getContextMetadata(@PathParam("uuid") String uuid, InputStream stream,
             @HeaderParam(HttpHeaders.CONTENT_TYPE) MediaType mediaType) throws IOException {
         Class<?> paramsClass = contextsManager.getMetadataParamsClass(getType(mediaType));
         if (paramsClass == null) {
@@ -238,7 +238,7 @@ public class ContextsJaxrsService {
         final Object params = parseEntity(paramsClass, stream, mediaType);
         Object contextMetadata;
         try {
-            contextMetadata = contextsManager.getContextMetadata(uuid, params);
+            contextMetadata = contextsManager.getContextMetadata(getUUID(uuid), params);
         } catch (UnsupportedOperationErrorDescriptorException e) {
             throw new UnsupportedMediaTypeException(mediaType.toString());
         }
@@ -275,5 +275,14 @@ public class ContextsJaxrsService {
             }
         }
         return queryClass;
+    }
+
+    protected static UUID getUUID(String uuid) throws ResourceNotFoundException {
+        try {
+            if (uuid.toLowerCase().startsWith("uuid:")) uuid = uuid.substring(5);
+            return UUID.fromString(uuid);
+        } catch (Exception ex) {
+            throw new ResourceNotFoundException("Invalid UUID: " + uuid);
+        }
     }
 }

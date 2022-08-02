@@ -55,7 +55,7 @@
 /*   31. Miscellaneous                    */ /* line 7200 */
 /*       ???                              */ /* line 8235 */
 /*   ----------------------------------
-     File last modified Oct 14, 2021
+     File last modified July 7, 2022
      ----------------------------------   */
 
 
@@ -985,21 +985,15 @@ x:-o-prefocus, #selectedDataSources label {
 
 #designer .button.minimize {
     background-color: var(--background-grey-40);
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
     background-position: -61px -172px;
-    background-size: 80px;
+    background-size: 170px;
     display: inline-block;
     height: 32px;
     margin-top: 0;
     width: 14px;
     z-index: 10;
-}
-/* 2x DISCLOSURE ICONS */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    #designer .button.minimize {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 #designer .column.decorated.tertiary .button.minimize {
@@ -1275,6 +1269,10 @@ x:-o-prefocus, #selectedDataSources label {
     overflow: auto;
     position: absolute;
     padding: 0 10px;
+}
+
+#designer #mainTableContainer .jr-mMessageError {
+    z-index: 4000;
 }
 
 #designer #mainTableContainerOverlay {
@@ -1581,7 +1579,7 @@ and (max-device-width: 1024px) {
     background-repeat: no-repeat;
 }
 
-#designer #closeDesigenr.closeIcon { /* misspelling of closeDesigenr is intentional */
+#designer #closeDesigner.closeIcon {
     align-self: center;
     background: url("images/button_action_icons_sprite.svg");
     background-position: 6px -3160px;
@@ -1802,20 +1800,14 @@ and (max-device-width: 1024px) {
 }
 
 .tokens > .measure > .handle {
-    background: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
     background-position: 0 -32px;
-    background-size: 80px;
+    background-size: 170px;
     cursor: pointer;
     display: inline-block;
     position: relative;
     width: 12px;
-}
-/* 2x DISCLOSURE ICONS */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .tokens > .measure > .handle {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 li.level.meazure, /* misspelling is intentional */
@@ -1868,19 +1860,10 @@ li.dragging.dimension,
 li.dragging.measure,
 .wrap.dragging.measure > .icon:first-child,
 .wrap.dragging.dimension > .icon:first-child {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
-    background-position: -58px -28px;
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
+    background-position: -58px -623px;
     background-repeat: no-repeat;
-    background-size: 80px;
-}
-/* 2x ICON */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    li.dragging.dimension,
-    li.dragging.measure,
-    .wrap.dragging.measure > .icon:first-child,
-    .wrap.dragging.dimension > .icon:first-child {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
+    background-size: 170px;
 }
 
 li.dragging.dimension,
@@ -1894,21 +1877,15 @@ li.dragging.measure,
 }
 
 .tokens .button > .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
     background-position: -60px -56px;
-    background-size: 80px;
+    background-size: 170px;
     left: auto;
     right: 4px;
     height: 18px;
     width: 10px;
     z-index: inherit;
-}
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    .tokens .button > .icon {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 /*TODO Needs review: Bug 27332 - UI: Improved Adhoc Flow - Can not change filter expression (Edit button is not visible) */
@@ -2027,52 +2004,7 @@ li.dragging.measure,
     white-space: nowrap;
 }
 
-#filter-container .button.operator > .icon {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
-    background-position: 0 -82px;
-    background-size: 80px;
-    background-repeat: no-repeat;
-    height: 24px;
-    width: 11px;
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: auto;
-}
-
-#filters .panel.filter .header .disclosure,
-#filters .panel.expression .header .disclosure {
-    background-image: url("images/disclosure_indicators_icons_sprite@1x.png");
-    background-position: 2px -203px;
-    background-position: 2px -621px;
-    background-size: 70px;
-    float: left;
-    height: 24px;
-    position: absolute;
-    top: 0;
-    left: 2px;
-    width: 20px;
-}
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    #filter-container .button.operator > .icon,
-    #filters .panel.filter .header .disclosure,
-    #filters .panel.expression .header .disclosure {
-        background-image: url("images/disclosure_indicators_icons_sprite@2x.png");
-    }
-}
-
-#filters .panel.filter.minimized .header .disclosure,
-#filters .panel.expression.minimized .header .disclosure {
-    /* background-position: 2px -256px; medium grey color */
-    background-position: 2px -674px;
-}
-
 #filter-container .title .button.mutton {
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
-    background-repeat: no-repeat;
-    background-position: 5px 5px;
-    background-size: 70px;
     display: inline-block;
     height: 24px;
     margin: 0;
@@ -2081,15 +2013,42 @@ li.dragging.measure,
     top: 0;
     width: 22px;
 }
-/* 2x icons */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    #filter-container .title .button.mutton {
-        background-image: url("images/disclosure_indicators_icons_sprite@2x.png");
-    }
+
+#filter-container .operator > .icon,
+#filter-container .title .button.mutton > .icon {
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
+    background-repeat: no-repeat;
+    height: 24px;
 }
 
-#filter-container .button.mutton > .icon {
+#filter-container .operator > .icon {
+    background-position: 0 -82px;
+    background-size: 170px;
+    width: 11px;
+    right: 0;
+    left: auto;
+}
+
+#filter-container .title .button.mutton > .icon {
+    background-position: 5px 5px;
+    background-size: 150px;
+}
+
+#filters .panel.filter .header .disclosure,
+#filters .panel.expression .header .disclosure {
+    background-image: url("images/disclosure_indicators_icons_sprite.svg");
+    background-position: -88px -235px;
+    background-size: 170px;
+    float: left;
     height: 24px;
+    top: 0;
+    left: 2px;
+    width: 20px;
+}
+
+#filters .panel.filter.minimized .header .disclosure,
+#filters .panel.expression.minimized .header .disclosure {
+    background-position: -88px -295px;
 }
 
 #filter-container .sSelect-input {
@@ -3213,17 +3172,11 @@ and (orientation: portrait) {
 }
 
 .resourceBlock .buttonIconToggle {
-    background-image: url("images/disclosure_indicators_icons_sprite@1x.png");
-    background-size: 80px;
+    background-image: url("images/disclosure_indicators_icons_sprite.svg");
+    background-size: 170px;
     background-color: transparent;
     background-repeat: no-repeat;
     cursor: pointer;
-}
-/* 2x ICONS */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    .resourceBlock .buttonIconToggle {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png) !important;
-    }
 }
 
 .resourceBlock .buttonIconToggle.isOpen {
@@ -3271,8 +3224,8 @@ and (orientation: portrait) {
 }
 
 .resourceBlock-list .fileType-icon {
-    background-image: url("images/recent_items_icons_sprite@1x.png");
-    background-size: 18px;
+    background-image: url("images/file_type_icons_sprite.svg");
+    background-size: 20px;
     background-color: transparent;
     background-repeat: no-repeat;
     display: block;
@@ -3280,24 +3233,22 @@ and (orientation: portrait) {
     width: 18px;
     border-radius: 9px;
 }
-/* 2x RESOURCE ICONS */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    .resourceBlock-list .fileType-icon {
-        background-image: url("images/recent_items_icons_sprite@2x.png") !important;
-    }
-}
 
 .resourceBlock-list .fileType-icon.adhocDataView,
 .resourceBlock-list .fileType-icon.olapUnit {
-    background-position: 0 0;
+    background-position: -1px -108px;
 }
 
 .resourceBlock-list .fileType-icon.reportUnit {
-    background-position: 0 -28px;
+    background-position: -1px -144px;
+}
+
+.resourceBlock-list .fileType-icon.reportOptions {
+    background-position: -1px -180px;
 }
 
 .resourceBlock-list .fileType-icon.dashboard {
-    background-position: 0 -56px;
+    background-position: -1px -216px;
 }
 
 .resourceBlock-list .fileDate {
@@ -4549,19 +4500,12 @@ and (orientation: portrait) {
 .threeColumn.manager .button.minimize,
 .twoColumn.manager .button.minimize {
     background-color: var(--background-grey-40);
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
-    background-size: 80px;
+    background-size: 170px;
     height: 32px;
     margin-top: 0;
     width: 14px;
-}
-/* 2x DISCLOSURE ICONS */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    .threeColumn.manager .button.minimize,
-    .twoColumn.manager .button.minimize {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 .threeColumn.manager .column.decorated.minimized,
@@ -5727,8 +5671,8 @@ input[type="text"].mSelect-input {
     background-position: 4px -450px;
 }
 #reportViewer .toolbar #undo.over .icon,
-#reportViewer .toolbar #undo.pressed .icon,
-#reportViewer .toolbar #undo:active .icon {
+#reportViewer .toolbar #undo:not([disabled]).pressed .icon,
+#reportViewer .toolbar #undo:not([disabled]):active .icon {
     background-position: -26px -450px;
 }
 
@@ -5736,8 +5680,8 @@ input[type="text"].mSelect-input {
     background-position: 5px -480px;
 }
 #reportViewer .toolbar #redo.over .icon,
-#reportViewer .toolbar #redo.pressed .icon,
-#reportViewer .toolbar #redo:active .icon {
+#reportViewer .toolbar #redo:not([disabled]).pressed .icon,
+#reportViewer .toolbar #redo:not([disabled]):active .icon {
     background-position: -25px -480px;
 }
 
@@ -6060,21 +6004,15 @@ and (max-device-width: 1024px) {
 
 #reportViewer #inputControlsForm .button.minimize {
     background-color: var(--background-grey-40);
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
     background-position: -61px -172px;
-    background-size: 80px;
+    background-size: 170px;
     display: inline-block;
     height: 32px;
     margin-top: 0;
     width: 14px;
     z-index: 10;
-}
-/* 2x DISCLOSURE ICONS */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi) {
-    #reportViewer #inputControlsForm .button.minimize {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 #reportViewer #inputControlsForm > .content > .header {
@@ -6408,22 +6346,15 @@ div#reportPartsContainer span {
 #repoBrowse .button.minimize,
 #repoSearch .button.minimize {
     background-color: var(--background-grey-40);
-    background-image: url(images/disclosure_indicators_icons_sprite@1x.png);
+    background-image: url(images/disclosure_indicators_icons_sprite.svg);
     background-repeat: no-repeat;
     background-position: -61px -172px;
-    background-size: 80px;
+    background-size: 170px;
     display: inline-block;
     height: 32px;
     margin-top: 0;
     width: 14px;
     z-index: 10;
-}
-/* 2x DISCLOSURE ICONS */
-@media (-webkit-min-device-pixel-ratio: 2),(min-resolution: 192dpi){
-    #repoBrowse .button.minimize,
-    #repoSearch .button.minimize {
-        background-image: url(images/disclosure_indicators_icons_sprite@2x.png);
-    }
 }
 
 #repoBrowse .column.decorated > .content > .header,
@@ -6577,6 +6508,10 @@ div#reportPartsContainer span {
     float: none;
     margin-left: 6px;
     width: 300px;
+}
+
+#repoLibrary .switch {
+    margin-left: 16px;
 }
 
 #repoLibrary #folders,

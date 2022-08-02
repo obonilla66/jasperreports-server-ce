@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -36,8 +36,8 @@ import com.jaspersoft.jasperserver.export.modules.scheduling.beans.ReportJobBean
 import com.jaspersoft.jasperserver.export.modules.scheduling.beans.ReportUnitJobsIndexBean;
 import com.jaspersoft.jasperserver.export.service.impl.ImportExportServiceImpl;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Element;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ import java.util.Set;
  * @version $Id$
  */
 public class ReportJobsExporter extends BaseExporterModule {
-	private static final Log log = LogFactory.getLog(ReportJobsExporter.class);
+	private static final Logger log = LogManager.getLogger(ReportJobsExporter.class);
 
 	protected class OutputFolderCreator {
 		private String uri;
@@ -117,9 +117,7 @@ public class ReportJobsExporter extends BaseExporterModule {
 	}
 
 	private void processUri(final String uri) {
-		if (log.isDebugEnabled()) {
-			log.debug("Process report uri: " + uri);
-		}
+		log.debug("Process report uri: {}", uri);
 		Folder folder = configuration.getRepository().getFolder(executionContext, uri);
 		if (folder == null) {
 			doInExceptionHandlingContext(new ExceptionHandlingCallback() {
@@ -180,9 +178,7 @@ public class ReportJobsExporter extends BaseExporterModule {
 			return;
 		}
 
-		if (log.isDebugEnabled()) {
-			log.debug("Getting all jobs for the report: " + uri);
-		}
+		log.debug("Getting all jobs for the report: {}", uri);
 		List jobs = configuration.getReportScheduler().getScheduledJobSummaries(executionContext, uri);
 		if (jobs != null && !jobs.isEmpty()) {
 			if (exportJobs(uri, jobs)) {
@@ -220,9 +216,7 @@ public class ReportJobsExporter extends BaseExporterModule {
 			boolean ok = doInExceptionHandlingContext(new ExceptionHandlingCallback() {
 				@Override
 				public void execute() {
-					if (log.isDebugEnabled()) {
-						log.debug("Process report job: " + jobId);
-					}
+					log.debug("Process report job: {}", jobId);
 					ReportJob job = configuration.getReportScheduler().getScheduledJob(executionContext, jobId);
 					exportJob(folderCreator.getFolderPath(), job, jobSummary.getRuntimeInformation());
 

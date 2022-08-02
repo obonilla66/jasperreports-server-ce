@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -164,7 +164,7 @@ public class SearchResourcesActivity extends AbstractActivity<ResourceLookupColl
         return embeddedElements;
     }
 
-    private String buildRestUrl() {
+    protected String buildRestUrl() {
 
         String url = requestInfoProvider.getBaseUrl() + "rest_v2/hypermedia/resources";
 
@@ -191,6 +191,10 @@ public class SearchResourcesActivity extends AbstractActivity<ResourceLookupColl
 
         if (criteria.getSortBy() != null){
             result.add("sortBy="+criteria.getSortBy());
+        }
+
+        if (criteria.isFavorites() == true){
+            result.add("favorites="+true);
         }
 
         if (criteria.getAccessType() != null){

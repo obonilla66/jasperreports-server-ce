@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -306,8 +306,6 @@ dynamicTree.Tree.addMethod('_registerMouseEvents', function() {
             }
             this._deselectOthers(event, node, isMetaHeld(event), isShiftHeld(event), isRightClick(event));
 
-            var eventNames = [];
-
             if (isNode) {
                 isIcon && treeContainer.fire('nodeIcon:mouseup', {targetEvent: event, node: node});
                 treeContainer.fire('node:mouseup', {targetEvent: event, node: node})
@@ -350,7 +348,7 @@ dynamicTree.Tree.addMethod('_registerMouseEvents', function() {
 
             if (Draggables.dragging){
                 clearTimeout(this.timeout_id);
-                this.timeout_id = setTimeout(function (event) { node.openNode(event) }, this.EXPANDING_TIME);
+                this.timeout_id = setTimeout(function (evt) { node.openNode(evt) }, this.EXPANDING_TIME);
             }
 
             this.createDraggableIfNeeded(event, node);

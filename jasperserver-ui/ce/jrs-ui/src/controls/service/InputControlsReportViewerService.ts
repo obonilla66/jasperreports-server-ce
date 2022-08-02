@@ -396,4 +396,4 @@ export default class InputControlsReportViewerService {
                 return response;
             });
     }
-};
+}

@@ -104,7 +104,7 @@ fi
 
 JS_OPTION=$3
 JS_ANT_TARGET=$4
-JS_ANT_OPTIONS="$5 $6 $7 $8 $9 ${10}  -Djs.setup.mode=$JS_SETUP_MODE -Djava.net.preferIPv4Stack=true"
+JS_ANT_OPTIONS="$5 $6 $7 $8 $9 ${10}  -Djs.setup.mode=$JS_SETUP_MODE -Djava.net.preferIPv4Stack=true -Djs.option=$JS_OPTION"
 
 #
 # Initializing time variable.
