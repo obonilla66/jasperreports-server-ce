@@ -171,7 +171,6 @@ import {Template} from 'prototype';
                     Report.showInvisibleICValidationMessages();
                     return jQuery.Deferred().resolve();
                 } else if (Report.isLoaded) {
-                    this.hideAjaxDialog();
                     return window.viewer.refreshPage(1, finalReportParameters, urlParams.freshData);
                 } else {
                     return window.viewer.loadReport(finalReportParameters, _.once(function() {

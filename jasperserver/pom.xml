@@ -901,7 +901,7 @@
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
-        <version>1.1-beta-8-JS-1</version>
+        <version>${jaxen.version}</version>
         <exclusions>
           <exclusion>
               <groupId>dom4j</groupId>
@@ -926,11 +926,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>xalan</groupId>
-        <artifactId>xalan</artifactId>
-        <version>2.7.2</version>
-      </dependency>
-      <dependency>
         <groupId>org.codelibs.xerces</groupId>
         <artifactId>xercesImpl</artifactId>
         <version>2.12.1-sp1</version>
@@ -939,17 +934,6 @@
         <groupId>xml-apis</groupId>
         <artifactId>xml-apis</artifactId>
         <version>1.4.01</version>
-      </dependency>
-      <dependency>
-        <groupId>xalan</groupId>
-        <artifactId>serializer</artifactId>
-        <version>2.7.2</version>
-        <exclusions>
-          <exclusion>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.dom4j</groupId>
@@ -1105,6 +1089,17 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-configuration2</artifactId>
         <version>${commons-configuration.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons-text.version}</version>
       </dependency>
       <dependency>
         <groupId>net.jodah</groupId>
@@ -1396,7 +1391,7 @@
     <jpivot-groupId>jaspersoft.ji-pro.ji-jpivot-ui</jpivot-groupId>
     <connector-version>${project.version}</connector-version>
     <jpivot-artifactId>ji-jpivot</jpivot-artifactId>
-    <jpivot-version>6.1.0</jpivot-version>
+    <jpivot-version>6.1.1</jpivot-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <my.build.directory>target</my.build.directory>
     <spring.version>5.2.21.RELEASE</spring.version>
@@ -1434,15 +1429,17 @@
     <jackson.version>2.13.2</jackson.version>
     <jackson.databind.version>2.13.2.2</jackson.databind.version>    <commons.beanutils.version>1.9.4</commons.beanutils.version>
     <activemq.version>5.16.2</activemq.version>
-    <js-crypto.version>3.1.1</js-crypto.version>
+    <js-crypto.version>3.1.2</js-crypto.version>
     <commons-codec.version>1.10</commons-codec.version>
-    <commons-configuration.version>2.7</commons-configuration.version>
+    <commons-configuration.version>2.8.0</commons-configuration.version>
+    <commons-text.version>1.10.0</commons-text.version>
     <infinispan.version>10.1.8.Final</infinispan.version>
     <jgroups.version>4.1.9.Final</jgroups.version>
     <bcprov-jdk15on.version>1.68</bcprov-jdk15on.version>
     <failsafe.version>2.3.4</failsafe.version>
     <batik.version>1.14</batik.version>
     <opentelemetry.version>1.14.0</opentelemetry.version>
+    <jaxen.version>1.2.0</jaxen.version>
   </properties>
 
 </project>

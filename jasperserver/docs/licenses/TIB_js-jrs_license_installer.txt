@@ -1,5 +1,4 @@
 End User License Agreement
-
 If you have another valid, signed agreement with Licensor or a Licensor authorized reseller which applies to the specific products or services you are downloading, accessing, or otherwise receiving, that other agreement controls; otherwise, by using, downloading, installing, copying, or accessing Software, Maintenance, or Consulting Services, or by clicking on “I accept” on or adjacent to the screen where these Master Terms may be displayed, you hereby agree to be bound by and accept these Master Terms.  These Master Terms also apply to any Maintenance or Consulting Services you later acquire from Licensor relating to the Software. 
 
 You may place orders under these Master Terms by submitting separate Order Form(s). Capitalized terms used in the Agreement and not otherwise defined herein are defined at https://terms.tibco.com/#definitions. 
@@ -133,13 +132,11 @@ c) If Customer is using a free trial version of Software, Licensor may stop prov
 d) Notwithstanding anything to the contrary in this Agreement, Software subject to an Alpha, Beta, Developer Evaluation, Free Trial and Evaluation license may be deployed by Customer on AWS, Microsoft Azure, or similar environments.
 
 
-
-Version 10.9  2022 
+Version 10.9  2022 -Page 6 of 6
 Copyright © 1994-2022 TIBCO Software Inc.
 
----------------------------------------------
+
 Addenda:
 
 
-These Terms incorporate by reference as if fully set forth herein the terms contained in the document entitled "TIB_js-jrs_8.1.0_license" and delivered with the Licensor Software; accordingly, by accepting these Terms, you also hereby agree to be bound by and accept the terms contained in "TIB_js-jrs_8.1.0_license". 
-
+These Terms incorporate by reference as if fully set forth herein the terms contained in the document entitled "TIB_js-jrs_8.1.1_license" and delivered with the Licensor Software; accordingly, by accepting these Terms, you also hereby agree to be bound by and accept the terms contained in "TIB_js-jrs_8.1.1_license". 

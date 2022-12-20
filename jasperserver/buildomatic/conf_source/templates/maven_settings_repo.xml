@@ -78,7 +78,7 @@
         </repository>
         <repository>
           <id>Repo1 Maven</id>
-          <url>http://repo1.maven.org/maven2/</url>
+          <url>https://repo1.maven.org/maven2/</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
@@ -88,7 +88,7 @@
         </repository>
         <repository>
           <id>SpringSource</id>
-          <url>http://repo.springsource.org/release</url>
+          <url>https://repo.springsource.org/release</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>

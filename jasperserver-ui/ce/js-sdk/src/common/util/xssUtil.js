@@ -31,7 +31,7 @@ var htmlTagWhiteList = 'a,abbr,acronym,address,animate,animateMotion,animateTran
     'canvas,caption,center,circle,cite,clipPath,code,col,colgroup,color-profile,dd,defs,desc,details,dfn,discard,div,dl,dt,ellipse,em,' +
     'feBlend,feColorMatrix,feComponentTransfer,feComposite,feConvolveMatrix,feDiffuseLighting,feDisplacementMap,feDistantLight,feFlood,feFuncA,feFuncB,feFuncG,feFuncR,feGaussianBlur,feImage,feMerge,feMergeNode,feMorphology,feOffset,fePointLight,feSpecularLighting,feSpotLight,feTile,feTurbulence,' +
     'fieldset,filter,font,footer,form,h1,h2,h3,h4,h5,h6,head,' +
-    'header,hr,html,i,g,iframe,image,img,input,js-templateNonce,label,legend,li,line,linearGradient,main,map,mark,marker,mask,menu,menuitem,meta,metadata,mpath,nav,ol,option,p,path,pattern,polygon,polyline,' +
+    'header,hr,html,i,g,image,img,input,js-templateNonce,label,legend,li,line,linearGradient,main,map,mark,marker,mask,menu,menuitem,meta,metadata,mpath,nav,ol,option,p,path,pattern,polygon,polyline,' +
     'pre,radialGradient,rect,section,select,set,small,span,stop,strike,strong,style,sub,summary,sup,svg,switch,symbol,table,tbody,td,text,textPath,textarea,tfoot,th,thead,title,tr,tspan,u,ul,use,view';
 
 // None of the chars in the values of the map should appear as the map key to
@@ -179,6 +179,22 @@ function _canonicalize(string) {
     string = reverseCanonicExclusionRegex.test(string) ? string.replace(reverseCanonicExclusionRegex, function(match) { return reverseCanonicExclusionMap[match]; }) : string;
 
     return string;
+}
+
+/**
+ * Removes tabulation, new line and "carriage return" characters symbols from the string "javascript:"
+ *
+ * @param string
+ * @returns string
+ * @private
+ */
+function _removeBreakUpCharacters (string) {
+    // we are removing "tab", "new line" and "carriage return" characters inserted into "javascript:" string, so from
+    // "ja\tva\r\nscript:" we are getting "javascript:"
+
+    const jsKeyword = 'javascript:';
+    const jsKeywordSearchRegExp = RegExp(jsKeyword.split('').join('[\t\r\n]*'), 'ig');
+    return string.replace(jsKeywordSearchRegExp, jsKeyword);
 }
 
 /**
@@ -394,6 +410,8 @@ var _xssSoftHtmlEscape = function(string, options) {
 
     string = _canonicalize(string);
 
+    string = _removeBreakUpCharacters(string);
+
     //avoid escaping < or > in <TAG> or </TAG>, where TAG is white-listed
     if (options.whiteList && options.whiteList instanceof Array && options.whiteList.length > 0) {
         //escape <TAG>
@@ -488,8 +506,35 @@ var _xssUnescape = function(string) {
     return unescapeRegexp.test(string) ? string.replace(unescapeRegexp, function(match) { return unescapeMap[match]; }) : string;
 };
 
+const stripHTMLRecurse = (variable, escapeOptions = null) => {
+    if (typeof variable === 'string') {
+        return _xssSoftHtmlEscape(variable, escapeOptions);
+    }
+
+    if (typeof variable === 'object' && variable !== null) {
+        Object.keys(variable).forEach(key => {
+            if (typeof variable[key] === 'string') {
+                variable[key] = _xssSoftHtmlEscape(variable[key], escapeOptions);
+            } else if (Array.isArray(variable[key])) {
+                variable[key].forEach((item, i) => {
+                    variable[key][i] = stripHTMLRecurse(item, escapeOptions);
+                });
+            } else if (typeof variable[key] === 'object') {
+                variable[key] = stripHTMLRecurse(variable[key], escapeOptions);
+            }
+        });
+    }
+
+    return variable;
+};
+
+const sanitizeHighchartsOptions = (highchartsOptions) => {
+    return stripHTMLRecurse(highchartsOptions);
+}
+
 export default {
     softHtmlEscape: _xssSoftHtmlEscape,
     hardEscape: _xssHardEscape,
-    unescape: _xssUnescape
+    unescape: _xssUnescape,
+    sanitizeHighchartsOptions
 };

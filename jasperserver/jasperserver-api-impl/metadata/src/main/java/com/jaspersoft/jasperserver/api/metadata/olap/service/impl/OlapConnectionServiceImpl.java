@@ -465,7 +465,7 @@ public class OlapConnectionServiceImpl implements OlapConnectionService, ReportD
         try {
             initializeAndShow(omp, olapUnit.getURIString(), model, olapUnit);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage(), e.getCause());
         }
 
         return omp;

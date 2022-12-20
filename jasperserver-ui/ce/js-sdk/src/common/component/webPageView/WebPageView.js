@@ -22,13 +22,14 @@
 import Backbone from 'backbone';
 import _ from 'underscore';
 import $ from 'jquery';
+import xssUtil from '../../../common/util/xssUtil';
 import browserDetection from '../../util/browserDetection';
 
 function setIframeSrc() {
     /*jshint -W107 */
     if ((this.url || '').toLowerCase().indexOf('javascript:') === -1) {
         /*jshint +W107 */
-        this.$iframe.attr('src', this.url);
+        this.$iframe.attr('src', xssUtil.softHtmlEscape(this.url));
         this._iframeSrcSet = true;
         this.$el.addClass('loading');
         this._loadingTimeoutId && clearTimeout(this._loadingTimeoutId);
@@ -44,7 +45,7 @@ var WebPageView = Backbone.View.extend({
             throw new Error('WebPageView cannot be rendered to specified container');
         }
         this.renderTo = options.renderTo;
-        this.url = options.url;
+        this.url = xssUtil.softHtmlEscape(options.url);
         this.scrolling = _.isUndefined(options.scrolling) ? WebPageView.SCROLLING : options.scrolling;
         this.timeout = _.isUndefined(options.timeout) ? WebPageView.TIMEOUT : options.timeout;
         Backbone.View.prototype.constructor.apply(this, arguments);

@@ -21,6 +21,7 @@
 package com.jaspersoft.jasperserver.api.engine.jasperreports.service.impl;
 
 import com.jaspersoft.jasperserver.api.JSException;
+import com.jaspersoft.jasperserver.api.common.util.JndiUtils;
 import com.jaspersoft.jasperserver.api.metadata.common.service.JSDataSourceConnectionFailedException;
 import com.jaspersoft.jasperserver.api.metadata.common.util.JndiFallbackResolver;
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.JndiJdbcReportDataSource;
@@ -28,12 +29,11 @@ import com.jaspersoft.jasperserver.api.metadata.jasperreports.domain.ReportDataS
 import com.jaspersoft.jasperserver.api.metadata.jasperreports.service.ReportDataSourceService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.i18n.LocaleContextHolder;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.naming.NoInitialContextException;
+import javax.naming.*;
 import javax.sql.DataSource;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -70,7 +70,13 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
         JndiJdbcReportDataSource jndiDataSource = (JndiJdbcReportDataSource) dataSource;
 		if (getProfileAttributesResolver() != null) jndiDataSource = getProfileAttributesResolver().mergeResource(jndiDataSource);
         TimeZone timeZone = getTimeZoneByDataSourceTimeZone(jndiDataSource.getTimezone());
-        jndiName = jndiDataSource.getJndiName();
+		try {
+			jndiName = JndiUtils.validateName(jndiDataSource.getJndiName());
+		} catch (InvalidNameException  | NullPointerException e) {
+			if (log.isDebugEnabled()) log.debug(e.getMessage(), e);
+			throw new JSDataSourceConnectionFailedException(
+					messageSource.getMessage("exception.remote.invalid.jndi.service.name", new Object[]{jndiDataSource.getJndiName()}, LocaleContextHolder.getLocale()), e);
+		}
         if (disableJndi || ctx == null) {
         	return createServiceFromFallbackProperties(jndiName, timeZone);
         }

@@ -94,12 +94,12 @@ describe("xssUtil", function() {
 
     it("should escape srcdoc iframe attribute", function() {
         expect(xssUtil.softHtmlEscape('<iframe srcdoc="&lt;script>"></iframe>'))
-            .toEqual('<iframe &#115;&#114;&#99;doc="&lt;script>"></iframe>');
+            .toEqual('&lt;iframe &#115;&#114;&#99;doc="&lt;script>">&lt;/iframe>');
     });
 
     it("should escape srcdoc iframe attribute twice", function() {
         expect(xssUtil.softHtmlEscape('<iframe srcdoc="&lt;script><iframe srcdoc="&lt;script>"></iframe>'))
-            .toEqual('<iframe &#115;&#114;&#99;doc="&lt;script><iframe &#115;&#114;&#99;doc="&lt;script>"></iframe>');
+            .toEqual('&lt;iframe &#115;&#114;&#99;doc="&lt;script>&lt;iframe &#115;&#114;&#99;doc="&lt;script>">&lt;/iframe>');
     });
 
     it("should NOT escape parenthesis during softHtmlEscape. Potentially breaks CSS.", function() {
@@ -195,4 +195,96 @@ describe("xssUtil", function() {
         expect(xssUtil.softHtmlEscape(str)).toEqual(strRes);
     });
 
+    it("should escape an iframe tag in the string", function() {
+        var str = "<iframe src='content'>alert</iframe>";
+        var strRes = "&lt;iframe src='content'>alert&lt;/iframe>";
+        expect(xssUtil.softHtmlEscape(str)).toEqual(strRes);
+    });
+
+    it("should find and remove some special characters from javascript keyword", function() {
+        const jsKeyword = 'javascript:';
+        const fakeJsKeyword = 'ja\tvasc\r\nript:';
+        const fakeJsKeyword2 = 'ja&Tab;vasc\r&NewLine;ript:';
+
+        let prefix = '<div>';
+        let middle = '';
+        let suffix = '</div>';
+
+        let result = xssUtil.softHtmlEscape(prefix + fakeJsKeyword + middle + fakeJsKeyword + suffix);
+        let expected = prefix + middle + suffix;
+        expect(result).toEqual(expected);
+
+        result = xssUtil.softHtmlEscape(prefix + fakeJsKeyword2 + middle + fakeJsKeyword2 + suffix);
+        expected = prefix + middle + suffix;
+        expect(result).toEqual(expected);
+
+        middle = 'asdsds';
+        result = xssUtil.softHtmlEscape(prefix + fakeJsKeyword + middle + fakeJsKeyword + suffix);
+        // only the first jsKeyword is going to be removed, the second one (is going to stay because it's not considered
+        // as a separate word)
+        expected = prefix + middle + jsKeyword + suffix;
+        expect(result).toEqual(expected);
+
+        middle = 'asdsds ';
+        result = xssUtil.softHtmlEscape(prefix + fakeJsKeyword + middle + fakeJsKeyword + suffix);
+        // and here the second jsKeyword is going to be a separate word, thus, will be removed
+        expected = prefix + middle + suffix;
+        expect(result).toEqual(expected);
+    });
+
+    it("sanitizeHighchartsOptions should clean HC object from unsafe XSS strings", function () {
+
+        const unsafeClickString = '<a onClick="alert(10);">click here</a>';
+        const safeClickString = '<a &#111;&#110;Click="alert(10);">click here</a>';
+
+        const unsafeSrcdocString = '<iframe srcdoc="<script>alert(10)</script>"></iframe>';
+        const safeSrcdocString = '&lt;iframe &#115;&#114;&#99;doc="&lt;script>alert(10)&lt;/script>">&lt;/iframe>';
+
+        const unsafeScriptString = '<a href="javascript:alert(10);">click here</a>';
+        const safeScriptString = '<a href="alert(10);">click here</a>';
+
+        const someObject = {
+            onClickKey: unsafeClickString,
+            srcdocKey: unsafeSrcdocString,
+            scriptKey: unsafeScriptString,
+            onClickArray: [
+                'item1',
+                'item2',
+                unsafeClickString,
+                'item3'
+            ],
+            srcdocArray: [
+                'item1',
+                unsafeSrcdocString,
+                'item2'
+            ],
+            scriptArray: [
+                'item1',
+                'item2',
+                'item3',
+                unsafeScriptString
+            ],
+            obj: {
+                nestedObj: {
+                    onClickKey: unsafeClickString,
+                    srcdocKey: unsafeSrcdocString,
+                    scriptKey: unsafeScriptString
+                }
+            }
+        };
+
+        const actual = xssUtil.sanitizeHighchartsOptions(someObject);
+
+        expect(actual.onClickKey).toEqual(safeClickString);
+        expect(actual.srcdocKey).toEqual(safeSrcdocString);
+        expect(actual.scriptKey).toEqual(safeScriptString);
+
+        expect(actual.onClickArray[2]).toEqual(safeClickString);
+        expect(actual.srcdocArray[1]).toEqual(safeSrcdocString);
+        expect(actual.scriptArray[3]).toEqual(safeScriptString);
+
+        expect(actual.obj.nestedObj.onClickKey).toEqual(safeClickString);
+        expect(actual.obj.nestedObj.srcdocKey).toEqual(safeSrcdocString);
+        expect(actual.obj.nestedObj.scriptKey).toEqual(safeScriptString);
+    });
 });
