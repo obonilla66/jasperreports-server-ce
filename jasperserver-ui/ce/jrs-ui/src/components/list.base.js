@@ -45,6 +45,7 @@ import {JSTooltip} from "./components.tooltip";
 import _ from 'underscore';
 import xssUtil from 'js-sdk/src/common/util/xssUtil';
 import jQuery from 'jquery';
+import stdnav from 'js-sdk/src/common/stdnav/stdnav';
 
 var baseList = {
     isResponsive: function (item) {
@@ -337,11 +338,24 @@ dynamicList.ListItem.addMethod('show', function (container) {
     this._getElement().setAttribute('id', this._generateId());
     this._getElement().setAttribute('tabindex', -1);
     this.first && this.getList().tabindex && jQuery(this._getElement()).attr('tabindex', this.getList().tabindex);
+    this.first && this.getValue().isLabel && jQuery('#'+this.getList().getId()).attr('aria-label', this.getLabel().split(':')[0]);
     this._getElement().listItem = this;
     this.refreshStyle();
-    var siblings = container.childElements();
-    var itemIndex = this.index();
-    var afterIndex = itemIndex - 1;
+    let siblings = container.childElements();
+    let itemIndex = this.index();
+    let afterIndex = itemIndex - 1;
+
+    if(jQuery(this._element.children).attr('role') === 'row'){
+        jQuery(this._element).children('[role="row"]').attr('aria-posinset',this.getId());
+        jQuery(this._element).children('[role="row"]').attr('aria-level',1);
+        jQuery(this._element).children('[role="row"]').attr('aria-setsize',-1);
+    }
+    if(this._list.isCompositeSubList){
+        let posinset = parseInt(jQuery(this._element).children('[role="row"]').attr('aria-posinset'));
+        jQuery(this._element).children('[role="row"]').attr('aria-level',posinset+1)
+        jQuery(this._element).children('[role="row"]').attr('aria-setsize',-1);
+    }
+
     afterIndex > -1 && afterIndex < siblings.length ? this._getElement().insert({ after: siblings[afterIndex] }) : jQuery(container)[0].insert(this._getElement());
 });    /**
  *
@@ -614,7 +628,9 @@ dynamicList.CompositeItem.addMethod('_showSubList', function () {
         itemTemplateDomId: 'itemTemplateDomId' in opts ? opts.itemTemplateDomId : this.getList()._itemTemplateDomId,
         itemCssClassName: 'itemCssClassName' in opts ? opts.itemCssClassName : this.getList()._itemCssClassName,
         comparator: 'comparator' in opts ? opts.comparator : this.getList()._comparator,
-        items: this._items
+        items: this._items,
+        isCompositeSubList: true
+
     });
     this._subList._initEvents = function () {
     };
@@ -622,40 +638,7 @@ dynamicList.CompositeItem.addMethod('_showSubList', function () {
     this._subList._parentList = this.getList();
     this._subList.getItems().each(function (item) {
         item.parentItem = this;
-    }.bind(this));    // It's possible that multiple sublists will be coming back from the
-    // database, so only move the cursor if this is the sublist for an item
-    // that is the current cursor.  Arguably we shouldn't set focus yet,
-    // either, in case the delay is so long that the user is doing something
-    // with some other part of the interface, but let's see if that actually
-    // comes up.
-    // It's possible that multiple sublists will be coming back from the
-    // database, so only move the cursor if this is the sublist for an item
-    // that is the current cursor.  Arguably we shouldn't set focus yet,
-    // either, in case the delay is so long that the user is doing something
-    // with some other part of the interface, but let's see if that actually
-    // comes up.
-    if (this === this.getList().cursor) {
-        var subitem = this.getFirstChild();
-        if (subitem) {
-            this.deselect();
-            subitem.getList().setCursor(subitem);    //subitem.select();
-            //subitem.select();
-            if (this._getElement()) {
-                var $item = jQuery(this._getElement());
-                $item.removeClass('cursor');
-                $item.addClass('supercursor');
-            }
-            if (subitem._getElement()) {
-                // WARNING - This must be done this way, do not change it.
-                // Trying to do a focus() call directly here will not work,
-                // because of the complex callback situation that generally
-                // puts us in here in the first place.
-                window.setTimeout(function () {
-                    jQuery(subitem._getElement()).focus();
-                }, 0);
-            }
-        }
-    }
+    }.bind(this));
 });
 dynamicList.CompositeItem.addMethod('refresh', function () {
     dynamicList.ListItem.prototype.refresh.call(this);
@@ -788,6 +771,7 @@ dynamicList.List = function (id, options) {
     // private static var
     this.draggables = [];
     this._parentList = null;
+    this.listOrientation = null;
     if (options) {
         // Options with defaults.
         this._selectionDefaultsToCursor = 'selectionDefaultsToCursor' in options ? options.selectionDefaultsToCursor : true;
@@ -803,9 +787,11 @@ dynamicList.List = function (id, options) {
         this._itemTemplateDomId = options.itemTemplateDomId;
         this._itemCssClassName = options.itemCssClassName;
         this._comparator = options.comparator;
+        this.listOrientation = options.listOrientation;
         this.dragPattern = options.dragPattern;
         this.scroll = options.scroll;    // An initial set of items may be passed in with the options hash.
         // An initial set of items may be passed in with the options hash.
+        this.isCompositeSubList= options.isCompositeSubList;
         this.setItems(options.items);
     }
     this._createFromTemplate();
@@ -1228,6 +1214,7 @@ dynamicList.List.addMethod('selectItem', function (item, isCtrlHeld, isShiftKeyH
     }    // Move the cursor to the most recently selected or deselected item.
     // Move the cursor to the most recently selected or deselected item.
     this.setCursor(item);
+    jQuery(item._getElement()).children('[role="row"]').attr("aria-selected", "true");
 });    /**
  * @param item {dynamicList.ListItem} -
  */
@@ -1265,6 +1252,11 @@ dynamicList.List.addMethod('deselectOthers', function (item, isCtrlHeld, isShift
  */
 dynamicList.List.addMethod('resetSelected', function (skipParent) {
     var items = this._selectedItems;
+    let itemsLength = items.length;
+    if(!itemsLength && this.cursor){
+        let cursorEl = this.cursor._getElement();
+        jQuery(cursorEl).removeClass('selected');
+    }
     this._selectedItems = [];
     items.each(function (item) {
         var thatList = item.getList();
@@ -1275,6 +1267,7 @@ dynamicList.List.addMethod('resetSelected', function (skipParent) {
         }
         item.refreshStyle();
         this.fire(this.Event.ITEM_UNSELECTED, { item: item });
+        jQuery(item._getElement()).children('[role="row"]').attr("aria-selected", "false");
     }.bind(this));
     if (this._parentList && !skipParent) {
         this._parentList.resetSelected();
@@ -1469,7 +1462,7 @@ dynamicList.List.addMethod('selectPrevious', function (event) {
             }
             jQuery(item._getElement()).removeClass('supercursor');
             this.setCursor(item);
-            jQuery(item._getElement()).focus();
+            stdnav.forceFocus(jQuery(item._getElement()))
         }
     } else {
         // Normal case-- no sublist, or main item selected.
@@ -1482,10 +1475,27 @@ dynamicList.List.addMethod('selectPrevious', function (event) {
                     this._addItemToSelected(previousItem, false);
                 }
             } else {
+                const isLabelItem = previousItem.first && previousItem._value.isLabel;
+                if(isLabelItem) {
+                    return;
+                }
                 this.resetSelected();
                 item.getList().selectItem(previousItem);
-            }    // NOTE: Implies scroll, refresh, and possibly selection.
-            // NOTE: Implies scroll, refresh, and possibly selection.
+                // previous item has sublist and its open then iterate through it
+                if (previousItem?._subList?.getItems().length > 0 &&
+                    jQuery(previousItem._getElement()).hasClass(layoutModule.OPEN_CLASS)) {
+                    item = previousItem;
+                    previousItem = _.last(item._subList.getItems());
+                    jQuery(item._getElement()).addClass('supercursor');
+                    baseEvent.preventDefault();
+                    baseEvent.stopPropagation();
+                    item._subList.setCursor(previousItem);
+                    stdnav.forceFocus(jQuery(item._subList.cursor._getElement()))
+                    //jQuery(item._subList.cursor._getElement()).focus();
+                    return;
+                }
+
+            }// NOTE: Implies scroll, refresh, and possibly selection.
             this.setCursor(previousItem);
         }
     }
@@ -1578,29 +1588,81 @@ dynamicList.List.addMethod('selectPageUp', function (event) {
         // NOTE: Implies scroll, refresh, and possibly selection.
         this.setCursor(previousItem);
     }
-});    /**
- * @param event
- */
+});
+dynamicList.List.addMethod('selectFirst', function () {
+    if (this._items[0]) {
+        this.resetSelected();
+        this.setCursor(this._items[0]);
+    }
+});
+
+
+dynamicList.List.addMethod('selectLast', function () {
+    if (this._items[this._items.length - 1]) {
+        this.resetSelected();
+        this.setCursor(this._items[this._items.length - 1]);
+    }
+});
+
 /**
  * @param event
  */
 dynamicList.List.addMethod('selectOutwards', function (event) {
-    if (this.getSelectedItems().length < 1) {
+    let item = this.getSelectedItems()[0];
+
+    if (!item) {
+        item = this.cursor;
+    }
+
+    if (!item) {
         return;
     }
-    var item = this.getSelectedItems()[0];
-    var element = item._getElement();
-    var outItem = !baseList.isItemOpen(element) && item.parentItem;
-    if (outItem) {
-        item.deselect();
-        outItem.select();
-        outItem._getElement().focus();
-    } else {
-        baseList.closeItem(element);
-        this.fire(this.Event.ITEM_CLOSED, {
-            targetEvent: event,
-            item: item
-        });
+
+    let element = item._getElement();
+    let outItem = !baseList.isItemOpen(element) && item.parentItem;
+
+    let source = event.target;
+    let isRoleRow = jQuery(source).attr("role")==="row"
+
+    // Todo : fix  left key press on sublist focus move to parent list and collapse list
+
+    if(isRoleRow) {
+        if (outItem) {
+            // focus should go on parent on first press of right arrow
+            this.resetSelected();
+            outItem.select();
+            outItem._getElement().focus();
+            jQuery('.subfocus').removeClass('subfocus');
+            jQuery(outItem._getElement()).addClass('subfocus').addClass('focus-visible').removeClass("supercursor");
+        } else {
+            let source = event.target;
+            jQuery(source).attr('aria-expanded', false);
+            baseList.closeItem(element);
+            item.getList().selectItem(item);
+            item._getElement().focus();
+            jQuery('.subfocus').removeClass('subfocus');
+            jQuery(item._getElement()).addClass('subfocus').addClass('focus-visible');
+            this.fire(this.Event.ITEM_CLOSED, {
+                targetEvent: event,
+                item: item
+            });
+        }
+    }else {
+        let gridItem;
+        let dataCellElement = jQuery(source).is('[data-cell]')? jQuery(source) : jQuery(source).closest('[data-cell]');
+        let currentCell = dataCellElement? parseInt(jQuery(dataCellElement).attr('data-cell')) : null;
+        let parent = jQuery(source).closest('[role ="row"]');
+        let isFirstCellVisible = jQuery(parent).find("[data-cell=0]").first().css("visibility") !== "hidden";
+        if (currentCell === 0 && isFirstCellVisible) {
+            gridItem = parent
+        } else if (currentCell === 1 && !isFirstCellVisible) {
+            gridItem = parent
+        } else {
+            do {
+                gridItem = jQuery(parent).find(`[data-cell='${--currentCell}']`).first();
+            } while (gridItem.length === 1 && gridItem.css("visibility") === "hidden");
+        }
+        if (gridItem.length > 0) stdnav.forceFocus(gridItem);
     }
 });    /**
  * @param event
@@ -1609,45 +1671,53 @@ dynamicList.List.addMethod('selectOutwards', function (event) {
  * @param event
  */
 dynamicList.List.addMethod('selectInwards', function (event) {
-    var item = this.cursor;    // If there is no cursor for some reason (possibly during construction?)
-    // then use the first selected item.  If there is neither a cursor nor any
-    // selected items, abort.
-    // If there is no cursor for some reason (possibly during construction?)
-    // then use the first selected item.  If there is neither a cursor nor any
-    // selected items, abort.
+    /*
+      1.If there is no cursor for some reason (possibly during construction?)
+        then use the first selected item.  If there is neither a cursor nor any
+        selected items, abort.
+      2.if sublist exists and its not expanded then sublist will open first
+      3.if sublist is expaned then on next right click parentlist item get focused.
+
+      Note : refer right keyboard navigation treegrid sample :
+        https://www.w3.org/TR/wai-aria-practices-1.1/examples/treegrid/treegrid-1.html
+  */
+
+    let item = this.cursor;
+    let source =  event.target;
+
     if (!item) {
         if (this.getSelectedItems().length < 1) {
             return;
         }
         item = this.getSelectedItems()[0];
     }
-    if (item.isComposite) {
-        var element = item._getElement();
-        if (baseList.isItemOpen(element)) {
-            var subitem = item.getFirstChild();
-            if (subitem) {
-                item.deselect();
-                subitem.getList().setCursor(subitem);    //subitem.select();
-                //subitem.select();
-                if (item._getElement()) {
-                    var $item = jQuery(item._getElement());
-                    if (jQuery($item).is('.cursor')) {
-                        jQuery($item).removeClass('cursor');
-                        jQuery($item).addClass('supercursor');
-                    }
-                }
-                if (subitem._getElement()) {
-                    jQuery(subitem._getElement()).focus();
-                }
-            }
+    let element = item._getElement();
+    if (item.isComposite && !baseList.isItemOpen(element)) {
+        baseList.openItem(element);
+
+        jQuery(source).attr('aria-expanded', true);
+        this.fire(this.Event.ITEM_OPEN, {
+            targetEvent: event,
+            item: item
+        });
+    }else{
+        let isRoleRow = jQuery(source).attr("role")==="row";
+        let gridItem;
+
+        if (isRoleRow) {
+            gridItem = jQuery(source).find("[data-cell=0]").css("visibility") === "hidden" ?
+                jQuery(source).find("[data-cell=1]").first() :
+                jQuery(source).find("[data-cell=0]").first();
         } else {
-            baseList.openItem(element);
-            this.fire(this.Event.ITEM_OPEN, {
-                targetEvent: event,
-                item: item
-            });    // At this point, the contents of the sublist will still need to
-            // load, so we can take no other action.
+            let dataCell = +jQuery(source).attr('data-cell');
+            let parent = jQuery(source).closest('[role ="row"]');
+
+            do {
+                gridItem =jQuery(parent).find(`[data-cell='${++dataCell}']`).first();
+            } while(gridItem.length === 1 && gridItem.css("visibility") === "hidden");
         }
+        if(gridItem.length > 0) stdnav.forceFocus(gridItem);
+
     }
 });    /**
  * Render list items. Use this method when you need to re-render list.
@@ -1678,27 +1748,8 @@ dynamicList.List.addMethod('refresh', function () {
     if (!this._getElement()) {
         // List has not been rendered yet.
         return;
-    }    // Ensure that the list has a cursor.
-    // Ensure that the list has a cursor.
-    this.getCursor();    // Get the current scroll offset, so it can be sustained after refreshing
-    // the list.
-    // Get the current scroll offset, so it can be sustained after refreshing
-    // the list.
-    var scrollEl = this._getElement().parentNode, scrollTop;
-    if (!scrollEl) {
-        // Keep the testing framework happy; normally these would never be
-        // detatched from the DOM.
-        scrollTop = 0;
-    } else {
-        scrollTop = scrollEl.scrollTop;
     }
-    this.refreshStyle();
-    var elements = this._getElement().childElements(), itemElements = [], cursor = this.getCursor(), cursorWasFocus = false;
-    if (cursor && cursor.getList() && cursor._getElement()) {
-        if (document.activeElement === cursor._getElement() || jQuery.contains(cursor._getElement(), document.activeElement)) {
-            cursorWasFocus = true;
-        }
-    }
+    let elements = this._getElement().childElements(), itemElements = [];
     this.getItems().each(function (item, index) {
         item.first = index === 0;
         item.last = index === this.getItems().length - 1;
@@ -1722,14 +1773,32 @@ dynamicList.List.addMethod('refresh', function () {
         if (!itemElements.include(e) && e.parentNode) {
             e.remove();
         }
-    });    //this.scroll && this.scroll.refresh();
+    });
+    // Ensure that the list has a cursor.
+    this.getCursor();
+    // Get the current scroll offset, so it can be sustained after refreshing
+    // the list.
+    var scrollEl = this._getElement().parentNode, scrollTop;
+    if (!scrollEl) {
+        // Keep the testing framework happy; normally these would never be
+        // detatched from the DOM.
+        scrollTop = 0;
+    } else {
+        scrollTop = scrollEl.scrollTop;
+    }
+    this.refreshStyle();
+    let cursor = this.getCursor(), cursorWasFocus = false;
+    if (cursor && cursor.getList() && cursor._getElement()) {
+        if (document.activeElement === cursor._getElement() || jQuery.contains(cursor._getElement(), document.activeElement)) {
+            cursorWasFocus = true;
+        }
+    }
     //this.scroll && this.scroll.refresh();
     this.setCursor(cursor);    // Refresh can result in loss of focus under certain circumstances.
     // Refresh can result in loss of focus under certain circumstances.
     if (cursorWasFocus) {
         jQuery(this.getCursorElement())[0].focus();
-    }    // Finally, restore the scroll offset.  This is necessary if the list was
-    // manually scrolled so that the cursor is no longer visible.
+    }
     // Finally, restore the scroll offset.  This is necessary if the list was
     // manually scrolled so that the cursor is no longer visible.
     if (scrollEl) {
@@ -2065,12 +2134,14 @@ dynamicList.List.addMethod('_clickHandler', function (event) {
             return;
         var element = item._getElement(), source = event.target;
         if (item._isCloseHandler(source) && baseList.isItemOpen(element)) {
+            jQuery(source).attr('aria-expanded', false);
             baseList.closeItem(element);
             this.fire(this.Event.ITEM_CLOSED, {
                 targetEvent: event,
                 item: item
             });
         } else if (item._isOpenHandler(source) && !baseList.isItemOpen(element)) {
+            jQuery(source).attr('aria-expanded', true);
             baseList.openItem(element);
             this.fire(this.Event.ITEM_OPEN, {
                 targetEvent: event,
@@ -2107,19 +2178,24 @@ dynamicList.List.addMethod('_initEvents', function () {
         //scriptaculous stopped mousedown event but we made it throw this instead
         container.stopObserving('drag:mousedown').observe('drag:mousedown', this._mousedownHandler.bindAsEventListener(this));
     }
-    if (!isIPad)
+    if (!isIPad){
         container.stopObserving('mouseover').observe('mouseover', this._mouseoverHandler.bindAsEventListener(this));
-    container.stopObserving('click').observe('click', this._clickHandler.bindAsEventListener(this));
-    container.stopObserving('dblclick').observe('dblclick', this._dblclickHandler.bindAsEventListener(this));
-    container.stopObserving('key:down').observe('key:down', this.selectNext.bindAsEventListener(this));
-    container.stopObserving('key:up').observe('key:up', this.selectPrevious.bindAsEventListener(this));
-    container.stopObserving('key:right').observe('key:right', this.selectInwards.bindAsEventListener(this));
-    container.stopObserving('key:left').observe('key:left', this.selectOutwards.bindAsEventListener(this));
-    container.stopObserving('key:pagedown').observe('key:pagedown', this.selectPageDown.bindAsEventListener(this));    /*
-    container.stopObserving('key:pageup').observe('key:pageup', this.selectPageUp.bindAsEventListener(this));
-    container.stopObserving('key:home').observe('key:home', this.selectFirst.bindAsEventListener(this));
-    container.stopObserving('key:end').observe('key:end', this.selectLast.bindAsEventListener(this));
-    */
+    }
+    if (this.listOrientation === "horizontal"){
+        container.stopObserving('key:right').observe('key:right', this.selectNext.bindAsEventListener(this));
+        container.stopObserving('key:left').observe('key:left', this.selectPrevious.bindAsEventListener(this));
+    }else {
+        container.stopObserving('click').observe('click', this._clickHandler.bindAsEventListener(this));
+        container.stopObserving('dblclick').observe('dblclick', this._dblclickHandler.bindAsEventListener(this));
+        container.stopObserving('key:down').observe('key:down', this.selectNext.bindAsEventListener(this));
+        container.stopObserving('key:up').observe('key:up', this.selectPrevious.bindAsEventListener(this));
+        container.stopObserving('key:right').observe('key:right', this.selectInwards.bindAsEventListener(this));
+        container.stopObserving('key:left').observe('key:left', this.selectOutwards.bindAsEventListener(this));
+        container.stopObserving('key:pagedown').observe('key:pagedown', this.selectPageDown.bindAsEventListener(this));
+        container.stopObserving('key:pageup').observe('key:pageup', this.selectPageUp.bindAsEventListener(this));
+        container.stopObserving('key:home').observe('key:home', this.selectFirst.bindAsEventListener(this));
+        container.stopObserving('key:end').observe('key:end', this.selectLast.bindAsEventListener(this));
+    }
 });
 dynamicList.List.addMethod('_itemPreventEvent',function(item , event){
     let isComposite = item.isComposite,

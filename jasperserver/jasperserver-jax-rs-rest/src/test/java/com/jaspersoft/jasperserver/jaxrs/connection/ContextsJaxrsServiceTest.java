@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,6 +22,15 @@ package com.jaspersoft.jasperserver.jaxrs.connection;
 
 import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.common.error.handling.ExceptionOutputManager;
+import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandlerImpl;
+import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
+import com.jaspersoft.jasperserver.remote.connection.ContextCreationFailedException;
+import com.jaspersoft.jasperserver.remote.exception.ExportExecutionRejectedException;
+import com.jaspersoft.jasperserver.remote.services.ReportExecution;
+import org.springframework.context.MessageSource;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import com.jaspersoft.jasperserver.jaxrs.resources.ContentNegotiationHandler;
 import com.jaspersoft.jasperserver.remote.connection.ContextsManager;
 import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
@@ -91,10 +100,21 @@ public class ContextsJaxrsServiceTest {
     private ContextsJaxrsService spyService;
 
     ExecutionContext ctx = ExecutionContextImpl.getRuntimeExecutionContext();
+    @Mock
+    private MessageSource messageSourceMock;
 
+    @Mock
+    private ExceptionOutputManager outputManagerMock;
+
+    private static final String SERVER_ERROR_MESSAGE = "RevenueDetailReport.pdf " +
+            "は、リポジトリには保存されませんでした。エラーにより処理が中断されました。";
+    private SecureExceptionHandlerImpl exceptionHandler;
     @BeforeClass
     public void init() {
         MockitoAnnotations.initMocks(this);
+        exceptionHandler = new SecureExceptionHandlerImpl();
+        exceptionHandler.setExceptionOutputManager(outputManagerMock);
+        exceptionHandler.setMessageSource(messageSourceMock);
         spyService = spy(service);
     }
 
@@ -257,4 +277,37 @@ public class ContextsJaxrsServiceTest {
                 "java.lang.RuntimeException")));
         assertFalse(service.isProcessedException(new IllegalStateException(), Arrays.asList("ABC", "EGH")));
     }
+    @Test
+    public void checkNullForStackTrace_WhenStackTraceIsNotAllowed_InContextCreationFailure () {
+        final Exception exception =
+                new ContextCreationFailedException("Object", "jndiName", "Invalid JNDI name", new Throwable(" password authentication failed for user postgres"), exceptionHandler);
+        doReturn(false).when(outputManagerMock).isExceptionMessageAllowed();
+        doReturn(false).when(outputManagerMock).isStackTraceAllowed();
+        ErrorDescriptor retrievedDescriptor = exceptionHandler.handleException(exception,
+                new ErrorDescriptor().setErrorCode("connection.failed").setMessage(exception.getMessage()));
+        assertEquals("generic.error.message", retrievedDescriptor.getMessage());
+        String[] parameters = retrievedDescriptor.getParameters();
+        assertNull(parameters);
+
+    }
+
+    @Test
+    public void checkNullForOriginalParametersWhenExportExecutionFailed () {
+
+        final ExportExecutionRejectedException exception1 =
+                new ExportExecutionRejectedException(new ErrorDescriptor().setMessage("export failed").setErrorCode("export.failed"));
+        doReturn(false).when(outputManagerMock).isExceptionMessageAllowed();
+        assertNull(exception1.getErrorDescriptor().getParameters());
+        ErrorDescriptor errorDescriptor = exceptionHandler.handleException(exception1,
+                exception1.getErrorDescriptor(), null);
+
+    }
+
+    @Test
+    public void checkNullForOriginalParametersWhenReportExecutionFailed () {
+        ReportExecution execution = new ReportExecution();
+        execution.setErrorDescriptor(new ErrorDescriptor().setErrorCode("report.execution.failed").setMessage("Report execution failed"));
+        assertNull(execution.getErrorDescriptor().getParameters());
+    }
+
 }

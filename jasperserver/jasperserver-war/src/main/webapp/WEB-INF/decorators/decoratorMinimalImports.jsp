@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 <%--
-  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -25,7 +25,7 @@
 
 <%@ include file="../jsp/modules/common/jsEdition.jsp" %>
 
-<meta name = "viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, width=device-width">
+<meta name = "viewport" content="initial-scale=1.0, width=device-width">
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 
 <%-- JavaScript and CSS resources that are common to all or most pages, doesn't include decorations-related code --%>

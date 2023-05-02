@@ -57,6 +57,7 @@ export default Backbone.View.extend({
         this.selectedItemsList = this._createSelectedItemsList(options);
         this.height = options.height;
         this.resizable = options && options.resizable;
+        this.caseSensitiveSelection = options.caseSensitiveSelection;
         this.initListeners();
         if (typeof options.value !== 'undefined') {
             this.silent = true;
@@ -83,7 +84,8 @@ export default Backbone.View.extend({
             loadFactor: options.loadFactor,
             chunksTemplate: options.chunksTemplate,
             scrollTimeout: options.scrollTimeout,
-            keydownTimeout: options.keydownTimeout
+            keydownTimeout: options.keydownTimeout,
+            caseSensitiveSelection: options.caseSensitiveSelection
         });
     },
     _createSelectedItemsListDataProvider: function (options) {
@@ -179,11 +181,26 @@ export default Backbone.View.extend({
         this.selectionChangeTimeout = setTimeout(_.bind(this.selectionChangeInternal, this, selection), SELECTION_CHANGE_TIMEOUT);
     },
     selectionRemoved: function (selection) {
-        var currentRawSelection = this.availableItemsList.model.get('value'), seletedIndex, selectedLength = selection.length;
-        for (seletedIndex = 0; seletedIndex < selectedLength; seletedIndex += 1) {
-            delete currentRawSelection[selection[seletedIndex]];
+        const currentAvailableValues = this.availableItemsList.model.get('value');
+
+        for (let i = 0; i < selection.length; i += 1) {
+            let value = selection[i];
+            if (!value) {
+                continue;
+            }
+            if (!this.caseSensitiveSelection) {
+                value = value.toLowerCase();
+            }
+            delete currentAvailableValues[value];
         }
-        this.availableItemsList.setValue(_.keys(currentRawSelection));
+
+        let newValues;
+        if (this.caseSensitiveSelection) {
+            newValues = Object.keys(currentAvailableValues);
+        } else {
+            newValues = Object.values(currentAvailableValues);
+        }
+        this.availableItemsList.setValue(newValues);
     },
     selectionChangeInternal: function (selection) {
         var self = this, activeValue = this.selectedItemsList.listView.getActiveValue(), scrollTop = this.selectedItemsList.listView.$el.scrollTop();

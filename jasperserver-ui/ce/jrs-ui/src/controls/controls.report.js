@@ -50,10 +50,10 @@ const isMandatoryInputControls = () => {
         return !_.contains(_.keys(Report.getAllRequestParameters()), parameterName);
     }));
 
-    // Report.reportParameterValues means that parameters were saved in flow and were put on jsp, we do it when we go drill through.
+    // Report.reportParameterValues will be filled when returning from drill through.
     // _.isEmpty(Report.reportParameterValues) means that we are not returning from drill through.
 
-    return (Report.hasInputControls && (Report.reportForceControls || atLeastOneParameterDoesntHaveDefaultOrUrlValue && _.isEmpty(Report.reportParameterValues)));
+    return (Report.hasInputControls && ((Report.reportForceControls || atLeastOneParameterDoesntHaveDefaultOrUrlValue) && _.isEmpty(Report.reportParameterValues)));
 };
 
 var ControlsReport = function (jQuery, _, Controls, Report) {
@@ -148,15 +148,13 @@ var ControlsReport = function (jQuery, _, Controls, Report) {
                 }
             });
 
-            const mandatoryInputControls = isMandatoryInputControls();
-
             if (Report.hasInputControls) {
                 const dfd = this._fetchAndSetInputControlsStateOnce().then(() => {
                     const viewModel = Controls.controller.getViewModel();
                     const isValidSelection = viewModel.areAllControlsValid();
 
                     // when their is wrong URL params show control dailog
-                    if (mandatoryInputControls || !isValidSelection) {
+                    if (isMandatoryInputControls() || !isValidSelection) {
                         Controls.show();
 
                         Controls.controlDialog && Controls.controlDialog.show();
@@ -172,7 +170,7 @@ var ControlsReport = function (jQuery, _, Controls, Report) {
                     const viewModel = Controls.controller.getViewModel();
                     const isValidSelection = viewModel.areAllControlsValid();
 
-                    if (mandatoryInputControls || !isValidSelection) {
+                    if (isMandatoryInputControls() || !isValidSelection) {
                         if (Report && Report.nothingToDisplay) {
                             Report.nothingToDisplay.removeClass(layoutModule.HIDDEN_CLASS);
 
@@ -650,22 +648,39 @@ var ControlsReport = function (jQuery, _, Controls, Report) {
             const dfd = jQuery.Deferred();
 
             if (!this.initialInputControlsFetched) {
-                const allRequestParameters = _.extend(Report.getAllRequestParameters(), Report.reportParameterValues);
-                this.controller.fetchAndSetInputControlsState(allRequestParameters).then(() => {
-                    this.initialInputControlsFetched = true;
 
-                    const viewModel = Controls.controller.getViewModel();
-                    const selection = viewModel.get('selection');
+                const fetchRawValuesDfd = jQuery.Deferred();
+                if (Report.reportExecutionId && Report.reportExecutionId.length) {
+                    this.controller.fetchReportRawParameterValues(Report.reportExecutionId).then(values => {
+                        Report.reportParameterValues = values;
+                        fetchRawValuesDfd.resolve();
+                    }, (...args) => {
+                        fetchRawValuesDfd.reject(...args);
+                    });
+                } else {
+                    fetchRawValuesDfd.resolve();
+                }
 
-                    Controls.lastSelection = selection;
-                    Controls.initialSelection = selection;
+                fetchRawValuesDfd.then(() => {
+                    const allRequestParameters = _.extend(Report.getAllRequestParameters(), Report.reportParameterValues);
+                    this.controller.fetchAndSetInputControlsState(allRequestParameters).then(() => {
+                        this.initialInputControlsFetched = true;
 
-                    return dfd.resolve();
+                        const viewModel = Controls.controller.getViewModel();
+                        const selection = viewModel.get('selection');
+
+                        Controls.lastSelection = selection;
+                        Controls.initialSelection = selection;
+
+                        return dfd.resolve();
+                    }, (...args) => {
+                        dfd.reject(...args);
+                    });
+
+                    Controls.Utils.showLoadingDialogOn(dfd, null, true);
                 }, (...args) => {
                     dfd.reject(...args);
                 });
-
-                Controls.Utils.showLoadingDialogOn(dfd, null, true);
             } else {
                 dfd.resolve();
             }

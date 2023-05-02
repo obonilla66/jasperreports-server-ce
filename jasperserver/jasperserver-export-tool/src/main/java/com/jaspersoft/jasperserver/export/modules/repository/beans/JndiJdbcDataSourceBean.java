@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -50,7 +50,7 @@ public class JndiJdbcDataSourceBean extends ResourceBean {
 		try {
 			JndiUtils.validateName(getJndiName());
 			ds.setJndiName(getJndiName());
-		} catch (InvalidNameException | NullPointerException e) {
+		} catch (InvalidNameException e) {
 			throw new JSException(MessageFormat.format("The JNDI service name \"{0}\" is invalid.", getJndiName()), e);
 		}
 		ds.setTimezone(getTimezone());

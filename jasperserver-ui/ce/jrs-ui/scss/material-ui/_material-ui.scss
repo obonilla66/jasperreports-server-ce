@@ -11,13 +11,16 @@
       0g. dialog
       0h. divider
       0i. inputs
-      0j. radio
-      0k. spinner
-      0l. tabs
-      0m. table
-      0n. table pagination
-      0o. toolbar
-      0p. typography
+      0j. menu
+      0k. radio
+      0l. spinner
+      0m. stepper
+      0n. tabs
+      0o. table
+      0p. table pagination
+      0q. toolbar
+      0r. tooltip
+      0s. typography
 
   01. ACCORDION
 
@@ -62,43 +65,55 @@
 
   10. LISTBOX
 
-  11. PANEL
+  11. MENU
 
-  12. SPINNER
+  12. PANEL
 
-  13. TABLE
+  13. SPINNER
 
-  14. TABS
+  14. STEPPER
 
-  15. TOOLBAR
+  15. TABLE
 
-  16. TYPOGRAPHY
-      16a. Body & Titles
-      16b. Links
-      16c. Filter Statement
+  16. TABS
 
-  17. CONTROL
-      17a. Color
-      17b. Condition & Interval
-      17c. Pagination (JRWS)
-      17d. Range
-      17e. Refresh
-      17f. Zoom (JRWS)
+  17. TOOLBAR
 
-  18. JASPERSOFT SPECIFIC COMPONENTS
-      18a. Calendar
-      18b. Dropdown
-      18c. Filterbar
-      18d. Titlebar
+  18. TOOLTIP
 
-  19. UTILITY
-      19a. Alignment
-      19b. Containers
-      19c. Margins
-      19d. Measurements
-      19e. Text
+  19. TREE
+
+  20. TYPOGRAPHY
+      20a. Body & Titles
+      20b. Links
+      20c. Filter Statement
+
+  21. CONTROL
+      21a. Color
+      21b. Condition & Interval
+      21c. Pagination (JRWS)
+      21d. Range
+      21e. Refresh
+      21f. Zoom (JRWS)
+
+  22. JASPERSOFT SPECIFIC COMPONENTS
+      22a. Calendar
+      22b. Dropdown
+      22c. Filterbar
+      22d. Form
+      22e. Layout
+      22f. Titlebar
+
+  23. UTILITY
+      23a. Alignment
+      23b. Backgrounds
+      23c. Borders
+      23d. Containers
+      23e. Margins
+      23f. Measurements
+      23g. Text
   -----------------------------------
-  File last modified June 7, 2022
+  File last modified Feb 9, 2023
   ----------------------------------- */
 
 /* NOTE: changes were made to panel section on Oct 1, 2021. I tested
@@ -150,7 +165,7 @@
 .jr-mAutoComplete-MultiSelection .jr-MuiChip-label {
   box-sizing: border-box;
   color: #444444;
-  font-family: source_sans_proregular, Franklin Gothic, Verdana, Arial, sans-serif;
+  font-family: $font-family-primary;
   font-size: 12px;
 }
 
@@ -159,7 +174,7 @@
 }
 
 .jr-MuiAutocomplete-option {
-  font-family: source_sans_proregular, Franklin Gothic, Verdana, Arial, sans-serif;
+  font-family: $font-family-primary;
   font-size: 13px;
   font-weight: normal;
   line-height: 1.25
@@ -226,6 +241,10 @@
 /*  ----------------- */
 /*  0f. checkbox      */
 /*  ----------------- */
+.jr-MuiCheckbox-colorPrimary {
+  color: #666666;
+}
+
 .jr-MuiCheckbox-colorPrimary.jr-Mui-checked {
   color: $color-themePrimary;
 }
@@ -240,6 +259,10 @@
 .jr-MuiDialogContent-dividers {
   border-top-color: #e5eaed;
   border-bottom-color: #e5eaed;
+}
+
+.jr-MuiDialogActions-spacing > :not(:first-child) {
+  margin-left: 0;
 }
 
 /*  -------------- */
@@ -306,14 +329,43 @@
 }
 
 /*  -------------- */
-/*  0j. radio      */
+/*  0j. menu       */
+/*  -------------- */
+.jr-MuiMenuItem-root:hover {
+  background-color: #f5f5f5;
+}
+
+.jr-MuiMenuItem-root.jr-Mui-selected.mui,
+.jr-MuiMenuItem-root.jr-Mui-selected.mui:hover {
+  background-color: #ebebeb;
+}
+
+.jr-MuiListItemIcon-root {
+  margin-right: 8px;
+  min-width: unset;
+  width: 20px;
+}
+
+/*  -------------- */
+/*  0k. radio      */
 /*  -------------- */
 .jr-MuiRadio-colorPrimary.jr-Mui-checked {
   color: $color-themePrimary;
 }
 
 /*  -------------- */
-/*  0k. spinner    */
+/*  0l. stepper    */
+/*  -------------- */
+.jr-MuiStepper-root {
+  padding: 0;
+}
+
+.jr-MuiStepLabel-root {
+  align-items: start;
+}
+
+/*  -------------- */
+/*  0m. spinner    */
 /*  -------------- */
 .jr-MuiCircularProgress-colorPrimary {
   color: $color-themePrimary;
@@ -324,7 +376,7 @@
 }
 
 /*  ------------- */
-/*  0l. tabs      */
+/*  0n. tabs      */
 /*  ------------- */
 .jr-MuiTabs-root {
   min-height: 22px;
@@ -337,7 +389,7 @@
 }
 
 /*  -------------- */
-/*  0m. table      */
+/*  0o. table      */
 /*  -------------- */
 .jr-MuiTableCell-body {
   box-sizing: border-box;
@@ -363,12 +415,17 @@
 }
 
 .jr-MuiTableCell-root.jr-MuiTableCell-sizeSmall {
-  height: 24px;
-  padding: 0;
+  line-height: 17px;
+  padding-top: 6px;
+  padding-bottom: 4px;
+}
+
+.jr-MuiPaper-rounded > .jr-MuiTableContainer-root {
+  border-radius: 4px 4px 0 0;
 }
 
 /*  ----------------------- */
-/*  0n. table pagination    */
+/*  0p. table pagination    */
 /*  ----------------------- */
 .jr-MuiTablePagination-root {
   border-radius: 0 0 6px 6px;
@@ -426,15 +483,20 @@
 }
 
 /*  -------------- */
-/*  0o. toolbar    */
+/*  0q. toolbar    */
 /*  -------------- */
 .jr-MuiToolbar-root {
   height: auto;
   min-height: 40px;
 }
 
+/*  -------------- */
+/*  0r. tooltip    */
+/*  -------------- */
+.jr-MuiTooltip-arrow {}
+
 /*  ------------------ */
-/*  0p. typography     */
+/*  0s. typography     */
 /*  ------------------ */
 .jr-MuiTypography-root {
   font-family: $font-family-primary;
@@ -533,7 +595,7 @@
   padding: 12px;
 }
 
-/* size variation */
+/* size variation small */
 .jr-mAccordionSmall.mui .jr-mAccordion-title.mui,
 .jr-mAccordionSmall.mui .jr-mAccordion-title.jr-Mui-expanded.mui {
   height: 24px;
@@ -557,6 +619,32 @@
 
 .jr-mAccordionSmall.mui .jr-mAccordion-body.mui {
   padding: 8px;
+}
+
+/* size variation large */
+.jr-mAccordionLarge.mui .jr-mAccordion-title.mui,
+.jr-mAccordionLarge.mui .jr-mAccordion-title.jr-Mui-expanded.mui {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 10px 0 6px;
+}
+
+.jr-mAccordionLarge.mui .jr-mAccordion-title-icon.mui.jr-Mui-expanded {
+  top: 1px;
+}
+
+.jr-mAccordionLarge.mui .jr-mAccordion-title-text.mui > p {
+  font-size: 13px;
+  line-height: 32px;
+}
+
+.jr-mAccordionLarge.mui .jr-mAccordion-title.mui .jr-MuiSvgIcon-root {
+  width: .8em;
+  height: .8em;
+}
+
+.jr-mAccordionLarge.mui .jr-mAccordion-body.mui {
+  padding: 16px;
 }
 
 /* shaded title variation */
@@ -594,8 +682,8 @@
   width: auto;
 }
 
-.jr-mButton.mui:not(:first-of-type) {
-  margin-left: .5em;
+.jr-mButton.mui:not(:last-of-type) {
+  margin-right: .5em;
 }
 
 .jr-mButton-label.mui {
@@ -937,7 +1025,7 @@
   padding: 0;
 }
 
-.jr-mCard-body-padded.mui, /* this line to be deleted, syntax is wrong */
+.jr-mCard-body-padded.mui, /* This line to be deleted, syntax is wrong. Need to fix jsx files also */
 .jr-mCard-bodyPadded.mui {
   padding: 16px;
 }
@@ -958,6 +1046,10 @@
 }
 
 /* card variations */
+.jr-mCardShaded.mui {
+  background-color: $grey-2;
+}
+
 .jr-mCardDashlet.mui {
   border-radius: 6px;
   /*  box-shadow: 0px -1px 4px 0px rgba(0,0,0,0.12),
@@ -967,11 +1059,11 @@
 .jr-mCardDashlet-title.mui {}
 
 
-/* --------------- */
-/*  05. DIALOG     */
-/* --------------- */
-/*  05a. General   */
-/* --------------- */
+/* ------------------------ */
+/*  05. DIALOG & DRAWER     */
+/* ------------------------ */
+/*  05a. General Dialog     */
+/* ------------------------ */
 .jr-mDialog.mui {}
 
 .jr-mDialog-wrapper.mui {
@@ -999,7 +1091,7 @@
 }
 
 .jr-mDialog-bodyPadded.mui {
-  padding: 20px;
+  padding: 24px 20px 20px 20px;
 }
 
 .jr-mDialog-footer.mui {
@@ -1083,25 +1175,39 @@
 .jr-mDrawer-header-title.mui {
   color: #444444;
   font-family: $font-family-semibold;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: normal;
   line-height: normal;
   padding-top: 4px;
 }
 
-.jr-mDrawer-header.mui + .jr-mDrawer-body.mui {
+.jr-mDrawer-headerShaded.mui,
+.jr-mDrawer-subheaderShaded.mui {
+  background-color: #fafafa;
+}
+
+.jr-mDrawer-header.mui + .jr-mDrawer-body.mui,
+.jr-mDrawer-subheader.mui + .jr-mDrawer-body.mui {
   border-top: 1px solid #e5eaed;
 }
 
 .jr-mDrawer-body.mui {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
   padding: 0;
   overflow-y: auto;
 }
 
 .jr-mDrawer-bodyPadded.mui {
-  padding: 20px;
+  padding: 24px 20px 20px 20px;
 }
+
+.jr-mDrawer-subheader.mui {}
+
+.jr-mDrawer-subheaderPadded.mui {
+  padding: 0 20px;
+} /* no top or bottom padding because content is meant to appear as part of drawer header */
 
 .jr-mDrawer-footer.mui {
   align-items: center;
@@ -1191,11 +1297,15 @@
  *
  *  Inputs:               Container around all inputs in a form.
  *
- *  Inputs-group:         Group of related inputs. For example, all inputs in a section.
+ *  Inputs-group:         Group of related inputs. For example, Condition and Threshold where one depends
+ *                        on the other to have meaning/usefulness.
  *
- *  Inputs-group-item:    Item within a group. For example, a single inputs needs to be indented
- *                        below an Inputs-group-label. Create variations for specialized uses such
- *                        as jr-mInputs-group-itemValue or jr-mInputs-group-itemComplex below.
+ *  Inputs-group-item:    Item within a group. For example:
+ *                        1. For the Condition/Threshold Inputs-group, Condition would be one item and
+ *                           Threshold would be another
+ *                        2. A single input needs to be indented below an Inputs-group-label. Create
+ *                           variations for specialized uses such as jr-mInputs-group-itemValue or
+ *                           jr-mInputs-group-itemComplex below.
  *
  *  Inputs-group-items:   Sub-group within a group. For example, a group of inputs needs
  *                        to be indented below an Inputs-group-label.
@@ -1205,8 +1315,6 @@
   width: 100%;
 }
 
-.jr-mInputs-group.mui {}
-.jr-mInputs-group-item.mui {}
 .jr-mInputs-divider.mui {
   border-top: 1px solid #e5eaed;
   display: block;
@@ -1387,16 +1495,41 @@
   border: 1px solid #cccccc;
   border-radius: 2px;
   box-sizing: border-box;
+  color: #444444;
   font-family: $font-family-primary;
   font-size: 13px;
   height: 24px;
   padding: 0 6px;
-  white-space: nowrap;
+  /* white-space: nowrap; not sure why this is here, causes problems with textarea */
 }
 
 .jr-mInputText.mui textarea.jr-mInput-text.mui {
-  height: auto;
+  height: auto !important;
   min-height: 24px;
+}
+
+.jr-mInputSmall:not(.jr-mInputInline).mui .jr-mInput-text.mui[readonly],
+.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly],
+.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly] + fieldset {
+  background-color: transparent;
+  border: none;
+  color: #707070;
+  padding-left: 0;
+}
+
+.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly] {
+  padding-top: 5px;
+}
+
+.jr-mInputText.jr-mInputInline.mui .jr-mInput-text.mui[readonly] {
+  line-height: 1.3;
+  padding-top: 3px;
+}
+
+textarea[readonly].jr-mInput-text.mui {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
 }
 
 /* large text input */
@@ -1429,6 +1562,10 @@
   min-height: 28px;
 }
 
+.jr-mInputLarge.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly] {
+  padding-top: 7px;
+}
+
 /* small text input */
 .jr-mInputSmall.jr-mInputText.mui,
 .jr-mInputSmall.jr-mInputTextarea.mui {
@@ -1450,23 +1587,12 @@
   margin-bottom: 8px;
 }
 
-.jr-mInputSmall:not(.jr-mInputInline).mui .jr-mInput-text.mui[readonly],
-.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly],
-.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly] + fieldset {
-  background-color: transparent;
-  border: none;
-  color: #707070;
-  padding-left: 0;
-}
-
-textarea[readonly].jr-mInput-text.mui {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-}
-
 .jr-mInputSmall.mui textarea.jr-mInput-text.mui {
   min-height: 22px;
+}
+
+.jr-mInputSmall.jr-mInputText.mui:not(.jr-mInputInline) .jr-mInput-text.mui[readonly] {
+  padding-top: 3px;
 }
 
 /* error state */
@@ -1487,6 +1613,7 @@ textarea[readonly].jr-mInput-text.mui {
   background-color: #cfe5f3;
 }
 
+/*.jr-mInputText.mui .jr-MuiOutlinedInput-root.jr-Mui-focused .jr-mInput-text.mui[readonly]*/
 .jr-mInputText.mui:not(.jr-mInputInline) .jr-MuiOutlinedInput-root.jr-Mui-focused .jr-mInput-text.mui[readonly] {
   border: 1px solid #cfe5f3;
   padding-left: 2px;
@@ -1606,9 +1733,11 @@ textarea[readonly].jr-mInput-text.mui {
 /*  ------------------------- */
 .jr-mInputDate.mui {}
 .jr-mInputTime.mui {}
+.jr-mInputDatetime.mui {}
 
 .jr-mInputDate.jr-mInputInline.mui .jr-MuiInputBase-root,
-.jr-mInputTime.jr-mInputInline.mui .jr-MuiInputBase-root {
+.jr-mInputTime.jr-mInputInline.mui .jr-MuiInputBase-root,
+.jr-mInputDatetime.jr-mInputInline.mui .jr-MuiInputBase-root {
   flex: unset;
 }
 
@@ -1618,8 +1747,14 @@ textarea[readonly].jr-mInput-text.mui {
   width: calc(100% - 150px);
 }
 
+.jr-mInputDatetime.jr-mInputInline.mui .jr-mInput-label.mui {
+  flex: unset;
+  width: calc(100% - 180px);
+}
+
 .jr-mInputDate.mui input[type="date"]::-webkit-calendar-picker-indicator,
-.jr-mInputTime.mui input[type="time"]::-webkit-calendar-picker-indicator {
+.jr-mInputTime.mui input[type="time"]::-webkit-calendar-picker-indicator,
+.jr-mInputDatetime.mui input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   background-size: 16px;
   background-position: 1px 3px;
   height: 22px;
@@ -1630,7 +1765,8 @@ textarea[readonly].jr-mInput-text.mui {
 
 /* small */
 .jr-mInputDate.jr-mInputSmall.mui input[type="date"]::-webkit-calendar-picker-indicator,
-.jr-mInputTime.jr-mInputSmall.mui input[type="time"]::-webkit-calendar-picker-indicator {
+.jr-mInputTime.jr-mInputSmall.mui input[type="time"]::-webkit-calendar-picker-indicator,
+.jr-mInputDatetime.jr-mInputSmall.mui input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   background-size: 14px;
   background-position: 1px 3px;
   height: 20px;
@@ -1639,7 +1775,8 @@ textarea[readonly].jr-mInput-text.mui {
 
 /* large */
 .jr-mInputDate.jr-mInputLarge.mui input[type="date"]::-webkit-calendar-picker-indicator,
-.jr-mInputTime.jr-mInputLarge.mui input[type="time"]::-webkit-calendar-picker-indicator {
+.jr-mInputTime.jr-mInputLarge.mui input[type="time"]::-webkit-calendar-picker-indicator,
+.jr-mInputDatetime.jr-mInputLarge.mui input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   background-size: 18px;
   background-position: 1px 4px;
   height: 26px;
@@ -1647,7 +1784,8 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 .jr-mInputDate.jr-mInputLarge.mui .jr-mInput-text,
-.jr-mInputTime.jr-mInputLarge.mui .jr-mInput-text {
+.jr-mInputTime.jr-mInputLarge.mui .jr-mInput-text,
+.jr-mInputDatetime.jr-mInputLarge.mui .jr-mInput-text {
   padding-left: 4px;
 }
 
@@ -1655,9 +1793,10 @@ textarea[readonly].jr-mInput-text.mui {
 /*  08f. Select Input   */
 /*  ------------------- */
 .jr-mInputSelect.mui {
+  /* Nov 2022, redundant to text input and default mui styles
   display: flex;
   flex-direction: column;
-  margin: 0 0 12px 0;
+  margin: 0 0 12px 0; */
 }
 
 .jr-mInput-select.mui {
@@ -1665,7 +1804,7 @@ textarea[readonly].jr-mInput-text.mui {
   border: 1px solid #cccccc;
   border-radius: 2px;
   box-sizing: border-box;
-  color: #212121;
+  color: #444444;
   font-family: $font-family-primary;
   height: 24px;
   font-size: 13px;
@@ -1692,6 +1831,7 @@ textarea[readonly].jr-mInput-text.mui {
 
 .jr-mInput-select-item.mui,
 .jr-MuiMenuItem-root {
+  border-radius: 0;
   display: flex;
   font-family: $font-family-primary;
   font-size: 13px;
@@ -1712,6 +1852,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 .jr-Mui-focused .jr-mInput-select.mui {}
+
 
 /*  ------------------  */
 /*  08g. Search Input   */
@@ -1844,15 +1985,36 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 .jr-mInputBrowse.mui + .jr-mInput-helper.mui,
-.jr-mInputBrowse.mui + .jr-mInput-error.mui {
+.jr-mInputBrowse.mui + .jr-mInput-error.mui,
+.jr-mInputBrowse.mui + .jr-mInput-helper.mui + .jr-mInput-error.mui {
   margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+/* small */
+.jr-mInputBrowse.jr-mInputSmall.mui {
   margin-bottom: 8px;
 }
 
-.jr-mInputBrowse.mui + .jr-mInput-helper.mui + .jr-mInput-error.mui {
-  margin-top: -6px;
+.jr-mInputBrowse.jr-mInputSmall.mui + .jr-mInput-helper.mui,
+.jr-mInputBrowse.jr-mInputSmall.mui + .jr-mInput-error.mui,
+.jr-mInputBrowse.jr-mInputSmall.mui + .jr-mInput-helper.mui + .jr-mInput-error.mui{
+  margin-top: -4px;
   margin-bottom: 8px;
 }
+
+/* large */
+.jr-mInputBrowse.jr-mInputLarge.mui {
+  margin-bottom: 16px;
+}
+
+.jr-mInputBrowse.jr-mInputLarge.mui + .jr-mInput-helper.mui,
+.jr-mInputBrowse.jr-mInputLarge.mui + .jr-mInput-error.mui,
+.jr-mInputBrowse.jr-mInputLarge.mui + .jr-mInput-helper.mui + .jr-mInput-error.mui{
+  margin-top: -12px;
+  margin-bottom: 16px;
+}
+
 
 /*  ------------------  */
 /*  08j. Switch Input   */
@@ -1876,10 +2038,10 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-MuiSwitch-root, /* this can be removed after replacing with following classname */
 .jr-mInput-switch.mui {
   border-radius: 10px;
-  height: 20px;
+  height: 18px;
   overflow: visible;
   padding: 0;
-  width: 38px;
+  width: 32px;
 }
 
 .jr-MuiSwitch-switchBase {
@@ -1889,14 +2051,14 @@ textarea[readonly].jr-mInput-text.mui {
 
 .jr-MuiSwitch-thumb {
   box-shadow: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   margin-top: 2px;
   margin-left: 2px;
 }
 
 .jr-MuiSwitch-track {
-  background-color: #b5b5b5;
+  background-color: #8a8a8a;
   border-radius: 10px;
   opacity: 1;
 }
@@ -1911,7 +2073,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 .jr-MuiSwitch-switchBase.jr-Mui-checked {
-  transform: translateX(18px);
+  transform: translateX(14px);
 }
 
 .jr-mInputSwitch.mui > .jr-Mui-disabled {
@@ -2003,7 +2165,7 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-mInput-radio.mui {
   align-items: flex-start;
   color: #444444;
-  font-family: source_sans_proregular, Franklin Gothic, Verdana, Arial, sans-serif;
+  font-family: $font-family-primary;
   font-size: 13px;
   margin: 2px 0;
 }
@@ -2069,6 +2231,19 @@ textarea[readonly].jr-mInput-text.mui {
   width: 22px;
 }
 
+/*.jr-mInputCheckbox.mui*/ .jr-mInput-columns.mui {
+  align-content: stretch;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/*.jr-mInputCheckbox.mui*/ .jr-mInput-columns2.mui .jr-mInput-checkbox.mui {
+  width: 48%;
+}
+
+
+
 
 /* ------------------ */
 /*  09. INSTRUCTOR    */
@@ -2078,7 +2253,7 @@ textarea[readonly].jr-mInput-text.mui {
   color: #666666;
   display: flex;
   flex-direction: row;
-  font-family: source_sans_proregular, Franklin Gothic, Verdana, Arial, sans-serif;
+  font-family: $font-family-primary;
   font-weight: normal;
   height: 100%;
   justify-content: center;
@@ -2175,10 +2350,6 @@ textarea[readonly].jr-mInput-text.mui {
 
 .jr-mListbox-option-label.mui {}
 
-.jr-mListbox-option-labeljr-MuiButtonBase-root.mui {
-  display: flex;
-}
-
 /* large */
 .jr-mListboxLarge.mui .jr-mListbox-option,
 .jr-mListboxLarge.mui .jr-mInput-checkbox.mui {
@@ -2186,7 +2357,8 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 .jr-mListboxLarge.mui .jr-mListbox-option-label.mui {
-  margin: 4px 0;
+  /* margin: 4px 0; changed to 3px for consistency with other drop-down listboxes */
+  margin: 3px 0;
   min-height: 22px;
 }
 
@@ -2212,19 +2384,87 @@ textarea[readonly].jr-mInput-text.mui {
   color: #ffffff;
 }
 
-.jr-mListbox-option.mui.jr-MuiListItem-root.jr-Mui-selected:hover,
-.jr-mListbox-option.mui.jr-MuiListItem-root.jr-Mui-selected.jr-Mui-focusVisible {
-  background-color: $color-tciMedium;
-  color: #ffffff;
-}
-
 /*.jr-mListbox-option.mui .jr-MuiTouchRipple-child {
   background-color: $color-tciMedium;
 }*/
 
 
+/* ---------------- */
+/*  11. MENU        */
+/* ---------------- */
+.jr-mMenu.mui {}
+.jr-mMenuSelectable.mui {}
+.jr-mMenuDecorated.mui {}
+.jr-mMenu-list.mui {}
+
+.jr-mMenu-list-item.mui {
+  color: #444444;
+  margin: 2px 0;
+  padding: 3px 40px 1px 16px;
+}
+
+.jr-mMenu-list-item-text.mui > .jr-mText.mui {
+  line-height: 1.25;
+}
+
+.jr-mMenu-list-item-text.mui + .jr-mMenu-list-item-icon.mui {
+  position: absolute;
+  right: 0;
+}
+
+.jr-mMenu-list-item-text.mui + .jr-mMenu-list-item-icon.mui > .jr-mIcon.mui {
+  font-size: 18px;
+  color: #444444;
+}
+
+.jr-mMenu-divider.mui {
+  background-color: #e5eaed;
+  margin: 6px 0;
+}
+
+/* Selectable Menu */
+.jr-mMenuSelectable.mui .jr-mMenu-list-item-text.mui {
+  margin-left: 16px;
+}
+
+.jr-mMenu-list-item.Mui-selected.mui:before {
+  content: "";
+  display: inline-flex;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #01529a;
+}
+
+.jr-mMenu-list-item.Mui-selected.mui .jr-mMenu-list-item-text.mui {
+  margin-left: 10px;
+}
+
+/* Decorated Menu */
+.jr-mMenuDecorated.mui .jr-mMenu-list-item-icon.mui > .jr-mIcon.mui {
+  font-size: 14px;
+}
+
+.jr-mMenuDecorated.mui .jr-mMenu-list-item.mui {
+  padding-left: 12px;
+}
+
+/* Decorated + Selectable Menu */
+.jr-mMenuDecorated.jr-mMenuSelectable.mui .jr-mMenu-list-item-text.mui {
+  margin-left: 0;
+}
+
+.jr-mMenuDecorated.jr-mMenuSelectable.mui .jr-mMenu-list-item.Mui-selected.mui:before {
+  position: absolute;
+}
+
+.jr-mMenuDecorated.jr-mMenuSelectable.mui .jr-mMenu-list-item-icon.mui {
+  margin-left: 20px;
+}
+
+
 /* ----------------- */
-/*  11. PANEL        */
+/*  12. PANEL        */
 /* ----------------- */
 /* panel container */
 .jr-mPanels.mui {
@@ -2510,7 +2750,7 @@ textarea[readonly].jr-mInput-text.mui {
 
 
 /* ----------------- */
-/*  12. SPINNER      */
+/*  13. SPINNER      */
 /* ----------------- */
 .jr-mSpinner.mui {
   height: 28px;
@@ -2534,7 +2774,23 @@ textarea[readonly].jr-mInput-text.mui {
 
 
 /* ----------------- */
-/*  13. TABLE        */
+/*  14. STEPPER      */
+/* ----------------- */
+.jr-mStepper.mui {
+  background-color: transparent;
+}
+
+.jr-mStepper-step.mui {
+  margin-bottom: 32px;
+}
+
+.jr-mStepper-icon.mui {
+  font-size: 22px;
+}
+
+
+/* ----------------- */
+/*  15. TABLE        */
 /* ----------------- */
 .jr-mTable.mui {
   color: #444444;
@@ -2572,8 +2828,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /* attribue:value list table */
-.jr-mTableAttval.mui {
-}
+.jr-mTableAttval.mui {}
 
 .jr-mTableAttval.mui .jr-mTable-cell.mui {
   border-color: transparent;
@@ -2593,7 +2848,8 @@ textarea[readonly].jr-mInput-text.mui {
   padding-bottom: 14px;
 }
 
-.jr-mTableAttval.mui {
+.jr-mTableAttval.mui .jr-mTable-cellUrl.mui {
+  line-break: anywhere;
 }
 
 .jr-mTableAttval.mui .jr-mTable-cellAttribute.mui,
@@ -2670,19 +2926,36 @@ textarea[readonly].jr-mInput-text.mui {
 
 
 /* ----------------- */
-/*  14. TABS         */
+/*  16. TABS         */
 /* ----------------- */
 .jr-mTabs.mui {}
 
+.jr-mTabs-anchor.mui {
+  background-color: #e5eaed;
+  height: 1px;
+  margin-top: -1px;
+  width: 100%;
+}
+
 .jr-mTab.mui {
-  color: #666666;
+  color: #444444;
   font-family: $font-family-primary;
   font-weight: normal;
   letter-spacing: normal;
+  /*margin: 0 12px*/;
+  /*padding: 0 1px;*/
   margin: 0 6px;
-  opacity: 1;
   padding: 0 6px;
+  opacity: 1;
   text-transform: none;
+}
+
+.jr-mTab.mui:first-of-type {
+  margin-left: 0;
+}
+
+.jr-mTab.mui:last-of-type {
+  margin-right: 0;
 }
 
 .jr-mTab-label.mui {
@@ -2701,11 +2974,24 @@ textarea[readonly].jr-mInput-text.mui {
   color: $color-tciMedium;
 }
 
+.jr-mTab.mui .jr-MuiTouchRipple-root * {
+  border-color: red;
+}
+
 /* sizes */
 .jr-mTabsSmall.mui .jr-mTab.mui {
   font-size: 12px;
   line-height: 22px;
+  margin: 0 8px;
   min-height: 24px;
+}
+
+.jr-mTabsSmall.mui .jr-mTab.mui:first-of-type {
+  margin-left: 0;
+}
+
+.jr-mTabsSmall.mui .jr-mTab.mui:last-of-type {
+  margin-right: 0;
 }
 
 .jr-mTabsMedium.mui .jr-mTab.mui {
@@ -2718,6 +3004,10 @@ textarea[readonly].jr-mInput-text.mui {
   font-size: 14px;
   line-height: 28px;
   min-height: 30px;
+}
+
+.jr-MuiTabs-indicator {
+  background-color: $color-tciDark;
 }
 
 /* classic tabs */
@@ -2765,10 +3055,15 @@ textarea[readonly].jr-mInput-text.mui {
 
 
 /* ----------------- */
-/*  15. TOOLBAR      */
+/*  17. TOOLBAR      */
 /* ----------------- */
 .jr-mToolbar.mui {
   box-sizing: border-box;
+}
+
+/* toolbar variations */
+.jr-mToolbarShaded.mui {
+  background-color: #fafafa;
 }
 
 .jr-mToolbarPadded.mui {
@@ -2786,6 +3081,7 @@ textarea[readonly].jr-mInput-text.mui {
   padding-right: 24px;
 }
 
+/* toolbar content */
 .jr-mToolbar-divider.mui {
   align-self: center;
   border-right: 1px solid #dedede;
@@ -2804,6 +3100,11 @@ textarea[readonly].jr-mInput-text.mui {
   justify-content: flex-end;
 }
 
+.jr-mToolbar-divider.mui + .jr-mButton.mui {
+  margin-left: 0;
+}
+
+/* wrapable toolbar content */
 .jr-mToolbarWrapable.mui .jr-mTextFilter.mui {
   margin-top: 8px;
   margin-bottom: 4px;
@@ -2822,18 +3123,162 @@ textarea[readonly].jr-mInput-text.mui {
   margin-top: 8px;
 }
 
-.jr-mToolbar-divider.mui + .jr-mButton.mui {
-  margin-left: 0;
+
+/* ------------------ */
+/*  18. TOOLTIP       */
+/* ------------------ */
+.jr-mTooltip.mui {
+  background-color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  /* box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3); non-arrow tooltips only */
+  color: #444444;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.3)); /* needed for arrow tooltips */
+  font-family: $font-family-primary;
+  font-size: 12px;
+/*  margin: 0;*/
+  padding: 10px;
+}
+
+.jr-mTooltip-title.mui {
+  color: #212121;
+  font-family: $font-family-semibold;
+  font-weight: bold;
+  padding-bottom: 2px;
+}
+
+.jr-mTooltip-text.mui {
+  padding-bottom: 16px;
+}
+
+.jr-mTooltip-text.mui:last-of-type {
+  padding-bottom: 0;
+}
+
+.jr-mTooltip.mui .jr-MuiTooltip-arrow::before {
+  content: "";
+  background-color: #ffffff;
+}
+
+.jr-mTooltip.mui.jr-MuiTooltip-tooltipPlacementTop .jr-MuiTooltip-arrow,
+.jr-mTooltip.mui.jr-MuiTooltip-tooltipPlacementBottom .jr-MuiTooltip-arrow {
+  height: 10px;
+  width: 16px;
+}
+
+.jr-MuiTooltip-popperArrow[x-placement*="bottom"] .jr-MuiTooltip-arrow {
+  margin-top: -.83em;
+}
+
+.jr-MuiTooltip-popperArrow[x-placement*="top"] .jr-MuiTooltip-arrow {
+  margin-bottom: -.83em
+}
+
+.jr-mTooltip.mui.jr-MuiTooltip-tooltipPlacementRight .jr-MuiTooltip-arrow,
+.jr-mTooltip.mui.jr-MuiTooltip-tooltipPlacementLeft .jr-MuiTooltip-arrow {
+  height: 16px;
+  margin-left: -0.83em;
+  margin-top: 0;
+  width: 10px;
+}
+
+
+/* --------------- */
+/*  19. TREE       */
+/* --------------- */
+.jr-mTree.mui {}
+
+.jr-mTreeAdhoc.mui {}
+
+.jr-mTreeOutline.mui {}
+
+.jr-mTreeRepository.mui {}
+
+.jr-mTree-item.mui {}
+
+.jr-mTree-item-label.mui {
+  color: #444444;
+  overflow: hidden;
+}
+
+.jr-mTree-item-label-text.mui {
+  line-height: 25px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-icon.mui {
+  /*background-image: url("images/adhoc_datatree_icons_sprite_mui.svg"); not sure how to reference this*/
+  background-repeat: no-repeat;
+  background-size: 18px; /* original image width is 20px */
+  height: 18px;
+  margin-right: 4px;
+  width: 20px;
+  /*background-color: pink;*/
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconSet.mui {
+  background-position: 1px -1px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconStringfield.mui {
+  background-position: 1px -29px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconStringmeasure.mui {
+  background-position: 1px -57px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconNumberfield.mui {
+  background-position: 1px -86px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconNumbermeasure.mui {
+  background-position: 1px -115px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconCalcfield.mui {
+  background-position: 1px -144px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconCalcmeasure.mui {
+  background-position: 1px -173px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconDatefield.mui {
+  background-position: 1px -202px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconDatemeasure.mui {
+  background-position: 1px -231px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconTimefield.mui {
+  background-position: 1px -260px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconTimemeasure.mui {
+  background-position: 1px -289px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconBooleanfield.mui {
+  background-position: 1px -317px;
+}
+
+.jr-mTreeAdhoc.mui .jr-mTree-item-label-iconBooleanmeasure.mui {
+  background-position: 1px -346px;
 }
 
 
 /* --------------------- */
-/*  16. TYPOGRAPHY       */
+/*  20. TYPOGRAPHY       */
 /* --------------------- */
-/*  16a. Body & Titles   */
+/*  20a. Body & Titles   */
 /*  -------------------- */
 /* body text */
 .jr-mText.mui {
+  color: #444444;
   display: block;
   /* font-size: 13px; reinstate with rule below if there are issues */
 }
@@ -2852,18 +3297,6 @@ textarea[readonly].jr-mInput-text.mui {
 
 .jr-mTextXLarge.mui {
   font-size: 16px;
-}
-
-.jr-mTextTheme.mui {
-  color: $color-tciMedium;
-}
-
-.jr-mTextError.mui {
-  color: $color-errorDark;
-}
-
-.jr-mTextWarning.mui {
-  color: $color-warningDark;
 }
 
 /* title text */
@@ -2896,8 +3329,33 @@ textarea[readonly].jr-mInput-text.mui {
   font-size: 24px;
 }
 
+/* color */
+.jr-mTextDark.mui {
+  color: #212121;
+}
+
+.jr-mTextLight.mui {
+  color: #666666;
+}
+
+.jr-mTextLightest.mui {
+  color: #707070;
+} /* lightest color meeting WCAG AA contrast requirements against white background */
+
+.jr-mTextTheme.mui {
+  color: $color-tciMedium;
+}
+
+.jr-mTextError.mui {
+  color: $color-errorDark;
+}
+
+.jr-mTextWarning.mui {
+  color: $color-warningDark;
+}
+
 /* ----------------- */
-/*  16b. Links       */
+/*  20b. Links       */
 /*  ---------------- */
 .jr-mLink.mui:link,
 .jr-mLink.mui:visited,
@@ -2905,7 +3363,7 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-mLink.mui:active,
 .jr-mLink.mui:focus {
   color: #444444;
-  font-family: source_sans_proregular, Franklin Gothic, Verdana, Arial, sans-serif;
+  font-family: $font-family-primary;
   font-weight: normal;
 }
 
@@ -2917,7 +3375,7 @@ textarea[readonly].jr-mInput-text.mui {
   color: $color-tciMedium;
 }
 
-.jr-mLink.mui:focus-visible {
+.jr-mLink.mui.focus-visible {
   border-radius: 1px;
   outline: none;
 }
@@ -2927,7 +3385,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /* ----------------------- */
-/*  16c. Filter Statement  */
+/*  20c. Filter Statement  */
 /*  ---------------------- */
 .jr-mTextFilter.mui {
   font-size: 18px;
@@ -2945,17 +3403,11 @@ textarea[readonly].jr-mInput-text.mui {
   border-bottom: 1px dashed #444444;
 }
 
-
-.jr-mTextFilter.mui .jr-mText-value.mui {
-  color: #444444;
-  cursor: pointer;
-  margin: 0 6px 4px 6px;
-  border-bottom: 1px dashed #444444;
-}
+/* see Toolbar section for Filter Statement position within wrapable toolbar */
 
 
 /* ---------------- */
-/*  17. CONTROL     */
+/*  20. CONTROL     */
 /* ---------------- */
 .jr-mControl.mui {}
 
@@ -2964,7 +3416,7 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-mControlInline.mui {}
 
 /* ---------------- */
-/*  17a. Color      */
+/*  21a. Color      */
 /*  --------------  */
 .jr-mControl.mui {}
 
@@ -3093,31 +3545,35 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /* ------------------------------ */
-/*  17b. Condition & Interval     */
+/*  21b. Condition & Interval     */
 /*  ----------------------------- */
 .jr-mControlCondition.mui,
 .jr-mControlInterval.mui {
-  align-items: flex-end;
+  align-items: flex-start;
   display: flex;
 }
 
 .jr-mControlCondition.mui > .jr-mControl-operator.mui,
-.jr-mControlInterval.mui > .jr-mControl-interval.mui,
 .jr-mControlCondition.mui > .jr-mControl-threshold.mui,
+.jr-mControlInterval.mui > .jr-mControl-interval.mui,
 .jr-mControlInterval.mui > .jr-mControl-timeframe.mui {
   flex: 1 1 auto;
 }
 
 .jr-mControlCondition.jr-mControlFlexwidth.mui .jr-mControl-operator.mui,
-.jr-mControlCondition.jr-mControlFlexwidth.mui .jr-mControl-threshold.mui,
+.jr-mControlCondition.jr-mControlFlexwidth.mui .jr-mControl-threshold.mui {
+  /* flex: unset; Nov 2022, remove if there are no issues */
+  flex-basis: 0;
+}
+
 .jr-mControlInterval.jr-mControlFlexwidth.mui .jr-mControl-interval.mui,
 .jr-mControlInterval.jr-mControlFlexwidth.mui .jr-mControl-timeframe.mui {
-  flex: unset;
+  flex: 0 1 0;
 }
 
 .jr-mControlCondition.mui .jr-mControl-operator.mui .jr-mInput.mui,
 .jr-mControlInterval.mui .jr-mControl-timeframe.mui .jr-mInput.mui {
-  min-width: 150px;
+  min-width: 120px;
 }
 
 .jr-mControlCondition.mui + .jr-mInput-error.mui,
@@ -3125,12 +3581,17 @@ textarea[readonly].jr-mInput-text.mui {
   margin-top: -4px;
 }
 
+.jr-mControlCondition.mui > .jr-mControl-threshold.mui .jr-mControlRange-from.mui,
+.jr-mControlCondition.mui > .jr-mControl-threshold.mui .jr-mControlRange-to.mui {
+  flex-direction: column;
+} /* numeric range inside condition control, used when 'between' operator is selected */
+
 /* inline */
-/* keeps inputs aligned when label wraps to multiple lines */
+/* keeps inputs aligned when label wraps to multiple lines
 .jr-mControlCondition.jr-mControlInline.mui,
 .jr-mControlInterval.jr-mControlInline.mui {
   align-items: flex-start;
-}
+} redundant to rule above */
 
 /* sizes */
 .jr-mControlCondition.mui > .jr-mControl-threshold.mui .jr-mInput.mui,
@@ -3149,7 +3610,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /* ------------------- */
-/*  17c. Pagination    */
+/*  21c. Pagination    */
 /*  -----------------  */
 /* used in JRWS viewer */
 .jr-mControlPagination.mui {
@@ -3169,7 +3630,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /* --------------- */
-/*  17d. Range     */
+/*  21d. Range     */
 /*  -------------  */
 .jr-mControlRange.mui {}
 
@@ -3183,13 +3644,14 @@ textarea[readonly].jr-mInput-text.mui {
   flex: 1 1 auto;
 }
 
-.jr-mControlRange-from.mui div:not(:first-child),
-.jr-mControlRange-to.mui div:not(:first-child) {
+.jr-mControlRange-from.mui div:not(:first-child)[class=""],
+.jr-mControlRange-to.mui div:not(:first-child)[class=""] {
   margin-left: 6px;
 }
 
 .jr-mControlRange.mui .jr-mInputDate.mui,
-.jr-mControlRange.mui .jr-mInputTime.mui {
+.jr-mControlRange.mui .jr-mInputTime.mui,
+.jr-mControlRange.mui .jr-mInputText.mui {
   margin-bottom: 0;
 }
 
@@ -3210,7 +3672,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /*  --------------------  */
-/*  17e. Refresh Control  */
+/*  21e. Refresh Control  */
 /*  --------------------  */
 .jr-mControlRefresh.mui {
   align-items: center;
@@ -3230,7 +3692,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /* --------------- */
-/*  17f. Zoom      */
+/*  21f. Zoom      */
 /*  -------------  */
 /* used in JRWS viewer */
 .jr-mControlZoom.mui {
@@ -3251,9 +3713,9 @@ textarea[readonly].jr-mInput-text.mui {
 
 
 /* --------------------------- */
-/*  18. JASPERSOFT-SPECIFIC    */
+/*  22. JASPERSOFT-SPECIFIC    */
 /*  -------------------------- */
-/*  18a. Calendar              */
+/*  22a. Calendar              */
 /*  -------------------------- */
 /*  NOTES:
     • Doesn't use Material-UI component, so no .mui classname
@@ -3349,7 +3811,7 @@ textarea[readonly].jr-mInput-text.mui {
 }
 
 /*  -------------------------- */
-/*  18b. Dropdown              */
+/*  22b. Dropdown              */
 /*  -------------------------- */
 /*  Doesn't use Material-UI component, so no .mui classname */
 .jr-mDropdown {
@@ -3369,8 +3831,15 @@ textarea[readonly].jr-mInput-text.mui {
   padding-top: 0;
 }
 
+/*  ---------------- */
+/*  22d. Form        */
+/*  ---------------- */
+.jr-mForm {}
+
+.jr-mForm-section {}
+
 /*  --------------------- */
-/*  18c. Filterbar        */
+/*  22d. Filterbar        */
 /*  --------------------- */
 /*  Doesn't use Material-UI component, so no .mui classname */
 .jr-mFilterbar {
@@ -3401,8 +3870,32 @@ textarea[readonly].jr-mInput-text.mui {
   font-size: 14px;
 }
 
+/*  ---------------- */
+/*  22e. Layout      */
+/*  ---------------- */
+/*  Layout rules begine with jr-l instead of jr-m  */
+.jr-lColumns {
+  align-items: stretch;
+  display: flex;
+  height: 100%;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+.jr-lColumns-column {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+}
+
+.jr-lColumn {
+  background-color: lemonchiffon;
+  flex: 0 1 auto;
+}
+
 /*  ------------------ */
-/*  18d. Titlebar      */
+/*  22f. Titlebar      */
 /*  ------------------ */
 /* Titlebar uses the paper component as the parent container */
 .jr-mTitlebar.mui {
@@ -3410,7 +3903,7 @@ textarea[readonly].jr-mInput-text.mui {
   box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
   display: flex;
   flex-direction: column;
-  font-family: source_sans_proregular, Franklin Gothic, Verdana, Arial, sans-serif;
+  font-family: $font-family-primary;
   font-weight: normal;
   min-height: 40px;
   position: relative;
@@ -3470,22 +3963,42 @@ textarea[readonly].jr-mInput-text.mui {
 
 
 /* ------------------ */
-/*  19. UTILITY       */
+/*  23. UTILITY       */
 /*  ----------------- */
-/*  19a. Alignment    */
+/*  23a. Alignment    */
 /*  ----------------- */
 .jr-uAlignRight {float: right !important;}
 .jr-uAlignLeft {float: left !important;}
 
+
 /*  ----------------- */
-/*  19b. Containers   */
+/*  23b. Background   */
+/*  ----------------- */
+.jr-uBackgroundGrey-02 {background-color: $grey-2 !important;}
+.jr-uBackgroundGrey-03 {background-color: $grey-3 !important;}
+.jr-uBackgroundGrey-04 {background-color: $grey-4 !important;}
+.jr-uBackgroundGrey-08 {background-color: $grey-8 !important;}
+.jr-uBackgroundGrey-10 {background-color: $grey-10 !important;}
+.jr-uBackgroundGrey-16 {background-color: $grey-16 !important;}
+.jr-uBackgroundGrey-20 {background-color: $grey-20 !important;}
+.jr-uBackgroundGrey-29 {background-color: $grey-29 !important;}
+
+/*  ----------------- */
+/*  23c. Borders      */
+/*  ----------------- */
+/*  numbers represent % grey */
+.jr-uBorderGrey-08 {border:1px solid #ebebeb;}
+
+
+/*  ----------------- */
+/*  23d. Containers   */
 /*  ----------------- */
 .jr-uOverflow-auto {overflow: auto !important;}
 .jr-uOverflow-hide {overflow: hidden !important;}
 .jr-uOverflow-show {overflow: visible !important;}
 
 /*  --------------- */
-/*  19c. Margins    */
+/*  23e. Margins    */
 /*  --------------- */
 /* As a general rule, measurements throughout JRS are made
    in multiples of 4px. For margin rules, the number on the
@@ -3503,6 +4016,11 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-uMargin-08 {margin: 32px !important}
 .jr-uMargin-09 {margin: 36px !important}
 .jr-uMargin-10 {margin: 40px !important}
+.jr-uMargin-11 {margin: 44px !important}
+.jr-uMargin-12 {margin: 48px !important}
+.jr-uMargin-13 {margin: 52px !important}
+.jr-uMargin-14 {margin: 56px !important}
+.jr-uMargin-15 {margin: 60px !important}
 
 /* top */
 .jr-uMargin-t-00 {margin-top: 0 !important}
@@ -3516,6 +4034,8 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-uMargin-t-08 {margin-top: 32px !important}
 .jr-uMargin-t-09 {margin-top: 36px !important}
 .jr-uMargin-t-10 {margin-top: 40px !important}
+.jr-uMargin-t-11 {margin-top: 44px !important}
+.jr-uMargin-t-12 {margin-top: 48px !important}
 
 /* bottom */
 .jr-uMargin-b-00 {margin-bottom: 0 !important}
@@ -3529,6 +4049,8 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-uMargin-b-08 {margin-bottom: 32px !important}
 .jr-uMargin-b-09 {margin-bottom: 36px !important}
 .jr-uMargin-b-10 {margin-bottom: 40px !important}
+.jr-uMargin-b-11 {margin-bottom: 44px !important}
+.jr-uMargin-b-12 {margin-bottom: 48px !important}
 
 /* left */
 .jr-uMargin-l-00 {margin-left: 0 !important}
@@ -3542,6 +4064,8 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-uMargin-l-08 {margin-left: 32px !important}
 .jr-uMargin-l-09 {margin-left: 36px !important}
 .jr-uMargin-l-10 {margin-left: 40px !important}
+.jr-uMargin-l-11 {margin-left: 44px !important}
+.jr-uMargin-l-12 {margin-left: 48px !important}
 
 /* right */
 .jr-uMargin-r-00 {margin-right: 0 !important}
@@ -3555,37 +4079,49 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-uMargin-r-08 {margin-right: 32px !important}
 .jr-uMargin-r-09 {margin-right: 36px !important}
 .jr-uMargin-r-10 {margin-right: 40px !important}
+.jr-uMargin-r-11 {margin-right: 44px !important}
+.jr-uMargin-r-12 {margin-right: 48px !important}
 
 /* top & bottom */
-.jr-uMargin-tb-00 {margin-top: 0;  margin-bottom: 0 !important}
-.jr-uMargin-tb-01 {margin-top: 4px;  margin-bottom: 4px !important}
-.jr-uMargin-tb-02 {margin-top: 8px;  margin-bottom: 8px !important}
-.jr-uMargin-tb-03 {margin-top: 12px;  margin-bottom: 12px !important}
-.jr-uMargin-tb-04 {margin-top: 16px;  margin-bottom: 16px !important}
-.jr-uMargin-tb-05 {margin-top: 20px;  margin-bottom: 20px !important}
-.jr-uMargin-tb-06 {margin-top: 24px;  margin-bottom: 24px !important}
-.jr-uMargin-tb-07 {margin-top: 28px;  margin-bottom: 28px !important}
-.jr-uMargin-tb-08 {margin-top: 32px;  margin-bottom: 32px !important}
-.jr-uMargin-tb-09 {margin-top: 36px;  margin-bottom: 36px !important}
-.jr-uMargin-tb-10 {margin-top: 40px;  margin-bottom: 40px !important}
+.jr-uMargin-tb-00 {margin-top: 0 !important;  margin-bottom: 0 !important}
+.jr-uMargin-tb-01 {margin-top: 4px !important;  margin-bottom: 4px !important}
+.jr-uMargin-tb-02 {margin-top: 8px !important;  margin-bottom: 8px !important}
+.jr-uMargin-tb-03 {margin-top: 12px !important;  margin-bottom: 12px !important}
+.jr-uMargin-tb-04 {margin-top: 16px !important;  margin-bottom: 16px !important}
+.jr-uMargin-tb-05 {margin-top: 20px !important;  margin-bottom: 20px !important}
+.jr-uMargin-tb-06 {margin-top: 24px !important;  margin-bottom: 24px !important}
+.jr-uMargin-tb-07 {margin-top: 28px !important;  margin-bottom: 28px !important}
+.jr-uMargin-tb-08 {margin-top: 32px !important;  margin-bottom: 32px !important}
+.jr-uMargin-tb-09 {margin-top: 36px !important;  margin-bottom: 36px !important}
+.jr-uMargin-tb-10 {margin-top: 40px !important;  margin-bottom: 40px !important}
+.jr-uMargin-tb-11 {margin-top: 44px !important;  margin-bottom: 44px !important}
+.jr-uMargin-tb-12 {margin-top: 48px !important;  margin-bottom: 48px !important}
+.jr-uMargin-tb-13 {margin-top: 52px !important;  margin-bottom: 52px !important}
+.jr-uMargin-tb-14 {margin-top: 56px !important;  margin-bottom: 56px !important}
+.jr-uMargin-tb-15 {margin-top: 60px !important;  margin-bottom: 60px !important}
 
 /* left & right */
-.jr-uMargin-lr-00 {margin-left: 0;  margin-right: 0 !important}
-.jr-uMargin-lr-01 {margin-left: 4px;  margin-right: 4px !important}
-.jr-uMargin-lr-02 {margin-left: 8px;  margin-right: 8px !important}
-.jr-uMargin-lr-03 {margin-left: 12px;  margin-right: 12px !important}
-.jr-uMargin-lr-04 {margin-left: 16px;  margin-right: 16px !important}
-.jr-uMargin-lr-05 {margin-left: 20px;  margin-right: 20px !important}
-.jr-uMargin-lr-06 {margin-left: 24px;  margin-right: 24px !important}
-.jr-uMargin-lr-07 {margin-left: 28px;  margin-right: 28px !important}
-.jr-uMargin-lr-08 {margin-left: 32px;  margin-right: 32px !important}
-.jr-uMargin-lr-09 {margin-left: 36px;  margin-right: 36px !important}
-.jr-uMargin-lr-10 {margin-left: 40px;  margin-right: 40px !important}
+.jr-uMargin-lr-00 {margin-left: 0 !important;  margin-right: 0 !important}
+.jr-uMargin-lr-01 {margin-left: 4px !important;  margin-right: 4px !important}
+.jr-uMargin-lr-02 {margin-left: 8px !important;  margin-right: 8px !important}
+.jr-uMargin-lr-03 {margin-left: 12px !important;  margin-right: 12px !important}
+.jr-uMargin-lr-04 {margin-left: 16px !important;  margin-right: 16px !important}
+.jr-uMargin-lr-05 {margin-left: 20px !important;  margin-right: 20px !important}
+.jr-uMargin-lr-06 {margin-left: 24px !important;  margin-right: 24px !important}
+.jr-uMargin-lr-07 {margin-left: 28px !important;  margin-right: 28px !important}
+.jr-uMargin-lr-08 {margin-left: 32px !important;  margin-right: 32px !important}
+.jr-uMargin-lr-09 {margin-left: 36px !important;  margin-right: 36px !important}
+.jr-uMargin-lr-10 {margin-left: 40px !important;  margin-right: 40px !important}
+.jr-uMargin-lr-11 {margin-left: 44px !important;  margin-right: 44px !important}
+.jr-uMargin-lr-12 {margin-left: 48px !important;  margin-right: 48px !important}
 
 
 // -----------------------------
-//  19d. Measurements
+//  23f. Measurements
 // -----------------------------
+/*  height, percent */
+.jr-uHeight-100pc {height: 100% !important;}
+
 /*  width, percent */
 .jr-uWidth-1pc {width: 1% !important;}
 .jr-uWidth-2pc {width: 2% !important;}
@@ -3691,7 +4227,9 @@ textarea[readonly].jr-mInput-text.mui {
 /*  width, pixels */
 .jr-uWidth-100px {width: 100px !important;}
 .jr-uWidth-125px {width: 125px !important;}
+.jr-uWidth-140px {width: 140px !important;}
 .jr-uWidth-150px {width: 150px !important;}
+.jr-uWidth-175px {width: 175px !important;}
 .jr-uWidth-200px {width: 200px !important;}
 .jr-uWidth-250px {width: 250px !important;}
 .jr-uWidth-300px {width: 300px !important;}
@@ -3707,16 +4245,71 @@ textarea[readonly].jr-mInput-text.mui {
 .jr-uWidth-800px {width: 800px !important;}
 
 // -----------------------------
-//  19e. Text
+//  23g. Text
 // -----------------------------
+/* weight */
+.jr-uTextBold {font-family: $font-family-semibold !important;}
+.jr-uTextNormal {font-family: $font-family-primary !important;}
+
+/* line heights */
+.jr-uText-lh-145 {line-height: 1.45;}
+.jr-uText-lh-150 {line-height: 1.50;}
+
 /* colors */
-.jr-uTextBold {font-family: $font-family-semibold;}
-.jr-uTextNormal {font-family: $font-family-primary;}
+.jr-uColor-theme-light {color: $color-tciLight !important;}
+.jr-uColor-theme-medium {color: $color-tciMedium !important;}
+.jr-uColor-theme-dark {color: $color-tciDark !important;}
 
-.jr-uColor-theme-light {color: $color-tciLight;}
-.jr-uColor-theme-medium {color: $color-tciMedium;}
-.jr-uColor-theme-dark {color: $color-tciDark;}
+.jr-uColor-error {color: #d0021b !important;}
+.jr-uColor-success {color: #5a7e2a !important;}
+.jr-uColor-incomplete {color: #cccccc !important;}
 
+.jr-uGrey-lightest {color: #707070 !important;}
+.jr-uGrey-light {color: #666666 !important;}
+.jr-uGrey-medium {color: #444444 !important;}
+.jr-uGrey-dark {color: #212121 !important;}
+
+/* wrap and truncation */
+.jr-uTextBreak { // wrap text within words
+  white-space: normal;
+  word-break: break-all;
+}
+
+.jr-uTextWrap { // wrap text between words
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.jr-uTextNowrap { // no wrap
+  white-space: nowrap;
+}
+
+.jr-uTextTruncate { // truncate at 1 line
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-uTextTruncate2 { // truncate at 2 lines
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.jr-uTextTruncate3 { // truncate at 3 lines
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.jr-uTextTruncate4 { // truncate at 4 lines
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
 /* wrap and truncation */
 .jr-uTextBreak.mui { // wrap text within words
   white-space: normal;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -207,6 +207,33 @@ public class ReportExecutionsJaxrsService extends RemoteServiceWrapper<RunReport
             }
         });
     }
+
+	@GET
+	@Path("/{executionId}/rawParameterValues")
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@Operation(
+			operationId = "ReportExecutionsJaxrsService_0080",
+			summary = "Request for report execution raw parameter values.",
+			responses = {
+					@ApiResponse(
+							responseCode = "200",
+							description = "Success.\n\nThe content is the raw report parameters(input control values) used to run the report."
+					),
+					@ApiResponse(
+							responseCode = "404",
+							description = "Not found.\n\nWhen the report execution ID or the export ID specified in the request does not exist."
+					)
+			}
+	)
+	public Response getRawParameterValues(@Parameter(description = "The report execution ID") @PathParam("executionId") final String executionId) {
+		return callRemoteService(new ConcreteCaller<Response>() {
+			@Override
+			public Response call(RunReportService remoteService) throws ErrorDescriptorException {
+				final ReportExecution reportExecution = remoteService.getReportExecution(getExecutionId(executionId));
+				return Response.ok(reportExecution.getRawParameters()).build();
+			}
+		});
+	}
 
     @POST
     @Path("/{executionId}/parameters")

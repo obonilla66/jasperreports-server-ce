@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -573,7 +573,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
         } else {
             status = new ReportExecutionStatus(request);
         }
-
+		log.debug("ENGINE SERVICE: start report execution: " + request.getId());
 		engineExecutions.put(request.getId(), status);
         addPropertyToAuditEvent("executionID", request.getId());
 		addPropertyToAuditEvent("executionIDS", request.getId(), true, String.class);
@@ -582,6 +582,7 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 
 	protected void endExecution(Request request) {
         engineExecutions.remove(request.getId());
+		log.debug("ENGINE SERVICE: end report execution: " + request.getId());
 		currentExecutionStatus.set(null);
 
 		if (log.isDebugEnabled()) {
@@ -3010,7 +3011,6 @@ public class EngineServiceImpl implements EngineService, ReportExecuter,
 
     public List<ReportExecutionStatusInformation> getSchedulerReportExecutionStatusList(SchedulerReportExecutionStatusSearchCriteria searchCriteria) {
         List<ReportExecutionStatusInformation> executions = getReportExecutionStatusList();
-
 		User loginUser = null;
 		if (SecurityContextHolder.getContext() != null && SecurityContextHolder.getContext().getAuthentication()!= null) {
 			if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User) {

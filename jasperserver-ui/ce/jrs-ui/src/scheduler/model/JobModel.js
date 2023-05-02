@@ -772,6 +772,17 @@ export default Backbone.Model.extend({
 
         // ==============================
         // output tab
+        if (data.outputFormats != null && data.outputFormats.outputFormat != null) {
+            var formats = data.outputFormats.outputFormat;
+            for (var i = 0; i < formats.length; i++) {
+                if (formats[i] === 'XLS') {
+                    formats[i] = 'XLSX';
+                } else if (formats[i] === 'XLS_NOPAG') {
+                    formats[i] = 'XLSX_NOPAG';
+                }
+            }
+        }
+
         if (typeof data.repositoryDestination === "undefined" || data.repositoryDestination === null) {
             data.repositoryDestination = {
                 overwriteFiles: true,
@@ -1451,6 +1462,10 @@ export default Backbone.Model.extend({
         }
 
         var folder = this.get('repositoryDestination').folderURI;
+        if (folder.indexOf('${') >= 0) {
+            // property placeholder used, cannot check
+            return dfr.resolve();
+        }
 
         // check for empty
         if (!folder || folder === "") {
@@ -1763,24 +1778,28 @@ export default Backbone.Model.extend({
 
     isHostName: function(hostname) {
         if (!hostname) return false;
+        if (hostname.indexOf('${') >= 0) return true;
         var hostnameRegex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/;
         return hostnameRegex.test(hostname);
     },
 
     isEmail: function(email) {
         if (!email) return false;
+        if (email.indexOf('${') >= 0) return true;
         var re = new XRegExp(globalConfig.emailRegExpPattern, "g");
         return re.test(email);
     },
 
     isValidFileName: function(fileName) {
         if (!fileName) return false;
+        if (fileName.indexOf('${') >= 0) return true;
         var re = new RegExp(globalConfig.resourceIdNotSupportedSymbols, "g");
         return !re.test(fileName);
     },
 
     isValidUri: function(uri) {
         if (!uri) return false;
+        if (uri.indexOf('${') >= 0) return true;
         var re = new RegExp(globalConfig.resourceIdNotSupportedSymbols, "g");
         return !re.test(uri.replace(/\//g,"")); // exclude / from testing value
     },

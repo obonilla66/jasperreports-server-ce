@@ -336,7 +336,8 @@ dynamicTree.TreeSupport.addMethod('getTreeNodeChildren', function (parentNode, u
     var uri = parentNode.param.uri;
     var callback = function (obj, ni, uc, ec) {
         return function () {
-            return obj.getTreeNodeChildrenCallback(ni, uc, ec);
+            obj.resortTree();
+            obj.getTreeNodeChildrenCallback(ni, uc, ec);
         };
     }(this, parentNode.id, userCallbackFn, errorCallbackFn);
     var treeErrorHandler = function (ajaxAgent) {
@@ -655,6 +656,13 @@ dynamicTree.TreeSupport.addMethod('openAndSelectNode', function (uriStr, fnActio
     var selectedNode = this.getSelectedNode();
     if (selectedNode) {
         selectedNode.scroll();
+    } else {
+        let rootNode = this.getRootNode();
+        if (rootNode.name) {
+            fn(rootNode);
+        }  else {
+            fn(rootNode.getFirstChild());
+        }
     }
     if (fnAction) {
         fnAction();

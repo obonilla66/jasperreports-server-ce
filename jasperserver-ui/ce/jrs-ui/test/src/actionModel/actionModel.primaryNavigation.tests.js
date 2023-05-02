@@ -58,15 +58,15 @@ describe('Primary navigation', function () {
         expect(args).toEqual(expectedArgs);
     });
     it('should create mutton elements', function () {
-        jQuery('#navigationOptions .mutton').remove();
+        jQuery(`${primaryNavModule.NAVIGATION_MENU_PARENT_CLASS} .mutton`).remove();
         primaryNavModule.createMutton('test_id', 'test');
-        var mutton = jQuery('#navigationOptions #test_id');
+        var mutton = jQuery(`${primaryNavModule.NAVIGATION_MENU_PARENT_CLASS} #test_id`);
         expect(mutton.length).toEqual(1);
         expect(mutton).toHaveClass('mutton');
         expect(mutton.text().strip()).toEqual('test');
     });
     it('should open menu on mutton', function () {
-        jQuery('#navigationOptions .mutton').remove();
+        jQuery(`${primaryNavModule.NAVIGATION_MENU_PARENT_CLASS} .mutton`).remove();
         spyOn(actionModel, 'showDynamicMenu');
 
         primaryNavModule.initializeNavigation();

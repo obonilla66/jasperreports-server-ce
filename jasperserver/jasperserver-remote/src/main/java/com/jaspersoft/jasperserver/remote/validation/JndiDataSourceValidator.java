@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2020 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved. Confidential & Proprietary.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,6 +24,7 @@ import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.util.JndiUtils;
 import com.jaspersoft.jasperserver.dto.resources.ClientJndiJdbcDataSource;
 import com.jaspersoft.jasperserver.remote.exception.InvalidJndiServiceNameException;
+import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import org.springframework.stereotype.Component;
 
 import javax.naming.InvalidNameException;
@@ -43,8 +44,12 @@ public class JndiDataSourceValidator implements ClientValidator<ClientJndiJdbcDa
     public List<Exception> validate(ExecutionContext ctx, ClientJndiJdbcDataSource value) {
         try {
             JndiUtils.validateName(value.getJndiName());
-        } catch (InvalidNameException | NullPointerException e) {
+        } catch (InvalidNameException e) {
             return Collections.singletonList(new InvalidJndiServiceNameException(value.getJndiName(), e));
+        }
+        catch(NullPointerException e)
+        {
+            throw new MandatoryParameterNotFoundException(e.getMessage(), "JNDIName");
         }
         return Collections.emptyList();
     }

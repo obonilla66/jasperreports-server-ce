@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -39,6 +39,7 @@ import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.Pair;
+import org.springframework.beans.factory.annotation.Value;
 
 
 import java.math.BigDecimal;
@@ -606,7 +607,8 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
                     String valueToCheckInStringFormat = dataConverterService.formatSingleValue(valueToCheck, null, (Class) null);
                     String selectedInStringFormat = dataConverterService.formatSingleValue(selected, null, (Class) null);
                     if (valueToCheckInStringFormat != null && selectedInStringFormat != null) {
-                        isEqualityByStringFormats = selectedInStringFormat.equals(valueToCheckInStringFormat);
+                        if (isCaseSensitive()) isEqualityByStringFormats = selectedInStringFormat.equals(valueToCheckInStringFormat);
+                        else isEqualityByStringFormats = selectedInStringFormat.equalsIgnoreCase(valueToCheckInStringFormat);
                     }
                 }
             } catch (IllegalStateException e){
@@ -681,11 +683,9 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
         }
 
         protected boolean checkMatch(Object valueToCheck) {
-
             if(objectSet.contains(valueToCheck)) {
                 return true;
             }
-
             if(valueToCheck == null) {
                 return false;
             }
@@ -696,11 +696,16 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
                 if(valueToCheck instanceof Number && bigDecimalSet.contains(toBigDecimal((Number) valueToCheck))) {
                     return true;
                 }
-
                 // check equality by StringFormats
                 String valueInStringFormat = dataConverterService.formatSingleValue(valueToCheck, null, (Class) null);
-                if(valueInStringFormat != null && stringSet.contains(valueInStringFormat)) {
-                    return true;
+                if(valueInStringFormat != null) {
+                    if (!isCaseSensitive()) {
+                        if (stringSet.stream().anyMatch(valueInStringFormat::equalsIgnoreCase)) {
+                            return true;
+                        }
+                    } else if (stringSet.contains(valueInStringFormat)) {
+                        return true;
+                    }
                 }
             } catch(IllegalStateException e) {
                 log.warn(MessageFormat.format(
@@ -708,7 +713,6 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
                         valueToCheck != null ? valueToCheck.getClass() : valueToCheck)
                 );
             }
-
             //when no matching value in default values / incoming values dictionary return false
             return false;
         }
@@ -726,6 +730,7 @@ public class SingleSelectListInputControlHandler extends BasicInputControlHandle
             } else {
                 value = ((String) value).replace("\\,",",");
             }
+      //      value = (value != null ? ((String) value).toUpperCase() : null);
         }
         return value;
     }

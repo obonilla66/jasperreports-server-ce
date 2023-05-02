@@ -45,10 +45,13 @@ import _ from 'underscore';
 import jQuery from 'jquery';
 import stdnav from 'js-sdk/src/common/stdnav/stdnav';
 import scheduleDialog from '../scheduler/util/schedulerSaveDialog';
+import confirmationExitDialogUtil from '../navigateBack/utils/navigateBackUtils';
 import i18n from '../i18n/jasperserver_messages.properties';
+import ReportExecutionModel from 'bi-report/src/bi/report/model/ReportExecutionModel';
 
 Report.toolbarActionMap = {
-    'back': 'Report.goBack',
+    'close': 'Report.close',
+    'back': 'Report.navigateBack',
     'ICDialog': 'Controls.show',
     'export': doNothing,
     'undo': 'Report.undo',
@@ -137,6 +140,27 @@ jQuery.extend(Report, {
             if(isBtnDisabled){
                 e.preventDefault();
             }
+        });
+    },
+    deleteReportExecution: function (navBackCb=()=>{}) {
+        const executionId =  this.getGoBackExecutionId();
+        if (!this.isDrillDownExecution) {
+            if (executionId && !Report.mainExecutionId && history.length>1) {
+                Report.mainExecutionId = executionId;
+                window.viewer._reportInstance.destroy(()=>{
+                    this.deleteReportExecution(navBackCb);
+                });
+                delete Report.mainExecutionId;
+                this.destroyReportInstance(navBackCb)
+            }else{
+                this.destroyReportInstance(navBackCb)
+            }
+
+        }
+    },
+    destroyReportInstance:function(navBackCb){
+        window.viewer._reportInstance.destroy(()=>{},()=>{},()=>{
+            navBackCb();
         });
     },
     reportRefreshed: function (silentUpdate) {
@@ -260,6 +284,10 @@ jQuery.extend(Report, {
         dialogs.popup.hideShared(jQuery('#' + ajax.LOADING_ID)[0], Report.REPORT_COMPONENT_ID);
         jQuery('#schedule') && jQuery('#schedule').removeAttr('disabled');
         jQuery('#embed') && jQuery('#embed').removeAttr('disabled');
+
+        this.refreshNavigation();
+
+
     },
     showInvisibleICValidationMessages: function() {
         var iicValidationState = jQuery('#iicValidationErrorMessagesHolder');
@@ -446,6 +474,58 @@ jQuery.extend(Report, {
                 restoreState(elementsState);
             });
     },
+    exitDialogTextParams:function(){
+        if (window.viewer.hasReport()) {
+            if (window.viewer.isExportRunning()) {
+                return {
+                    options:{
+                        bodyText: {
+                            firstText: i18n['report.view.export.in.progress.confirm.leave.first.content'],
+                            secondText: i18n['report.view.in.progress.confirm.leave.second.content']
+                        },
+                        title: i18n['report.dialog.export.title'],
+                        closeLabel: i18n['report.dialog.close.button']
+                    }
+                }
+
+            }
+            if (window.viewer.isReportRunning()) {
+                return {
+                    options:{
+                        bodyText: {
+                            firstText: i18n['report.view.rendering.in.progress.confirm.leave.first.content'],
+                            secondText: i18n['report.view.in.progress.confirm.leave.second.content']
+                        },
+                        title: i18n['report.dialog.rendering.title'],
+                        closeLabel: i18n['report.dialog.close.button']
+                    }
+                }
+            }else{
+                return{
+                    options:{
+                        bodyText : {
+                            firstText: i18n['report.back.button.dialog.first.content'],
+                            secondText: i18n['report.back.button.dialog.second.content']
+                        },
+                        previousState : window.viewer.canSave && Report.savedState && Report.savedState != window.viewer.getReportStackState()
+                    }
+                }
+            }
+        }
+
+    },
+    close:function(){
+        jQuery(window).unbind("beforeunload");
+        let exitParams = Report.exitDialogTextParams(),
+            options = exitParams?.options || {};
+        confirmationExitDialogUtil.exitDialogBox && confirmationExitDialogUtil.exitDialogBox(options, false)
+    },
+    navigateBack:function(){
+        jQuery(window).unbind("beforeunload");
+        let exitParams = Report.exitDialogTextParams(),
+            options = exitParams?.options || {};
+        confirmationExitDialogUtil.exitDialogBox && confirmationExitDialogUtil.exitDialogBox(options, true , Report.goBack)
+    },
     goBack: function (noConfirm) {
         var confirm = noConfirm === true ? false : true;
         if (confirm && !Report.confirmExit()) {
@@ -458,10 +538,18 @@ jQuery.extend(Report, {
             window.history.back();
         } else {
             // exportForm is used here to leave the page
+            const executionId = Report.getGoBackExecutionId();
+            if (executionId !== null) {
+                Report.exportForm._executionId.value = executionId;
+            }
             Report.exportForm._eventId.value = 'close';
             Report.exportForm._flowExecutionKey.value = Report.reportExecutionKey();
             Report.exportForm.submit();
         }
+    },
+    getGoBackExecutionId :function(){
+        const executionIdParam = /(\?|&)_goBackExecutionId=([^&]*)/.exec(location.href);
+        return executionIdParam && executionIdParam.length === 3 ? executionIdParam[2] : null;
     },
     open: function () {
         alert('Not implemented yet: open report');
@@ -501,6 +589,17 @@ jQuery.extend(Report, {
             }
         });
     },
+    refreshNavigation:function() {
+        if(history.length > 1){
+            if(location.search.includes('_eventId_drillReport') || location.search.includes('_ddHyperlink')) {
+                jQuery('#back').show();
+            }else{
+                jQuery('#back').parent().remove();
+            }
+        }else{
+            jQuery('#back').parent().remove();
+        }
+    },
 
     schedule: function(){
         let previousState = window.viewer.canSave && Report.savedState && Report.savedState != window.viewer.getReportStackState(),
@@ -515,5 +614,18 @@ jQuery.extend(Report, {
         scheduleDialog.scheduleDialogBox(previousState,paramsMap,save);
     }
 });
+
+
+const reportExecutionModelMixin=(reportExecutionModelUrlRemove)=>{
+    return {
+        urlRemove() {
+            const executionId = Report.mainExecutionId;
+            return executionId ? this.urlRun() + '/' + executionId : reportExecutionModelUrlRemove.apply(this, arguments);
+        }
+    }
+};
+
+const reportExecutionModelUrlRemoveMixin = reportExecutionModelMixin(ReportExecutionModel.prototype.urlRemove);
+_.extend(ReportExecutionModel.prototype, reportExecutionModelUrlRemoveMixin);
 
 export default Report;

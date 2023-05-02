@@ -43,15 +43,19 @@
        drop 
        foreign key FKfowvvrdpyr4fsfdt0qekb6b31;
 
-    alter table JIFavoriteResource 
-       drop 
+    alter table JIFavoriteResource
+       drop
        foreign key FKe3ak4arnheeorbrsc4u8m8pi0;
 
-    alter table JIFavoriteResource 
-       drop 
+    alter table JIFavoriteResource
+       drop
        foreign key FK63man3dkmekfr2hgfifi3ne8c;
 
-    alter table JIFileResource 
+    alter table JIExternalUserLoginEvents
+       drop
+       foreign key FKoa3o2do60b45cm4vgu6tw15ad;
+
+    alter table JIFileResource
        drop 
        foreign key FK9cks6rnum2e1nwpltygmric0a;
 
@@ -312,6 +316,8 @@
     drop table if exists JIDataType;
 
     drop table if exists JIFavoriteResource;
+
+    drop table if exists JIExternalUserLoginEvents;
 
     drop table if exists JIFileResource;
 

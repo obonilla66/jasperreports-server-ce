@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -687,8 +687,38 @@ public class SingleSelectListInputControlHandlerTest extends BaseInputControlHan
 
         doThrow(new IllegalStateException()).when(dataConverterService).formatSingleValue("invalid", null, (Class) null);
         assertFalse(selectedValuesDict.checkMatch("invalid"));
+    }
 
+    @Test
+    public void SelectedValuesDict_withSingle_CaseSensitive() {
+        assertTrue(handler.matches("abc", "abc"));
+    }
 
+    @Test
+    public void SelectedValuesDict_withSingle_CaseInSensitive() {
+        handler.setCaseSensitive(false);
+        doAnswer(invocation -> invocation.getArgument(0)).when(dataConverterService)
+                .formatSingleValue(anyString(), nullable(DataType.class), nullable(Class.class));
+        assertTrue(handler.matches("abc", "aBc"));
+    }
+
+    @Test
+    public void SelectedValuesDict_withCollection_CaseInSensitive() {
+        handler.setCaseSensitive(false);
+        List<Object> defaultValue = Arrays.asList(new String[]{"abc2", "efg2"});
+        doAnswer(invocation -> invocation.getArgument(0)).when(dataConverterService)
+                    .formatSingleValue(anyString(), nullable(DataType.class), nullable(Class.class));
+        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict = handler.createSelectedValuesDict(defaultValue);
+        assertTrue(selectedValuesDict.checkMatch("aBc2"));
+        assertTrue(selectedValuesDict.checkMatch("EFG2"));
+    }
+
+    @Test
+    public void SelectedValuesDict_withCollection_CaseSensitive() {
+        List<Object> defaultValue = Arrays.asList(new Object[]{"abc", "efg"});
+        SingleSelectListInputControlHandler.SelectedValuesDict selectedValuesDict = handler.createSelectedValuesDict(defaultValue);
+        assertTrue(selectedValuesDict.checkMatch("abc"));
+        assertFalse(selectedValuesDict.checkMatch("EFG"));
     }
 
     @Test

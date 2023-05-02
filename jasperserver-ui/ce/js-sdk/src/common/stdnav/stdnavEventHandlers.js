@@ -458,10 +458,6 @@ export default {
     basicExit: function (element, args) {
         logger.debug("stdnav.basicExit(" + element.nodeName + "#" + element.id + ")");
         var target = this.closestNavigableAncestor($('.superfocus'));
-        if (!target) {
-            // Something's gotten confused.  Refocus to the global entry-point
-            target = $('#searchInput'); //TODO: get rid of dependency on JRS mark-up
-        }
         if (target !== undefined) {
             this.runAction('rejoined', target[0]);
         }

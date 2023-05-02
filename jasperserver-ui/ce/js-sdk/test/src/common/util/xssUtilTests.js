@@ -179,7 +179,6 @@ describe("xssUtil", function() {
         expect(xssUtil.hardEscape(str)).toEqual("&lt;script&gt;&lt;js-templateNonce&gt;&lt;/js-templateNonce&gt;&lt;/script&gt;");
     });
 
-
     it("should NOT escape a non-whitelisted tags if the tag is in jrsConfigs.xssHtmlTagWhiteList (via security-config.properties)", function() {
         // These tags are escaped due to jrsConfigsMock.js prop xssHtmlTagWhiteList: '+xss-test-123,xss-test-4567'
         var str = "<xss-test-123>alert</xss-test-123>";
@@ -192,12 +191,6 @@ describe("xssUtil", function() {
     it("should escape a non-whitelisted tag 'xss-test-123' in the string", function() {
         var str = "<xss-test-1234567>alert</xss-test-1234567>";
         var strRes = "&lt;xss-test-1234567>alert&lt;/xss-test-1234567>";
-        expect(xssUtil.softHtmlEscape(str)).toEqual(strRes);
-    });
-
-    it("should escape an iframe tag in the string", function() {
-        var str = "<iframe src='content'>alert</iframe>";
-        var strRes = "&lt;iframe src='content'>alert&lt;/iframe>";
         expect(xssUtil.softHtmlEscape(str)).toEqual(strRes);
     });
 
@@ -232,59 +225,51 @@ describe("xssUtil", function() {
         expect(result).toEqual(expected);
     });
 
-    it("sanitizeHighchartsOptions should clean HC object from unsafe XSS strings", function () {
-
-        const unsafeClickString = '<a onClick="alert(10);">click here</a>';
-        const safeClickString = '<a &#111;&#110;Click="alert(10);">click here</a>';
-
-        const unsafeSrcdocString = '<iframe srcdoc="<script>alert(10)</script>"></iframe>';
-        const safeSrcdocString = '&lt;iframe &#115;&#114;&#99;doc="&lt;script>alert(10)&lt;/script>">&lt;/iframe>';
-
-        const unsafeScriptString = '<a href="javascript:alert(10);">click here</a>';
-        const safeScriptString = '<a href="alert(10);">click here</a>';
-
-        const someObject = {
-            onClickKey: unsafeClickString,
-            srcdocKey: unsafeSrcdocString,
-            scriptKey: unsafeScriptString,
-            onClickArray: [
-                'item1',
-                'item2',
-                unsafeClickString,
-                'item3'
-            ],
-            srcdocArray: [
-                'item1',
-                unsafeSrcdocString,
-                'item2'
-            ],
-            scriptArray: [
-                'item1',
-                'item2',
-                'item3',
-                unsafeScriptString
-            ],
-            obj: {
-                nestedObj: {
-                    onClickKey: unsafeClickString,
-                    srcdocKey: unsafeSrcdocString,
-                    scriptKey: unsafeScriptString
-                }
-            }
-        };
-
-        const actual = xssUtil.sanitizeHighchartsOptions(someObject);
-
-        expect(actual.onClickKey).toEqual(safeClickString);
-        expect(actual.srcdocKey).toEqual(safeSrcdocString);
-        expect(actual.scriptKey).toEqual(safeScriptString);
-
-        expect(actual.onClickArray[2]).toEqual(safeClickString);
-        expect(actual.srcdocArray[1]).toEqual(safeSrcdocString);
-        expect(actual.scriptArray[3]).toEqual(safeScriptString);
-
-        expect(actual.obj.nestedObj.onClickKey).toEqual(safeClickString);
-        expect(actual.obj.nestedObj.srcdocKey).toEqual(safeSrcdocString);
-        expect(actual.obj.nestedObj.scriptKey).toEqual(safeScriptString);
+    it("should escape an iframe tag in the string", function() {
+        var str = "<iframe src='content'>alert</iframe>";
+        var strRes = "&lt;iframe src='content'>alert&lt;/iframe>";
+        expect(xssUtil.softHtmlEscape(str)).toEqual(strRes);
     });
+
+
+    it("canonicalize() method should decode characters of interest from DEC, HEX and Entity-name encodings into ASCII", function() {
+
+        const characters = '/:=javascriptond';
+
+        const encodings = [
+            // DEC encoding of characters
+            "&#47&#58&#61&#106&#97&#118&#97&#115&#99&#114&#105&#112&#116&#111&#110&#100",
+            "&#0000047&#0000058&#0000061&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000111&#0000110&#0000100",
+            "&#47;&#58;&#61;&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#111;&#110;&#100;",
+            "&#0000047;&#0000058;&#0000061;&#0000106;&#0000097;&#0000118;&#0000097;&#0000115;&#0000099;&#0000114;&#0000105;&#0000112;&#0000116;&#0000111;&#0000110;&#0000100;",
+
+            // HEX encoding of characters
+            "&#x2F&#x3A&#x3D&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x6F&#x6E&#x64",
+            "&#x00000002F&#x00000003A&#x00000003D&#x00000006A&#x000000061&#x000000076&#x000000061&#x000000073&#x000000063&#x000000072&#x000000069&#x000000070&#x000000074&#x00000006F&#x00000006E&#x000000064",
+            "&#x2F;&#x3A;&#x3D;&#x6A;&#x61;&#x76;&#x61;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x6F;&#x6E;&#x64;",
+            "&#x00000002F;&#x00000003A;&#x00000003D;&#x00000006A;&#x000000061;&#x000000076;&#x000000061;&#x000000073;&#x000000063;&#x000000072;&#x000000069;&#x000000070;&#x000000074;&#x00000006F;&#x00000006E;&#x000000064;",
+
+            // HEX encoding of characters, smaller register but capital '&#X' instead of '&#x'
+            "&#X2f&#X3a&#X3d&#X6a&#X61&#X76&#X61&#X73&#X63&#X72&#X69&#X70&#X74&#X6f&#X6e&#X64",
+            "&#X00000002f&#X00000003a&#X00000003d&#X00000006a&#X000000061&#X000000076&#X000000061&#X000000073&#X000000063&#X000000072&#X000000069&#X000000070&#X000000074&#X00000006f&#X00000006e&#X000000064",
+            "&#X2f;&#X3a;&#X3d;&#X6a;&#X61;&#X76;&#X61;&#X73;&#X63;&#X72;&#X69;&#X70;&#X74;&#X6f;&#X6e;&#X64;",
+            "&#X00000002f;&#X00000003a;&#X00000003d;&#X00000006a;&#X000000061;&#X000000076;&#X000000061;&#X000000073;&#X000000063;&#X000000072;&#X000000069;&#X000000070;&#X000000074;&#X00000006f;&#X00000006e;&#X000000064;"
+        ];
+
+        for (let i = 0; i < encodings.length; i++) {
+            // prefix is used for debugging to understand what string is not equal to expected
+            // by looking at error messages in console
+            const prefix = 'line ' + (i + 1) + ': ';
+            const from = prefix + encodings[i];
+            const expected = prefix + characters;
+            expect(xssUtil.canonicalize(from)).toEqual(expected);
+        }
+
+        // Entity-name encoding of characters
+        expect(xssUtil.canonicalize("&sol;&colon;&equals;&tab;&newline;")).toEqual("/:=\t\n");
+        expect(xssUtil.canonicalize("&sol&colon&equals&tab&newline")).toEqual("/:=\t\n");
+        expect(xssUtil.canonicalize("&SOL;&COLON;&EQuals;&tAB;&nEWliNe;")).toEqual("/:=\t\n");
+        expect(xssUtil.canonicalize("&SOL&COLON&EQuals&tAB&nEWliNe")).toEqual("/:=\t\n");
+    });
+
 });

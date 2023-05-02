@@ -7,11 +7,13 @@ import {
     InputSize, SizeToClass
 } from '../types/InputTypes';
 import { FormHelper, FormHelperTextProps as JRSFormHelperTextProps } from '../FormHelperTextGroup/FormHelperText'
+import { FormError } from '../FormHelperTextGroup/FormErrorText';
 
 export type CheckboxGroupProps = {
     size?: InputSize,
     title?: string,
     helperText?: string,
+    errorMessage?: string,
     FormGroupProps?: MuiFormGroupProps,
     FormHelperTextProps?: JRSFormHelperTextProps,
     FormLabelProps?: Omit<MuiFormLabelProps, 'component'> & {
@@ -23,7 +25,7 @@ export type CheckboxGroupProps = {
 }
 
 export const CheckboxGroup = forwardRef<HTMLDivElement, PropsWithChildren<CheckboxGroupProps>>(({
-    helperText, children, size = 'medium', title = '', FormLabelProps = {}, FormGroupProps = {}, FormControlProps = {}
+    helperText, errorMessage, children, size = 'medium', title = '', FormLabelProps = {}, FormGroupProps = {}, FormControlProps = {}
 }, ref) => {
     const { component: formControlComponent = 'fieldset', className: formControlClassName = '', ...restFormControlProps } = FormControlProps
     const { className: formLabelPropsClassName = '', component: formLabelComponent = 'legend', ...restFormLabelProps } = FormLabelProps;
@@ -35,6 +37,7 @@ export const CheckboxGroup = forwardRef<HTMLDivElement, PropsWithChildren<Checkb
                 {children}
             </FormGroup>
             <FormHelper text={helperText} />
+            <FormError text={errorMessage} />
         </MuiFormControl>
     )
 })

@@ -918,7 +918,8 @@ _.extend(Report, {
         'docx',
         'pptx',
         'json',
-        'data_csv'
+        'data_csv',
+        'data_xlsx'
     ],
     chart: {
         componentTypes: ['chart'],

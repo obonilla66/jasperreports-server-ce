@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -1182,6 +1182,12 @@ public class ReportSchedulingFacade
         if (!hasTriggerErrors(errors)) {
 			scheduler.validate(job, errors);
 		}
+		return errors;
+	}
+
+	public ValidationErrors validateEffectiveJobOutput(ExecutionContext context, ReportJob job) {
+		ValidationErrors errors = validator.validateEffectiveJobOutput(context, job);
+        validateScheduledJobOutputLocation(errors, context, job);
 		return errors;
 	}
 

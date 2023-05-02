@@ -102,6 +102,17 @@ create sequence hibernate_sequence start 1 increment 1;
         primary key (id)
     );
 
+    create table JIExternalUserLoginEvents (
+       id int8 not null,
+        username varchar(100) not null,
+        enabled boolean,
+        recordCreationDate timestamp,
+        recordLastUpdateDate timestamp,
+        numberOfFailedLoginAttempts int4 default 0,
+        tenantId varchar(100),
+        primary key (id)
+    );
+
     create table JIFavoriteResource (
        id int8 not null,
         user_id int8 not null,
@@ -473,6 +484,7 @@ create sequence hibernate_sequence start 1 increment 1;
         externallyDefined boolean,
         enabled boolean,
         previousPasswordChangeTime timestamp,
+        numberOfFailedLoginAttempts int4 default 0,
         primary key (id)
     );
 
@@ -902,14 +914,23 @@ create index resource_type_index on JIResource (resourceType);
        add constraint FK27s5ja8sxgrylp7cf0wyscl79 
        foreign key (id) 
        references JIOlapClientConnection;
+create index JILogEvent_userId_index on JILogEvent (userId);
+create index idx17_reportDataSource_idx on JIMondrianConnection (reportDataSource);
+create index JIUser_tenantId_index on JIUser (tenantId);
+create index JIReportJob_alert_index on JIReportJob (alert);
+create index idx20_mondrianConnection_idx on JIMondrianXMLADefinition (mondrianConnection);
 create index idx25_content_destination_idx on JIReportJob (content_destination);
-create index idx28_resource_id_idx on JIReportThumbnail (resource_id);
+create index idx23_olapClientConnection_idx on JIOlapUnit (olapClientConnection);
 create index JIReportJob_job_trigger_index on JIReportJob (job_trigger);
-create index JIReportUnit_mainReport_index on JIReportUnit (mainReport);
 create index idx26_mail_notification_idx on JIReportJob (mail_notification);
-create index JIReportUnit_query_index on JIReportUnit (query);
-create index JIReportJob_owner_index on JIReportJob (owner);
-create index idx24_alert_id_idx on JIReportAlertToAddress (alert_id);
+create index idx36_resource_id_idx on JIVirtualDataSourceUriMap (resource_id);
+create index JIResourceFolder_version_index on JIResourceFolder (version);
+create index uri_index on JIObjectPermission (uri);
+create index JIResourceFolder_hidden_index on JIResourceFolder (hidden);
+create index idx21_recipientobjclass_idx on JIObjectPermission (recipientobjectclass);
+create index JIInputControl_data_type_index on JIInputControl (data_type);
+create index idx22_recipientobjid_idx on JIObjectPermission (recipientobjectid);
+create index JIInputCtrl_list_of_values_idx on JIInputControl (list_of_values);
 create index JIRole_tenantId_index on JIRole (tenantId);
 create index JIInputControl_list_query_idx on JIInputControl (list_query);
 create index JIUserRole_roleId_index on JIUserRole (roleId);
@@ -917,32 +938,24 @@ create index idx15_input_ctrl_id_idx on JIInputControlQueryColumn (input_control
 create index JIUserRole_userId_index on JIUserRole (userId);
 create index idx16_mondrianSchema_idx on JIMondrianConnection (mondrianSchema);
 create index JITenant_parentId_index on JITenant (parentId);
-create index idx17_reportDataSource_idx on JIMondrianConnection (reportDataSource);
-create index JIUser_tenantId_index on JIUser (tenantId);
-create index idx20_mondrianConnection_idx on JIMondrianXMLADefinition (mondrianConnection);
-create index JILogEvent_userId_index on JILogEvent (userId);
-create index idx23_olapClientConnection_idx on JIOlapUnit (olapClientConnection);
-create index JIReportJob_alert_index on JIReportJob (alert);
-create index JIQuery_dataSource_index on JIQuery (dataSource);
-create index idx22_recipientobjid_idx on JIObjectPermission (recipientobjectid);
-create index JIResourceFolder_version_index on JIResourceFolder (version);
-create index uri_index on JIObjectPermission (uri);
-create index JIResourceFolder_hidden_index on JIResourceFolder (hidden);
-create index idx21_recipientobjclass_idx on JIObjectPermission (recipientobjectclass);
-create index JIInputControl_data_type_index on JIInputControl (data_type);
-create index JIInputCtrl_list_of_values_idx on JIInputControl (list_of_values);
-create index idx29_reportDataSource_idx on JIReportUnit (reportDataSource);
-create index idx30_input_ctrl_id_idx on JIReportUnitInputControl (input_control_id);
-create index idx27_destination_id_idx on JIReportJobMailRecipient (destination_id);
-create index idx31_report_unit_id_idx on JIReportUnitInputControl (report_unit_id);
-create index idx14_repodest_id_idx on JIFTPInfoProperties (repodest_id);
-create index idx32_report_unit_id_idx on JIReportUnitResource (report_unit_id);
-create index idx34_item_reference_idx on JIRepositoryCache (item_reference);
-create index idx33_resource_id_idx on JIReportUnitResource (resource_id);
-create index idxA1_resource_id_idx on JICustomDatasourceResource (resource_id);
+create index JIResource_parent_folder_index on JIResource (parent_folder);
 create index JIFavoriteResource_resource_id_idx on JIFavoriteResource (resource_id);
+create index idx33_resource_id_idx on JIReportUnitResource (resource_id);
+create index JIFavoriteResource_user_id_idx on JIFavoriteResource (user_id);
 create index JIResource_childrenFolder_idx on JIResource (childrenFolder);
 create index JIFileResource_reference_index on JIFileResource (reference);
-create index JIResource_parent_folder_index on JIResource (parent_folder);
 create index idx35_parent_folder_idx on JIResourceFolder (parent_folder);
-create index idx36_resource_id_idx on JIVirtualDataSourceUriMap (resource_id);
+create index JIQuery_dataSource_index on JIQuery (dataSource);
+create index idx28_resource_id_idx on JIReportThumbnail (resource_id);
+create index JIReportJob_owner_index on JIReportJob (owner);
+create index JIReportUnit_mainReport_index on JIReportUnit (mainReport);
+create index idx24_alert_id_idx on JIReportAlertToAddress (alert_id);
+create index JIReportUnit_query_index on JIReportUnit (query);
+create index idx27_destination_id_idx on JIReportJobMailRecipient (destination_id);
+create index idx29_reportDataSource_idx on JIReportUnit (reportDataSource);
+create index idx14_repodest_id_idx on JIFTPInfoProperties (repodest_id);
+create index idx30_input_ctrl_id_idx on JIReportUnitInputControl (input_control_id);
+create index idx34_item_reference_idx on JIRepositoryCache (item_reference);
+create index idx31_report_unit_id_idx on JIReportUnitInputControl (report_unit_id);
+create index idxA1_resource_id_idx on JICustomDatasourceResource (resource_id);
+create index idx32_report_unit_id_idx on JIReportUnitResource (report_unit_id);

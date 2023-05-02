@@ -121,7 +121,7 @@ $.extend(stdnavPluginForms.prototype, {
     // being instrumented, but this construct may not actually have focus at
     // the time this function is called.
     _ariaPrep: function (el) {
-        $(el).attr('role', 'form');
+        //$(el).attr('role', 'form');
         return null;
     },
 
@@ -133,7 +133,7 @@ $.extend(stdnavPluginForms.prototype, {
     // construct, but this construct may not actually have focus at the time
     // this function is called.
     _ariaRefresh: function (el) {
-        $(el).attr('role', 'form');
+        //$(el).attr('role', 'form');
         return null;
     },
 

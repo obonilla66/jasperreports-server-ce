@@ -39,6 +39,7 @@ import {
 import actionModel from '../actionModel/actionModel.modelGenerator';
 import layoutModule from '../core/core.layout';
 import primaryNavModule from '../actionModel/actionModel.primaryNavigation';
+import {tooltipModule} from '../components/components.tooltip';
 
 var keyManager = {
     ignoreKeyDown : [
@@ -75,6 +76,12 @@ document.observe('keydown', function(event){
         focused.fire('key:enter', {targetEvent: event, node: focused});
         return;
     }
+
+    if(event.keyCode == 32) {
+        focused.fire('key:space', {targetEvent: event, node: focused});
+        return;
+    }
+
     if(event.shiftKey && (event.keyCode == Keys.DOM_VK_F10)) {
         //prevent from showing native menu, specially in IE9
     	Event.stop(event);
@@ -184,26 +191,28 @@ document.observe('keydown', function(event){
 ////////////////////////////////////////////////
 
 
-document.observe('key:esc', function(event){
-    if(actionModel.isMenuShowing()){
-        actionModel.hideActionModelMenu();
+document.observe('key:escape', function(event){
+    let hasTooltipEl = event.target.closest('[tooltiptext]');
+    if(hasTooltipEl){
+        tooltipModule.hideJSTooltip(hasTooltipEl);
     }
 });
 
-document.observe('key:enter', function(event){
+const fireMenuItemAction = function(event){
     var elem = event.target, matched;
 
     //if menu showing - simulate mouseup
     var menuElement = jQuery('#' + layoutModule.MENU_ID)[0];
     if (layoutModule.isVisible(menuElement)) {
         Event.stop(event);
-        var selected = jQuery(menuElement).find(":focus,." + layoutModule.HOVERED_CLASS)[0];
+        //var selected = jQuery(menuElement).find(":focus,." + layoutModule.HOVERED_CLASS)[0];
+        var selected = elem;
         if (selected) {
             var thisItem = selected;
-            if (!selected.is(layoutModule.MENU_LIST_PATTERN)){
-                thisItem = jQuery(selected).parent(layoutModule.MENU_LIST_PATTERN);
+            if (!jQuery(selected).is(layoutModule.MENU_LIST_PATTERN)){
+                thisItem = jQuery(selected).parent(layoutModule.MENU_LIST_PATTERN)[0];
             }
-            setTimeout(thisItem.onmouseup.curry(event.memo.targetEvent),0);
+            thisItem && thisItem.onmouseup && setTimeout(thisItem.onmouseup.curry(event.memo.targetEvent),0);
         }
     }
 
@@ -217,7 +226,9 @@ document.observe('key:enter', function(event){
             primaryNavModule.navigationOption("library");
         }
     }
-});
+};
+document.observe('key:enter', fireMenuItemAction);
+document.observe('key:space', fireMenuItemAction);
 
 export default keyManager;
 

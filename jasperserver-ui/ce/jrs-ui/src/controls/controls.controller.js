@@ -260,6 +260,15 @@ const validatePaginatedValuesResponse = (response, controls) => {
                 this.dataUri = options.reportOptionUri || options.reportUri;
             },
 
+            fetchReportRawParameterValues: function(executionId) {
+                var dfd = this.inputControlsReportViewerService.fetchReportRawParameterValues(executionId)
+                    .then(values => {
+                        return jQuery.Deferred().resolve(values);
+                    });
+                Controls.Utils.showLoadingDialogOn(dfd, null, true);
+                return dfd;
+            },
+
             fetchAndSetInputControlsState: function (allRequestParameters) {
                 var dfd = this.inputControlsReportViewerService.fetchInputControlsInitialState(
                     this.dataUri, allRequestParameters

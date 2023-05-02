@@ -148,4 +148,16 @@ describe("Scheduler Job View", function() {
         expect(lastRunDate).toEqual("localizedDate");
         expect(nextRunDate).toEqual("localizedDate");
     });
+
+    it("should validate email containing ${", function() {
+        expect(jobModel.isEmail("${name}@domain.com")).toEqual(true);
+    });
+
+    it("should validate fileName containing ${", function() {
+        expect(jobModel.isValidFileName("file-${name}.pdf")).toEqual(true);
+    });
+
+    it("should validate URI containing ${", function() {
+        expect(jobModel.isValidUri("/path/to/${name}")).toEqual(true);
+    });
 });

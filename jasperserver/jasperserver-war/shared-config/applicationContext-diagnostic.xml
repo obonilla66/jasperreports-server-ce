@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -428,7 +428,7 @@
     <bean id="repositoryDatabaseInfo" class="com.jaspersoft.jasperserver.api.logging.diagnostic.service.impl.RepositoryDiagnosticService">
         <property name="dataSource" ref="dataSource"/>
     </bean>
-    <bean id="hibernateStatistics" class="org.hibernate.stat.internal.ConcurrentStatisticsImpl">
+    <bean id="hibernateStatistics" class="org.hibernate.stat.internal.StatisticsImpl">
         <constructor-arg index="0">
             <ref bean="sessionFactory"/>
         </constructor-arg>
@@ -495,35 +495,6 @@
             </property>
         </bean>
     -->
-
-    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" depends-on="jasperJMXServer" lazy-init="false">
-        <property name="targetObject">
-            <bean factory-method="getRootLogger" class="org.apache.log4j.Logger" />
-        </property>
-        <property name="targetMethod">
-            <value>addAppender</value>
-        </property>
-        <property name="arguments">
-            <list>
-                <bean init-method="activateOptions"
-                      class="jmxlogger.integration.log4j.JmxLogAppender">
-                    <!--<property name="ObjectName" value="jasperserver:name=Logger" />-->
-                    <property name="MBeanServerValue" ref="jasperJMXServer" />
-                    <property name="Layout">
-                        <bean class="org.apache.log4j.PatternLayout">
-                            <constructor-arg>
-                                <value>%-5p %c[1] - %m%ex%n</value>
-                            </constructor-arg>
-                        </bean>
-                    </property>
-                    <property name="threshold">
-                        <bean class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean"
-                              id="org.apache.log4j.Priority.DEBUG" />
-                    </property>
-                </bean>
-            </list>
-        </property>
-    </bean>
 
     <bean class="org.springframework.jmx.export.MBeanExporter" lazy-init="false">
         <property name="server" ref="jasperJMXServer"/>

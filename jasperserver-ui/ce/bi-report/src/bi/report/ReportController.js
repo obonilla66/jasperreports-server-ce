@@ -428,7 +428,7 @@ _.extend(ReportController.prototype, Backbone.Events, {
 
         return dfd;
     },
-
+    applyParametersTimeout: null,
     applyReportParameters: function(refresh) {
         var dfd = new $.Deferred(),
             self = this;
@@ -440,15 +440,20 @@ _.extend(ReportController.prototype, Backbone.Events, {
                 status: "cancelled"
             });
 
-        this.model
-            .applyParameters(refresh)
-            .then(function() {
-                self.trigger(reportEvents.AFTER_REPORT_EXECUTION);
-                self.fetchExportDfd = self.fetchPageHtmlExportAndJiveComponents();
-                return self.fetchExportDfd;
-            }, dfd.reject)
-            .then(dfd.resolve, dfd.reject);
-
+        if (this.applyParametersTimeout) {
+            clearTimeout(this.applyParametersTimeout)
+        }
+        this.applyParametersTimeout = setTimeout(() => {
+            this.model
+                .applyParameters(refresh)
+                .then(function () {
+                    self.trigger(reportEvents.AFTER_REPORT_EXECUTION);
+                    self.fetchExportDfd = self.fetchPageHtmlExportAndJiveComponents();
+                    return self.fetchExportDfd;
+                }, dfd.reject)
+                .then(dfd.resolve, dfd.reject);
+            this.applyParametersTimeout = null;
+        }, 600)
         return dfd;
     },
 

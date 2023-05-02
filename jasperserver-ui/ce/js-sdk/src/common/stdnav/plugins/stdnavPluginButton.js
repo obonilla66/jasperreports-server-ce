@@ -73,7 +73,6 @@ $.extend(stdnavPluginButton.prototype, {
         this.behavior = {
             'enter': [this, this._onEnterOrEntered, null],
             'entered': [this, this._onEnterOrEntered, null],
-            'exit': [this, this._onExit, null],
             'toggle': [this, this._onEnterOrEntered, null],
             'inherit': false,
             'inheritable': true
@@ -160,10 +159,6 @@ $.extend(stdnavPluginButton.prototype, {
             eventAutomation.simulateClickSequence(element);
         }
         return element;
-    },
-
-    _onExit: function(){
-        return $('#searchInput')[0]; // re-use the common exit handler (stdnav.basicExit())
     }
 });
 

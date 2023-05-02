@@ -21,7 +21,7 @@
 
 import $ from 'jquery';
 import _ from 'underscore';
-import ListWithSelectionModel from '../model/ListWithSelectionModel';
+import ListWithSelectionModel from '../../../../components/scalableList/model/ListWithSelectionModel';
 import ScalableList from './ScalableList';
 var MOUSE_MOVE_MIN_PIXELS = 1;
 var BUTTONS = {

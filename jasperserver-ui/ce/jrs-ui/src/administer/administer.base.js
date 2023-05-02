@@ -57,6 +57,9 @@ window.Administer = _.extend({
         'p#navLogSettings': function () {
             return window.Administer.urlContext + '/log_settings.html';
         },
+        'p#navGeneralSettings': function () {
+            return window.Administer.urlContext + '/flow.html?_flowId=generalSettingsFlow';
+        },
         'p#logCollectors': function () {
             return window.Administer.urlContext + '/logCollectors.html';
         },

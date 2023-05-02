@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -24,10 +24,13 @@ import com.jaspersoft.jasperserver.api.ErrorDescriptorException;
 import com.jaspersoft.jasperserver.api.ExceptionListWrapper;
 import com.jaspersoft.jasperserver.api.JSException;
 import com.jaspersoft.jasperserver.api.common.domain.impl.ExecutionContextImpl;
+import com.jaspersoft.jasperserver.api.common.error.handling.SecureExceptionHandler;
 import com.jaspersoft.jasperserver.dto.common.ErrorDescriptor;
 import com.jaspersoft.jasperserver.jaxrs.common.JaxrsEntityParser;
 import com.jaspersoft.jasperserver.jaxrs.resources.ContentNegotiationHandler;
+import com.jaspersoft.jasperserver.remote.connection.ContextCreationFailedException;
 import com.jaspersoft.jasperserver.remote.connection.ContextsManager;
+import com.jaspersoft.jasperserver.remote.connection.SecureExceptionWrapperInContextCreationFailure;
 import com.jaspersoft.jasperserver.remote.exception.IllegalParameterValueException;
 import com.jaspersoft.jasperserver.remote.exception.MandatoryParameterNotFoundException;
 import com.jaspersoft.jasperserver.remote.exception.NotAcceptableException;
@@ -37,6 +40,7 @@ import com.jaspersoft.jasperserver.remote.exception.UnsupportedMediaTypeExceptio
 import com.jaspersoft.jasperserver.remote.exception.UnsupportedOperationErrorDescriptorException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -88,6 +92,8 @@ public class ContextsJaxrsService {
     @Resource(name = "processedExceptionsForCreatingContext")
     private List<String> processedExceptionsForCreatingContext;
 
+    @Autowired
+    private SecureExceptionWrapperInContextCreationFailure secureExceptionWrapper;
     @POST
     public Response createContext(InputStream stream, @HeaderParam(HttpHeaders.CONTENT_TYPE) MediaType mediaType,
             @HeaderParam(HttpHeaders.ACCEPT) MediaType accept, @Context HttpServletRequest request, @Context UriInfo uriInfo) throws URISyntaxException, IllegalParameterValueException, IOException {
@@ -124,7 +130,12 @@ public class ContextsJaxrsService {
             }
         } catch (Exception ex) {
             if (isProcessedException(ex, processedExceptionsForCreatingContext)) {
-                throw ex;
+                if (ex instanceof ContextCreationFailedException) {
+                    ErrorDescriptor errorDescriptor = secureExceptionWrapper.handleException(new ErrorDescriptor().setErrorCode("connection.failed").setMessage(ex.getMessage()).setParameters(((ContextCreationFailedException) ex).getErrorDescriptor().getParameters()));
+                    throw new ErrorDescriptorException(errorDescriptor, ex.getCause());
+                } else {
+                    throw ex;
+                }
             } else {
                 // just in case there is unknown exception,
                 // wrap unprocessed exception with error descriptor with error message only

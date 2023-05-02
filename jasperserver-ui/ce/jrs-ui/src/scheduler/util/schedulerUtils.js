@@ -22,7 +22,7 @@
 import $ from 'jquery';
 import config from 'js-sdk/src/jrs.configs';
 import _ from 'underscore';
-import {redirectToUrl} from "../../util/utils.common";
+import { redirectToUrl } from "../../util/utils.common";
 import xssUtil from 'js-sdk/src/common/util/xssUtil';
 import schedulerOverlayIframeTemplate from "../template/schedulerOverlayIframeTemplate.htm";
 import schedulerConstants from './schedulerConstants';

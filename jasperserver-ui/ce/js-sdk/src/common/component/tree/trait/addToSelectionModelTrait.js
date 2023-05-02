@@ -20,7 +20,7 @@
  */
 
 import _ from 'underscore';
-import ScalableListModel from '../../list/model/ScalableListModel';
+import ScalableListModel from 'src/components/scalableList/model/ScalableListModel';
 export default {
     afterFetchComplete: function (items, total) {
         ScalableListModel.prototype.afterFetchComplete.apply(this, arguments);

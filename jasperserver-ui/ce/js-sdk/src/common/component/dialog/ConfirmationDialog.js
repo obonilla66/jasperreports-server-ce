@@ -32,7 +32,7 @@ export default Dialog.extend({
             additionalCssClasses: options.additionalCssClasses || 'confirmationDialog',
             title: options.title || i18n['dialog.confirm.title'],
             content: this.confirmDialogTemplate({ text: options.text }),
-            buttons: [
+            buttons: options.buttons || [
                 {
                     label: options.yesLabel || i18n['button.yes'],
                     action: 'yes',

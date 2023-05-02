@@ -1,10 +1,5 @@
 {
-  "ignoreList": [
-    "lodash",
-    "jquery-ui",
-    "moment",
-    "moment-timezone"
-  ],
+  "ignoreList": [ ],
   "ignoreDevList": [
     "lodash",
     "underscore",

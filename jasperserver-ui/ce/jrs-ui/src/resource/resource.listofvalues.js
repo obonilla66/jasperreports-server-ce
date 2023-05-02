@@ -22,6 +22,7 @@
  * @version: $Id$
  */
 import jQuery from 'jquery';
+import layoutModule from "../core/core.layout";
 import resource from './resource.base';
 import {matchAny} from "../util/utils.common";
 import {ValidationModule} from "../util/utils.common";
@@ -40,7 +41,7 @@ var resourceListOfValues = {
     LINK_PATTERN: 'a.launcher',
     _canGenerateId: true,
     initialize: function (options) {
-        this._form = jQuery(document.body).find('form')[0];
+        this._form = jQuery('#' + layoutModule.PAGE_BODY_ID).find('form')[0];
         this._label = jQuery('#' +this.LABEL_ID)[0];
         this._resourceId = jQuery('#' +this.RESOURCE_ID_ID)[0];
         this._description = jQuery('#' +this.DESCRIPTION_ID)[0];

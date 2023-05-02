@@ -43,7 +43,7 @@ about.aboutBox = {
     show: function () {
         var dom = jQuery('#aboutBox');
         if (dom.hasClass('hidden')) {
-            dialogs.popup.show(dom[0], true);
+            dialogs.popup.show(dom[0], true, {closable: true});
         }
     },
     _hide: function () {

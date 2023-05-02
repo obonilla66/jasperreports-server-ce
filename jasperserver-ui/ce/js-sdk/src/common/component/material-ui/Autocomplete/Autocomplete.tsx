@@ -32,4 +32,4 @@ export const Autocomplete = React.forwardRef(AutoCompleteFunc) as
         Multiple extends boolean | undefined = undefined,
         DisableClearable extends boolean | undefined = undefined,
         FreeSolo extends boolean | undefined = undefined
-        >(props: MuiAutocompleteProps<T, Multiple, DisableClearable, FreeSolo> & React.RefAttributes<HTMLDivElement>) => ReactElement;
+        >(props: AutocompleteProps<T, Multiple, DisableClearable, FreeSolo> & React.RefAttributes<HTMLDivElement>) => ReactElement;

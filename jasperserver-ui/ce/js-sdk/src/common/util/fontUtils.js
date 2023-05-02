@@ -419,7 +419,7 @@ const findFontSize = function(options) {
 
 const getFontHeight = function (fontSize) {
     // took from Highcharts library
-    return fontSize < 24 ? fontSize + 3 : fontSize * 1.2;
+    return fontSize < 24 ? fontSize + 3 : Math.round(fontSize * 1.2);
 };
 
 const getFontBaseline = function (fontSize) {

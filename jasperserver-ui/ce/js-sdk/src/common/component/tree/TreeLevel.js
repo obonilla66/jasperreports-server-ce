@@ -23,8 +23,8 @@ import _ from 'underscore';
 import Panel from '../panel/Panel';
 import collapsiblePanelTrait from '../panel/trait/collapsiblePanelTrait';
 import List from '../list/view/ListWithSelection';
-import addToSelectionModelTrait from './trait/addToSelectionModelTrait';
-import ListWithSelectionModel from '../list/model/ListWithSelectionModel';
+import addToSelectionModelTrait from '../../../components/scalableList/model/trait/addToSelectionModelTrait';
+import ListWithSelectionModel from '../../../components/scalableList/model/ListWithSelectionModel';
 
 let ListWithSelectionModelExtended = ListWithSelectionModel.extend(addToSelectionModelTrait);
 

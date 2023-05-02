@@ -365,6 +365,10 @@ export default class InputControlsReportViewerService {
             });
     }
 
+    fetchReportRawParameterValues(executionId: string) {
+        return this.inputControlsService.getReportRawParameterValues(executionId).then((response) => response);
+    }
+
     private fetchInputControlsOptionsByPaginatedValuesOptionsAndUri(options: {
         paginationOptions: PaginatedValuesOptions[],
         paginationOptionsPerControl?: {

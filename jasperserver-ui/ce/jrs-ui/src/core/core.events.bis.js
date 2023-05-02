@@ -80,6 +80,12 @@ document.observe('contextmenu', function (event) {
     Event.stop(event);
     return false;
 });
+
+const MainMenuTopLevelItemToActionMap = {
+    [layoutModule.MAIN_NAVIGATION_HOME_ITEM_ID]: 'home',
+    [layoutModule.MAIN_NAVIGATION_LIBRARY_ITEM_ID]: 'library'
+};
+
 document.observe('dom:loaded', function (event) {
     var isGlobalEventsAllowed = function (el) {
         var $el = jQuery(el);
@@ -94,11 +100,11 @@ document.observe('dom:loaded', function (event) {
         if (isGlobalEventsAllowed(this))
             buttonManager.out(this);
     });
-    jQuery('body').on('focus', layoutModule.BUTTON_PATTERN, function (evt) {
+    jQuery('body').on('focusin', layoutModule.BUTTON_PATTERN, function (evt) {
         if (!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this))
             buttonManager.over(this);
     });
-    jQuery('body').on('blur', layoutModule.BUTTON_PATTERN + '.' + layoutModule.HOVERED_CLASS, function (evt) {
+    jQuery('body').on('focusout', layoutModule.BUTTON_PATTERN + '.' + layoutModule.HOVERED_CLASS, function (evt) {
         if (!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this))
             buttonManager.out(this);
     });
@@ -108,22 +114,31 @@ document.observe('dom:loaded', function (event) {
         layoutModule.DISCLOSURE_BUTTON_PATTERN,
         layoutModule.META_LINKS_PATTERN
     ].join(','), function (evt) {
-        if (evt.type == 'mousedown' || evt.type == 'touchstart') {
-            !hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this) && buttonManager.down(this);
-        } else {
-            !hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this) && buttonManager.up(this);
-        }
-        if (evt.type == 'mouseup' || evt.type == 'touchend') {
-            if (this.parentNode.id == layoutModule.MAIN_NAVIGATION_HOME_ITEM_ID)
-                primaryNavModule.navigationOption('home');
-            if (this.parentNode.id == layoutModule.MAIN_NAVIGATION_LIBRARY_ITEM_ID)
-                primaryNavModule.navigationOption('library');
+        const isStartEvent = evt.type === 'mousedown' || evt.type === 'touchstart';
+
+        if (!hasDisabledAttributeSet(this) && isGlobalEventsAllowed(this)) {
+            isStartEvent ? buttonManager.down(this) : buttonManager.up(this);
         }
     });
+
+    // Main menu
+    jQuery('body').on('click', `#${layoutModule.MAIN_NAVIGATION_ID} > li`, function (evt) {
+        const action = MainMenuTopLevelItemToActionMap[evt.currentTarget.getAttribute('id')];
+        if (action) {
+            primaryNavModule.navigationOption(action);
+        }
+    });
+    jQuery(`#${layoutModule.MAIN_NAVIGATION_ID}`).on('mouseover', layoutModule.NAVIGATION_MUTTON_PATTERN, function (evt) {
+        primaryNavModule.showNavButtonMenu(evt, this);
+    });
+
+
     jQuery('#frame').on('touchend mouseup', '.minimize', function (evt) {
         if (this.parentNode.className.indexOf('maximized') >= 0) {
+            jQuery(this).attr('aria-expanded', false);
             layoutModule.minimize(this);
         } else {
+            jQuery(this).attr('aria-expanded', true);
             layoutModule.maximize(this);
         }
         evt.preventDefault();
@@ -143,27 +158,27 @@ document.observe('dom:loaded', function (event) {
     jQuery('#' + layoutModule.META_LINK_LOGOUT_ID).on('mousedown touchstart', function (evt) {
         evt.preventDefault();
         primaryNavModule.navigationOption('logOut');
-    });    /*
-     * Tooltips
-     */
+    });
+
     /*
      * Tooltips
      */
-    jQuery('body').on('mouseover mouseout click', '[tooltiptext]', function (evt) {
-        (evt.type == 'mouseout' || evt.type == 'click') && tooltipModule.hideJSTooltip(this);
-        evt.type == 'mouseover' && tooltipModule.showJSTooltip(this, [
+    jQuery('body').on('mouseover', '[tooltiptext]', function (evt) {
+        tooltipModule.showJSTooltip(this, [
             evt.clientX,
             evt.clientY
-        ]);
-    });    /*
-     * Top navigation menu
-     */
-    /*
-     * Top navigation menu
-     */
-    jQuery('#mainNavigation').on('mouseover', layoutModule.NAVIGATION_MUTTON_PATTERN, function (evt) {
-        primaryNavModule.showNavButtonMenu(evt, this);
+        ])
     });
+    jQuery('body').on('focusin', '[tooltiptext]', function (evt) {
+        tooltipModule.showJSTooltip(this, [
+            evt.target.getBoundingClientRect().right,
+            evt.target.getBoundingClientRect().top
+        ])
+    });
+    jQuery('body').on('mouseout click focusout', '[tooltiptext]', function (evt) {
+        tooltipModule.hideJSTooltip(this);
+    });
+
     if (isSupportsTouch()) {
         document.body.addEventListener('touchstart', function (e) {
             window.calendar && window.calendar.hide && !window.calendar.hidden && window.calendar.hide();

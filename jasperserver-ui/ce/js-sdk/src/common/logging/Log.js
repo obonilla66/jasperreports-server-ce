@@ -51,10 +51,12 @@ Log.prototype._prepareLogItem = function(logItem) {
     var stack = new Error().stack;
     if (stack) {
         var lineAccessingLogger = stack.split("\n")[2];
-        var res = lineAccessingLogger.match(/\/(\w+\.\w+):(\d+)/i);
-        if (res) {
-            logItem.file = res[1];
-            logItem.line = res[2];
+        if (lineAccessingLogger != null) {
+            var res = lineAccessingLogger.match(/\/(\w+\.\w+):(\d+)/i);
+            if (res) {
+                logItem.file = res[1];
+                logItem.line = res[2];
+            }
         }
     }
     if (!logItem.file) {

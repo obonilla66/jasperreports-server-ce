@@ -33,6 +33,9 @@ export default Dialog.extend({
             message: options.message,
             additionalCssClasses: 'alertDialog ' + (options.additionalCssClasses || ''),
             title: options.title || i18n['dialog.exception.title'],
+            id: options.id,
+            titleContainerId: options.titleContainerId,
+            bodyContainerId: options.bodyContainerId,
             buttons: [{
                 label: i18n['button.close'],
                 action: 'close',

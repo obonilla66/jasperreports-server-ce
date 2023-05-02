@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2019 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,6 +22,7 @@ package com.jaspersoft.jasperserver.api.engine.scheduling.quartz;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import io.opentelemetry.extension.annotations.WithSpan;
 import org.apache.commons.logging.Log;
@@ -95,7 +96,19 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
     @WithSpan
     @Override
 	public List<? extends ReportExecutionOutput> createOutputs(Map<String, Object> reportParameters) {
-        Set<Byte> outputFormats = jobDetails.getOutputFormatsSet();
+        Set<Byte> outputFormats = new HashSet<>(jobDetails.getOutputFormatsSet());
+        if (outputFormats.remove(ReportJob.OUTPUT_FORMAT_XLS))
+        {
+        	outputFormats.add(ReportJob.OUTPUT_FORMAT_XLSX);
+        }
+        if (outputFormats.remove(ReportJob.OUTPUT_FORMAT_XLS_NOPAG))
+        {
+        	outputFormats.add(ReportJob.OUTPUT_FORMAT_XLSX_NOPAG);
+        }
+        if (outputFormats.remove(ReportJob.OUTPUT_FORMAT_XLS_DETAILED))
+        {
+        	outputFormats.add(ReportJob.OUTPUT_FORMAT_XLSX_DETAILED);
+        }
         List<ReportExecutionOutput> outputs = new ArrayList<ReportExecutionOutput>(outputFormats.size());
         for (Iterator<Byte> it = outputFormats.iterator(); it.hasNext(); ) {
             Byte format = it.next();
@@ -156,13 +169,16 @@ public class InternalReportExecutor implements ReportExecutor, MessageSourceAwar
     	}
 
         @WithSpan
-        @Override
-    	public ReportOutput getReportOutput(ReportJobContext reportJobContext) throws JobExecutionException {
+		@Override
+		public void createReportOutput(ReportJobContext reportJobContext, Consumer<ReportOutput> outputConsumer)
+				throws JobExecutionException {
     		ReportUnitResult result = getReportResultForOutput(output, jasperReport);
-            ReportOutput reportOutput = getOutput().getOutput(reportJobContext, result.getJasperPrint());
-            reportOutput.setExecutionID(result.getRequestId());
-    		return reportOutput;
-    	}
+            getOutput().createOutputs(reportJobContext, result.getJasperPrint(),
+            		reportOutput -> {
+                        reportOutput.setExecutionID(result.getRequestId());
+                        outputConsumer.accept(reportOutput);
+            		});
+		}
     }
 
     @WithSpan

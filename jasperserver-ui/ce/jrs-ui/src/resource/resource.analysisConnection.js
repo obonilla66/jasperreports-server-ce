@@ -29,6 +29,7 @@ import {ajaxTargettedUpdate} from "../core/core.ajax";
 import {baseErrorHandler} from "../core/core.ajax.utils";
 import dialogs from '../components/components.dialogs';
 import jQuery from 'jquery';
+import layoutModule from "../core/core.layout";
 
 var resourceAnalysisConnection = {
     TYPE_ID: 'analysisConnection\\.type',
@@ -48,7 +49,7 @@ var resourceAnalysisConnection = {
     CHANGE_TYPE_BUTTON_ID: 'changeCombo',
     _canGenerateId: true,
     initialize: function (options) {
-        this._form = jQuery(document.body).find('form')[0];
+        this._form = jQuery('#' + layoutModule.PAGE_BODY_ID).find('form')[0];
         this._type = jQuery('#' + this.TYPE_ID)[0];
         this._label = jQuery('#' + this.LABEL_ID)[0];
         this._resourceId = jQuery('#' + this.RESOURCE_ID_ID)[0];

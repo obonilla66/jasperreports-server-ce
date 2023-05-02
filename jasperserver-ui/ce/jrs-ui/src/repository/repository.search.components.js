@@ -24,7 +24,6 @@
 /* global alert, confirm*/
 import {Droppables, Draggables} from 'dragdropextra';
 import {$break} from 'prototype';
-import accessibilityModule from '../core/core.accessibility';
 import buttonManager from '../core/core.events.bis';
 import orgModule from '../manage/mng.common';
 import {dynamicList, baseList} from '../components/list.base';
@@ -109,9 +108,7 @@ repositorySearch.secondarySearchBox = {
     setText: function (text) {
         this._searchBox.setText(text);
     }
-};    ///////////////////////////////
-// Toolbar object
-///////////////////////////////
+};
 ///////////////////////////////
 // Toolbar object
 ///////////////////////////////
@@ -165,9 +162,7 @@ repositorySearch.toolbar = {
         }
         return actionMap;
     }
-};    ///////////////////////////////
-// Folder panel object
-///////////////////////////////
+};
 ///////////////////////////////
 // Folder panel object
 ///////////////////////////////
@@ -177,6 +172,7 @@ repositorySearch.foldersPanel = {
     _cookieName: 'lastFolderUri',
     _canDoBrowse: true,
     _touchController: null,
+    _browseRepoTimer:null,
     initialize: function (options) {
         if (options.isFolderSet) {
             this._uri = options.state.folderUri;
@@ -197,20 +193,23 @@ repositorySearch.foldersPanel = {
             escapeHyperlinks: true
         });
         disableSelectionWithoutCursorStyle(jQuery('#' + this.getTreeId()).parents().eq(1));
-        this.tree.observe('key:contextMenu', function (event) {
+        this.tree.observe('tree:contextMenu', function (event) {
             var node = event.memo.node;
-            var nodePosition = getBoxOffsets(node, true);
+            var label = jQuery(node).closest('li').find('p').text();
+            var nodePosition = getBoxOffsets(event.memo.focused, true);
+            repositorySearch.model.setContextFolder(new Folder(event.memo.node));
             repositorySearch.actionModel.showFolderMenu(event, {
                 menuLeft: nodePosition[0] + 100,
                 //TODO: use constants for offsets
                 menuTop: nodePosition[1] + 20    //TODO: use constants for offsets
-            });
+            }, label);
             Event.stop(event);
+            actionModel.focusMenu();
         });
-        this.tree.observe('key:escape', function (event) {
+        /*this.tree.observe('key:escape', function (event) {
             actionModel.hideMenu();
             Event.stop(event);
-        });
+        });*/
         this.tree.observe('tree:mouseover', function (event) {
             this.tree._overNode = event.memo.node;
         }.bindAsEventListener(this));
@@ -278,10 +277,10 @@ repositorySearch.foldersPanel = {
             this.tree.openAndSelectNode(this._uri);
         }.bindAsEventListener(this));
         this.tree.observe('tree:loaded', function (event) {
-            this._canDoBrowse = false;    // Forbid do browse to prevent initial browsing for each folder in the uri.
+            this._canDoBrowse = false;
             // Forbid do browse to prevent initial browsing for each folder in the uri.
-            if (this._uri == '/') {
-                jQuery(this.tree.rootNode).select();
+            if (this._uri === '/') {
+                this.tree.rootNode.name ? jQuery(this.tree.rootNode).select() : jQuery(this.tree.rootNode.getFirstChild()).select();
             } else {
                 this.tree.openAndSelectNode(this._uri);
             }
@@ -305,8 +304,13 @@ repositorySearch.foldersPanel = {
         return this;
     },
     doBrowse: function () {
+        let self = this;
         if (this._canDoBrowse) {
-            repositorySearch.fire(repositorySearch.Event.SEARCH_BROWSE, { uri: this._uri });
+            clearTimeout(this._browseRepoTimer);
+            this._browseRepoTimer = setTimeout(()=>{
+                this._browseRepoTimer=undefined;
+                repositorySearch.fire(repositorySearch.Event.SEARCH_BROWSE, { uri: self._uri });
+            },0);
         }
     },
     getSelectedUri: function () {
@@ -316,7 +320,7 @@ repositorySearch.foldersPanel = {
         return this._treeId;
     },
     selectFolder: function (folder) {
-        this.tree.openAndSelectNode(folder.URI);
+        this.tree.openAndSelectNode(folder.URI, null, null, { shouldFocus: true });
     },
     reselectFolder: function (folder) {
         if (folder.node.isSelected()) {
@@ -327,6 +331,13 @@ repositorySearch.foldersPanel = {
     refreshFolder: function (folder) {
         this.selectFolder(folder);
         this.updateSubFolders(folder);
+    },
+    createAndSelectFolder: function (targetFolder, toFolder) {
+        return this.tree.getTreeNodeChildren(toFolder.node, function (result) {
+            if (result) {
+                this.tree.openAndSelectNode(targetFolder.URI, null, null, { shouldFocus: true });
+            }
+        }.bind(this));
     },
     updateFolder: function (folder, label, description) {
         folder.label = label;
@@ -357,13 +368,11 @@ repositorySearch.foldersPanel = {
                 var node = result.detect(function (n) {
                     return n.param.id == targetFolder.name;
                 });
-                node && this.tree.openAndSelectNode(node.param.uri);
+                node && this.tree.openAndSelectNode(node.param.uri, null, null, { shouldFocus: true });
             }
         }.bind(this));
     }
-};    ///////////////////////////////
-// Results panel object
-///////////////////////////////
+};
 ///////////////////////////////
 // Results panel object
 ///////////////////////////////
@@ -540,21 +549,32 @@ repositorySearch.resultsPanel = {
             new JSTooltip(createdDate, { text: this.getValue().dateTime });
             new JSTooltip(scheduleIcon, { text: i18n['schedule.tooltip'] });
             new JSTooltip(favoriteIcon, { text: i18n['favorite.tooltip'] });
+
+            jQuery(name).attr("aria-label", xssUtil.hardEscape(this.getValue().label));
+            jQuery(createdDate).attr("aria-label", xssUtil.hardEscape(this.getValue().date +' '+ this.getValue().dateTime));
+            jQuery(modifiedDate).attr("aria-label", xssUtil.hardEscape(this.getValue().updateDate + ' ' + this.getValue().updateDateTime));
+
             return element;
         };
         var baseRefreshStyle = resourceItem.refreshStyle;
         resourceItem.refreshStyle = function () {
             baseRefreshStyle.call(this);
-            var element = this._getElement();
+            var element = this._getElement(),
+                ariaLabel = this.getValue().label + ", " + this.getValue().type;
+
             if (this.getValue().isScheduled) {
                 jQuery(element).addClass(layoutModule.SCHEDULED_CLASS);
+                ariaLabel = ariaLabel + ", " + i18n['schedule.tooltip'];
             }
             if (this.getValue().isFavorite) {
-                jQuery(element).addClass(layoutModule.FAVORITE_CLASS);
+                jQuery(element).addClass(layoutModule.FAVORITE_CLASS).find('[role="checkbox"]').first().attr("aria-checked", true);
+                ariaLabel = ariaLabel + ", " + i18n['favorite.tooltip'];
             }
             if (this.isLoading) {
                 jQuery(element).addClass(layoutModule.LOADING_CLASS);
             }
+
+            jQuery(element).attr("aria-label", xssUtil.hardEscape(ariaLabel));
         };
         return resourceItem;
     },
@@ -639,11 +659,12 @@ repositorySearch.resultsPanel = {
                 repositorySearch.actionModel.showResourceMenu(event, menuPosition);
             }
             Event.stop(event);
+            actionModel.focusMenu();
         }.bindAsEventListener(this));
-        this.getList().observe('key:escape', function (event) {
+        /*this.getList().observe('key:escape', function (event) {
             actionModel.hideMenu();
             Event.stop(event);
-        });
+        });*/
     },
     _selectOrUnselectResources:function(event){
         const item = event.memo.item;
@@ -724,6 +745,12 @@ repositorySearch.resultsPanel = {
         this._refreshEmptyListMessage();
         this.refresh();
     },
+    _renderHeader: function () {
+        // For simplicity we do not render header as resource item
+        // instead we clone template node and insert it as a first element in the list
+        const headerClone = jQuery(this._header).find("li").clone();
+        jQuery('#' + this._resultListId).prepend(headerClone);
+    },
     setResources: function (resources, toItem) {
         var items = resources.collect(this._createResourceItem);
         var list = this.getList();
@@ -735,6 +762,7 @@ repositorySearch.resultsPanel = {
             this._infiniteScroll && this._infiniteScroll.reset();
             list.setItems(items);
             list.show();
+            this._renderHeader();
             this._refreshEmptyListMessage();
         }
 
@@ -758,7 +786,7 @@ repositorySearch.resultsPanel = {
 
         this.getList().addItems(items);
         this.getList().refresh();
-
+        this._renderHeader();
         if (items.length > 0) {
             this._toggleInfiniteScrollBasedOnViewportHeight();
             tooltipModule.enableTooltips();
@@ -791,9 +819,7 @@ repositorySearch.resultsPanel = {
         this._fixHeaderWidth();
         tooltipModule.cleanUp();
     }
-};    ///////////////////////////////
-// Filter panel object
-///////////////////////////////
+};
 ///////////////////////////////
 // Filter panel object
 ///////////////////////////////
@@ -804,7 +830,7 @@ repositorySearch.filtersPanel = {
     _cookieName: 'filtersPopularity',
     _ignoreFilterEvent: false,
     initialize: function (filtersMetaData, selectedFilters) {
-        //this._getContainer().update();    // Process filters configuration
+        //this._getContainer().update();
         // Process filters configuration
         filtersMetaData.each(function (filter, index) {
             var element= jQuery(this._getContainer().childElements()[index]);
@@ -824,8 +850,7 @@ repositorySearch.filtersPanel = {
         }
         if (isSupportsTouch()) {
             this._touchController = new TouchController(document.getElementById(this._id), jQuery('#' + this._id).parents());
-        }    //this._refreshScroll();
-        //this._refreshScroll();
+        }
         return this;
     },
     _buttonToggleListener: function(element){
@@ -874,7 +899,6 @@ repositorySearch.filtersPanel = {
             items: this._createItemsList(filterMetaData)
         });
         // When item is selected fire filter event
-        // When item is selected fire filter event
         list.observe('item:selected', function (event) {
             var item = event.memo.item;
             if (item.getValue().isSeparator || item.getValue().isMore || this._ignoreFilterEvent) {
@@ -917,9 +941,7 @@ repositorySearch.filtersPanel = {
         }
         return this._container;
     }
-};    ///////////////////////////////
-// Filter path object
-///////////////////////////////
+};
 ///////////////////////////////
 // Filter path object
 ///////////////////////////////
@@ -961,9 +983,7 @@ repositorySearch.filterPath = {
             jQuery(document.body).find(this._contentBodySelector).removeClass('showingSubHeader');
         }
     }
-};    ///////////////////////////////
-// Sorters panel object
-///////////////////////////////
+};
 ///////////////////////////////
 // Sorters panel object
 ///////////////////////////////
@@ -990,7 +1010,8 @@ repositorySearch.sortersPanel = {
         this.sortersList = new dynamicList.List(this._containerId, {
             listTemplateDomId: "tabSet_control_horizontal_responsive",
             itemTemplateDomId: "tabSet_control_horizontal_responsive:tab",
-            items: [this.labelItem].concat(sortItems)
+            items: [this.labelItem].concat(sortItems),
+            listOrientation: "horizontal"
         });
 
         var self = this;
@@ -1031,7 +1052,7 @@ repositorySearch.sortersPanel = {
         var self = this;
 
         this.sortersList.getItems().each(function(item) {
-            if (item !== self.labelItem && !item.isSelected()) {
+            if (item !== self.labelItem) {
                 item.disable();
                 item.refresh();
             }
@@ -1042,7 +1063,7 @@ repositorySearch.sortersPanel = {
         var self = this;
 
         this.sortersList.getItems().each(function(item) {
-            if (item !== self.labelItem && !item.isSelected()) {
+            if (item !== self.labelItem) {
                 item.enable();
                 item.refresh();
             }
@@ -1059,19 +1080,19 @@ repositorySearch.sortersPanel = {
         e.removeAttribute('id');
         return e;
     }
-};    /////////////////////////////////
-// Repository permissions dialog
-/////////////////////////////////
+};
 /////////////////////////////////
 // Repository permissions dialog
 /////////////////////////////////
-var ResourcePermissions = function (resource) {
+var ResourcePermissions = function (resource, event) {
     this._resource = resource;
+    this._eventSourceFocusableElement = event && ((event.memo && event.memo.focused) || event.findElement('[tabindex=-1]'));
     this._isVisible = false;
     this._listId = this.ENTITY_LIST_ID;
     this._listContainerId = this.LIST_CONTAINER_ID;
     this._searchBoxId = this.SEARCH_BOX_ID;
-    this.viewBy = 'USER', this._processTemplate();
+    this.viewBy = 'USER';
+    this._processTemplate();
 };
 ResourcePermissions.addVar('TEMPLATE_DOM_ID', 'permissions');
 ResourcePermissions.addVar('TOOLTIP_TEMPLATE_DOM_ID', 'orgTooltip');
@@ -1081,10 +1102,11 @@ ResourcePermissions.addVar('WAIT_ITEM_TEMPLATE_ID', 'tabular_twoColumn_setLeft:l
 ResourcePermissions.addVar('ENTITY_LIST_ID', 'permissionsList');
 ResourcePermissions.addVar('LIST_CONTAINER_ID', 'permissionsListContainer');
 ResourcePermissions.addVar('SEARCH_BOX_ID', 'searchPermissionsBox');
+ResourcePermissions.addVar('SEARCH_BOX_INPUT_PATTERN', '#permissionsSearchInput');
 ResourcePermissions.addVar('NAME_TOOLTIP_PATTERN', '.one');
 ResourcePermissions.addVar('NAME_PATTERN', '.one>a.launcher');
 ResourcePermissions.addVar('PERMISSIONS_PATTERN', '.two>select');
-ResourcePermissions.addVar('VIEW_BY_TAB_SET_PATTERN', '#permissionsViewBy');
+ResourcePermissions.addVar('VIEW_BY_TAB_SET_PATTERN', '#viewMode');
 ResourcePermissions.addVar('TAB_PATTERN', '.tab>p');
 ResourcePermissions.addVar('PATH_PATTERN', '.path');
 ResourcePermissions.addVar('SUBMIT_BUTTON', '#permissionsOk');
@@ -1093,12 +1115,16 @@ ResourcePermissions.addVar('CANCEL_BUTTON', '#permissionsCancel');
 ResourcePermissions.addVar('BODY_PATTERN', 'div.body');
 ResourcePermissions.addMethod('_processTemplate', function () {
     this._dom = jQuery('#' + this.TEMPLATE_DOM_ID).clone(true)[0];
-    jQuery(this._dom).attr('id', null);
-    jQuery(this._dom).children('.body').attr('id', '');
+    jQuery(this._dom).attr('id',"permissionDialog");
+    jQuery(this._dom).find(this.BODY_PATTERN).attr('id', '');
     var path = jQuery(this._dom).find(this.PATH_PATTERN)[0];
-    path.update(xssUtil.hardEscape(this._resource.URIString.truncate(50)));
+    path.update(xssUtil.hardEscape(this._resource.URIString.truncate(80)));
     jQuery(path).attr('title', this._resource.URIString);
+    jQuery(path).closest('.title').attr('id', "permissionDialogTitle");
+    jQuery(path).attr('role', "heading");
+    jQuery(path).attr('aria-level', "1");
     this._viewByTabSet = jQuery(this._dom).find(this.VIEW_BY_TAB_SET_PATTERN)[0];
+    this._searchBoxInput = jQuery(this._dom).find(this.SEARCH_BOX_INPUT_PATTERN)[0];
     this._byUsersButton = jQuery(this._dom).find(this.TAB_PATTERN)[0];
     this._byRolesButton = jQuery(this._dom).find(this.TAB_PATTERN)[1];
     this._submitButton = jQuery(this._dom).find(this.SUBMIT_BUTTON)[0];
@@ -1106,6 +1132,7 @@ ResourcePermissions.addMethod('_processTemplate', function () {
     this._cancelButton = jQuery(this._dom).find(this.CANCEL_BUTTON)[0];
     this._byUsersButton.viewType = 'USER';
     this._byRolesButton.viewType = 'ROLE';
+    jQuery(this._searchBoxInput).attr('id', null);
     jQuery(this._submitButton).attr('id', null);
     jQuery(this._applyButton).attr('id', null);
     jQuery(this._cancelButton).attr('id', null);
@@ -1139,8 +1166,7 @@ ResourcePermissions.addMethod('_buttonClickHandler', function (e) {
             this._submitButton,
             this._applyButton
         ].include(button)) {
-            jQuery(this._byUsersButton).addClass(layoutModule.BUTTON_CLASS);
-            jQuery(this._byRolesButton).addClass(layoutModule.BUTTON_CLASS);
+            this._hideWarning();
             repositorySearch.fire(repositorySearch.PermissionEvent.UPDATE, {
                 uri: uri,
                 entities: this.getChangedEntities(),
@@ -1166,11 +1192,65 @@ ResourcePermissions.addMethod('_buttonClickHandler', function (e) {
         [this._cancelButton].include(button) && this.hide();
     }
 });
+ResourcePermissions.addMethod('_keyDownHandler', function (e) {
+    var element = e.target;
+    //on esc key should hide dialog
+    if (e.key === "Escape" || e.keyCode === 27) {
+        this.hide();
+    }
+    if (!this._waiting) {
+        let button;
+        var tab = matchAny(element, [layoutModule.TABSET_TAB_PATTERN], true);
+        //If we have focus on role-user TabList section below condition get executed
+        if(tab){
+            let elementTarget;
+            if(e.keyCode === 37){
+                elementTarget = jQuery(element).prev(layoutModule.TABSET_TAB_PATTERN);
+            }else if(e.keyCode === 39){
+                elementTarget = jQuery(element).next(layoutModule.TABSET_TAB_PATTERN);
+            }
+            if(elementTarget && elementTarget.length){
+                let buttonEl = jQuery(elementTarget).find(layoutModule.BUTTON_PATTERN);
+                button = (buttonEl.length) ? buttonEl[0] : null;
+            }
+        }
+        var selectElement = matchAny(element, ['select'], true);
+        //If we have focus on select/dropdown element don't allow default left/right key for option changes
+        if(selectElement) {
+            if(e.keyCode === 37 || e.keyCode === 39){
+                e.preventDefault();
+            }
+        }
+        var uri = this._resource.URIString;
+        if ([
+            this._byUsersButton,
+            this._byRolesButton
+        ].include(button)) {
+            if (this.isChanged()) {
+                this._showWarning();
+                e.stopPropagation();
+            } else {
+                this._hideWarning();
+                this.viewBy = button.viewType;
+                repositorySearch.fire(repositorySearch.PermissionEvent.BROWSE, {
+                    uri: uri,
+                    type: this.viewBy
+                });
+            }
+        }
+    }
+});
 ResourcePermissions.addMethod('_showWarning', function () {
     jQuery(this._dom).find(this.BODY_PATTERN).addClass(layoutModule.ERROR_CLASS);
+    jQuery(layoutModule.MESSAGE_WARNING_PATTERN).focus();
+    jQuery(layoutModule.MESSAGE_WARNING_PATTERN).on({
+        'focus': ()=>{jQuery(layoutModule.MESSAGE_WARNING_PATTERN).addClass('focus-visible')},
+        'blur': ()=>{jQuery(layoutModule.MESSAGE_WARNING_PATTERN).removeClass('focus-visible')}
+    });
 });
 ResourcePermissions.addMethod('_hideWarning', function () {
     jQuery(this._dom).find(this.BODY_PATTERN).removeClass(layoutModule.ERROR_CLASS);
+    jQuery(layoutModule.MESSAGE_WARNING_PATTERN).off('focus blur')
 });
 ResourcePermissions.addMethod('_launcherClickHandler', function (e) {
     var element = e.element();
@@ -1187,6 +1267,39 @@ ResourcePermissions.addMethod('_launcherClickHandler', function (e) {
     e.preventDefault();
     e.stopPropagation();
 });
+ResourcePermissions.addMethod('_selectFocusInHandler', function (e) {
+    var element = e.target;
+    if (this._waiting) {
+        return;
+    }else{
+        //if element or its children has select then make it focusable
+        if (element.tagName === 'SELECT'){
+            element.setAttribute('tabindex', 0);
+            element.focus();
+        }else if(element.children.length && element.children[0].tagName === 'SELECT'){
+            if(element.children[0].hasAttribute('disabled')){
+                element.setAttribute('aria-label', i18n['permissionsDialog.permission.selectDisabledAriaLabel']);
+            }else{
+                element.children[0].setAttribute('tabindex', 0);
+                element.children[0].focus();
+            }
+        }
+    }
+});
+
+ResourcePermissions.addMethod('_selectFocusOutHandler', function (e) {
+    var element = e.target;
+    if (this._waiting) {
+        return;
+    }else{
+        if (element.tagName === 'SELECT'){
+            element.setAttribute('tabindex', -1);
+        }else if(element.children.length && element.children[0].tagName === 'SELECT'){
+            element.children[0].setAttribute('tabindex', -1);
+        }
+    }
+});
+
 ResourcePermissions.addMethod('_selectChangeHandler', function (e) {
     var element = e.target;
     e.stopPropagation();
@@ -1201,13 +1314,6 @@ ResourcePermissions.addMethod('_selectChangeHandler', function (e) {
             li.listItem.getValue().permission.newPermission = newPermission != value.permission.getResolvedPermission() ? newPermission : undefined;
             li.listItem.refresh();
         }
-    }
-    if (this.isChanged()) {
-        jQuery(this._byUsersButton).removeClass(layoutModule.BUTTON_CLASS);
-        jQuery(this._byRolesButton).removeClass(layoutModule.BUTTON_CLASS);
-    } else {
-        jQuery(this._byUsersButton).addClas(layoutModule.BUTTON_CLASS);
-        jQuery(this._byRolesButton).addClass(layoutModule.BUTTON_CLASS);
     }
 });
 ResourcePermissions.addMethod('_selectMouseOverHandler', function (e) {
@@ -1271,18 +1377,27 @@ ResourcePermissions.addMethod('show', function () {
             isFolder: this._resource.isFolder()
         });
         this._isVisible = true;
-        document.getElementById(this._listId).parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.style.height = '360px';
-        dialogs.popup.show(this._dom);
+        dialogs.popup.show(this._dom, true);
+        this._clearPositionStyles(this._dom);
         this._dom.observe('click', this._buttonClickHandler.bindAsEventListener(this));
+        this._dom.observe('keydown', this._keyDownHandler.bindAsEventListener(this));
+        this._dom.observe('focusin', this._selectFocusInHandler.bindAsEventListener(this));
+        this._dom.observe('focusout', this._selectFocusOutHandler.bindAsEventListener(this));
         if (isSupportsTouch()) {
             this._viewByTabSet.observe('touchstart', this._buttonClickHandler.bindAsEventListener(this));
         }
-        this._dom.observe('click', this._launcherClickHandler.bindAsEventListener(this));    // Change event not bubbled up in IE
-        //        this._dom.observe('change', this._selectChangeHandler.bindAsEventListener(this));
+        this._dom.observe('click', this._launcherClickHandler.bindAsEventListener(this));
         // Change event not bubbled up in IE
         //        this._dom.observe('change', this._selectChangeHandler.bindAsEventListener(this));
         this._dom.observe('mouseover', this._selectMouseOverHandler.bindAsEventListener(this));
     }
+});
+// Removes positioning styles set by centerElement in dialogs.popup.show method to instead rely on CSS
+ResourcePermissions.addMethod('_clearPositionStyles', (element) => {
+    element.style.marginLeft = null;
+    element.style.marginTop = null;
+    element.style.top = null;
+    element.style.left = null;
 });
 ResourcePermissions.addMethod('showAndWait', function () {
     if (!this._isVisible) {
@@ -1311,6 +1426,7 @@ ResourcePermissions.addMethod('hide', function () {
         this._viewByTabSet.stopObserving('touchstart');
     }
     repositorySearch.dialogsPool.removePermissionsDialog(this._resource);
+    this._eventSourceFocusableElement && this._eventSourceFocusableElement.focus();
 });
 ResourcePermissions.addMethod('enable', function () {
     this._searchBox.enable();
@@ -1349,6 +1465,7 @@ ResourcePermissions.addMethod('_createItem', function (value) {
                 text: xssUtil.hardEscape(tenantId),
                 templateId: template
             });
+            jQuery(nameTooltip).attr('aria-description', `${i18n['tooltip.organization']} ${xssUtil.hardEscape(tenantId)}`);
             var origRemove = element.remove;
             element.remove = function () {
                 tooltipModule.hideJSTooltip(nameTooltip);
@@ -1395,8 +1512,8 @@ ResourcePermissions.addMethod('resetList', function (listId) {
     // see http://jira.jaspersoft.com/browse/JRS-8471
     var listUl = jQuery('#' + listId);
     jQuery(listUl).find('[js-nonmodal-tabindex]').removeAttr('js-nonmodal-tabindex');
-    jQuery(listUl).find('[js-navtype]').attr('js-navtype', false);
-    jQuery(listUl).find('[tabindex]').removeAttr('tabindex');
+    //jQuery(listUl).find('[js-navtype]').attr('js-navtype', false);
+    //jQuery(listUl).find('[tabindex]').removeAttr('tabindex');
 });
 ResourcePermissions.addMethod('scrollReset', function () {
     var listId = this._listId;
@@ -1439,10 +1556,12 @@ ResourcePermissions.addMethod('updateEntities', function (entities) {
 });
 ResourcePermissions.addMethod('isChanged', function () {
     return this.getChangedEntities().length > 0;
-});    /////////////////////////////////////////////////////////////////
-// Poll with all properties and permissions dialogs.
-// Use this pool object to create instances of those dialogs.
-/////////////////////////////////////////////////////////////////
+});
+
+repositorySearch.resourcePermissionsObj = {
+    ResourcePermissions
+};
+
 /////////////////////////////////////////////////////////////////
 // Poll with all properties and permissions dialogs.
 // Use this pool object to create instances of those dialogs.
@@ -1517,8 +1636,8 @@ repositorySearch.dialogsPool = {
     createPropertiesDialog: function (resource) {
         return this._createDialog(ResourceProperties, resource);
     },
-    createOrGetPermissionsDialog: function (resource) {
-        return this._createOrGetDialog(ResourcePermissions, resource);
+    createOrGetPermissionsDialog: function (resource, event) {
+        return this._createOrGetDialog(ResourcePermissions, resource, event);
     },
     createOrGetPropertiesDialog: function (resource, options) {
         return this._createOrGetDialog(ResourceProperties, resource, options);
@@ -1646,9 +1765,8 @@ repositorySearch.showCreateFolderConfirm = function (folder) {
     var dialog = jQuery('#addFolder')[0], name = jQuery('#addFolderInputName')[0], description = jQuery('#addFolderInputDescription')[0], add = jQuery('#addFolderBtnAdd')[0], cancel = jQuery('#addFolderBtnCancel')[0];
     var doShow = function (folder) {
         toFolder = folder;
-        dialogs.popup.show(dialog);
+        dialogs.popup.show(dialog, true, {closable: true});
         name.setValue(repositorySearch.messages['action.create.folder.name']);
-        accessibilityModule.disable();
         setTimeout(function () {
             name.focus();
             name.select();
@@ -1660,21 +1778,28 @@ repositorySearch.showCreateFolderConfirm = function (folder) {
         ValidationModule.hideError(name);
         ValidationModule.hideError(description);
         dialogs.popup.hide(dialog);
-        accessibilityModule.enable();
         event.stopPropagation();
     };
     var doValidate = function () {
-        var isValid = ValidationModule.validate([
+        var isLabelValid = ValidationModule.validate([
             {
                 validator: ResourcesUtils.labelValidator,
                 element: name
-            },
+            }
+        ]);
+        const isDescriptionValid = ValidationModule.validate([
             {
                 validator: ResourcesUtils.descriptionValidator,
                 element: description
             }
         ]);
-        return isValid;
+
+        if (!isLabelValid) {
+            jQuery('#addFolderInputName').focus();
+        } else if (!isDescriptionValid) {
+            jQuery('#addFolderInputDescription').focus();
+        }
+        return isLabelValid && isDescriptionValid;
     };
     var doAdd = function (event) {
         if (jQuery(add).attr('disabled') === 'disabled') {
@@ -1683,7 +1808,8 @@ repositorySearch.showCreateFolderConfirm = function (folder) {
         new repositorySearch.ServerAction.createFolderAction(repositorySearch.FolderAction.CREATE, {
             toFolder: toFolder,
             label: name.getValue(),
-            desc: description.getValue()
+            desc: description.getValue(),
+            dialog: dialog
         }).invokeAction();
         doHide(event);
     };
@@ -1693,7 +1819,10 @@ repositorySearch.showCreateFolderConfirm = function (folder) {
         }
         event.stopPropagation();
     });
-    cancel.observe('click', doHide);
+    cancel.observe('click', (event) => {
+        doHide(event);
+        dialogs.popup.hide(dialog);
+    });
     repositorySearch.showCreateFolderConfirm = doShow;
     doShow(folder);
 };
@@ -1702,31 +1831,51 @@ repositorySearch.DeleteConfirmation = {
     ID_DELETE_DIALOG_OK_BUTTON: 'deleteResourceOK',
     ID_DELETE_DIALOG_CANCEL_BUTTON: 'deleteResourceCancel'
 };
-repositorySearch.showDeleteFolderConfirm = function (folder) {
+repositorySearch.showDeleteFolderConfirm = function (folder, event) {
     var message = repositorySearch.getMessage('SEARCH_DELETE_FOLDER_CONFIRM_MSG', { folderUri: folder.URI });
     var action = new repositorySearch.ServerAction.createFolderAction(repositorySearch.FolderAction.DELETE, { folder: folder });
-    repositorySearch._showDeleteDialog(message, action);
+    repositorySearch._showDeleteDialog(message, action, event);
 };
-repositorySearch.showDeleteResourceConfirm = function (resource) {
+repositorySearch.showDeleteResourceConfirm = function (resource, event) {
     var message = repositorySearch.getMessage('SEARCH_DELETE_CONFIRM_MSG', { resourceUri: resource.URIString });
     var action = new repositorySearch.ServerAction.createResourceAction(repositorySearch.ResourceAction.DELETE, { resources: [resource] });
-    repositorySearch._showDeleteDialog(message, action);
+    repositorySearch._showDeleteDialog(message, action, event);
 };
-repositorySearch.showBulkDeleteResourcesConfirm = function (resources) {
+repositorySearch.showBulkDeleteResourcesConfirm = function (resources, event) {
     var message = repositorySearch.getMessage('SEARCH_BULK_DELETE_CONFIRM_MSG', { count: resources.length });
     var action = new repositorySearch.ServerAction.createResourceAction(repositorySearch.ResourceAction.DELETE, { resources: resources });
-    repositorySearch._showDeleteDialog(message, action);
+    repositorySearch._showDeleteDialog(message, action, event);
 };
-repositorySearch._showDeleteDialog = function (message, action) {
-    var confirmElement = jQuery('#' + repositorySearch.DeleteConfirmation.ID_DELETE_DIALOG_CONTAINER);
-    confirmElement.find('.body').html(xssUtil.hardEscape(message));
-    dialogs.popupConfirm.show(confirmElement, true, {
-        okButtonSelector: '#' + repositorySearch.DeleteConfirmation.ID_DELETE_DIALOG_OK_BUTTON,
-        cancelButtonSelector: '#' + repositorySearch.DeleteConfirmation.ID_DELETE_DIALOG_CANCEL_BUTTON
-    });
-    jQuery('#' + repositorySearch.DeleteConfirmation.ID_DELETE_DIALOG_OK_BUTTON).on('click', function () {
-        action.invokeAction();
-    });
+repositorySearch._showDeleteDialog = function (message, action, event) {
+    let dialogText = xssUtil.hardEscape(message),
+        focusTarget = event
+            && ((event.type === 'mouseup' && event.target.ancestors().filter(element => element.hasClassName("selected"))[0])
+                || (event.type === 'dataavailable' && event.target)),
+        confirmDialogOpts = {
+            title: i18n['DIALOG_CONFIRM_TITLE'],
+            text: dialogText,
+            buttons: [
+                {
+                    label: i18n['DIALOG_CONFIRM_BUTTON_LABEL_OK'],
+                    action: 'yes',
+                    primary: true
+                },
+                {
+                    label: i18n['DIALOG_CONFIRM_BUTTON_LABEL_CANCEL'],
+                    action: 'no',
+                    primary: false
+                }
+            ],
+            returnFocusTo: focusTarget
+        },
+        confirmDialog = new ConfirmationDialog(confirmDialogOpts);
+
+    confirmDialog.setReturnFocus(focusTarget);
+
+    confirmDialog.on("button:yes", () => action.invokeAction());
+    confirmDialog.on("button:no", () => confirmDialog.close());
+
+    confirmDialog.open();
 };
 repositorySearch.showResourceProperties = function (resource, options) {
     var resourceProperties = repositorySearch.dialogsPool.createOrGetPropertiesDialog(resource, { showMode: true });
@@ -1764,13 +1913,13 @@ repositorySearch.addToFavorite = function (resources, itemHovered) {
     });
     if ( !isItemMarkedAsFav ) {
         repositorySearch.onFavoriteItem(url, selectedResourceList).then(()=>{
-            selectedElem.addClass(layoutModule.FAVORITE_CLASS);
+            selectedElem.addClass(layoutModule.FAVORITE_CLASS).find('[role="checkbox"]').first().attr("aria-checked", true);
             repositorySearch.setFavorite(resources);
         });
     } else {
         url = url+ '/delete';
         repositorySearch.onFavoriteItem(url, selectedResourceList).then(()=>{
-            selectedElem.removeClass(layoutModule.FAVORITE_CLASS);
+            selectedElem.removeClass(layoutModule.FAVORITE_CLASS).find('[role="checkbox"]').first().attr("aria-checked", false);
             repositorySearch.setFavorite(resources);
         });
     }
@@ -1781,12 +1930,12 @@ repositorySearch.setFavorite = function(resources){
         resource.isFavorite = ! resource.isFavorite
     });
 };
-repositorySearch.editResourcePermissions = function (resource) {
-    var dialog = repositorySearch.dialogsPool.createOrGetPermissionsDialog(resource);
+repositorySearch.editResourcePermissions = function (resource, event) {
+    var dialog = repositorySearch.dialogsPool.createOrGetPermissionsDialog(resource, event);
     dialog.showAndWait();
 };
-repositorySearch.editFolderPermissions = function (folder) {
-    var dialog = repositorySearch.dialogsPool.createOrGetPermissionsDialog(folder);
+repositorySearch.editFolderPermissions = function (folder, event) {
+    var dialog = repositorySearch.dialogsPool.createOrGetPermissionsDialog(folder, event);
     dialog.showAndWait();
 };
 repositorySearch.showUploadThemeConfirm = function (folder, reupload) {
@@ -1854,11 +2003,11 @@ repositorySearch.showUploadThemeConfirm = function (folder, reupload) {
                             dialog.on("button:yes", function() {
                                 var action = new repositorySearch.ServerAction.createFolderAction(repositorySearch.ThemeAction.REUPLOAD, options);
                                 action.invokeAction();
-                                dialog.remove();
+                                self.close() && self.remove();
                             });
 
                             dialog.on("button:no", function(){
-                                dialog.remove();
+                                self.close() && self.remove();
                             });
                             dialog.open();
                         } else if (respObj.data.isActiveTheme) {

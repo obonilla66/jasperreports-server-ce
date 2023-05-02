@@ -48,6 +48,7 @@ import i18n from '../i18n/jasperserver_messages.properties';
 import xssUtil from 'js-sdk/src/common/util/xssUtil';
 import ConfirmationDialog from 'js-sdk/src/common/component/dialog/ConfirmationDialog';
 import domUtil from 'js-sdk/src/common/util/domUtil';
+import navigateBackUtils from '../navigateBack/utils/navigateBackUtils';
 
 //var localContext = window;
 //////////////////////////
@@ -57,9 +58,9 @@ function invokeAction(actionName) {
     var action = repositorySearch.Action['create' + actionName].call();
     action.invokeAction();
 }
-function invokeFolderAction(actionName, folder) {
+function invokeFolderAction(actionName, folder, options) {
     var theFolder = folder ? folder : repositorySearch.model.getContextFolder();
-    var action = repositorySearch.folderActionFactory[actionName](theFolder);
+    var action = repositorySearch.folderActionFactory[actionName](theFolder, options);
     action.invokeAction();
 }
 function invokeResourceAction(actionName, resource, options) {
@@ -67,9 +68,9 @@ function invokeResourceAction(actionName, resource, options) {
     var action = repositorySearch.resourceActionFactory[actionName](theResource, options);
     action.invokeAction();
 }
-function invokeBulkAction(actionName) {
+function invokeBulkAction(actionName, resourceName, event) {
     var resources = repositorySearch.model.getSelectedResources();
-    var action = repositorySearch.bulkActionFactory[actionName](resources);
+    var action = repositorySearch.bulkActionFactory[actionName](resources, event);
     action.invokeAction();
 }
 
@@ -482,6 +483,8 @@ var repositorySearch = {
         repositorySearch.model.setServerState(options.state);
         repositorySearch.CursorManager.initialize();
         repositorySearch.actionModel.initialize();
+        this.navigateToResourcePage();
+
         if (repositorySearch.mode == repositorySearch.Mode.BROWSE) {
             repositorySearch.toolbar.initialize(repositorySearch.actionModel.bulkActions);
             repositorySearch.foldersPanel.initialize(options);
@@ -626,6 +629,10 @@ var repositorySearch = {
                 if (resource.isLoaded() && item.isLoading) {
                     item.setLoading(false);
                 }
+                if (jQuery(item._getElement()).hasClass('cursor')){
+                    jQuery('.subfocus').removeClass('subfocus');
+                    jQuery(item._getElement()).addClass('subfocus').addClass('focus-visible');
+                }
             }
         }.bindAsEventListener(repositorySearch));
         repositorySearch.observe('state:changed', function (event) {
@@ -673,11 +680,23 @@ var repositorySearch = {
         }
         this._disableBfCacheIfSafari();
     },
+    navigateToResourcePage: function(){
+        let mode= repositorySearch.mode;
+        if(mode && history.length > 1) {
+            let locObj = window.primaryNavModule.navigationPaths[mode],
+                queryParams = window.primaryNavModule.navigationPaths[mode].params;
+            queryParams = queryParams ? '?' + queryParams : '';
+
+            const destination = __jrsConfigs__.urlContext + '/' + locObj.url + queryParams;
+            navigateBackUtils.setLocation(destination);
+        }
+    },
     showContextMenu: function (e) {
         var event = e.memo.targetEvent;
-        if (repositorySearch.mode == repositorySearch.Mode.BROWSE) {
+        if (repositorySearch.mode === repositorySearch.Mode.BROWSE) {
             if (repositorySearch.foldersPanel.isFolderContextMenu(event)) {
-                repositorySearch.actionModel.showFolderMenu(event);
+                const label = jQuery(e.memo.targetEvent?.target).closest('li').find('p').text().trim();
+                repositorySearch.actionModel.showFolderMenu(event, undefined, label);
             }
         }
         if (repositorySearch.resultsPanel.isResourceContextMenu(event)) {
@@ -727,8 +746,9 @@ var repositorySearch = {
         });
         this.observe('folder:deleteError', this.defaultErrorHandler);
         this.observe('folder:created', function (event) {
-            var folder = event.memo.inputData.toFolder;
-            repositorySearch.foldersPanel.refreshFolder(folder);
+            var toFolder = event.memo.inputData.toFolder;
+            var targetFolder = event.memo.responseData;
+            repositorySearch.foldersPanel.createAndSelectFolder(targetFolder, toFolder);
         });
         this.observe('folder:createError', this.defaultErrorHandler);
         this.observe('folder:copied', function (event) {
@@ -839,9 +859,10 @@ var repositorySearch = {
         this.observe('resource:convertError', this.defaultErrorHandler);
     },
     defaultErrorHandler: function (event) {
-        var errorDialog = new AlertDialog({ title: i18n['dialog.dependencies.title'] });
-        errorDialog.setMessage(event.memo.responseData || event.memo);
-        errorDialog.open();
+        this.errorDialog && this.errorDialog.remove();
+        this.errorDialog = new AlertDialog({ title: i18n['dialog.dependencies.title'], id: 'dependenciesDialogId', titleContainerId: 'dependenciesDialogTitle', bodyContainerId: 'dependenciesDialogBody' });
+        this.errorDialog.setMessage(event.memo.responseData || event.memo);
+        this.errorDialog.open();
 
         repositorySearch.sortersPanel.enableItems();
     },
@@ -1116,8 +1137,8 @@ repositorySearch.actionModel = {
         });    //var treeContainer = ($(repositorySearch.foldersPanel.getTreeId()).parent());
         //treeContainer.observe('scroll', function(event) {!isRightClick(event) && actionModel.hideMenu()});
     },
-    showFolderMenu: function (event, coordinates) {
-        actionModel.showDynamicMenu(this._folderMenu, event, null, coordinates, this._holderId);
+    showFolderMenu: function (event, coordinates, label) {
+        actionModel.showDynamicMenu(this._folderMenu, event, null, coordinates, this._holderId, undefined, label);
     },
     showResourceBulkMenu: function (event, coordinates) {
         actionModel.showDynamicMenu(this._resourceBulkMenu, event, null, coordinates, this._holderId);
@@ -1501,10 +1522,10 @@ var Utils = {
 // Repository Search Initialization
 ////////////////////////////////////
 document.observe('element:contextmenu', repositorySearch.showContextMenu.bindAsEventListener(repositorySearch));
-document.observe('key:escape', function (event) {
+/*document.observe('key:escape', function (event) {
     actionModel.hideMenu();
     Event.stop(event);
-});
+});*/
 document.observe('key:delete', function (event) {
     // for bug 25864 - to prevent warning message appearing when trying to delete text in any text input
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {

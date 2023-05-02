@@ -7,6 +7,19 @@
 #
 
 # -----------------------------------------------------------------------------
+handleExtraJarsForJdk17() {
+  # Directory paths are relative to JRS_HOME\buildomatic.
+  javaVersion=$(java -version 2>&1 | head -1 | cut -d '"' -f 2 | cut -d '.' -f1)
+  if [ ${javaVersion} -ge 17 ]; then
+    echo "Copying additional jar file(s) that are needed very specific to jdk 17+ runtime."
+    cp ./install_resources/extra-jars-jdk17/nashorn*.jar ./lib
+    cp ./install_resources/extra-jars-jdk17/asm*.jar ./lib
+  else
+    echo "Deleting any existing jar file(s) that are needed very specific to jdk 17+ runtime."
+    rm ./lib/asm*.jar
+    rm ./lib/nashorn*.jar
+  fi
+}
 
 fail() {
   if [[ -n $1 ]]; then
@@ -24,6 +37,7 @@ showUsage() {
 # Selects bundled or existing Ant.
 #
 initializeAntEnvironment() {
+  handleExtraJarsForJdk17
   if test -d ../apache-ant
   then
     ANT_HOME=../apache-ant

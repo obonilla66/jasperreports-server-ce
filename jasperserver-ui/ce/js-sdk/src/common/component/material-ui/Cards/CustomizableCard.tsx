@@ -23,7 +23,7 @@ export const CustomizableCard = forwardRef<HTMLElement, CardProps>(({
     const overflowClass = cardOverflow ? 'jr-uOverflow-show' : '';
     const marginClass = isLastOrSingleCard ? '' : 'jr-uMargin-b-08';
     return (
-        <MuiCard ref={ref} className={`jr-mCard jr-mCardDashlet ${marginClass} ${overflowClass} ${cardClassname} mui`} variant={variant} elevation={elevation} {...rest}>
+        <MuiCard ref={ref} className={`jr-mCard ${marginClass} ${overflowClass} ${cardClassname} mui`} variant={variant} elevation={elevation} {...rest}>
             <MuiCardContent {...cardContentProps}>
                 { isCardHeader && (
                     <MuiCardHeader

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -68,6 +68,7 @@ public class RepoUser implements User, IdedObject {
 		this.favorites = favorites;
 	}
 	private Set<RepoProfileAttribute> profileAttributes = null;
+	private Integer numberOfFailedLoginAttempts;
 
 	/**
 	 * @return
@@ -307,7 +308,8 @@ public class RepoUser implements User, IdedObject {
 		setExternallyDefined(u.isExternallyDefined());
 		setEnabled(u.isEnabled());
 		setPreviousPasswordChangeTime(u.getPreviousPasswordChangeTime());
-		
+		setNumberOfFailedLoginAttempts(u.getNumberOfFailedLoginAttempts());
+
         String tenantId = (u.getTenantId() == null) ? TenantService.ORGANIZATIONS : u.getTenantId();
 		RepoTenant pTenant = resolver.getPersistentTenant(tenantId, true);
 		setTenant(pTenant);
@@ -343,6 +345,7 @@ public class RepoUser implements User, IdedObject {
 		u.setExternallyDefined(isExternallyDefined());
 		u.setEnabled(isEnabled());
 		u.setPreviousPasswordChangeTime(getPreviousPasswordChangeTime());
+		u.setNumberOfFailedLoginAttempts(getNumberOfFailedLoginAttempts());
         if (TenantService.ORGANIZATIONS.equals(getTenantId())) {
             u.setTenantId(null);
         } else {
@@ -438,5 +441,15 @@ public class RepoUser implements User, IdedObject {
 
 	public void setProfileAttributes(Set<RepoProfileAttribute> profileAttributes) {
 		this.profileAttributes = profileAttributes;
+	}
+
+	@Override
+	public Integer getNumberOfFailedLoginAttempts() {
+		return numberOfFailedLoginAttempts == null ? 0 : numberOfFailedLoginAttempts;
+	}
+
+	@Override
+	public void setNumberOfFailedLoginAttempts(Integer numberOfFailedLoginAttempts) {
+		this.numberOfFailedLoginAttempts = numberOfFailedLoginAttempts;
 	}
 }

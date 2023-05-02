@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+  ~ Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
   ~ http://www.jaspersoft.com.
   ~
   ~ Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -493,7 +493,8 @@
     <!-- db props -->
     <property name="dbProps" value="${currentConf}/db.properties"/>
 
-
+    <!-- connectors props -->
+    <property name="componentsProps" value="${currentConf}/components.properties"/>
 
     <!-- app server props -->
     <property name="appSrvProps" value="${currentConf}/app.srv.properties"/>
@@ -786,6 +787,9 @@
 
                     <!-- load db props -->
                     <property file="${dbProps}"/>
+
+                    <!-- load connectors props -->
+                    <property file="${componentsProps}"/>
 
                     <!-- load app server props -->
                     <property file="${appSrvProps}"/>
@@ -1239,27 +1243,24 @@
     <target name="list-files" description="list all files">
         <ant antfile="${js-pro-path}/build-config.xml" inheritall="true" inheritrefs="true" target="list-files"/>
     </target>
-    
+
     <target name="test-ce-all-props" description="Tests that all JasperServer CE properties are initialized">
       <var name="listOfPropsCE" value="dbType,dbHost,dbUsername,dbPassword,dbPort,js.dbName,sugarcrm.dbName,foodmart.dbName,
       webAppNameCE" />
-      
-      <if>
-        <not>
-          <isset property="CATALINA_HOME"/>
-        </not>
-        <then>
-          <var name="listOfPropsCE" value="${listOfPropsCE},appServerType,appServerDir" />
-        </then>
-      </if>
-
-      <validatePropsNotBlank properties="${listOfPropsCE}" />
+        <if>
+            <not>
+                <isset property="CATALINA_HOME"/>
+            </not>
+            <then>
+                <var name="listOfPropsCE" value="${listOfPropsCE},appServerType,appServerDir" />
+            </then>
+        </if>
+        <validatePropsNotBlank properties="${listOfPropsCE}" />
     </target>
 
     <target name="test-pro-all-props" description="Tests that all JasperServer Pro properties are initialized">
       <var name="listOfPropsPro" value="dbType,dbHost,dbUsername,dbPassword,dbPort,js.dbName,sugarcrm.dbName,foodmart.dbName,
       webAppNamePro" />
-
         <if>
             <isset property="installType"/>
             <then>
@@ -1390,7 +1391,7 @@
                 </then>
             </elseif>
             <else>
-                <var name="groovy.version" value="3.0.7"/>
+                <var name="groovy.version" value="3.0.13"/>
                 <echo>Didn't find groovy JAR, downloading groovy ${groovy.version}</echo>
                 <runmaven dir="${basedir}">
                     <arg value="dependency:copy"/>

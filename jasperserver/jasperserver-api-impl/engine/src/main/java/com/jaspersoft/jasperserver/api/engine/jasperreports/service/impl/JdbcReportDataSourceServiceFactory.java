@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -324,17 +324,9 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 				expired = poolDataSources.removeExpired(now, getPoolTimeout(), getAthenaPoolTimeOut());
 			}
 		}
-
 		if (expired != null && !expired.isEmpty()) {
-			for (Iterator it = expired.iterator(); it.hasNext();) {
-				PooledDataSource ds = (PooledDataSource) it.next();
-				try {
-					ds.release();
-				} catch (Exception e) {
-					log.error("Error while releasing connection pool.", e);
-					// ignore
-				}
-			}
+			JdbcReportDataSourceServiceFactory.CleanupThread cleanupThread = new JdbcReportDataSourceServiceFactory.CleanupThread(expired);
+			cleanupThread.start();
 		}
 	}
 
@@ -528,6 +520,30 @@ public class JdbcReportDataSourceServiceFactory implements ReportDataSourceServi
 
 		public boolean accept(File dir, String name) {
 			return (name.toLowerCase().startsWith(schemaPrefix));
+		}
+	}
+
+
+	class CleanupThread extends Thread {
+
+		private List expiredItems;
+
+		public CleanupThread(List expiredItems) {
+			this.expiredItems = expiredItems;
+		}
+
+		public void run() {
+			if (expiredItems != null && !expiredItems.isEmpty()) {
+				for (Iterator it = expiredItems.iterator(); it.hasNext(); ) {
+					PooledDataSource ds = (PooledDataSource) it.next();
+					try {
+						ds.release();
+					} catch (Exception e) {
+						log.error("Error while releasing connection pool.", e);
+						// ignore
+					}
+				}
+			}
 		}
 	}
 }

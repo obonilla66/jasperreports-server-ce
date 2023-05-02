@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -197,6 +197,14 @@ public class ReportJob implements Serializable {
 	 */
 
 	public static final byte OUTPUT_FORMAT_DATA_CSV= 17;
+
+	/**
+	 * XLSX Metadata output constant.
+	 *
+	 * @see #getOutputFormats()
+	 */
+
+	public static final byte OUTPUT_FORMAT_DATA_XLSX= 18;
 
 	/**
 	 * Report unit with data snapshot output format.

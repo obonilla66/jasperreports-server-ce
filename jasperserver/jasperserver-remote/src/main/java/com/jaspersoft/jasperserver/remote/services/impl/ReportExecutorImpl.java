@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -260,6 +260,7 @@ public class ReportExecutorImpl implements ReportExecutor {
                     }
 
                     saveAutoDataSnapshot(executionContext, reportResource, reportContext);
+                    refreshReportUnitInContext(reportResource, reportContext);
                     break;
                 case UPDATED:
                     if (options.isSaveDataSnapshot()) {
@@ -275,6 +276,15 @@ public class ReportExecutorImpl implements ReportExecutor {
                 default:
                     //NOP
                     break;
+            }
+        }
+
+        private void refreshReportUnitInContext(Resource reportResource, ReportContext reportContext) {
+            // DataSnapshot saving will increase version number in repository and reportContext will be outdated. JS-63876
+            if (dataSnapshotService.isSnapshotRecordingEnabled()) {
+                ReportUnit freshReportUnit = getResource(
+                        ReportUnit.class, reportResource.getURI());
+                reportContext.setParameterValue(ReportUnitRequest.REPORT_CONTEXT_PARAMETER_REPORT_UNIT, freshReportUnit);
             }
         }
 

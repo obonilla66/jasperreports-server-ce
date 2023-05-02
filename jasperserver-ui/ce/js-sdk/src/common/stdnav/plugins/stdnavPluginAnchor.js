@@ -75,6 +75,7 @@ $.extend(stdnavPluginAnchor.prototype, {
             'ariarefresh': [this, this._ariaRefresh, null],
             'down': [this, this._onLeftOrUp, null],
             'enter': [this, this._onEnterOrEntered, null],
+            'toggle': [this, this._onToggle, null],
             'inherit': false,
             'inheritable': true,
             'left': [this, this._onLeftOrUp, null],
@@ -96,7 +97,7 @@ $.extend(stdnavPluginAnchor.prototype, {
     // being instrumented, but this construct may not actually have focus at
     // the time this function is called.
     _ariaPrep: function (el) {
-        $(el).attr('role', 'link');
+        //$(el).attr('role', 'link');
         /*
         var label = $(el).attr('aria-label');
         if (stdnav.nullOrUndefined(label)) {
@@ -114,7 +115,7 @@ $.extend(stdnavPluginAnchor.prototype, {
     // construct, but this construct may not actually have focus at the time
     // this function is called.
     _ariaRefresh: function (el) {
-        $(el).attr('role', 'link');
+        //$(el).attr('role', 'link');
         /*
         var label = $(el).attr('aria-label');
         if (stdnav.nullOrUndefined(label)) {
@@ -213,6 +214,17 @@ $.extend(stdnavPluginAnchor.prototype, {
             // Fire the click handler
             eventAutomation.simulateClickSequence(element);
         }
+        return element;
+    },
+
+    // Making links with role='button' react to space bar as normal buttons does
+    _onToggle: function (element) {
+        // Activate the link.
+        var $el = $(element);
+        if ($el.is('a') && $el.attr('role') === 'button') {
+            return this._onEnterOrEntered(element);
+        }
+
         return element;
     }
 });

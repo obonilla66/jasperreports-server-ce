@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -42,6 +42,7 @@ import com.jaspersoft.jasperserver.inputcontrols.cascade.handlers.validators.Inp
 import com.jaspersoft.jasperserver.inputcontrols.cascade.InputControlValidationException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -80,6 +81,9 @@ public class BasicInputControlHandler implements InputControlHandler {
     protected InputControlPagination inputControlPagination;
 
     protected ToClientConverter<DataType, ClientDataType, ToClientConversionOptions> dataTypeResourceConverter;
+
+    @Value("${inputControl.handler.values.caseSensitive:true}")
+    private boolean isCaseSensitive = true;
 
     @PostConstruct
     public void init(){
@@ -355,6 +359,14 @@ public class BasicInputControlHandler implements InputControlHandler {
     }
     protected InputControlOption buildInputControlOption(String label, String value) {
         return new InputControlOption(value, label);
+    }
+
+    public boolean isCaseSensitive() {
+        return isCaseSensitive;
+    }
+
+    public void setCaseSensitive(boolean caseSensitive) {
+        this.isCaseSensitive = caseSensitive;
     }
 }
 

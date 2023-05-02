@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -22,6 +22,7 @@
 package com.jaspersoft.jasperserver.api.metadata.user.service.impl;
 
 import com.jaspersoft.jasperserver.api.common.crypto.PasswordCipherer;
+import com.jaspersoft.jasperserver.api.common.domain.ExecutionContext;
 import com.jaspersoft.jasperserver.api.common.util.spring.StaticApplicationContext;
 import com.jaspersoft.jasperserver.api.logging.diagnostic.domain.DiagnosticAttribute;
 import com.jaspersoft.jasperserver.api.logging.diagnostic.domain.DiagnosticAttributeImpl;
@@ -43,10 +44,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate5.HibernateTemplate;
+import org.springframework.test.context.event.annotation.BeforeTestMethod;
 
 import java.util.List;
 import java.util.Map;
@@ -58,10 +61,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link com.jaspersoft.jasperserver.api.metadata.user.service.impl.UserAuthorityServiceImpl}
@@ -123,6 +123,12 @@ public class UserAuthorityServiceImplTest {
 
         assertEquals(total_roles_count, resultDiagnosticData.get(new DiagnosticAttributeImpl(
                 DiagnosticAttributeBuilder.TOTAL_ROLES_COUNT, null, null)).getDiagnosticAttributeValue());
+    }
+
+
+    @BeforeTestMethod
+    public void initBeforeTest(){
+        hibernateTemplate = Mockito.mock(HibernateTemplate.class);
     }
 
     @Test
@@ -247,4 +253,22 @@ public class UserAuthorityServiceImplTest {
         return DigestUtils.sha1Hex(password);
     }
 
+    @Test
+    public void testPutUser() {
+        RepoUser repoUser= new RepoUser();
+        repoUser.setNumberOfFailedLoginAttempts(1);
+        repoUser.setUsername("testUser");
+        repoUser.setPassword("testPassword");
+        repoUser.setEnabled(true);
+        repoUser.setExternallyDefined(false);
+        repoUser.setTenantId("organizations");
+        repoUser.setId(10);
+        userAuthorityService.setHibernateTemplate(hibernateTemplate);
+        doNothing().when(userAuthorityService).updatePersistentUser(Mockito.any(),Mockito.any());
+        doNothing().when(userAuthorityService).addPropertiesToUserEvent(Mockito.any(String[].class),Mockito.any(User.class));
+        when(userAuthorityService.getHibernateTemplate()).thenReturn(hibernateTemplate);
+        doNothing().when(hibernateTemplate).saveOrUpdate(Mockito.any(User.class));
+        when(userAuthorityService.getRepoUser(Mockito.any(ExecutionContext.class),Mockito.any(User.class))).thenReturn(repoUser);
+        verify(userAuthorityService,times(1)).doPutUser(null,repoUser);
+    }
 }

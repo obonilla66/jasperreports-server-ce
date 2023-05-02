@@ -21,19 +21,6 @@
 
 import _ from 'underscore';
 
-export default {
-    afterFetchComplete: function (items, total) {
-        _.each(items, function (item, i) {
-            if (item) {
-                if (item.addToSelection) {
-                    toggleSelection.call(this, item, i, true);
-                } else if (!_.isUndefined(item.addToSelection)) {
-                    toggleSelection.call(this, item, i);
-                }
-            }
-        }, this);
-    }
-};
 function toggleSelection(item, i, select) {
     var index = this.get('bufferStartIndex') + i;
     if (this.selectionContains) {
@@ -47,3 +34,17 @@ function toggleSelection(item, i, select) {
     }
     delete item.addToSelection;
 }
+
+export default {
+    afterFetchComplete: function (items) {
+        _.each(items, function (item, i) {
+            if (item) {
+                if (item.addToSelection) {
+                    toggleSelection.call(this, item, i, true);
+                } else if (!_.isUndefined(item.addToSelection)) {
+                    toggleSelection.call(this, item, i);
+                }
+            }
+        }, this);
+    }
+};

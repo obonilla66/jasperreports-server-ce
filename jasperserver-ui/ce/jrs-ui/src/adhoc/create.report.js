@@ -78,8 +78,8 @@ JRS.CreateReport = (function(jQuery, jrsConfigs) {
             getDialog(uri).show();
         },
 
-        selectGenerator: function(advUri) {
-            getDialog(advUri).show();
+        selectGenerator: function(advUri, event) {
+            getDialog(advUri).show(false, event);
         }
     };
 })(jQuery, __jrsConfigs__);

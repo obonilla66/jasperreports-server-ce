@@ -39,6 +39,7 @@ import stdnav from 'js-sdk/src/common/stdnav/stdnav';
 import xssUtil from 'js-sdk/src/common/util/xssUtil';
 import i18n from '../i18n/all.properties';
 import hyperlinkTypes from 'bi-report/src/bi/report/jive/enum/hyperlinkTypes';
+import hyperlinkTargets from 'bi-report/src/bi/report/jive/enum/hyperlinkTargets';
 import errorDialogTemplate from './templates/errorDialogTemplate.htm';
 
 var defaultReportStatus = {
@@ -74,8 +75,8 @@ var Viewer = function(options) {
         results: []
     };
     it.tabs = {
-        maxCount: 4, //FIXME: this is configured with JRL props
-        maxLabelLength: 16 //FIXME: this is configured with JRL props
+        maxCount: null, // this is configured with JRL prop: com.jaspersoft.jasperserver.viewer.report.tabs.max.count
+        maxLabelLength: null // this is configured with JRL prop: com.jaspersoft.jasperserver.viewer.report.tabs.labels.max.length
     };
 
     $.extend(it.config, options);
@@ -491,16 +492,32 @@ Viewer.privateMethods = {
 
             partsContainer.on('click', 'button#part_prev', function(evt) {
                 var activeTab = partsContainer.find('li div.reportPart.active').closest('li'),
-                    // prevPart,
+                    prevPart,
                     prevTab = activeTab.prev('li').not('li.control.search');
+
+                if (!prevTab.length) {
+                    prevPart = it.getPreviousPart(activeTab);
+                    partsContainer.find('div.reportPart:last').closest('li').remove();
+                    prevTab = $(it.exportPart(prevPart));
+                    partsContainer.prepend(prevTab);
+                }
+
                 $(this).prop('disabled', true);
                 prevTab.find(".button").trigger('click');
             });
 
             partsContainer.on('click', 'button#part_next', function(evt) {
                 var activeTab = partsContainer.find('li div.reportPart.active').closest('li'),
-                    // nextPart,
+                    nextPart,
                     nextTab = activeTab.next('li').not('li.control.search');
+
+                if (!nextTab.length) {
+                    nextPart = it.getNextPart(activeTab);
+                    partsContainer.find('div.reportPart:first').closest('li').remove();
+                    nextTab = $(it.exportPart(nextPart));
+                    nextTab.insertBefore(partsContainer.find('li.control.search').has("button#part_prev"));
+                }
+
                 $(this).prop('disabled', true);
                 nextTab.find(".button").trigger('click');
             });
@@ -536,27 +553,19 @@ Viewer.privateMethods = {
     getNextPart: function(tab) {
         var it = this,
             parts = it.getReportParts(),
-            indexOfTab = it.partsStartIndex.indexOf(tab.data('pageindex'));
+            indexOfTab = it.partsStartIndex.indexOf(tab.find(".reportPart").data('pageindex'));
 
         return parts[indexOfTab + 1];
     },
     getPreviousPart: function(tab) {
         var it = this,
             parts = it.getReportParts(),
-            indexOfTab = it.partsStartIndex.indexOf(tab.data('pageindex'));
+            indexOfTab = it.partsStartIndex.indexOf(tab.find(".reportPart").data('pageindex'));
 
         return parts[indexOfTab - 1];
     },
     getReportParts: function() {
-        var it = this,
-            parts = it._reportInstance.components.reportparts[0].config.parts;
-
-        if (it._reportInstance.reportComponents && it._reportInstance.reportComponents.reportparts
-            && it._reportInstance.reportComponents.reportparts[0].config.parts.length > parts.length) {
-            parts = it._reportInstance.reportComponents.reportparts[0].config.parts;
-        }
-
-        return parts;
+        return this._reportInstance.data().reportParts;
     },
     markActiveReportPart: function() {
         var it = this,
@@ -877,31 +886,43 @@ Viewer.privateMethods = {
 };
 
 Viewer.publicMethods = {
-    loadReport: function(params, onReportCompleted) {
+    loadReport: function({ executionId, params, onReportCompleted }) {
         var self = this;
+        var reportConfig = {};
+        $(window).on("beforeunload", _.bind(ReportViewRuntime.deleteReportExecution, ReportViewRuntime));
 
-        var pagesOption = {};
-        if (this.config.anchor) {
-            pagesOption.anchor = this.config.anchor;
-        }
-        if (this.config.page) {
-            pagesOption.pages = this.config.page;
-        }
-        if(_.isEmpty(pagesOption)) {
-            pagesOption.pages = 1;
+        if (executionId != null) {
+            Object.assign(reportConfig, {
+                resource: {
+                    executionId: executionId
+                }
+            });
+        } else {
+            const pagesOption = {};
+            if (this.config.anchor) {
+                pagesOption.anchor = this.config.anchor;
+            }
+            if (this.config.page) {
+                pagesOption.pages = this.config.page;
+            }
+            if(_.isEmpty(pagesOption)) {
+                pagesOption.pages = 1;
+            }
+            Object.assign(reportConfig, {
+                resource: this.config.reporturi,
+                params: params || {},
+                pages: pagesOption,
+            });
         }
 
-        this._reportInstance = new Report({
+        Object.assign(reportConfig, {
             server: this.config.contextPath,
             container: this.config.at,
             centerReport: true,
             useReportZoom: true,
             loadingOverlay: false,
             modalDialogs: false,
-            resource: this.config.reporturi,
             autoresize: false,
-            params: params || {},
-            pages: pagesOption,
             reportContainerWidth: this.config.at ? $(this.config.at).width() : null,
             defaultJiveUi: {
                 enabled: true,
@@ -1046,6 +1067,9 @@ Viewer.publicMethods = {
                             forceRedraw = false;
                         }
 
+                        self.tabs.maxCount = ReportViewRuntime.reportViewerTabsMaxCount;
+                        self.tabs.maxLabelLength = ReportViewRuntime.reportViewerTabsLabelsMaxLength;
+
                         self.prepareReportParts(reportparts, forceRedraw);
                         self.reportPartsContainer && self.reportPartsContainer.removeClass('hidden');
                     }
@@ -1084,12 +1108,14 @@ Viewer.publicMethods = {
                         case hyperlinkTypes.REPORT_EXECUTION:
                             var drilldownHref = link.href;
 
-                            // add flow specific params for allowing to go back
-                            if (drilldownHref.indexOf("_flowExecutionKey") == -1) {
+                            // add drillReport event parameter for hyperlinks with target _self
+                            if (hyperlinkTargets.SELF === link.target && drilldownHref.indexOf("_flowExecutionKey") == -1) {
                                 drilldownHref += "&_eventId_drillReport=";
                                 drilldownHref += "&_flowExecutionKey=" + ReportViewRuntime.reportExecutionKey(self.config.reporturi);
                             }
-
+                            drilldownHref += `&_goBackExecutionId=${self._reportInstance._getExecutionId()}`;
+                            ReportViewRuntime.isDrillDownExecution = true;
+                            ReportViewRuntime.mainReportExecutionId = self._reportInstance._getExecutionId();
                             window.open(drilldownHref, link.targetValue);
                             break;
                         }
@@ -1098,6 +1124,7 @@ Viewer.publicMethods = {
             }
         });
 
+        this._reportInstance = new Report(reportConfig);
         var deferred = this._reportInstance.run();
         deferred.done(function() {
             self.boundedOnWindowResizeHandler = _.bind(self.onWindowResizeHandler, self);

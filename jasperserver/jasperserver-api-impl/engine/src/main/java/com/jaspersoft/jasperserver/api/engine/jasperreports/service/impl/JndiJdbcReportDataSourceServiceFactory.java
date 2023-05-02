@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -72,7 +72,7 @@ public class JndiJdbcReportDataSourceServiceFactory extends JdbcReportDataSource
         TimeZone timeZone = getTimeZoneByDataSourceTimeZone(jndiDataSource.getTimezone());
 		try {
 			jndiName = JndiUtils.validateName(jndiDataSource.getJndiName());
-		} catch (InvalidNameException  | NullPointerException e) {
+		} catch (InvalidNameException e) {
 			if (log.isDebugEnabled()) log.debug(e.getMessage(), e);
 			throw new JSDataSourceConnectionFailedException(
 					messageSource.getMessage("exception.remote.invalid.jndi.service.name", new Object[]{jndiDataSource.getJndiName()}, LocaleContextHolder.getLocale()), e);

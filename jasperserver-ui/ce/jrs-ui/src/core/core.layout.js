@@ -59,8 +59,8 @@ var layoutModule = {
     TREE_CONTAINER_PATTERN: '.collapsible',
     TOOLBAR_CAPSULE_PATTERN: '#toolbar .capsule',
     NAVIGATION_MUTTON_PATTERN: 'li.mutton',
-    NAVIGATION_PATTERN: '#navigationOptions li',
-    NAVIGATION_HOVER_PATTERN: '#navigationOptions li.over',
+    NAVIGATION_PATTERN: '.js-navigationOptions li',
+    NAVIGATION_HOVER_PATTERN: '.js-navigationOptions li.over',
     META_LINKS_PATTERN: '#metaLinks #main_logOut_link',
     BUTTON_SET_BUTTON: '.buttonSet > *',
     TABSET_TAB_PATTERN: '.tab',
@@ -73,6 +73,7 @@ var layoutModule = {
     LIST_ITEM_WRAP_PATTERN: '.wrap',
     DISCLOSURE_BUTTON_PATTERN: '.disclosure',
     // Entries in menu bars, popup menus, dropdown menus, and context menus.
+    MENU_PATTERN: '#menu',
     MENU_LIST_PATTERN: '#menu li',
     // Visual separators in menus that aren't focusable or cursorable.
     SEPARATOR_PATTERN: '.separator',
@@ -794,6 +795,7 @@ var layoutModule = {
         jQuery.each(panels, function (i, panel) {
             if (panel.jo.length && panel.jo.is(':visible')) {
                 if (panel.minimized) {
+                    jQuery(panel.jo).children('button.minimize').attr('aria-expanded', false);
                     panel.jo.removeClass('maximized').addClass('minimized');
                     layoutModule.minimize(panel.jo[0], true);
                 } else {
@@ -804,6 +806,7 @@ var layoutModule = {
                             panel.width = panel.minWidth;
                         }
                     }
+                    jQuery(panel.jo).children('button.minimize').attr('aria-expanded', true);
                     panel.jo.removeClass('minimized').addClass('maximized');
                     jMainPanelElement.css(panel.isLeft ? 'left' : 'right', panel.width + 'px');
                     panel.jo.css('width', panel.width + 'px');

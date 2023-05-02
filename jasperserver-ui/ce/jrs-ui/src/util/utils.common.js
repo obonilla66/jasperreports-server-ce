@@ -85,6 +85,7 @@ import {Dragger, DragListener} from './tools.drag';
 import moment from 'moment';
 import xssUtil from 'js-sdk/src/common/util/xssUtil';
 import {$, $w, Prototype, Position} from 'prototype';
+import stdnavAlerting from 'js-sdk/src/common/stdnav/stdnavAlerting'
 
 var log = '';    ///////////////////////////////////////////
 // Operating System check.
@@ -3217,9 +3218,7 @@ function fitObjectIntoScreen(obj, thisLeft, thisTop, thisWidth, thisHeight) {
         l = sl;
     obj.style.left = l + 'px';
     obj.style.top = t + 'px';
-}    ///////////////////////////////////////////
-// Element Displaying and Effects
-///////////////////////////////////////////
+}
 ///////////////////////////////////////////
 // Element Displaying and Effects
 ///////////////////////////////////////////
@@ -3230,10 +3229,7 @@ function selectAndFocusOn(id) {
     var el = jQuery('#' + id)[0];
     el.select();
     el.focus();
-}    ///////////////////////////////////////////
-// Element Overlays
-///////////////////////////////////////////
-//haze out the entire usable page
+}
 ///////////////////////////////////////////
 // Element Overlays
 ///////////////////////////////////////////
@@ -4796,20 +4792,26 @@ var ValidationModule = {
      * @reutrns is validation successful (true/false)
      */
     validateEntry: function (validationEntry, showError) {
+        var valid = true;
+        var msg;
+
         if (validationEntry.validator) {
             //legacy format
-            return this.validateLegacy(validationEntry, showError);
+            valid = this.validateLegacy(validationEntry, showError);
+        } else if (!validationEntry.selector) {
+            msg = this._validateElement(validationEntry.element, validationEntry, showError);
+            valid = msg == null;
+        } else {
+            var elements = jQuery(validationEntry.element).find(validationEntry.selector);
+            for (let i = 0; i < elements.length; i++) {
+                msg = this._validateElement(elements[i], validationEntry, showError);
+                valid = valid && msg == null;
+            }
         }
-        if (!validationEntry.selector) {
-            var msg = this._validateElement(validationEntry.element, validationEntry, showError);
-            return msg == null;
-        }
-        var elements = jQuery(validationEntry.element).find(validationEntry.selector);
-        var valid = true;
-        for (var i = 0; i < elements.length; i++) {
-            var newMsg = this._validateElement(elements[i], validationEntry, showError);
-            valid = valid && newMsg == null;
-        }
+
+        // allow a screen-reader user to hear last validation message
+        stdnavAlerting.alert(msg);
+
         return valid;
     },
     /**
@@ -5046,6 +5048,7 @@ var ValidationModule = {
      */
     showError: function (element, errorMessage, detailsMessage) {
         this._showMessage(element, errorMessage, utilsCommonEnum.ERROR_CLASS, utilsCommonEnum.MESSAGE_WARNING_PATTERN);
+        jQuery(element).attr('aria-invalid', 'true');
         var msgContainer = element.validatorMessageContainer || element.parentNode;
         if (detailsMessage) {
             var detailsBtn = jQuery(msgContainer).find(utilsCommonEnum.DETAILS_PATTERN)[0];
@@ -5088,6 +5091,7 @@ var ValidationModule = {
                 msg.update('');
             }
         }
+        jQuery(element).attr('aria-invalid', 'false');
     },
     /**
      * Hides success message for the specified form element.

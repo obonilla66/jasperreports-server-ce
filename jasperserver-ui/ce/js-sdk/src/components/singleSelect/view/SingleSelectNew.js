@@ -45,7 +45,11 @@ var SingleSelectNew = SingleSelect.extend({
     },
     _createListViewModel: function (options) {
         this.getData = options.getData;
-        return options.model || _.extend(new SingleSelectListModelNew(options), { _afterSelect: _.partial(afterSelect, this._getSelectionIndex) });
+        if (options.model) {
+            return options.model;
+        }
+        const singleSelectListModelNew = new SingleSelectListModelNew(options);
+        return _.extend(singleSelectListModelNew, { _afterSelect: _.partial(afterSelect, this._getSelectionIndex) });
     },
     _getSelectionIndex: function (selection) {
         var bufferStartIndex = this.listViewModel.get('bufferStartIndex');

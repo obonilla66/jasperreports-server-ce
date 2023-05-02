@@ -26,6 +26,7 @@ import jQuery from 'jquery';
 import {ValidationModule} from "../util/utils.common";
 import resource from './resource.base';
 import picker from '../components/components.pickers';
+import layoutModule from "../core/core.layout";
 
 var resourceReportResourceNaming = {
     LABEL_ID: 'label',
@@ -38,7 +39,7 @@ var resourceReportResourceNaming = {
     BROWSE_BUTTON_ID: 'browser_button',
     _canGenerateId: true,
     initialize: function (options) {
-        this._form = jQuery(document.body).find('form')[0];
+        this._form = jQuery('#' + layoutModule.PAGE_BODY_ID).find('form')[0];
         this._label = jQuery('#' +this.LABEL_ID)[0];
         this._resourceId = jQuery('#' +this.RESOURCE_ID_ID)[0];
         this._description = jQuery('#' +this.DESCRIPTION_ID)[0];

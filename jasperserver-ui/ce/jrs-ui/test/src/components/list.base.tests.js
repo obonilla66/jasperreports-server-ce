@@ -641,28 +641,6 @@ describe('lists', function () {
             ]);
             removeListItemsFromBody(items);
         });
-        it('should select inwards items if item already opened', function () {
-            var list = new dynamicList.List('defaultListTemplate', {
-                listTemplateDomId: 'defaultListTemplate',
-                multiSelect: true
-            });
-            list.addItems(items);
-            list.selectItem(items[0]);
-            var stub = sinon.stub(list, 'getSelectedItems');
-            stub.onCall(0).returns([]);
-            stub.onCall(1).returns([]);
-            stub.onCall(2).returns([]);
-            stub.onCall(3).returns([]);
-            stub.returns([items[1]]);
-            sinon.spy(list, 'fire');
-            spyOn(items[0], 'deselect');
-            spyOn(baseList, 'isItemOpen').and.returnValue(true);
-            list.selectInwards();
-            expect(items[0].deselect).toHaveBeenCalled();
-            expect(list.fire).toHaveBeenCalledWith(list.Event.ITEM_SELECTED, { item: items[1] });
-            stub.restore();
-            list.fire.restore();
-        });
         it('should open sublist if it is closed', function () {
             var list = new dynamicList.List('defaultListTemplate', {
                 listTemplateDomId: 'defaultListTemplate',
@@ -672,23 +650,8 @@ describe('lists', function () {
             list.selectItem(items[0]);
             spyOn(baseList, 'isItemOpen').and.returnValue(false);
             spyOn(baseList, 'openItem');
-            list.selectInwards();
+            list.selectInwards({});
             expect(baseList.openItem).toHaveBeenCalled();
-        });
-        it('should select outwards items if item already opened and item from sublist is selected', function () {
-            var list = new dynamicList.List('defaultListTemplate', {
-                listTemplateDomId: 'defaultListTemplate',
-                multiSelect: true
-            });
-            list.addItems(items);
-            items[1].parentItem = items[0];
-            list.selectItem(items[1]);
-            spyOn(items[0], 'select');
-            spyOn(items[1], 'deselect');
-            spyOn(baseList, 'isItemOpen').and.returnValue(false);
-            list.selectOutwards();
-            expect(items[1].deselect).toHaveBeenCalled();
-            expect(items[0].select).toHaveBeenCalled();
         });
         it('should close sublist parent item is selected', function () {
             var list = new dynamicList.List('defaultListTemplate', {
@@ -699,7 +662,12 @@ describe('lists', function () {
             list.selectItem(items[0]);
             spyOn(baseList, 'isItemOpen').and.returnValue(true);
             spyOn(baseList, 'closeItem');
-            list.selectOutwards();
+            list.selectOutwards({
+                target:{
+                    getAttribute: ()=>('row'),
+                    setAttribute: ()=>{}
+                }
+            });
             expect(baseList.closeItem).toHaveBeenCalled();
         });
         it('should have possibility to show and set proper flags', function () {

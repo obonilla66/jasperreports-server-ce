@@ -157,7 +157,7 @@ var canonicExclusionRegex = RegExp('(?:' + regexKeys(canonicExclusionMap).join('
 var reverseCanonicExclusionRegex = RegExp('(?:' + regexKeys(reverseCanonicExclusionMap).join('|') + ')', 'g');
 
 /**
- * Canonicalize/decode the string from any HTML encoding to ASCII.
+ * Canonicalize/decode characters of interest from the HTML encoding (DEC, HEX and Entity name) to ASCII characters.
  * Hard escaped characters listed as keys in escapeMap are not canonicalized to prevent soft
  * escape from reversing the hard escape as in xssUtil.softHtmlEscape(xssUtil.hardEscape(str))
  *
@@ -171,9 +171,41 @@ function _canonicalize(string) {
     // exclude potentially hard escaped chars from escapeMap values
     string = canonicExclusionRegex.test(string) ? string.replace(canonicExclusionRegex, function(match) { return canonicExclusionMap[match]; }) : string;
 
-    var canonicElem = document.createElement('textarea');
-    canonicElem.innerHTML = string; // eslint-disable-line
-    string = canonicElem.value;
+    // In this block, we need to decode characters in the string '/:=javascriptond' from their encoded variants.
+    // This string of characters is based on next strings:
+    //     'javascript:' -- used to define javascript action taken by tags
+    //     'on=' -- used to define actions taken by tags
+    //     'srcdoc' -- used to define srcdoc attribute of the iframe
+    // Other encoded symbols are not important to our XSS protection because any XSS threat depend on these characters.
+    // For the reference on encodings you may take a look here:
+    // https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Character_entity_references_in_HTML
+    // It seems like there are just 3 encodings (DEC, HEX and Entity name) which are supported across browsers
+    // as of 2022.
+
+    // translating DEC encoded symbols into characters. It's like '&#47' or '&#47;' into '/'
+    // yes, this approach translates all DEC-encodings, which is OK with us
+    string = string.replace(/&#(\d+);?/g, ((match, dec) => String.fromCharCode(dec) ));
+
+    // translating HEX encoded symbols into characters. It's like '&#x2F' or '&#x2F;' into '/'
+    // yes, again, this approach translates all HEX-encodings, which is OK with us
+    string = string.replace(/&#x([a-f0-9]+);?/ig, ((match, group) => String.fromCharCode(parseInt(group, 16)) ));
+
+    // translating Entity-name encoded symbols into characters. It's like '&sol;' into '/'
+    const entityNameDecodingMap = {
+        '&tab;': '\t',
+        '&newline;': '\n',
+        '&sol;': '/',
+        '&colon;': ':',
+        '&equals;': '=',
+
+        '&tab': '\t',
+        '&newline': '\n',
+        '&sol': '/',
+        '&colon': ':',
+        '&equals': '='
+    };
+    const regexpEscapeMap = RegExp('(?:' + Object.keys(entityNameDecodingMap).join('|') + ')', 'ig');
+    string = string.replace(regexpEscapeMap, (match) => entityNameDecodingMap[match.toLowerCase()] );
 
     // revert the chars excluded above to their original values
     string = reverseCanonicExclusionRegex.test(string) ? string.replace(reverseCanonicExclusionRegex, function(match) { return reverseCanonicExclusionMap[match]; }) : string;
@@ -182,14 +214,14 @@ function _canonicalize(string) {
 }
 
 /**
- * Removes tabulation, new line and "carriage return" characters symbols from the string "javascript:"
+ * Removes tabulation, new line and "carriage return" characters from the string "javascript:"
  *
  * @param string
  * @returns string
  * @private
  */
 function _removeBreakUpCharacters (string) {
-    // we are removing "tab", "new line" and "carriage return" characters inserted into "javascript:" string, so from
+    // We are removing "tab", "new line" and "carriage return" characters inserted into "javascript:" string, so from
     // "ja\tva\r\nscript:" we are getting "javascript:"
 
     const jsKeyword = 'javascript:';
@@ -305,9 +337,11 @@ function _getWhitelistRightRegex() {
     return _getWhitelistRightRegex.rightTagRegexp;
 }
 
-//regex map used to escape HTML tag attributes which produce javascript context.
+// Regex map used to escape HTML tag attributes which produce javascript context.
 // During 'soft' html escape, the map keys are converted into Regexp(\b<key>\b, 'gi')
 // and replaced with the corresponding map values.
+// Important: the code of _canonicalize() method is based on characters used in regexs defined here.
+// So if you going to add some new symbols into any regex pattern, please, consider checking code of _canonicalize().
 var _defaultAttribSoftEscapeMap = {
     'regex': [
         /\bjavascript:/ig,
@@ -506,35 +540,9 @@ var _xssUnescape = function(string) {
     return unescapeRegexp.test(string) ? string.replace(unescapeRegexp, function(match) { return unescapeMap[match]; }) : string;
 };
 
-const stripHTMLRecurse = (variable, escapeOptions = null) => {
-    if (typeof variable === 'string') {
-        return _xssSoftHtmlEscape(variable, escapeOptions);
-    }
-
-    if (typeof variable === 'object' && variable !== null) {
-        Object.keys(variable).forEach(key => {
-            if (typeof variable[key] === 'string') {
-                variable[key] = _xssSoftHtmlEscape(variable[key], escapeOptions);
-            } else if (Array.isArray(variable[key])) {
-                variable[key].forEach((item, i) => {
-                    variable[key][i] = stripHTMLRecurse(item, escapeOptions);
-                });
-            } else if (typeof variable[key] === 'object') {
-                variable[key] = stripHTMLRecurse(variable[key], escapeOptions);
-            }
-        });
-    }
-
-    return variable;
-};
-
-const sanitizeHighchartsOptions = (highchartsOptions) => {
-    return stripHTMLRecurse(highchartsOptions);
-}
-
 export default {
     softHtmlEscape: _xssSoftHtmlEscape,
     hardEscape: _xssHardEscape,
     unescape: _xssUnescape,
-    sanitizeHighchartsOptions
+    canonicalize: _canonicalize
 };

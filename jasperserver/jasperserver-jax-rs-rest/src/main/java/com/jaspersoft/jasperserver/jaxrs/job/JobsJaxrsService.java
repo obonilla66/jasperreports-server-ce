@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 - 2022 TIBCO Software Inc. All rights reserved.
+ * Copyright (C) 2005-2023. Cloud Software Group, Inc. All Rights Reserved.
  * http://www.jaspersoft.com.
  *
  * Unless you have purchased a commercial license agreement from Jaspersoft,
@@ -21,7 +21,6 @@
 package com.jaspersoft.jasperserver.jaxrs.job;
 
 import com.jaspersoft.jasperserver.api.common.util.PaginationConstants;
-import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJob;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobRuntimeInformation;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.ReportJobSummary;
 import com.jaspersoft.jasperserver.api.engine.scheduling.domain.jaxb.ReportJobStateXmlAdapter;
@@ -162,24 +161,6 @@ public class JobsJaxrsService extends RemoteServiceWrapper<JobsService> {
         return callRemoteService(new ConcreteCaller<Response>() {
             public Response call(JobsService service) throws ErrorDescriptorException {
                 return Response.ok(reportJobConverter.toClient(service.scheduleJob(reportJobConverter.toServer(getRuntimeExecutionContext(), clientReportJob, null)), null)).build();
-            }
-        });
-    }
-
-    /**
-     * Fix for JS-63480
-     * This method allows to create a new job with xml payload which supports reportJob with parameters + types
-     *
-     * @param reportJob                   - report job to create
-     * @return created job as response with status OK (code 200)
-     */
-    @PUT
-    @Produces(JobClientConstants.JOB_V_1_XML_MEDIA_TYPE)
-    @Consumes(JobClientConstants.JOB_V_1_XML_MEDIA_TYPE)
-    public Response scheduleJob(final ReportJob reportJob) {
-        return callRemoteService(new ConcreteCaller<Response>() {
-            public Response call(JobsService service) throws ErrorDescriptorException {
-                return Response.ok(service.scheduleJob(reportJob)).build();
             }
         });
     }
